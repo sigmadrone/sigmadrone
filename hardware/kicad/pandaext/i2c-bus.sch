@@ -1,0 +1,192 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:special
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:BQ24070
+LIBS:LTC2954-2
+LIBS:S-8241
+LIBS:SC189
+LIBS:TPS61032
+LIBS:L3GD20
+LIBS:LSM303DLHC
+LIBS:PCA9306
+LIBS:PCA9685
+LIBS:NCP551SN18T1G
+LIBS:74AVC4T774
+LIBS:header
+LIBS:pandaext-cache
+EELAYER 24 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 6 8
+Title ""
+Date "18 jun 2013"
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L PCA9306 U?
+U 1 1 51575065
+P 3800 2500
+F 0 "U?" H 3800 2400 50  0000 C CNN
+F 1 "PCA9306" H 3550 2000 50  0000 C CNN
+F 2 "MODULE" H 4100 2100 50  0001 C CNN
+F 3 "DOCUMENTATION" H 3950 2900 50  0001 C CNN
+	1    3800 2500
+	1    0    0    -1  
+$EndComp
+$Comp
+L 1V8 #PWR?
+U 1 1 5158C316
+P 1300 1150
+F 0 "#PWR?" H 1300 1290 20  0001 C CNN
+F 1 "1V8" H 1300 1260 30  0000 C CNN
+F 2 "" H 1300 1150 60  0000 C CNN
+F 3 "" H 1300 1150 60  0000 C CNN
+	1    1300 1150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1300 1150 1300 1650
+$Comp
+L C C?
+U 1 1 5158C326
+P 1300 1850
+F 0 "C?" H 1300 1950 40  0000 L CNN
+F 1 "C" H 1306 1765 40  0000 L CNN
+F 2 "~" H 1338 1700 30  0000 C CNN
+F 3 "~" H 1300 1850 60  0000 C CNN
+	1    1300 1850
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR?
+U 1 1 5158C335
+P 1300 3400
+F 0 "#PWR?" H 1300 3400 30  0001 C CNN
+F 1 "GND" H 1300 3330 30  0001 C CNN
+F 2 "" H 1300 3400 60  0000 C CNN
+F 3 "" H 1300 3400 60  0000 C CNN
+	1    1300 3400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	1300 2050 1300 3400
+$Comp
+L 3V3 #PWR?
+U 1 1 5158C360
+P 5050 1150
+F 0 "#PWR?" H 5050 1250 40  0001 C CNN
+F 1 "3V3" H 5050 1275 40  0000 C CNN
+F 2 "" H 5050 1150 60  0000 C CNN
+F 3 "" H 5050 1150 60  0000 C CNN
+	1    5050 1150
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R?
+U 1 1 5158C41C
+P 5050 1550
+F 0 "R?" V 5130 1550 40  0000 C CNN
+F 1 "200K" V 5057 1551 40  0000 C CNN
+F 2 "~" V 4980 1550 30  0000 C CNN
+F 3 "~" H 5050 1550 30  0000 C CNN
+	1    5050 1550
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R?
+U 1 1 5158C457
+P 5500 1550
+F 0 "R?" V 5580 1550 40  0000 C CNN
+F 1 "2.2K" V 5507 1551 40  0000 C CNN
+F 2 "~" V 5430 1550 30  0000 C CNN
+F 3 "~" H 5500 1550 30  0000 C CNN
+	1    5500 1550
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R?
+U 1 1 5158C462
+P 5950 1550
+F 0 "R?" V 6030 1550 40  0000 C CNN
+F 1 "2.2K" V 5957 1551 40  0000 C CNN
+F 2 "~" V 5880 1550 30  0000 C CNN
+F 3 "~" H 5950 1550 30  0000 C CNN
+	1    5950 1550
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5050 1800 5050 2400
+Wire Wire Line
+	5050 2200 4550 2200
+Wire Wire Line
+	5050 2400 4550 2400
+Connection ~ 5050 2200
+Wire Wire Line
+	4550 2600 7050 2600
+Wire Wire Line
+	5500 2600 5500 1800
+Wire Wire Line
+	4550 2800 7050 2800
+Wire Wire Line
+	5950 2800 5950 1800
+Wire Wire Line
+	5050 1300 5950 1300
+Connection ~ 5500 1300
+Wire Wire Line
+	5050 1300 5050 1150
+Text GLabel 7050 2600 2    60   BiDi ~ 0
+SCL
+Text GLabel 7050 2800 2    60   BiDi ~ 0
+SDA
+Connection ~ 5500 2600
+Connection ~ 5950 2800
+Wire Wire Line
+	1300 1650 3050 1650
+Wire Wire Line
+	3050 1650 3050 2200
+Wire Wire Line
+	3050 2400 1300 2400
+Connection ~ 1300 2400
+Text GLabel 2600 2800 0    60   BiDi ~ 0
+I2C4_SDA/GPIO_133
+Text GLabel 2600 2600 0    60   BiDi ~ 0
+I2C4_SCL/GPIO_132
+Wire Wire Line
+	3050 2600 2600 2600
+Wire Wire Line
+	3050 2800 2600 2800
+$EndSCHEMATC

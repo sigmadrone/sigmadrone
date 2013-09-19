@@ -1,0 +1,141 @@
+{
+	"Title": "SigmaDrone Platform File",
+	"Version": 0.1,
+	"Protocol": "SigmaDrone",
+	"DroneType": "QuadRotor",
+	"DroneCommand": "Reset",
+	"DroneHardware": {
+		"HardwareId": "68:05:ca:0f:da:10",
+		"Devices": [
+			{
+				"TODO":"todo"
+			}
+		]
+	},
+	"GlobalConfig": {
+		"Log": {
+			"Level": "Verbose",
+			"PrintRotationMatrix": false,
+			"LogFileName": "stdout"
+		},
+		"Devices": [
+			{
+				"Gyro": {
+					"DeviceName": "/dev/gyro0",
+					"Rate": 400,
+					"Scale": 2000,
+					"MaxReading": 32768	
+				}
+			},
+			{
+				"Accelerometer": {
+					"DeviceName": "/dev/accel0",
+					"Rate": 400,
+					"Scale": 4,
+					"MaxReading": 32768
+				}
+			},
+			{
+				"Magnetometer": {
+					"DeviceName": "/dev/mag0"
+				}
+			},
+			{
+				"Servo_pca9685": {
+					"DeviceName": "/dev/pwm0",
+					"Rate": 320,
+					"ChannelMask": "0xff",
+					"BitCount": 12
+				}
+			}
+		],
+		"Quad": {
+			"MotorToServoMap": [0, 1, 2, 3],
+			"ImuCoordinateAngles": [0, 0, 45],
+			"PID": {
+				"Kp": 0.8,
+				"Ki": 0.00000005,
+				"Kd": 0.0015
+			}
+		},
+		"ControlChannel": {
+			"ServerAddress": "127.0.0.1",
+			"ServerPort": 2222,
+			"RoleIsServer": true,
+			"RoleIsClient": false
+		}
+	},
+	"Flight": {
+		"Thrust": 0.4,
+		"MinThrust": 0.3,
+		"MaxThrust": 0.6,
+		"TargetQuaternion": [1.0, 0.0, 0.0, 0.0]
+	},
+	
+	"Plugins": [
+		{
+			"Description": "Controls IMU devices - gyro/accel/mag",
+			"PluginName": "sd.imureader",
+			"DlFileName": "sdplugs.so"
+		},
+		{
+			"Description": "Calculates gyro bias and earth G vector",
+			"PluginName": "sd.imubias",
+			"DlFileName": "sdplugs.so",
+			"Config": {
+				"NumSamples": 2000
+			}
+		},
+		{
+			"Description": "Remaps the readings from the IMU devices",
+			"PluginName": "sd.imuremap",
+			"DlFileName": "sdplugs.so",
+			"Config": {
+				"Gyro": [1,0,0, 0,1,0, 0,0,1],
+				"Accelerometer":[0,-1,0, 1,0,0, 0,0,1]
+			}
+		},
+		{
+			"Description": "Performs low-pass filtering on gyro/accel/etc",
+			"PluginName": "sd.imuprefilter",
+			"DlFileName": "sdplugs.so",
+			"Config": {
+				"GyroLpf": [
+				 	0.0143, 0.0303, 0.0723, 0.1245, 0.1670, 0.1833,
+					0.1670, 0.1245, 0.0723, 0.0303, 0.0143
+				],
+				"AccelLpf": [
+				 	0.0143, 0.0303, 0.0723, 0.1245, 0.1670, 0.1833,
+					0.1670, 0.1245, 0.0723, 0.0303, 0.0143
+				]
+			}
+		},
+		{
+			"Description": "Calculates drone attitude using current IMU readings",
+			"PluginName": "sd.imufilter",
+			"DlFileName": "sdplugs.so"
+		},
+		{
+			"Description": "Controls the servo/pwm device",
+			"PluginName": "sd.servo_pca9685",
+			"DlFileName": "sdplugs.so"
+		},
+		{
+			"Description": "Populates the desired attitude Qt and velocity vector",
+			"PluginName": "sd.navigator",
+			"DlFileName": "sdplugs.so"
+		},
+		{
+			"Description": "Calcs motor settings; issues commands to the servo plugin",
+			"PluginName": "sd.quadpilot",
+			"DlFileName": "sdplugs.so",
+			"Config": {
+				"PID": {
+					"Kp": 0.8,
+					"Ki": 0.00000005,
+					"Kd": 0.0015
+				}
+			}
+		}
+	]
+}
