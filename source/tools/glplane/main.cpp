@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 	glutDisplayFunc(display);
 	glutIdleFunc(IdleFunction);
 
-	Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(-88, 0, 180));
+	Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(0), DEG2RAD(180)));
 
 	GLuint mLoc = glGetUniformLocation(gProgram, "M");
 	if (mLoc >= 0)
@@ -126,7 +126,7 @@ again:
 								M.at(2,0), M.at(2,1), M.at(2,2));
 			}
 			GLuint mLoc;
-			Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(-88, 0, 180) * M);
+			Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(0), DEG2RAD(180)) * M);
 
 			mLoc = glGetUniformLocation(gProgram, "M");
 			if (mLoc >= 0)
