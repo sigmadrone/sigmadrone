@@ -63,7 +63,7 @@ void _CommandArgs::PrintUsage()
 	fprintf(stdout, " --rot-matrix            Print the rotation matrix\n");
 	fprintf(stdout, " --host    <HOSTNAME>    Execute as client and connect to\n"
 			        "                         HOSTNAME\n");
-	fprintf(stdout, " --port    <PORT>        Server TCP port. Default port is %d\n",DRONE_DEFAULT_PORT);
+	fprintf(stdout, " --port    <PORT>        Server TCP port. Default port is %d\n",SD_DEFAULT_PORT);
 	fprintf(stdout,"\n");
 	fprintf(stdout, " --maxdps  <DPS>         Gyro max angular speed in deg/s\n");
 	fprintf(stdout, " --rate    <RATE>        Gyro and accel sampling rate\n");
@@ -112,7 +112,7 @@ _CommandArgs::ParseArgs(
 	//
 	m_parsedArgs.Command = SD_COMMAND_NONE;
 	m_parsedArgs.HostAddress = "127.0.0.1";
-	m_parsedArgs.ServerPort = DRONE_DEFAULT_PORT;
+	m_parsedArgs.ServerPort = SD_DEFAULT_PORT;
 	m_parsedArgs.IsClient = m_parsedArgs.IsServer = false;
 	m_parsedArgs.DroneCfg.Pilot = SD_PILOT_TYPE_QUADROTOR;
 

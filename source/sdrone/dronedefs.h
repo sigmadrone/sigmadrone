@@ -12,8 +12,6 @@
 
 #define DRONE_AXIS_NET_PROT "axes://"
 
-static const int DRONE_DEFAULT_PORT = 2222;
-
 #define DRONZONE_PROTOCOL "DRONZONE:"
 
 

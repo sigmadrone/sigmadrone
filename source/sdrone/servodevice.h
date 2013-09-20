@@ -9,7 +9,6 @@
 #define SERVODEVICE_H_
 
 #include "commoninc.h"
-#include "pluginapi.h"
 
 class ServoDevice : public IPlugin
 {

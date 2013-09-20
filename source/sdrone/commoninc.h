@@ -21,7 +21,7 @@
 #include "axesdata.h"
 #include "dronedefs.h"
 #include "matrix.h"
-#include "pluginapi.h"
+#include "sdroneapi.h"
 
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(x) (sizeof(x)/sizeof(x[0]))

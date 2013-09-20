@@ -11,7 +11,6 @@
 #include "commoninc.h"
 #include <string>
 #include <pthread.h>
-#include "pluginapi.h"
 
 class PluginChain;
 
