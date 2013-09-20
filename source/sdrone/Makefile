@@ -4,7 +4,7 @@ CC          = $(CROSS_COMPILE)gcc
 INCLUDES    = -I../include
 LIBS		= -lm -lrt -lpthread -ldl
 CFLAGS		= -g -O0 -Wall
-TARGET		= quadrotor
+TARGET		= sdroned
 OBJECTS		= \
 	commandargs.o\
 	pluginchain.o\

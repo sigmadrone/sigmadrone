@@ -43,12 +43,12 @@ _CommandArgs::~_CommandArgs()
 
 void _CommandArgs::PrintUsage()
 {
-	fprintf(stdout, "QuadRotor 1.0\n");
-	fprintf(stdout, "Controls the quadrotor hardware; runs as a daemon server or "
+	fprintf(stdout, "\nSigma Drone 0.1\n");
+	fprintf(stdout, "Controls the drone hardware; runs as a daemon server or "
 			        "client process.\n");
 	fprintf(stdout,"\n");
 	fprintf(stdout, "Usage: \n");
-	fprintf(stdout, "%s [command] [options]\n\n", !!m_argv ? m_argv[0] : "quadrotor");
+	fprintf(stdout, "%s [command] [options]\n\n", !!m_argv ? m_argv[0] : "sdroned");
 	fprintf(stdout, "command:\n");
 	fprintf(stdout, " run                     Start the main control loop or execute\n"
 			        "                         flight control command, aka --thrust\n");
@@ -98,11 +98,14 @@ void _CommandArgs::PrintUsage()
 
 bool
 _CommandArgs::ParseArgs(
-		int m_argc,
-		char* m_argv[])
+		int argc,
+		char* argv[])
 {
 	int i = 1;
 	SdDroneConfig* droneCfg = &m_parsedArgs.DroneCfg;
+
+	m_argc = argc;
+	m_argv = argv;
 
 	//
 	// Init with the current default values
