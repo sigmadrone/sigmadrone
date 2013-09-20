@@ -1,7 +1,3 @@
-SUBDIRS += axesdata
-SUBDIRS += alldata
-SUBDIRS += servo
-SUBDIRS += attitudefilter
 
 all:
 	@for dir in $(SUBDIRS); do \
