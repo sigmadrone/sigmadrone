@@ -29,7 +29,7 @@ PluginChain::~PluginChain()
 		if (0 != it->second) {
 			printf("ERROR: plugin %s did not respond to Stop command, "
 				"will unload it dirty", pluginCtx->m_plugin->GetName());
-			RemovePluginContext(it->second);
+			PluginDetach(it->second);
 		}
 	}
 
@@ -201,7 +201,7 @@ int PluginChain::PluginAttach(
 	return ret;
 }
 
-void PluginChain::RemovePluginContext(
+void PluginChain::PluginDetach(
 		PluginContext* pluginCtx)
 {
 	bool release = false;
@@ -215,6 +215,9 @@ void PluginChain::RemovePluginContext(
 	}
 	Unlock();
 	if (release) {
+		printf("Detached plugin %s from altitude @%f \n",
+				pluginCtx->m_plugin->GetName(),
+				pluginCtx->GetMyAltitude());
 		pluginCtx->Release();
 	}
 }
@@ -321,7 +324,12 @@ int PluginChain::DispatchIo(
 {
 	int err = SD_ESUCCESS;
 	RefedPluginListIterator it;
-	ReferencePluginList(&it,caller,dispatchFlags,iop->deviceId,iop->ioCode);
+	ReferencePluginList(
+			&it,
+			caller,
+			dispatchFlags,
+			SD_DEVICEID_TO_FLAG(iop->deviceId),
+			SD_IOCODE_TO_FLAG(iop->ioCode));
 	for (it.BeginIterate(); 0 != it.Get() && SD_ESUCCESS == err; it.Next()) {
 		err = it.Get()->m_plugin->IoCallback(iop);
 	}
@@ -362,6 +370,9 @@ int PluginChain::StopPlugins(bool detachPlugins)
 	ReferencePluginList(&it,0,
 			SD_FLAG_DISPATCH_DOWN | SD_FLAG_DISPATCH_TO_ALL, 0, 0);
 	for (it.BeginIterate(); 0 != it.Get(); it.Next()) {
+		printf("Stopping plugin %s @%f \n",
+				it.Get()->m_plugin->GetName(),
+				it.Get()->GetMyAltitude());
 		it.Get()->m_plugin->Stop(stopFlag);
 	}
 	return 0;

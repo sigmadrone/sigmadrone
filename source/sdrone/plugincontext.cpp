@@ -57,7 +57,7 @@ PluginContext::~PluginContext()
 void PluginContext::DetachPlugin()
 {
 	AddRef();
-	m_chain->RemovePluginContext(this);
+	m_chain->PluginDetach(this);
 	StartStopIoDispatchThread(false);
 	Release();
 }
@@ -121,7 +121,7 @@ void* PluginContext::DispatchThread(void* arg)
 
 
 void PluginContext::SetIoFilters(
-		uint32_t deviceTypeMask,
+		SdDeviceId deviceTypeMask,
 		uint32_t ioCodeMask)
 {
 	m_deviceFilter = deviceTypeMask;

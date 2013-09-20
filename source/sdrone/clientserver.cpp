@@ -133,7 +133,9 @@ void* ClientServer::ServerThread(void* arg)
 			(const sockaddr*)&localAddress,
 			sizeof(localAddress));
 	if (-1 == err) {
-		printf("Failed to bind to local address,err=%d\n",errno);
+		err = errno;
+		printf("Failed to bind to local address,err=%d %s\n",err,
+				strerror(err));
 		goto __return;
 	}
 	if (-1 == (err = listen(listenSocket,10))) {

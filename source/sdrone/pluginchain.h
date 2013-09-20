@@ -27,7 +27,7 @@ public:
 		const char* const attachBelow[],
 		IPluginRuntime** pluginRuntime
 		);
-	void RemovePluginContext(PluginContext*);
+	void PluginDetach(PluginContext*);
 	int DispatchIo(
 			PluginContext* issuer,
 			SdIoPacket* iop,

@@ -202,6 +202,7 @@ int ImuReader::IoDispatchThread()
 			ioPacket.deltaTime = 0.005; //TODO
 		} else {
 			ret = EIO;
+			goto __return;
 		}
 	} else {
 		ret = m_GyroDevice.ReadData(m_ImuData.gyro, sizeof(m_ImuData.gyro));

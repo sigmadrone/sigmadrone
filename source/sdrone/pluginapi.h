@@ -420,7 +420,7 @@ struct IPluginRuntime
 	 * attaches to the chain.
 	 */
 	virtual void SetIoFilters(
-			IN uint32_t deviceTypeMask,
+			IN SdDeviceId deviceTypeMask,
 			IN uint32_t ioCodeMask
 			) = 0;
 

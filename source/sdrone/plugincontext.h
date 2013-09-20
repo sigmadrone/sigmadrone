@@ -29,7 +29,7 @@ public:
 			bool start
 			);
 	void SetIoFilters(
-			uint32_t deviceTypeMask,
+			SdDeviceId deviceTypeMask,
 			uint32_t ioCodeMask);
 	int DispatchIo(
 			IN OUT SdIoPacket* iop,
