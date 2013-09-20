@@ -8,63 +8,50 @@
 		"HardwareId": "68:05:ca:0f:da:10",
 		"Devices": [
 			{
-				"TODO":"todo"
+				"TODO":"Potentially description of all the devices"
 			}
 		]
 	},
 	"GlobalConfig": {
-		"Log": {
-			"Level": "Verbose",
-			"PrintRotationMatrix": false,
-			"LogFileName": "stdout"
+		"Gyro": {
+			"DeviceName": "/dev/gyro0",
+			"Rate": 400,
+			"Scale": 2000,
+			"MaxReading": 32768	
 		},
-		"Devices": [
-			{
-				"Gyro": {
-					"DeviceName": "/dev/gyro0",
-					"Rate": 400,
-					"Scale": 2000,
-					"MaxReading": 32768	
-				}
-			},
-			{
-				"Accelerometer": {
-					"DeviceName": "/dev/accel0",
-					"Rate": 400,
-					"Scale": 4,
-					"MaxReading": 32768
-				}
-			},
-			{
-				"Magnetometer": {
-					"DeviceName": "/dev/mag0"
-				}
-			},
-			{
-				"Servo_pca9685": {
-					"DeviceName": "/dev/pwm0",
-					"Rate": 320,
-					"ChannelMask": "0xff",
-					"BitCount": 12
-				}
-			}
-		],
+		"Accelerometer": {
+			"DeviceName": "/dev/accel0",
+			"Rate": 400,
+			"Scale": 4,
+			"MaxReading": 32768
+		},
+		"Magnetometer": {
+			"DeviceName": "/dev/mag0"
+		},
+		"Servo": {
+			"DeviceName": "/dev/pwm0",
+			"Rate": 320,
+			"ChannelMask": "0xff",
+			"BitCount": 12
+		},
 		"Quad": {
 			"MotorToServoMap": [0, 1, 2, 3],
 			"ImuCoordinateAngles": [0, 0, 45],
-			"PID": {
-				"Kp": 0.8,
-				"Ki": 0.00000005,
-				"Kd": 0.0015
-			}
+			"Kp": 0.8,
+			"Ki": 0.00000005,
+			"Kd": 0.0015
 		},
 		"ControlChannel": {
 			"ServerAddress": "127.0.0.1",
 			"ServerPort": 2222,
 			"RoleIsServer": true,
 			"RoleIsClient": false
-		}
+		},
+		"Level": "Verbose",
+		"PrintRotationMatrix": false,
+		"LogFileName": "stdout"
 	},
+	
 	"Flight": {
 		"Thrust": 0.4,
 		"MinThrust": 0.3,
