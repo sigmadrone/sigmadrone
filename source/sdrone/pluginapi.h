@@ -32,7 +32,7 @@ typedef enum _SdCommand {
 
 typedef enum _SdDroneType
 {
-	SD_DRONE_TYPE_INVALID,
+	SD_DRONE_TYPE_NONE = 0,
 	SD_DRONE_TYPE_HELLI,
 	SD_DRONE_TYPE_AIRPLANE,
 	SD_DRONE_TYPE_QUADROTOR,
