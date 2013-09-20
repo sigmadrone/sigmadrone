@@ -38,8 +38,7 @@ int ImuBias::AttachToChain(
 int ImuBias::Start(
 	CommandArgs* cmdArgs)
 {
-	const SdDroneConfig* droneConfig = cmdArgs->GetSdDroneConfig();
-	m_NumBiasSamples = droneConfig->Gyro.NumBiasSamples;
+	m_NumBiasSamples = 1000; // todo: must be controlled
 	m_CurrentBiasSamples = 0;
 	m_Runtime->SetIoFilters(
 		SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),

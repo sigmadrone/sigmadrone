@@ -21,6 +21,13 @@
 #define OUT
 #endif
 
+#define SD_LOG_LEVEL_NONE 0
+#define SD_LOG_LEVEL_ERROR 1
+#define SD_LOG_LEVEL_WARNING 2
+#define SD_LOG_LEVEL_INFO 3
+#define SD_LOG_LEVEL_VERBOSE 4
+#define SD_LOG_LEVEL_DEBUG 5
+
 typedef enum _SdCommand {
 	SD_COMMAND_NONE = 0,
 	SD_COMMAND_RUN,
@@ -32,7 +39,7 @@ typedef enum _SdCommand {
 
 typedef enum _SdDroneType
 {
-	SD_DRONE_TYPE_NONE = 0,
+	SD_DRONE_TYPE_INVALID,
 	SD_DRONE_TYPE_HELLI,
 	SD_DRONE_TYPE_AIRPLANE,
 	SD_DRONE_TYPE_QUADROTOR,
@@ -89,7 +96,11 @@ typedef struct _SdDroneConfig
 	Matrix3d GyroMap;
 	Matrix3d AccMap;
 	Matrix3d MagMap;
+	int LogLevel;
+	const char* ServerAddress;
+	int ServerPort;
 	int PrintRotationMatrix;
+	const char* LogFileName;
 } SdDroneConfig;
 
 typedef enum _SdImuDeviceId
@@ -376,13 +387,6 @@ typedef struct _SdIoPacket
  * not set
  */
 #define SD_FLAG_DISPATCH_SKIP_CALLER	0x0004
-
-#define SD_LOG_LEVEL_NONE 0
-#define SD_LOG_LEVEL_ERROR 1
-#define SD_LOG_LEVEL_WARNING 2
-#define SD_LOG_LEVEL_INFO 3
-#define SD_LOG_LEVEL_VERBOSE 4
-#define SD_LOG_LEVEL_DEBUG 5
 
 struct IPluginRuntime
 {

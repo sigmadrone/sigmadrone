@@ -33,6 +33,7 @@ _CommandArgs::_CommandArgs() :
 	m_parsedArgs.DroneCfg.Quad.Kp = 0.6;
 	m_parsedArgs.DroneCfg.Quad.Ki = 0.00000005;
 	m_parsedArgs.DroneCfg.Quad.Kd = 0.0015;
+
 	m_targetAttitude = QuaternionD(1,0,0,0);
 }
 
@@ -111,9 +112,12 @@ _CommandArgs::ParseArgs(
 	m_parsedArgs.ServerPort = DRONE_DEFAULT_PORT;
 	m_parsedArgs.IsClient = m_parsedArgs.IsServer = false;
 	m_parsedArgs.DroneCfg.Pilot = SD_PILOT_TYPE_QUADROTOR;
+
+	// TODO: must be controlled from cmd line
 	m_parsedArgs.DroneCfg.AccMap = Matrix3d( 0,-1, 0,
 											1, 0, 0,
 											0, 0, 1);
+	m_parsedArgs.DroneCfg.MagMap = m_parsedArgs.DroneCfg.AccMap;
 	m_parsedArgs.DroneCfg.GyroMap = Matrix3d(1, 0, 0,
 											0, 1, 0,
 											0, 0, 1);

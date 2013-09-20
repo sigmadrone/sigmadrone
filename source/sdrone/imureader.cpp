@@ -14,6 +14,7 @@ ImuReader::ImuReader()
 	m_File = 0;
 	m_RunTime = 0;
 	memset(&m_ImuData,0,sizeof(m_ImuData));
+	memset(&m_GyroConfig,0,sizeof(m_GyroConfig));
 	clock_gettime(CLOCK_REALTIME, &m_LastTime);
 	m_RefCnt = 1;
 }
@@ -103,6 +104,8 @@ int ImuReader::Start(
 		m_MagDevice.Enable(1);
 	}
 
+	m_GyroConfig = droneConfig->Gyro;
+
 	clock_gettime(CLOCK_REALTIME, &m_LastTime);
 
 	/*
@@ -184,6 +187,7 @@ int ImuReader::IoDispatchThread()
 	SdIoPacket::Init(&ioPacket,SD_IOCODE_RECEIVE, GetDeviceId(), GetName());
 	ioPacket.inData.dataType = SdIoData::TYPE_IMU;
 	ioPacket.inData.asImuData = &m_ImuData;
+	ioPacket.startPluginAltitude = m_RunTime->GetMyAltitude();
 
 	if (0 != m_File) {
 		char buffer[256];
@@ -218,18 +222,23 @@ int ImuReader::IoDispatchThread()
 		ioPacket.deltaTime = DeltaT();
 	}
 
+	m_GyroData.clear();
 	for (unsigned int j = 0; j < m_ImuData.gyro_samples; j++) {
 		m_GyroData = m_GyroData + Vector3d(
 				m_ImuData.gyro[j].x, m_ImuData.gyro[j].y, m_ImuData.gyro[j].z);
 	}
-	m_GyroData = m_GyroData / m_ImuData.gyro_samples;
+	m_GyroData = m_GyroData / m_ImuData.gyro_samples * m_GyroConfig.Scale /
+			m_GyroConfig.MaxReading;
 
+	m_AccelData.clear();
 	for (unsigned int j = 0; j < m_ImuData.acc_samples; j++) {
 		m_AccelData = m_AccelData + Vector3d(
 				m_ImuData.acc[j].x, m_ImuData.acc[j].y, m_ImuData.acc[j].z);
 	}
 	m_AccelData = m_AccelData / m_ImuData.acc_samples;
+	m_AccelData = m_AccelData.normalize();
 
+	m_MagData.clear();
 	for (unsigned int j = 0; j < m_ImuData.mag_samples; j++) {
 		m_MagData = m_MagData + Vector3d(
 				m_ImuData.mag[j].x, m_ImuData.mag[j].y, m_ImuData.mag[j].z);

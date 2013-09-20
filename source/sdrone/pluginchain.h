@@ -62,7 +62,9 @@ private:
 	void ReferencePluginList(
 			RefedPluginListIterator* refList,
 			PluginContext* caller,
-			uint32_t dispatchFlags
+			uint32_t dispatchFlags,
+			SdDeviceId deviceFilter,
+			uint32_t ioFilter
 			);
 
 	void LockWrite();

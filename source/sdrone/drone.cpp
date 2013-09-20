@@ -65,8 +65,6 @@ Drone::Drone()
 
 	m_isRunning = true;
 	m_pluginsStarted = false;
-
-	InitInternalPlugins();
 }
 
 Drone::~Drone()
@@ -216,6 +214,8 @@ int Drone::Run(_CommandArgs* cmdArgs)
 {
 	int err = 0;
 	if (m_isRunning) {
+		// TEMP
+		InitInternalPlugins();
 		if (!m_pluginsStarted) {
 			if (0 == (err = m_pluginChain.StartPlugins(cmdArgs))) {
 				m_pluginsStarted = true;
@@ -229,6 +229,10 @@ int Drone::Run(_CommandArgs* cmdArgs)
 
 void Drone::InitInternalPlugins()
 {
+	static int initialized = 0;
+	if (!__sync_bool_compare_and_swap (&initialized, 0, 1)) {
+		return;
+	}
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_DEVICE);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_REMAP);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_BIAS);

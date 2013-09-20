@@ -272,15 +272,10 @@ void PluginChain::LockRead()
 void PluginChain::ReferencePluginList(
 		PluginChain::RefedPluginListIterator* refList,
 		PluginContext* caller,
-		uint32_t dispatchFlags)
+		uint32_t dispatchFlags,
+		SdDeviceId deviceFilter,
+		uint32_t ioFilter)
 {
-	uint32_t deviceFilter = 0;
-	uint32_t ioFilter = 0;
-	if (caller) {
-		deviceFilter = caller->m_plugin->GetDeviceId();
-		ioFilter = 0;//caller->GetPluginIoCodeFilter();
-	}
-
 	refList->Expand(m_chain.size());
 
 	LockRead();
@@ -326,9 +321,12 @@ int PluginChain::DispatchIo(
 {
 	int err = SD_ESUCCESS;
 	RefedPluginListIterator it;
-	ReferencePluginList(&it,caller,dispatchFlags);
+	ReferencePluginList(&it,caller,dispatchFlags,iop->deviceId,iop->ioCode);
 	for (it.BeginIterate(); 0 != it.Get() && SD_ESUCCESS == err; it.Next()) {
 		err = it.Get()->m_plugin->IoCallback(iop);
+	}
+	if (SD_ESTOP_DISPATCH == err) {
+		err = SD_ESUCCESS;
 	}
 	return err;
 }
@@ -362,7 +360,7 @@ int PluginChain::StopPlugins(bool detachPlugins)
 	RefedPluginListIterator it;
 	int stopFlag = detachPlugins ? IPlugin::FLAG_STOP_AND_DETACH : 0;
 	ReferencePluginList(&it,0,
-			SD_FLAG_DISPATCH_DOWN | SD_FLAG_DISPATCH_TO_ALL);
+			SD_FLAG_DISPATCH_DOWN | SD_FLAG_DISPATCH_TO_ALL, 0, 0);
 	for (it.BeginIterate(); 0 != it.Get(); it.Next()) {
 		it.Get()->m_plugin->Stop(stopFlag);
 	}
@@ -377,7 +375,7 @@ int PluginChain::ExecuteCommand(_CommandArgs* cmdArgs)
 	SdIoPacket::Init(&iop,SD_IOCODE_COMMAND,SD_DEVICEID_ALL,"bcast");
 	iop.inData.asCommandArgs = cmdArgs;
 	iop.inData.dataType = SdIoData::TYPE_COMMAND_ARGS;
-	ReferencePluginList(&it,0,SD_FLAG_DISPATCH_TO_ALL);
+	ReferencePluginList(&it,0,SD_FLAG_DISPATCH_TO_ALL,0,0);
 	for (it.BeginIterate(); 0 != it.Get() && SD_ESUCCESS == err; it.Next()) {
 		it.Get()->m_plugin->IoCallback(&iop);
 	}

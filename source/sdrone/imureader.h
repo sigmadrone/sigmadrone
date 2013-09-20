@@ -47,6 +47,7 @@ private:
 	Vector3d m_AccelData;
 	Vector3d m_GyroData;
 	Vector3d m_MagData;
+	SdImuDeviceConfig m_GyroConfig;
 	IPluginRuntime* m_RunTime;
 	int m_RefCnt;
 	FILE* m_File;
