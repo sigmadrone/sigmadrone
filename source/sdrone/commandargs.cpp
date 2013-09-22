@@ -33,6 +33,7 @@ _CommandArgs::_CommandArgs() :
 	m_parsedArgs.DroneCfg.Quad.Kp = 0.6;
 	m_parsedArgs.DroneCfg.Quad.Ki = 0.00000005;
 	m_parsedArgs.DroneCfg.Quad.Kd = 0.0015;
+	m_parsedArgs.DroneCfg.LogLevel = SD_LOG_LEVEL_VERBOSE;
 
 	m_targetAttitude = QuaternionD(1,0,0,0);
 }

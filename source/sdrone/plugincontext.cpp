@@ -11,6 +11,7 @@
 
 static void* s_myModuleHandle = (void*)-1;
 extern char **g_Argv;
+extern _CommandArgs g_CmdArgs;
 
 PluginContext::PluginContext(
 		IPlugin* plugin,
@@ -168,21 +169,25 @@ int PluginContext::Release()
 }
 
 void PluginContext::Log(
-		int severity,
+		int logLevel,
 		const char* format,
 		...)
 {
 	va_list args;
 	va_start (args, format);
-	Logv(severity,format,args);
+	Logv(logLevel,format,args);
 	va_end (args);
 }
 
 void PluginContext::Logv(
-	int severity,
+	int logLevel,
 	const char* format,
 	va_list args)
 {
+	if (logLevel > g_CmdArgs.GetDroneConfig()->LogLevel) {
+		return;
+	}
+	vfprintf(stdout,format,args);
 }
 
 uint32_t PluginContext::GetPluginDeviceFilter()

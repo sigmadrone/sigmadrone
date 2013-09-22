@@ -46,7 +46,7 @@ int QuadRotorPilot::AttachToChain(
 int QuadRotorPilot::Start(
 		CommandArgs* cmdArgs)
 {
-	const SdDroneConfig* config = cmdArgs->GetSdDroneConfig();
+	const SdDroneConfig* config = cmdArgs->GetDroneConfig();
 	assert(config);
 	assert(m_Runtime);
 	m_Config = config->Quad;

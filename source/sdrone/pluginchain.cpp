@@ -38,7 +38,7 @@ PluginChain::~PluginChain()
 
 int PluginChain::PluginAttach(
 	IPlugin* plugin,
-	SdPluginAltitude _desiredAltitude,
+	SdPluginAltitude desiredAltitude,
 	const char* const attachAbove[],
 	const char* const attachBelow[],
 	IPluginRuntime** pluginRuntime)
@@ -46,12 +46,9 @@ int PluginChain::PluginAttach(
 	int ret = EINVAL;
 	std::string lowerPlugins;
 	std::string upperPlugins;
-	SdPluginAltitude newAltitude = SD_ALTITUDE_INVALID;
+	SdPluginAltitude newAltitude = desiredAltitude;
 	SdPluginAltitude altitudeLo = SD_ALTITUDE_INVALID;
 	SdPluginAltitude altitudeHi = SD_ALTITUDE_INVALID;
-	SdPluginAltitude desiredAltitude = _desiredAltitude;
-	PluginMapIt itLo = m_chain.end();
-	PluginMapIt itHi = m_chain.end();
 	PluginContext* pluginContext = 0;
 
 	if (!plugin || !pluginRuntime) {
@@ -60,12 +57,12 @@ int PluginChain::PluginAttach(
 
 	*pluginRuntime = 0;
 
-	if (desiredAltitude >= SD_ALTITUDE_GROUP_LOWER_FILTER &&
+	if (newAltitude >= SD_ALTITUDE_GROUP_LOWER_FILTER &&
 		plugin->GetDeviceId() < SD_DEVICEID_FILTER) {
-		desiredAltitude = SD_ALTITUDE_GROUP_DEVICE;
+		newAltitude = SD_ALTITUDE_GROUP_DEVICE;
 	}
 	if (0 == attachAbove && 0 == attachBelow &&
-		!(desiredAltitude >= SD_ALTITUDE_FIRST && desiredAltitude <= SD_ALTITUDE_LAST)) {
+		!(newAltitude >= SD_ALTITUDE_FIRST && newAltitude <= SD_ALTITUDE_LAST)) {
 		return ret;
 	}
 
@@ -87,13 +84,13 @@ int PluginChain::PluginAttach(
 					ret = SD_EINVALID_DEPENDENCY; /*ABBA*/
 					goto __unlock_and_return;
 				}
-				itLo = it;
+				altitudeLo = it->second->GetMyAltitude();
 			}
 		}
 	}
 
-	if (m_chain.end() == itLo) {
-		itLo = FindNearestAltitude(desiredAltitude,true);
+	if (SD_ALTITUDE_INVALID == altitudeLo) {
+		altitudeLo = SD_ALTITUDE_FIRST_IN_GROUP(newAltitude);
 	}
 
 	if (upperPlugins.length()>0) {
@@ -105,19 +102,18 @@ int PluginChain::PluginAttach(
 					ret = SD_EINVALID_DEPENDENCY; /*ABBA*/
 					goto __unlock_and_return;
 				}
-				if (m_chain.end() == itHi) {
-					itHi = it;
+				if (SD_ALTITUDE_INVALID == altitudeHi) {
+					altitudeHi = it->second->GetMyAltitude();
 				}
 			}
 		}
 	}
 
-	if (m_chain.end() == itHi) {
-		itHi = FindNearestAltitude(desiredAltitude,false);
+	if (SD_ALTITUDE_INVALID == altitudeHi) {
+		altitudeHi = SD_ALTITUDE_LAST_IN_GROUP(newAltitude);
 	}
 
-	if (m_chain.end() != itHi && m_chain.end() != itLo &&
-		itHi->second->GetMyAltitude() < itLo->second->GetMyAltitude()) {
+	if (altitudeHi <= altitudeLo) {
 		/*
 		 * The plugin has conflicting dependencies
 		 */
@@ -125,53 +121,21 @@ int PluginChain::PluginAttach(
 		goto __unlock_and_return;
 	}
 
-	altitudeLo = SD_ALTITUDE_FIRST_IN_GROUP(desiredAltitude);
-	if (m_chain.end() != itLo) {
-		if (itLo->second->GetMyAltitude() > SD_ALTITUDE_LAST_IN_GROUP(desiredAltitude)) {
-			ret = SD_EINVALID_DEPENDENCY;
-			goto __unlock_and_return;
-		}
-		if (itLo->second->GetMyAltitude() <= SD_ALTITUDE_FIRST_IN_GROUP(desiredAltitude)) {
-			altitudeLo = SD_ALTITUDE_FIRST_IN_GROUP(desiredAltitude);
+	if (newAltitude < altitudeLo || newAltitude > altitudeHi) {
+		newAltitude = (altitudeLo+altitudeHi)/2;
+	}
+
+	while (m_chain.find(newAltitude) != m_chain.end())
+	{
+		assert(altitudeLo <= newAltitude && newAltitude <= altitudeHi);
+		if (newAltitude - altitudeLo > altitudeHi - newAltitude) {
+			altitudeHi = newAltitude;
 		} else {
-			altitudeLo = itLo->second->GetMyAltitude();
+			altitudeLo = newAltitude;
 		}
+		newAltitude = (altitudeLo+altitudeHi)/2;
 	}
 
-	altitudeHi = SD_ALTITUDE_LAST_IN_GROUP(desiredAltitude);
-	if (m_chain.end() != itHi) {
-		if (itHi->second->GetMyAltitude() < SD_ALTITUDE_FIRST_IN_GROUP(desiredAltitude)) {
-			ret = SD_EINVALID_DEPENDENCY;
-			goto __unlock_and_return;
-		}
-		if (itHi->second->GetMyAltitude() > SD_ALTITUDE_LAST_IN_GROUP(desiredAltitude)) {
-			altitudeHi = SD_ALTITUDE_LAST_IN_GROUP(desiredAltitude);
-		} else {
-			altitudeHi = itHi->second->GetMyAltitude();
-		}
-	}
-
-	if (altitudeLo == altitudeHi) {
-		PluginMapIt it = m_chain.find(altitudeLo);
-		assert(it != m_chain.end());
-		altitudeHi = SD_ALTITUDE_LAST_IN_GROUP(altitudeHi);
-		if (++it != m_chain.end()) {
-			altitudeHi = fmin(altitudeHi,it->second->GetMyAltitude());
-		}
-		if (altitudeLo == altitudeHi) {
-			assert(false);
-			ret = SD_EINVALID_DEPENDENCY;
-			goto __unlock_and_return;
-		}
-	}
-
-	if (altitudeLo < desiredAltitude && desiredAltitude > altitudeHi) {
-		newAltitude = desiredAltitude;
-	} else {
-		assert(altitudeLo < altitudeHi);
-		newAltitude = (altitudeLo + altitudeHi)/2;
-	}
-	assert(m_chain.find(newAltitude) == m_chain.end());
 
 	pluginContext = new PluginContext(plugin,this,
 			newAltitude,lowerPlugins,upperPlugins);
@@ -220,21 +184,6 @@ void PluginChain::PluginDetach(
 				pluginCtx->GetMyAltitude());
 		pluginCtx->Release();
 	}
-}
-
-PluginChain::PluginMapIt PluginChain::FindNearestAltitude(
-		SdPluginAltitude altitude,
-		bool low)
-{
-	for (PluginMapIt it = m_chain.begin(); it != m_chain.end(); it++) {
-		if (low && it->second->GetMyAltitude() == altitude) {
-			return it;
-		}
-		if (it->second->GetMyAltitude() > altitude) {
-			return low ? --it : it;
-		}
-	}
-	return m_chain.end();
 }
 
 bool PluginChain::IsStringInList(

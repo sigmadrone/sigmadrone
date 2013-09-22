@@ -12,17 +12,15 @@ OBJECTS		= \
 	main.o\
 	drone.o\
 	imudevice.o\
-	sensorreader.o\
-	missioncontrol.o\
 	servodevice.o\
 	quadrotorpilot.o\
-	pidpilot.o\
 	clientserver.o\
 	imureader.o\
 	navigator.o\
 	imufilterplugin.o\
 	imuremap.o\
-	imubias.o
+	imubias.o\
+	tracelogplugin.o
 
 all : $(TARGET)
 

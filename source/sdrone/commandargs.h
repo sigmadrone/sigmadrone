@@ -61,7 +61,7 @@ public:
 	int GetServerPort() { return m_parsedArgs.ServerPort; }
 	const char* GetHostAddress() { return m_parsedArgs.HostAddress; }
 	int GetTimeToSleep() { return m_parsedArgs.TimeToSleep; }
-	const SdDroneConfig* GetSdDroneConfig() { return &m_parsedArgs.DroneCfg; }
+	const SdDroneConfig* GetDroneConfig() { return &m_parsedArgs.DroneCfg; }
 private:
 	int m_argc;
 	char** m_argv;

@@ -52,7 +52,7 @@ int ImuReader::Start(
 {
 	int err = EINVAL;
 	Close();
-	const SdDroneConfig* droneConfig = cmdArgs->GetSdDroneConfig();
+	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
 	if (droneConfig->Accel.DeviceName == droneConfig->Gyro.DeviceName) {
 		/*
 		 * Operating in text mode

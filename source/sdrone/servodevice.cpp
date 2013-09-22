@@ -45,7 +45,7 @@ void ServoDevice::Close()
 
 int ServoDevice::Start(CommandArgs* cmdArgs)
 {
-	const SdDroneConfig* droneConfig = cmdArgs->GetSdDroneConfig();
+	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
 	const SdServoConfig* config = &droneConfig->Servo;
 	int err = EINVAL;
 

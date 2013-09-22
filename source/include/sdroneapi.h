@@ -240,6 +240,7 @@ typedef uint64_t SdDeviceId;
 #define SD_PLUGIN_PIDPILOT  "sd.pidpilot"
 #define SD_PLUGIN_NAVIGATOR "sd.navigator"
 #define SD_PLUGIN_SERVO_PCA9685 "sd.servo_pca9685"
+#define SD_PLUGIN_TRACELOG "sd.tracelog"
 
 #define SD_PLUGIN_VERSION "SigmaDronePlugin"
 
@@ -443,16 +444,17 @@ struct IPluginRuntime
 	virtual SdPluginAltitude GetMyAltitude() = 0;
 
 	virtual void Log(
-			int severity,
+			int logLevel,
 			const char* format,
 			...
 			) = 0;
 
 	virtual void Logv(
-			int severity,
+			int logLevel,
 			const char* format,
 			va_list args
 			) = 0;
+
 #if 0
 	/*
 	 * Returns altitude for any plugin
@@ -601,7 +603,7 @@ struct CommandArgs
 	virtual double GetMaxThrust() = 0;
 	virtual double GetDesiredThrust() = 0;
 	virtual const QuaternionD* GetTargetAttitude() = 0;
-	virtual const SdDroneConfig* GetSdDroneConfig() = 0;
+	virtual const SdDroneConfig* GetDroneConfig() = 0;
 protected:
 	virtual ~CommandArgs() {}
 };

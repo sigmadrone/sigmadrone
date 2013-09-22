@@ -37,7 +37,7 @@ int ImuRemap::AttachToChain(
 int ImuRemap::Start(
 	CommandArgs* cmdArgs)
 {
-	const SdDroneConfig* droneConfig = cmdArgs->GetSdDroneConfig();
+	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
 	m_AccelMap = droneConfig->AccMap;
 	m_GyroMap = droneConfig->GyroMap;
 	m_MagMap = droneConfig->MagMap;

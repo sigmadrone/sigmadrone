@@ -17,6 +17,7 @@
 #include "imubias.h"
 #include "imuremap.h"
 #include "imufilterplugin.h"
+#include "tracelogplugin.h"
 
 Drone* Drone::s_Only = 0;
 
@@ -102,94 +103,24 @@ int Drone::ExecuteCommand(
 	int err = EINVAL;
 	switch (cmdArgs->GetCommand()) {
 	case SD_COMMAND_RESET:
-		err = Reset(cmdArgs->GetSdDroneConfig(),false);
+		err = Reset(cmdArgs->GetDroneConfig(),false);
 		break;
 	case SD_COMMAND_EXIT:
 		err = Reset(0,true);
 		m_isRunning = false;
 		break;
 	case SD_COMMAND_RUN:
-		SetConfig(cmdArgs->GetSdDroneConfig());
+		SetConfig(cmdArgs->GetDroneConfig());
 		//SetThrust(cmdArgs->GetDesiredThrust());
 		//SetThrustRange(cmdArgs->GetMinThrust(),cmdArgs->GetMaxThrust());
 		err = Run(cmdArgs);
 		break;
 	case SD_COMMAND_NONE:
 	default:
-		SetConfig(cmdArgs->GetSdDroneConfig());
+		SetConfig(cmdArgs->GetDroneConfig());
 		break;
 	}
 	return err;
-}
-
-
-void Drone::PrintState(FILE* out)
-{
-#if 0
-	fprintf(out,"-->================ Iteration %lu ===================\n",
-			(unsigned long)m_Iteration);
-	const QuaternionD& attQ = m_ImuFilter->GetAttitude();
-	const Vector4d* mot = m_Pilot->GetMotors();
-	Vector3d x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
-	Vector3d gyroDps = m_ImuFilter->GetGyroData();
-	x = attQ.rotate(Vector3d(1, 0, 0));
-	y = attQ.rotate(Vector3d(0, 1, 0));
-	z = attQ.rotate(Vector3d(0, 0, 1));
-	fprintf(out,"--> X     : %1.3lf %1.3lf %1.3lf\n",x.at(0,0),x.at(1,0),x.at(2,0));
-	fprintf(out,"--> Y     : %1.3lf %1.3lf %1.3lf\n",y.at(0,0),y.at(1,0),y.at(2,0));
-	fprintf(out,"--> Z     : %1.3lf %1.3lf %1.3lf\n",z.at(0,0),z.at(1,0),z.at(2,0));
-	fprintf(out,"--> Q     : %1.3lf %1.3lf %1.3lf %1.3lf\n",
-			attQ.w,attQ.x,attQ.y,attQ.z);
-	fprintf(out,"--> Accel : %1.3lf %1.3lf %1.3lf\n",
-			m_ImuFilter->GetAccelData().at(0,0),
-			m_ImuFilter->GetAccelData().at(1,0),
-			m_ImuFilter->GetAccelData().at(2,0));
-	fprintf(out,"--> Gyro  : %4.3lf %4.3lf %4.3lf\n",
-			gyroDps.at(0,0), gyroDps.at(1,0), gyroDps.at(2,0));
-
-	fprintf(out,"--> Motor : %1.3lf %1.3lf %1.3lf %1.3lf\n",
-			mot->at(0,0),mot->at(1,0),mot->at(2,0),mot->at(3,0));
-	const Vector3d& err = m_Pilot->GetErrorAxis();
-	gyroDps = m_Pilot->GetOmega();
-	fprintf(out,"--> AngV  : %4.3lf %4.3lf %4.3lf\n",
-			gyroDps.at(0,0), gyroDps.at(1,0), gyroDps.at(2,0));
-	fprintf(out,"--> AngAcc: %4.3lf %4.3lf %4.3lf\n",
-			m_Pilot->GetAngularAccel().at(0,0),
-			m_Pilot->GetAngularAccel().at(1,0),
-			m_Pilot->GetAngularAccel().at(2,0));
-	fprintf(out,"--> Torque: %4.3lf %4.3lf %4.3lf Tc: %4.3f %4.3f %4.3f ErrAng: %4.3f\n",
-			err.at(0,0),err.at(1,0),err.at(2,0),
-			m_Pilot->GetTorqueCorrection().at(0,0),
-			m_Pilot->GetTorqueCorrection().at(1,0),
-			m_Pilot->GetTorqueCorrection().at(2,0),
-			m_Pilot->GetErrorAngle());
-
-	fprintf(out, "--> IMU %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf \n",
-			m_ImuFilter->GetAccelData().at(0,0),
-			m_ImuFilter->GetAccelData().at(1,0),
-			m_ImuFilter->GetAccelData().at(2,0),
-			gyroDps.at(0,0), gyroDps.at(1,0), gyroDps.at(2,0),
-			m_ImuFilter->GetMagData().at(0,0),
-			m_ImuFilter->GetMagData().at(1,0),
-			m_ImuFilter->GetMagData().at(2,0));
-
-	if (m_config.PrintRotationMatrix) {
-		QuaternionD tgtQ = m_MissionControl->GetDesiredAttitude();
-		fprintf(out,"--> Tgt Q : %1.3lf %1.3lf %1.3lf %1.3lf\n",
-				tgtQ.w,tgtQ.w,tgtQ.y,tgtQ.z);
-		fprintf(out,"--> Vg    : %1.3lf %1.3lf %1.3lf\n",
-					m_ImuFilter->GetVg().at(0,0),
-					m_ImuFilter->GetVg().at(1,0),
-					m_ImuFilter->GetVg().at(2,0));
-		Matrix4d rotMx = attQ.rotMatrix4();
-		fprintf(out, "%5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf \n",
-				rotMx.at(0, 0), rotMx.at(0, 1), rotMx.at(0, 2),
-				rotMx.at(1, 0), rotMx.at(1, 1), rotMx.at(1, 2),
-				rotMx.at(2, 0), rotMx.at(2, 1), rotMx.at(2, 2));
-	}
-
-	fprintf(out,"-->=====================================================\n");
-#endif
 }
 
 void Drone::PrintConfig(const SdDroneConfig* config)
@@ -241,6 +172,7 @@ void Drone::InitInternalPlugins()
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_NAVIGATOR);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_QUADPILOT);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_SERVO_PCA9685);
+	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_TRACELOG);
 }
 
 bool Drone::IsRunning(void)
@@ -321,6 +253,13 @@ int SdPluginInitialize(
 		if (0 != servoDev) {
 			servoDev->AttachToChain(droneContext,attachPlugin);
 			servoDev->Release();
+		}
+	}
+	if (0 == pluginName || 0 == (strcmp(pluginName,SD_PLUGIN_TRACELOG))){
+		TraceLogPlugin* tracer = new TraceLogPlugin();
+		if (0 != tracer) {
+			tracer->AttachToChain(droneContext,attachPlugin);
+			tracer->Release();
 		}
 	}
 	return 0;
