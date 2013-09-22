@@ -11,7 +11,6 @@
 #include <pthread.h>
 #include "axesdata.h"
 #include "dronedefs.h"
-#include "ipilot.h"
 #include "pluginchain.h"
 #include "commandargs.h"
 

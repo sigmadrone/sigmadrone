@@ -7,9 +7,7 @@
 
 #include "commoninc.h"
 #include "drone.h"
-#include "sensorreader.h"
 #include "quadrotorpilot.h"
-#include "pidpilot.h"
 #include "servodevice.h"
 #include "imufilter.h"
 #include "imureader.h"
