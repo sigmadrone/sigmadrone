@@ -52,6 +52,9 @@ public:
 		short3d_t* data,
 		size_t size
 		);
+	int SetWatermark(
+		int watermark
+		);
 
 	inline SdImuDeviceId GetDeviceId() { return m_DeviceId; }
 

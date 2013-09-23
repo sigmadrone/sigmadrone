@@ -80,8 +80,20 @@ int ImuReader::Start(
 			droneConfig->Mag.DeviceName,SD_IMU_DEVICE_MAG))) {
 			goto __return;
 		}
-		m_AccDevice.SetRate(droneConfig->Accel.Rate);
-		m_GyroDevice.SetRate(droneConfig->Gyro.Rate);
+		m_AccDevice.SetRate(droneConfig->Accel.SamplingRate);
+		m_AccDevice.GetRate(&readValue);
+		if (readValue != droneConfig->Accel.SamplingRate) {
+			printf("ERROR: read wrong accel rate value %d, expected %d\n",
+					readValue, droneConfig->Accel.SamplingRate);
+		}
+
+		m_GyroDevice.SetRate(droneConfig->Gyro.SamplingRate);
+		m_GyroDevice.GetRate(&readValue);
+		if (readValue != droneConfig->Gyro.SamplingRate) {
+			printf("ERROR: read wrong gyro rate value %d, expected %d\n",
+					readValue, droneConfig->Gyro.SamplingRate);
+		}
+
 		m_AccDevice.SetScale(droneConfig->Accel.Scale);
 		m_AccDevice.GetScale(&readValue);
 		if (readValue != droneConfig->Accel.Scale) {
@@ -94,6 +106,10 @@ int ImuReader::Start(
 			printf("ERROR: read wrong value for gyro scale %d, expected %d\n",
 					readValue, droneConfig->Gyro.Scale);
 		}
+
+		m_AccDevice.SetWatermark(droneConfig->Accel.Watermark);
+		m_GyroDevice.SetWatermark(droneConfig->Gyro.Watermark);
+
 		m_GyroDevice.Enable(0);
 		m_AccDevice.Enable(0);
 		m_GyroDevice.ResetFifo();
@@ -183,6 +199,8 @@ int ImuReader::IoCallback(
 int ImuReader::IoDispatchThread()
 {
 	int ret = 0;
+	static int totalSamples = 0;
+
 	SdIoPacket ioPacket;
 	SdIoPacket::Init(&ioPacket,SD_IOCODE_RECEIVE, GetDeviceId(), GetName());
 	ioPacket.inData.dataType = SdIoData::TYPE_IMU;
@@ -231,6 +249,7 @@ int ImuReader::IoDispatchThread()
 	m_GyroData = m_GyroData / m_ImuData.gyro_samples * m_GyroConfig.Scale /
 			m_GyroConfig.MaxReading;
 
+
 	m_AccelData.clear();
 	for (unsigned int j = 0; j < m_ImuData.acc_samples; j++) {
 		m_AccelData = m_AccelData + Vector3d(
@@ -238,6 +257,11 @@ int ImuReader::IoDispatchThread()
 	}
 	m_AccelData = m_AccelData / m_ImuData.acc_samples;
 	m_AccelData = m_AccelData.normalize();
+
+	if ((totalSamples++ % 200) == 0) {
+		m_RunTime->Log(SD_LOG_LEVEL_VERBOSE,"--> Gyro  : %d, Acc:  %d samples\n",
+				m_ImuData.gyro_samples,m_ImuData.acc_samples);
+	}
 
 	m_MagData.clear();
 	for (unsigned int j = 0; j < m_ImuData.mag_samples; j++) {

@@ -38,8 +38,12 @@ int ImuBias::AttachToChain(
 int ImuBias::Start(
 	CommandArgs* cmdArgs)
 {
-	m_NumBiasSamples = 1000; // todo: must be controlled
+	m_NumBiasSamples = cmdArgs->GetDroneConfig()->Gyro.NumBiasSamples;
 	m_CurrentBiasSamples = 0;
+	m_Runtime->Log(SD_LOG_LEVEL_INFO,
+			"--> Will calculate bias for %d samples (%2.3lf sec), stay still...\n",
+			(double)m_NumBiasSamples/cmdArgs->GetDroneConfig()->Gyro.SamplingRate,
+			m_NumBiasSamples);
 	m_Runtime->SetIoFilters(
 		SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
 		SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
@@ -96,12 +100,24 @@ int ImuBias::IoCallback(
 			m_EarthG = m_EarthG + *ioPacket->accelData;
 			m_GyroBias = m_GyroBias + *ioPacket->gyroDataDps;
 			++m_CurrentBiasSamples;
+			if (0 == (m_CurrentBiasSamples % 100)) {
+				m_Runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Collecting bias sample %d\n",
+					m_CurrentBiasSamples);
+			}
 			return SD_ESTOP_DISPATCH;
 		}
 		if (m_CurrentBiasSamples == m_NumBiasSamples) {
 			m_EarthG = m_EarthG / m_NumBiasSamples;
 			m_GyroBias = m_GyroBias / m_NumBiasSamples;
 			++m_CurrentBiasSamples; // so we will not perform the div again
+
+			m_Runtime->Log(SD_LOG_LEVEL_INFO,"--> Done calculating bias!\n");
+			m_Runtime->Log(SD_LOG_LEVEL_INFO,"--> Earth G:   %1.3lf %1.3lf %1.3lf\n",
+					m_EarthG.at(0,0),
+					m_EarthG.at(1,0),
+					m_EarthG.at(2,0));
+			m_Runtime->Log(SD_LOG_LEVEL_INFO,"--> Gyro Bias: %4.3lf %4.3lf %4.3lf\n",
+					m_GyroBias.at(0,0), m_GyroBias.at(1,0), m_GyroBias.at(2,0));
 		}
 		m_GyroData = *ioPacket->gyroDataDps - m_GyroBias;
 		ioPacket->gyroDataDps = &m_GyroData;

@@ -15,22 +15,24 @@
 	"GlobalConfig": {
 		"Gyro": {
 			"DeviceName": "/dev/gyro0",
-			"Rate": 400,
+			"Sampling Rate": 400,
 			"Scale": 2000,
-			"MaxReading": 32768	
+			"MaxReading": 32768,
+			"Watermark": 2
 		},
 		"Accelerometer": {
 			"DeviceName": "/dev/accel0",
-			"Rate": 400,
+			"SamplingRate": 400,
 			"Scale": 4,
-			"MaxReading": 32768
+			"MaxReading": 32768,
+			"Watermark": 2
 		},
 		"Magnetometer": {
 			"DeviceName": "/dev/mag0"
 		},
 		"Servo": {
 			"DeviceName": "/dev/pwm0",
-			"Rate": 320,
+			"SamplingRate": 400,
 			"ChannelMask": "0xff",
 			"BitCount": 12
 		},
@@ -48,8 +50,9 @@
 			"RoleIsClient": false
 		},
 		"LogLevel": "Verbose",
-		"PrintRotationMatrix": false,
+		"LogRotationMatrix": false,
 		"LogFileName": "stdout"
+		"LogRate": 200
 	},
 	
 	"Flight": {

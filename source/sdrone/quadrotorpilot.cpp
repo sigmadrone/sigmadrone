@@ -51,7 +51,7 @@ int QuadRotorPilot::Start(
 	assert(m_Runtime);
 	m_Config = config->Quad;
 	m_PidCtl.Reset(m_Config.Kp,m_Config.Ki,m_Config.Kd,15);
-	m_Dt = 1.0/config->Gyro.Rate;
+	m_Dt = 1.0/config->Gyro.SamplingRate;
 	m_Counter = 0;
 	m_Motors.clear();
 	m_PrevErrQ = QuaternionD(1, 0, 0, 0);

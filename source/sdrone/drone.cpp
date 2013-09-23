@@ -43,11 +43,11 @@ Drone::Drone()
 
 	memset(&m_config,0,sizeof(m_config));
 	m_config.Accel.DeviceName = "/dev/accel0";
-	m_config.Accel.Rate = 200;
+	m_config.Accel.SamplingRate = 200;
 	m_config.Accel.Scale = 4;
 	m_config.Accel.MaxReading = 32768;
 	m_config.Gyro.DeviceName = "/dev/gyro0";
-	m_config.Gyro.Rate = 200;
+	m_config.Gyro.SamplingRate = 200;
 	m_config.Gyro.Scale = 2000;
 	m_config.Gyro.MaxReading = 32768;
 	m_config.Mag.DeviceName = "/dev/mag0";
@@ -124,20 +124,22 @@ int Drone::ExecuteCommand(
 void Drone::PrintConfig(const SdDroneConfig* config)
 {
 	printf("Drone configuration:\n");
-	printf("Gyro device:  %s\n",config->Gyro.DeviceName);
-	printf("Gyro rate:    %d Hz\n",config->Gyro.Rate);
-	printf("Gyro scale:   %d DPS\n",config->Gyro.Scale);
-	printf("Accel device: %s\n",config->Accel.DeviceName);
-	printf("Accel rate:   %d Hz\n",config->Accel.Rate);
-	printf("Accel scale:  %d G\n",config->Accel.Scale);
-	printf("Compass:      %s\n",config->Mag.DeviceName);
-	printf("IMU Angle:    %d\n",config->Quad.ImuAngleAxisZ);
+	printf("Gyro device:    %s\n",config->Gyro.DeviceName);
+	printf("Gyro rate:      %d Hz\n",config->Gyro.SamplingRate);
+	printf("Gyro scale:     %d DPS\n",config->Gyro.Scale);
+	printf("Gyro watermark: %d\n",config->Gyro.Watermark);
+	printf("Accel device:   %s\n",config->Accel.DeviceName);
+	printf("Accel rate:     %d Hz\n",config->Accel.SamplingRate);
+	printf("Accel scale:    %d G\n",config->Accel.Scale);
+	printf("Accel watermrk: %d\n",config->Accel.Watermark);
+	printf("Compass:        %s\n",config->Mag.DeviceName);
+	printf("IMU Angle:      %d\n",config->Quad.ImuAngleAxisZ);
 	for (int i = 0; (size_t)i < ARRAYSIZE(config->Quad.Motor); i++) {
-		printf("Quad M%d:      Servo %d\n",i,config->Quad.Motor[i]);
+		printf("Quad M%d:        Servo %d\n",i,config->Quad.Motor[i]);
 	}
-	printf("Kp:           %1.8f\n", config->Quad.Kp);
-	printf("Ki:           %1.8f\n", config->Quad.Ki);
-	printf("Kd:           %1.8f\n", config->Quad.Kd);
+	printf("Kp:             %1.8f\n", config->Quad.Kp);
+	printf("Ki:             %1.8f\n", config->Quad.Ki);
+	printf("Kd:             %1.8f\n", config->Quad.Kd);
 }
 
 int Drone::Run(_CommandArgs* cmdArgs)
@@ -147,6 +149,7 @@ int Drone::Run(_CommandArgs* cmdArgs)
 		// TEMP
 		InitInternalPlugins();
 		if (!m_pluginsStarted) {
+			PrintConfig(cmdArgs->GetDroneConfig());
 			if (0 == (err = m_pluginChain.StartPlugins(cmdArgs))) {
 				m_pluginsStarted = true;
 			}

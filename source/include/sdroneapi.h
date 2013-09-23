@@ -59,10 +59,32 @@ typedef enum _SdPilotType
 typedef struct _SdImuDeviceConfig
 {
 	const char* DeviceName;
-	int Rate;
+
+	/*
+	 * Sampling rate
+	 */
+	int SamplingRate;
+
+	/*
+	 * Degrees per second for gyro and number of Gs for accelerometer
+	 */
 	int Scale;
+
+	/*
+	 * Max value of a read sample
+	 */
 	int MaxReading;
+
+	/*
+	 * For how many samples are used for gyro bias calculation and earth G
+	 * vector
+	 */
 	int NumBiasSamples;
+
+	/*
+	 * How many samples to collect prior to firing an interrupt
+	 */
+	int Watermark;
 } SdImuDeviceConfig;
 
 typedef struct _SdServoConfig
@@ -98,11 +120,16 @@ typedef struct _SdDroneConfig
 	Matrix3d GyroMap;
 	Matrix3d AccMap;
 	Matrix3d MagMap;
-	int LogLevel;
 	const char* ServerAddress;
 	int ServerPort;
-	int PrintRotationMatrix;
+	int LogRotationMatrix;
+	int LogLevel;
 	const char* LogFileName;
+
+	/*
+	 * How many times per second the logger should log
+	 */
+	double LogRate;
 } SdDroneConfig;
 
 typedef enum _SdImuDeviceId

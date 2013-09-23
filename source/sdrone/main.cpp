@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
 
 		// wait for server thread to terminate
 		while (0 != clientSrv.IsServerThreadRunning()) {
-			millisleep(g_CmdArgs.GetTimeToSleep());
+			millisleep(1000);
 			if (!theDrone->IsRunning()) {
 				string cmdLine;
 				const char* exitCmd[] = {

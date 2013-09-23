@@ -13,8 +13,10 @@ TraceLogPlugin::TraceLogPlugin()
 	m_runtime = 0;
 	m_refCnt = 1;
 	m_iteration = 0;
-	m_printRotMatrix = 0;
+	m_logRotMatrix = 0;
 	m_logLevel = SD_LOG_LEVEL_NONE;
+	m_logPeriod = 0.1;
+	m_timeAfterLastLog = 0;
 }
 
 TraceLogPlugin::~TraceLogPlugin()
@@ -41,7 +43,8 @@ int TraceLogPlugin::Start(
 {
 	m_iteration = 0;
 	m_logLevel = cmdArgs->GetDroneConfig()->LogLevel;
-	m_printRotMatrix = cmdArgs->GetDroneConfig()->PrintRotationMatrix;
+	m_logRotMatrix = cmdArgs->GetDroneConfig()->LogRotationMatrix;
+	m_logPeriod = 1.0/(double)cmdArgs->GetDroneConfig()->LogRate;
 	m_runtime->SetIoFilters(
 		SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
 		SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
@@ -93,6 +96,15 @@ const char* TraceLogPlugin::GetDlFileName()
 int TraceLogPlugin::IoCallback(
 	SdIoPacket* ioPacket)
 {
+	++m_iteration;
+	m_timeAfterLastLog += ioPacket->deltaTime;
+
+	if (m_timeAfterLastLog < m_logPeriod) {
+		return SD_ESUCCESS;
+	}
+
+	m_timeAfterLastLog = 0;
+
 	if (m_logLevel < SD_LOG_LEVEL_VERBOSE) {
 		return SD_ESUCCESS;
 	}
@@ -108,6 +120,8 @@ int TraceLogPlugin::IoCallback(
 	y = attQ->rotate(Vector3d(0, 1, 0));
 	z = attQ->rotate(Vector3d(0, 0, 1));
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+			"--> dT,s  : %1.6lf\n", ioPacket->deltaTime);
+	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
 			"--> X     : %1.3lf %1.3lf %1.3lf\n",x.at(0,0),x.at(1,0),x.at(2,0));
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
 			"--> Y     : %1.3lf %1.3lf %1.3lf\n",y.at(0,0),y.at(1,0),y.at(2,0));
@@ -120,8 +134,12 @@ int TraceLogPlugin::IoCallback(
 			ioPacket->accelData->at(0,0),
 			ioPacket->accelData->at(1,0),
 			ioPacket->accelData->at(2,0));
-	m_runtime->Log(SD_LOG_LEVEL_VERBOSE, "--> Gyro: %4.3lf %4.3lf %4.3lf\n",
+	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Gyro:  %4.3lf %4.3lf %4.3lf\n",
 			gyroDps->at(0,0), gyroDps->at(1,0), gyroDps->at(2,0));
+	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Mag:   %1.3lf %1.3lf %1.3lf\n",
+				ioPacket->magData->at(0,0),
+				ioPacket->magData->at(1,0),
+				ioPacket->magData->at(2,0));
 
 	if (0 != mot) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Motor : %1.3lf %1.3lf %1.3lf %1.3lf\n",
@@ -150,7 +168,7 @@ int TraceLogPlugin::IoCallback(
 			m_ImuFilter->GetMagData().at(2,0));
 #endif
 
-	if (m_printRotMatrix) {
+	if (m_logRotMatrix) {
 		const QuaternionD* tgtQ = ioPacket->targetQ;
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Tgt Q : %1.3lf %1.3lf %1.3lf %1.3lf\n",
 				tgtQ->w,tgtQ->w,tgtQ->y,tgtQ->z);
@@ -164,7 +182,7 @@ int TraceLogPlugin::IoCallback(
 
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
 			"<-- ================ End Iteration %lu ===================\n\n",
-			(unsigned long)m_iteration++);
+			(unsigned long)m_iteration);
 
 	return SD_ESUCCESS;
 }

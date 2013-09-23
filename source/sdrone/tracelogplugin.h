@@ -37,7 +37,9 @@ private:
 private:
 	uint32_t m_iteration;
 	uint32_t m_logLevel;
-	int m_printRotMatrix;
+	int m_logRotMatrix;
+	double m_logPeriod;
+	double m_timeAfterLastLog;
 	IPluginRuntime* m_runtime;
 	int m_refCnt;
 };

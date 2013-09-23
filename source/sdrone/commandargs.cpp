@@ -14,26 +14,30 @@ _CommandArgs::_CommandArgs() :
 {
 	memset(&m_parsedArgs,0,sizeof(m_parsedArgs));
 	m_parsedArgs.DroneCfg.Accel.DeviceName = "/dev/accel0";
-	m_parsedArgs.DroneCfg.Accel.Rate = 200;
+	m_parsedArgs.DroneCfg.Accel.SamplingRate = 200;
 	m_parsedArgs.DroneCfg.Accel.Scale = 4;
 	m_parsedArgs.DroneCfg.Accel.MaxReading = 32768;
+	m_parsedArgs.DroneCfg.Accel.Watermark = 2;
 	m_parsedArgs.DroneCfg.Gyro.DeviceName = "/dev/gyro0";
-	m_parsedArgs.DroneCfg.Gyro.Rate = 200;
+	m_parsedArgs.DroneCfg.Gyro.SamplingRate = 200;
 	m_parsedArgs.DroneCfg.Gyro.Scale = 2000;
 	m_parsedArgs.DroneCfg.Gyro.MaxReading = 32768;
+	m_parsedArgs.DroneCfg.Gyro.NumBiasSamples = 1000;
+	m_parsedArgs.DroneCfg.Gyro.Watermark = 2;
 	m_parsedArgs.DroneCfg.Mag.DeviceName = "/dev/mag0";
 	m_parsedArgs.DroneCfg.Servo.DeviceName = "/dev/pwm0";
 	m_parsedArgs.DroneCfg.Servo.ChannelMask = 0xff;
 	m_parsedArgs.DroneCfg.Servo.Rate = 100;
 	m_parsedArgs.DroneCfg.Quad.Motor[0] = 0;
-	m_parsedArgs.DroneCfg.Quad.Motor[1] = 2;
-	m_parsedArgs.DroneCfg.Quad.Motor[2] = 3;
-	m_parsedArgs.DroneCfg.Quad.Motor[3] = 4;
+	m_parsedArgs.DroneCfg.Quad.Motor[1] = 1;
+	m_parsedArgs.DroneCfg.Quad.Motor[2] = 2;
+	m_parsedArgs.DroneCfg.Quad.Motor[3] = 3;
 	m_parsedArgs.DroneCfg.Quad.ImuAngleAxisZ = 45;
 	m_parsedArgs.DroneCfg.Quad.Kp = 0.6;
 	m_parsedArgs.DroneCfg.Quad.Ki = 0.00000005;
 	m_parsedArgs.DroneCfg.Quad.Kd = 0.0015;
 	m_parsedArgs.DroneCfg.LogLevel = SD_LOG_LEVEL_VERBOSE;
+	m_parsedArgs.DroneCfg.LogRate = 1;
 
 	m_targetAttitude = QuaternionD(1,0,0,0);
 }
@@ -75,7 +79,7 @@ void _CommandArgs::PrintUsage()
 			0.3);
 	fprintf(stdout, " --maxthrust <0..99>     Max thrust value per motor, default is %1.2f\n",
 			0.99);
-	fprintf(stdout, " --sleep   <MILLISECS>   Time to sleep between state dump\n");
+	fprintf(stdout, " --lograte               How many times to log per second\n");
 	fprintf(stdout, " --log     <FILENAME>    Capture daemon output to file\n");
 	fprintf(stdout, " --infile  <FILENAME>    Input file for IMU readings, testing only\n");
 	fprintf(stdout, " --outfile <FILENAME>    Out file for servo, testing only\n");
@@ -151,7 +155,7 @@ _CommandArgs::ParseArgs(
 			}
 		} else if (strcmp(m_argv[i], "--rate") == 0) {
 			if (++i < m_argc) {
-				droneCfg->Accel.Rate = droneCfg->Gyro.Rate = atoi(m_argv[i]);
+				droneCfg->Accel.SamplingRate = droneCfg->Gyro.SamplingRate = atoi(m_argv[i]);
 			}
 		} else if (strcmp(m_argv[i], "--motor") == 0) {
 			if (i+2 < m_argc) {
@@ -207,10 +211,9 @@ _CommandArgs::ParseArgs(
 			if (++i < m_argc) {
 				droneCfg->Servo.DeviceName = m_argv[i];
 			}
-		} else if (strcmp(m_argv[i], "--sleep") == 0) {
+		} else if (strcmp(m_argv[i], "--lograte") == 0) {
 			if (++i < m_argc) {
-				int timeToSleep = atoi(m_argv[i]);
-				m_parsedArgs.TimeToSleep = (timeToSleep >= 0) ? timeToSleep : 1000;
+				droneCfg->LogRate = atof(m_argv[i]);
 			}
 		} else if (strcmp(m_argv[i], "--imuangle") == 0) {
 			if (++i < m_argc) {
@@ -219,7 +222,7 @@ _CommandArgs::ParseArgs(
 		} else if (strcmp(m_argv[i], "--pid-pilot") == 0) {
 			droneCfg->Pilot = SD_PILOT_TYPE_PID;
 		} else if (strcmp(m_argv[i], "--rot-matrix") == 0) {
-			droneCfg->PrintRotationMatrix = 1;
+			droneCfg->LogRotationMatrix = 1;
 		} else {
 			return false;
 		}

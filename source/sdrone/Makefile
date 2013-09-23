@@ -1,9 +1,10 @@
-#CROSS_COMPILE = arm-linux-gnueabi-
+CROSS_COMPILE=arm-linux-gnueabi-
 CPP	    	= $(CROSS_COMPILE)g++
 CC          = $(CROSS_COMPILE)gcc
 INCLUDES    = -I../include
 LIBS		= -lm -lrt -lpthread -ldl
-CFLAGS		= -g -O0 -Wall
+#use -Wno-psabi to turn off warnings about ABI changes for va-list in GCC 4.4
+CFLAGS		= -g -O0 -Wall -Wno-psabi
 TARGET		= sdroned
 OBJECTS		= \
 	commandargs.o\

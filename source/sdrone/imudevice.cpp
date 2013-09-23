@@ -193,3 +193,15 @@ int ImuDevice::ReadData(short3d_t* data, size_t size)
 	}
 	return ret/sizeof(short3d_t);
 }
+
+int ImuDevice::SetWatermark(
+	int watermark)
+{
+	int err = ioctl(m_Fid,AXISDATA_IOC_SETWATERMARK, watermark);
+	if (err < 0) {
+		err = errno;
+		printf("ERROR: AXISDATA_IOC_SETWATERMARK %s failed, scale %d, err=%d/%s\n",
+				m_DeviceName, watermark, err, strerror(err));
+	}
+	return err;
+}
