@@ -40,8 +40,9 @@ private:
 	Vector3d m_GyroData;
 	Vector3d m_EarthG;
 	Vector3d m_GyroBias;
-	uint32_t m_NumBiasSamples;
 	uint32_t m_CurrentBiasSamples;
+	double m_ElapsedTime;
+	double m_TotalBiasCalcTime;
 	IPluginRuntime* m_Runtime;
 	int m_RefCnt;
 };

@@ -13,7 +13,8 @@ ImuBias::ImuBias()
 {
 	m_Runtime = 0;
 	m_RefCnt = 1;
-	m_NumBiasSamples = m_CurrentBiasSamples = 0;
+	m_CurrentBiasSamples = 0;
+	m_ElapsedTime = m_TotalBiasCalcTime = 0;
 }
 
 ImuBias::~ImuBias()
@@ -38,12 +39,13 @@ int ImuBias::AttachToChain(
 int ImuBias::Start(
 	CommandArgs* cmdArgs)
 {
-	m_NumBiasSamples = cmdArgs->GetDroneConfig()->Gyro.NumBiasSamples;
+	double biasSamples = cmdArgs->GetDroneConfig()->Gyro.NumBiasSamples;
 	m_CurrentBiasSamples = 0;
+	m_ElapsedTime = 0;
+	m_TotalBiasCalcTime = (double)biasSamples/cmdArgs->GetDroneConfig()->Gyro.SamplingRate;
 	m_Runtime->Log(SD_LOG_LEVEL_INFO,
 			"--> Will calculate bias for %d samples (%2.3lf sec), stay still...\n",
-			(double)m_NumBiasSamples/cmdArgs->GetDroneConfig()->Gyro.SamplingRate,
-			m_NumBiasSamples);
+			m_TotalBiasCalcTime, biasSamples);
 	m_Runtime->SetIoFilters(
 		SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
 		SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
@@ -96,20 +98,19 @@ int ImuBias::IoCallback(
 	SdIoPacket* ioPacket)
 {
 	if (!!ioPacket->accelData && !!ioPacket->gyroDataDps && !!ioPacket->magData) {
-		if (m_CurrentBiasSamples < m_NumBiasSamples) {
+		if (m_ElapsedTime < m_TotalBiasCalcTime) {
+
 			m_EarthG = m_EarthG + *ioPacket->accelData;
 			m_GyroBias = m_GyroBias + *ioPacket->gyroDataDps;
-			++m_CurrentBiasSamples;
-			if (0 == (m_CurrentBiasSamples % 100)) {
-				m_Runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Collecting bias sample %d\n",
-					m_CurrentBiasSamples);
+			m_CurrentBiasSamples++;
+			m_ElapsedTime += ioPacket->deltaTime;
+
+			if (m_ElapsedTime < m_TotalBiasCalcTime) {
+				return SD_ESTOP_DISPATCH;
 			}
-			return SD_ESTOP_DISPATCH;
-		}
-		if (m_CurrentBiasSamples == m_NumBiasSamples) {
-			m_EarthG = m_EarthG / m_NumBiasSamples;
-			m_GyroBias = m_GyroBias / m_NumBiasSamples;
-			++m_CurrentBiasSamples; // so we will not perform the div again
+
+			m_EarthG = m_EarthG / m_CurrentBiasSamples;
+			m_GyroBias = m_GyroBias / m_CurrentBiasSamples;
 
 			m_Runtime->Log(SD_LOG_LEVEL_INFO,"--> Done calculating bias!\n");
 			m_Runtime->Log(SD_LOG_LEVEL_INFO,"--> Earth G:   %1.3lf %1.3lf %1.3lf\n",

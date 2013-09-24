@@ -96,6 +96,10 @@ const char* TraceLogPlugin::GetDlFileName()
 int TraceLogPlugin::IoCallback(
 	SdIoPacket* ioPacket)
 {
+	const QuaternionD* attQ;
+	const Vector4d* mot;
+	Vector3d x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
+
 	++m_iteration;
 	m_timeAfterLastLog += ioPacket->deltaTime;
 
@@ -108,19 +112,39 @@ int TraceLogPlugin::IoCallback(
 	if (m_logLevel < SD_LOG_LEVEL_VERBOSE) {
 		return SD_ESUCCESS;
 	}
+	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+			"--> dT,s  : %1.6lf  %1.6f (sensor read)\n",
+			ioPacket->deltaTime, ioPacket->timeToReadSensors);
+
+	if (ioPacket->accelData) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Accel : %1.3lf %1.3lf %1.3lf\n",
+				ioPacket->accelData->at(0,0),
+				ioPacket->accelData->at(1,0),
+				ioPacket->accelData->at(2,0));
+	}
+
+	const Vector3d* gyroDps = ioPacket->gyroDataDps;
+	if (gyroDps) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Gyro  : %4.3lf %4.3lf %4.3lf\n",
+				gyroDps->at(0,0), gyroDps->at(1,0), gyroDps->at(2,0));
+	}
+
+	if (ioPacket->magData) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Mag   : %1.3lf %1.3lf %1.3lf\n",
+				ioPacket->magData->at(0,0),
+				ioPacket->magData->at(1,0),
+				ioPacket->magData->at(2,0));
+	}
 
 	if (!ioPacket->attitudeQ) {
-		return SD_ESUCCESS;
+		goto __return;
 	}
-	const QuaternionD* attQ = ioPacket->attitudeQ;
-	const Vector4d* mot = ioPacket->motors;
-	Vector3d x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
-	const Vector3d* gyroDps = ioPacket->gyroDataDps;
+
+	attQ = ioPacket->attitudeQ;
+	mot = ioPacket->motors;
 	x = attQ->rotate(Vector3d(1, 0, 0));
 	y = attQ->rotate(Vector3d(0, 1, 0));
 	z = attQ->rotate(Vector3d(0, 0, 1));
-	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-			"--> dT,s  : %1.6lf\n", ioPacket->deltaTime);
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
 			"--> X     : %1.3lf %1.3lf %1.3lf\n",x.at(0,0),x.at(1,0),x.at(2,0));
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
@@ -130,16 +154,6 @@ int TraceLogPlugin::IoCallback(
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
 			"--> Q     : %1.3lf %1.3lf %1.3lf %1.3lf\n",
 			attQ->w,attQ->x,attQ->y,attQ->z);
-	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Accel: %1.3lf %1.3lf %1.3lf\n",
-			ioPacket->accelData->at(0,0),
-			ioPacket->accelData->at(1,0),
-			ioPacket->accelData->at(2,0));
-	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Gyro:  %4.3lf %4.3lf %4.3lf\n",
-			gyroDps->at(0,0), gyroDps->at(1,0), gyroDps->at(2,0));
-	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Mag:   %1.3lf %1.3lf %1.3lf\n",
-				ioPacket->magData->at(0,0),
-				ioPacket->magData->at(1,0),
-				ioPacket->magData->at(2,0));
 
 	if (0 != mot) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Motor : %1.3lf %1.3lf %1.3lf %1.3lf\n",
@@ -180,6 +194,7 @@ int TraceLogPlugin::IoCallback(
 				rotMx.at(2, 0), rotMx.at(2, 1), rotMx.at(2, 2));
 	}
 
+	__return:
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
 			"<-- ================ End Iteration %lu ===================\n\n",
 			(unsigned long)m_iteration);

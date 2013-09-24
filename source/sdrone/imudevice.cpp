@@ -116,6 +116,7 @@ int ImuDevice::ResetFifo()
 
 int ImuDevice::SetRate(int rate)
 {
+	printf("%s SetRate %d\n", m_DeviceName, rate);
 	int err = ioctl(m_Fid,AXISDATA_IOC_SETRATE,rate);
 	if (err < 0) {
 		printf("ERROR: AXISDATA_IOC_SETRATE %s failed, err=%d\n",

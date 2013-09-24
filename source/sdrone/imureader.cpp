@@ -114,9 +114,13 @@ int ImuReader::Start(
 		m_AccDevice.Enable(0);
 		m_GyroDevice.ResetFifo();
 		m_AccDevice.ResetFifo();
-		m_MagDevice.SetReadDataThrottle(15);
+
+
 		m_GyroDevice.Enable(1);
+
 		m_AccDevice.Enable(1);
+
+		m_MagDevice.SetReadDataThrottle(15);
 		m_MagDevice.Enable(1);
 	}
 
@@ -198,6 +202,7 @@ int ImuReader::IoCallback(
 
 int ImuReader::IoDispatchThread()
 {
+	double deltaT0 = 0;
 	int ret = 0;
 	static int totalSamples = 0;
 
@@ -223,22 +228,28 @@ int ImuReader::IoDispatchThread()
 			goto __return;
 		}
 	} else {
+		deltaT0 = DeltaT();
+
 		ret = m_GyroDevice.ReadData(m_ImuData.gyro, sizeof(m_ImuData.gyro));
 		if (ret < 0) {
 			goto __return;
 		}
 		m_ImuData.gyro_samples = ret;
+
 		ret = m_AccDevice.ReadData(m_ImuData.acc, sizeof(m_ImuData.acc));
 		if (ret < 0) {
 			goto __return;
 		}
 		m_ImuData.acc_samples = ret;
+
 		ret = m_MagDevice.ReadData(m_ImuData.mag, sizeof(m_ImuData.mag));
 		if (ret < 0) {
 			goto __return;
 		}
 		m_ImuData.mag_samples = ret;
-		ioPacket.deltaTime = DeltaT();
+		ioPacket.timeToReadSensors = DeltaT();
+
+		ioPacket.deltaTime = ioPacket.timeToReadSensors+deltaT0;
 	}
 
 	m_GyroData.clear();
@@ -258,8 +269,10 @@ int ImuReader::IoDispatchThread()
 	m_AccelData = m_AccelData / m_ImuData.acc_samples;
 	m_AccelData = m_AccelData.normalize();
 
-	if ((totalSamples++ % 200) == 0) {
-		m_RunTime->Log(SD_LOG_LEVEL_VERBOSE,"--> Gyro  : %d, Acc:  %d samples\n",
+	if ((totalSamples++ % 100) == 0) {
+		m_RunTime->Log(SD_LOG_LEVEL_DEBUG,"deltaT0: %1.6f totalDeltaT: %1.6f\n",
+				deltaT0,ioPacket.deltaTime);
+		m_RunTime->Log(SD_LOG_LEVEL_DEBUG,"--> Gyro  : %d, Acc:  %d samples\n",
 				m_ImuData.gyro_samples,m_ImuData.acc_samples);
 	}
 
