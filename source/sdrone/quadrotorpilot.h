@@ -54,9 +54,8 @@ private:
 	const Vector3d& GetDesiredOmega() const { return m_DesiredOmega; }
 
 	int UpdateState(
-			const QuaternionD& attitudeQ,
-			const QuaternionD& targetQ,
-			const Vector3d& _currentOmega);
+			const SdIoPacket*
+			);
 
 	static double GetTorqueScale(
 			double errAngle
@@ -102,7 +101,6 @@ private:
 	double m_MaxRev;
 	double m_DesiredRev;
 	int m_Counter;
-	double m_Dt;
 	double m_ErrorAngle;
 	Vector3d m_TorqueCorrection;
 	Vector3d m_TorqueEstimate;

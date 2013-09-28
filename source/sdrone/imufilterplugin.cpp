@@ -94,7 +94,7 @@ int ImuFilterPlugin::IoCallback(SdIoPacket* ioPacket)
 		return EINVAL;
 	}
 	if (m_SetEarthG) {
-		m_ImuFilter.SetEarthG(*ioPacket->accelData);
+		m_ImuFilter.SetEarthG(*ioPacket->earthG);
 		m_SetEarthG = false;
 	}
 	ioPacket->attitudeQ = &(m_ImuFilter.Update(

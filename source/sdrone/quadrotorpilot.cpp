@@ -15,8 +15,7 @@ QuadRotorPilot::QuadRotorPilot() :
 	m_MinRev = 0.0;
 	m_MaxRev = 1.0;
 	m_Counter = 0;
-	m_Skip = 10;
-	m_Dt = 1.0/200;
+	m_Skip = 3;
 	m_ErrorAngle = 0;
 	m_Runtime = 0;
 	m_RefCnt = 1;
@@ -51,7 +50,6 @@ int QuadRotorPilot::Start(
 	assert(m_Runtime);
 	m_Config = config->Quad;
 	m_PidCtl.Reset(m_Config.Kp,m_Config.Ki,m_Config.Kd,15);
-	m_Dt = 1.0/config->Gyro.SamplingRate;
 	m_Counter = 0;
 	m_Motors.clear();
 	m_PrevErrQ = QuaternionD(1, 0, 0, 0);
@@ -62,6 +60,9 @@ int QuadRotorPilot::Start(
 		Vector3d(0,0,1),-m_Config.ImuAngleAxisZ);
 	m_GyroFilt.Reset();
 	m_Step = Vector3d(s_InitialStep,s_InitialStep,s_InitialStep);
+	m_MinRev = cmdArgs->GetMinThrust();
+	m_MaxRev = cmdArgs->GetMaxThrust();
+	m_DesiredRev = cmdArgs->GetDesiredThrust();
 
 	m_Runtime->SetIoFilters(
 			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
@@ -127,8 +128,7 @@ int QuadRotorPilot::IoCallback(
 			return EINVAL;
 		}
 
-		UpdateState(*ioPacket->attitudeQ,*ioPacket->targetQ,
-				*ioPacket->gyroDataDps);
+		UpdateState(ioPacket);
 
 		/*
 		 *  Set the motor values in the IO structures so it can be used by the
@@ -188,10 +188,10 @@ template <typename T> __inline int sign(T val)
 }
 
 int QuadRotorPilot::UpdateState(
-		const QuaternionD& attitudeQ,
-		const QuaternionD& targetQ,
-		const Vector3d& _currentOmega)
+	const SdIoPacket* ioPacket)
 {
+	const QuaternionD& attitudeQ = *ioPacket->attitudeQ;
+	const QuaternionD& targetQ = *ioPacket->targetQ;
 	int retVal = 0;
 	Vector3d currentOmega;
 
@@ -217,10 +217,10 @@ int QuadRotorPilot::UpdateState(
 
 	errQ.z = 0;
 	errQ = errQ.normalize();
-	currentOmega = m_RotZQ.rotate(_currentOmega);
+	currentOmega = m_RotZQ.rotate(*ioPacket->gyroDataDps);
 	currentOmega = m_GyroFilt.DoFilter(currentOmega);
 
-	double angleDeg = errQ.angle();
+	double angleDeg = RAD2DEG(errQ.angle());
 	if (fabs(angleDeg) > 180) {
 		Vector3d axis = errQ.axis() * -1.0f;
 		errQ = QuaternionD::fromAxisRot(axis,
@@ -232,7 +232,7 @@ int QuadRotorPilot::UpdateState(
 	angleDeg = fmin(angleDeg,90);
 
 	Vector3d errAxis = errQ.axis().normalize() * sin(DEG2RAD(angleDeg));
-	Vector3d angAccel = (currentOmega-m_Omega)/m_Dt;
+	Vector3d angAccel = (currentOmega-m_Omega)/ioPacket->deltaTime;
 	Vector3d desiredOmega = CalcDesiredOmega3d(errAxis);
 
 	m_TorqueEstimate = errAxis;
@@ -244,7 +244,10 @@ int QuadRotorPilot::UpdateState(
 	//
 	// Feed the error into the pid controller
 	//
-	errAxis = m_PidCtl.GetPid(errAxis,m_Dt,m_Dt/2);
+	errAxis = m_PidCtl.GetPid(
+			errAxis,
+			ioPacket->deltaTime,
+			ioPacket->deltaTime/4);
 
 
 	m_ErrorAngle = angleDeg;
@@ -259,7 +262,7 @@ int QuadRotorPilot::UpdateState(
 
 void QuadRotorPilot::CalcThrustFromErrAxis(
 		const Vector3d& err,
-		double targetThrust)
+		double _targetThrust)
 {
 	//
 	// Control the motors in pairs 0-2 and 1-3.
@@ -280,6 +283,8 @@ void QuadRotorPilot::CalcThrustFromErrAxis(
 	double m2 = m_Motors.at(1,0);
 	double m3 = m_Motors.at(2,0);
 	double m4 = m_Motors.at(3,0);
+	double targetThrust = 4*_targetThrust*_targetThrust;
+
 
 	deltaX = err.at(0,0) + m2*m2 - m4*m4;
 	denom = 2 * (m2 + m4);

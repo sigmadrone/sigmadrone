@@ -394,6 +394,7 @@ typedef struct _SdIoPacket
 	const Vector4d* motors;
 	double droneAltitude;
 	double deltaTime; /*elapsed time since the last sample*/
+	double timeToReadSensors;
 	// TODO: Gps/Temperature
 } SdIoPacket;
 

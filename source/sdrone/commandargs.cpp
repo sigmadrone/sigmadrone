@@ -120,6 +120,9 @@ _CommandArgs::ParseArgs(
 	m_parsedArgs.ServerPort = SD_DEFAULT_PORT;
 	m_parsedArgs.IsClient = m_parsedArgs.IsServer = false;
 	m_parsedArgs.DroneCfg.Pilot = SD_PILOT_TYPE_QUADROTOR;
+	m_parsedArgs.MinThrust = 0.3;
+	m_parsedArgs.MaxThrust = 0.99;
+	m_parsedArgs.Thrust = 0.5;
 
 	// TODO: must be controlled from cmd line
 	m_parsedArgs.DroneCfg.AccMap = Matrix3d( 0,-1, 0,

@@ -98,6 +98,7 @@ int TraceLogPlugin::IoCallback(
 {
 	const QuaternionD* attQ;
 	const Vector4d* mot;
+	const Vector3d* gyroDps;
 	Vector3d x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
 
 	++m_iteration;
@@ -111,29 +112,6 @@ int TraceLogPlugin::IoCallback(
 
 	if (m_logLevel < SD_LOG_LEVEL_VERBOSE) {
 		return SD_ESUCCESS;
-	}
-	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-			"--> dT,s  : %1.6lf  %1.6f (sensor read)\n",
-			ioPacket->deltaTime, ioPacket->timeToReadSensors);
-
-	if (ioPacket->accelData) {
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Accel : %1.3lf %1.3lf %1.3lf\n",
-				ioPacket->accelData->at(0,0),
-				ioPacket->accelData->at(1,0),
-				ioPacket->accelData->at(2,0));
-	}
-
-	const Vector3d* gyroDps = ioPacket->gyroDataDps;
-	if (gyroDps) {
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Gyro  : %4.3lf %4.3lf %4.3lf\n",
-				gyroDps->at(0,0), gyroDps->at(1,0), gyroDps->at(2,0));
-	}
-
-	if (ioPacket->magData) {
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Mag   : %1.3lf %1.3lf %1.3lf\n",
-				ioPacket->magData->at(0,0),
-				ioPacket->magData->at(1,0),
-				ioPacket->magData->at(2,0));
 	}
 
 	if (!ioPacket->attitudeQ) {
@@ -154,6 +132,29 @@ int TraceLogPlugin::IoCallback(
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
 			"--> Q     : %1.3lf %1.3lf %1.3lf %1.3lf\n",
 			attQ->w,attQ->x,attQ->y,attQ->z);
+
+	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+			"--> dT,s  : %1.6lf  %1.6f (sensor read)\n",
+			ioPacket->deltaTime, ioPacket->timeToReadSensors);
+
+	if (ioPacket->accelData) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Accel : %1.3lf %1.3lf %1.3lf\n",
+				ioPacket->accelData->at(0,0),
+				ioPacket->accelData->at(1,0),
+				ioPacket->accelData->at(2,0));
+	}
+
+	if (0 != (gyroDps = ioPacket->gyroDataDps)) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Gyro  : %4.3lf %4.3lf %4.3lf\n",
+				gyroDps->at(0,0), gyroDps->at(1,0), gyroDps->at(2,0));
+	}
+
+	if (ioPacket->magData) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Mag   : %1.3lf %1.3lf %1.3lf\n",
+				ioPacket->magData->at(0,0),
+				ioPacket->magData->at(1,0),
+				ioPacket->magData->at(2,0));
+	}
 
 	if (0 != mot) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Motor : %1.3lf %1.3lf %1.3lf %1.3lf\n",

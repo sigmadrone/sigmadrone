@@ -273,7 +273,9 @@ int ServoDevice::SetRate(int freq)
 		fprintf(stdout, "ServoDevice rate %d, PWMmin = %d, PWMmax = %d\n",
 				freq, m_OneMsInterval, 2*m_OneMsInterval);
 	} else {
-		fprintf(stdout,"ServoDevice::SetRate failed, err=%d\n",errno);
+		err = errno;
+		fprintf(stdout,"ServoDevice::SetRate failed, err=%d, %s\n",
+				err, strerror(err));
 	}
 	return err;
 }
