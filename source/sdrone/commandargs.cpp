@@ -22,12 +22,12 @@ _CommandArgs::_CommandArgs() :
 	m_parsedArgs.DroneCfg.Gyro.SamplingRate = 200;
 	m_parsedArgs.DroneCfg.Gyro.Scale = 2000;
 	m_parsedArgs.DroneCfg.Gyro.MaxReading = 32768;
-	m_parsedArgs.DroneCfg.Gyro.NumBiasSamples = 1000;
+	m_parsedArgs.DroneCfg.Gyro.NumBiasSamples = 2000;
 	m_parsedArgs.DroneCfg.Gyro.Watermark = 2;
 	m_parsedArgs.DroneCfg.Mag.DeviceName = "/dev/mag0";
 	m_parsedArgs.DroneCfg.Servo.DeviceName = "/dev/pwm0";
 	m_parsedArgs.DroneCfg.Servo.ChannelMask = 0xff;
-	m_parsedArgs.DroneCfg.Servo.Rate = 100;
+	m_parsedArgs.DroneCfg.Servo.Rate = 390;
 	m_parsedArgs.DroneCfg.Quad.Motor[0] = 0;
 	m_parsedArgs.DroneCfg.Quad.Motor[1] = 1;
 	m_parsedArgs.DroneCfg.Quad.Motor[2] = 2;
@@ -49,9 +49,8 @@ _CommandArgs::~_CommandArgs()
 void _CommandArgs::PrintUsage()
 {
 	fprintf(stdout, "\nSigma Drone 0.1\n");
-	fprintf(stdout, "Controls the drone hardware; runs as a daemon server or "
-			        "client process.\n");
-	fprintf(stdout,"\n");
+	fprintf(stdout, "Controls the drone hardware, runs as a daemon server or "
+			        "client process.\n\n");
 	fprintf(stdout, "Usage: \n");
 	fprintf(stdout, "%s [command] [options]\n\n", !!m_argv ? m_argv[0] : "sdroned");
 	fprintf(stdout, "command:\n");
@@ -86,7 +85,7 @@ void _CommandArgs::PrintUsage()
 	fprintf(stdout, " --imuangle <ANGLE DEG>  Angle between the IMU and motor axis\n");
 	fprintf(stdout,"\n");
 	fprintf(stdout,
-			"Additional notes:\n "
+			"Additional notes:\n"
 			"When command is not specified changes in the configuration\n"
 			"are accumulated until following reset/run. Multiple run commands\n"
 			"can be issued in order to control the flight; currently only\n"

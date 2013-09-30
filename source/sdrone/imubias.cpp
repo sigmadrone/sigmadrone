@@ -39,13 +39,13 @@ int ImuBias::AttachToChain(
 int ImuBias::Start(
 	CommandArgs* cmdArgs)
 {
-	double biasSamples = cmdArgs->GetDroneConfig()->Gyro.NumBiasSamples;
+	int biasSamples = cmdArgs->GetDroneConfig()->Gyro.NumBiasSamples;
 	m_CurrentBiasSamples = 0;
 	m_ElapsedTime = 0;
 	m_TotalBiasCalcTime = (double)biasSamples/cmdArgs->GetDroneConfig()->Gyro.SamplingRate;
 	m_Runtime->Log(SD_LOG_LEVEL_INFO,
 			"--> Will calculate bias for %d samples (%2.3lf sec), stay still...\n",
-			m_TotalBiasCalcTime, biasSamples);
+			 biasSamples, m_TotalBiasCalcTime);
 	m_Runtime->SetIoFilters(
 		SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
 		SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
@@ -111,9 +111,6 @@ int ImuBias::IoCallback(
 
 			m_EarthG = m_EarthG / m_CurrentBiasSamples;
 			m_GyroBias = m_GyroBias / m_CurrentBiasSamples;
-			if (fabs(m_EarthG.at(2,0)) < 0.97) {
-				m_EarthG = Vector3d(0,0,-1);
-			}
 
 			m_Runtime->Log(SD_LOG_LEVEL_INFO,"\n--> Done calculating bias!\n");
 			m_Runtime->Log(SD_LOG_LEVEL_INFO,"--> Earth G:   %1.3lf %1.3lf %1.3lf\n",
@@ -122,6 +119,19 @@ int ImuBias::IoCallback(
 					m_EarthG.at(2,0));
 			m_Runtime->Log(SD_LOG_LEVEL_INFO,"--> Gyro Bias: %4.3lf %4.3lf %4.3lf\n\n",
 					m_GyroBias.at(0,0), m_GyroBias.at(1,0), m_GyroBias.at(2,0));
+
+			/*
+			 * TODO: in order for us to be able to level the drone, earth G must
+			 * contain the averaged reading when the drone frame is leveled,i.e
+			 * parallel to the earth surface. So I guess accounting for the actual
+			 * earth G must be done only if we know that the drone is leveled and
+			 * perhaps should be done only once as it will depend on the angle
+			 * between the sensor and the drone coordinate systems. For now we will
+			 * just hard-code it
+			 */
+			if (fabs(m_EarthG.at(2,0)) < 0.97) {
+				m_EarthG = Vector3d(0,0,-1);
+			}
 		}
 		m_GyroData = *ioPacket->gyroDataDps - m_GyroBias;
 		ioPacket->gyroDataDps = &m_GyroData;

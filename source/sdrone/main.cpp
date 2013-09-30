@@ -74,6 +74,12 @@ int main(int argc, char *argv[])
 	}
 
 	if (!g_CmdArgs.ParseArgs(argc,argv)) {
+		printf("FAILED to parse the command line!\n\n");
+		g_CmdArgs.PrintUsage();
+		goto __return;
+	}
+
+	if (g_CmdArgs.GetArgc() == 1) {
 		g_CmdArgs.PrintUsage();
 		goto __return;
 	}
@@ -116,16 +122,6 @@ int main(int argc, char *argv[])
 		while (0 != clientSrv.IsServerThreadRunning()) {
 			millisleep(1000);
 			if (!theDrone->IsRunning()) {
-				string cmdLine;
-				const char* exitCmd[] = {
-						"exit","--outfile","stdout"
-				};
-				clientSrv.SerializeCommand(&cmdLine,
-						ARRAYSIZE(exitCmd),(char**)exitCmd);
-				clientSrv.SendCommandToDrone(
-						g_CmdArgs.GetHostAddress(),
-						g_CmdArgs.GetServerPort(),
-						cmdLine);
 				break;
 			}
 		}

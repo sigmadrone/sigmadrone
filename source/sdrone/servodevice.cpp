@@ -259,7 +259,7 @@ int ServoDevice::SetRate(int freq)
 
 	assert(freq > 0);
 	numOneMsIntervals = (1.0 / (double)freq) / 0.001;
-	if (numOneMsIntervals < 3) {
+	if (numOneMsIntervals < 2.0) {
 		fprintf(stdout, "ServoDevice::SetRate - rate too high %d\n",freq);
 		return err;
 	}
