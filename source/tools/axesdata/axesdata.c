@@ -43,6 +43,10 @@ static int usage(int argc, const char *argv[])
 	fprintf(stderr, "\t--get-rate               Get sample rate.\n");
 	fprintf(stderr, "\t--set-scale N            Set scale.\n");
 	fprintf(stderr, "\t--get-scale              Get scale.\n");
+	fprintf(stderr, "\t--set-mode N             Set the device operation mode. AXESDATA_OPMODE_STREAM = 0, AXESDATA_OPMODE_BYPASS = 1\n");
+	fprintf(stderr, "\t--get-mode               Get the current device operation mode.\n");
+	fprintf(stderr, "\t--set-watermark N        Set FIFO watermark, N must be between 1 and 31.\n");
+	fprintf(stderr, "\t--get-watermark          Get the current FIFO watermark.\n");
 	fprintf(stderr, "\t--enable                 Enable sensor sampling.\n");
 	fprintf(stderr, "\t--disable                Disable sensor sampling.\n");
 	fprintf(stderr, "\t--gnuplot                Read text data.\n");
@@ -164,6 +168,62 @@ static int axesdata_apply_commandline(int fd, int argc, const char *argv[])
 			return 1;
 		}
 	}
+
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--set-mode") == 0) {
+			if (++i < argc) {
+				arg = atol(argv[i]);
+				ret = ioctl(fd, AXISDATA_IOC_SETMODE, arg);
+				if (ret < 0) {
+					perror("AXISDATA_IOC_SETMODE");
+					return -1;
+				}
+			}
+			bexit = 1;
+		}
+	}
+
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--get-mode") == 0) {
+			ret = ioctl(fd, AXISDATA_IOC_GETMODE, 0);
+			if (ret < 0) {
+				perror("AXISDATA_IOC_GETMODE");
+				return -1;
+			} else {
+				fprintf(stdout, "%d\n", ret);
+			}
+			return 1;
+		}
+	}
+
+
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--set-watermark") == 0) {
+			if (++i < argc) {
+				arg = atol(argv[i]);
+				ret = ioctl(fd, AXISDATA_IOC_SETWATERMARK, arg);
+				if (ret < 0) {
+					perror("AXISDATA_IOC_SETWATERMARK");
+					return -1;
+				}
+			}
+			bexit = 1;
+		}
+	}
+
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--get-watermark") == 0) {
+			ret = ioctl(fd, AXISDATA_IOC_GETWATERMARK, 0);
+			if (ret < 0) {
+				perror("AXISDATA_IOC_GETWATERMARK");
+				return -1;
+			} else {
+				fprintf(stdout, "%d\n", ret);
+			}
+			return 1;
+		}
+	}
+
 	return bexit;
 }
 

@@ -16,6 +16,11 @@ struct __int3d {
 	__s32 z;
 };
 
+typedef enum {
+	AXESDATA_OPMODE_STREAM = 0,
+	AXESDATA_OPMODE_BYPASS,
+} axesdata_opmode_t;
+
 typedef struct __short3d short3d_t;
 typedef struct __int3d int3d_t;
 
@@ -28,5 +33,8 @@ typedef struct __int3d int3d_t;
 #define AXISDATA_IOC_GETENABLED		_IO(AXISDATA_IOC_MAGIC, 6)
 #define AXISDATA_IOC_SETENABLED		_IO(AXISDATA_IOC_MAGIC, 7)
 #define AXISDATA_IOC_SETWATERMARK	_IO(AXISDATA_IOC_MAGIC, 8)
+#define AXISDATA_IOC_GETWATERMARK	_IO(AXISDATA_IOC_MAGIC, 9)
+#define AXISDATA_IOC_SETMODE		_IO(AXISDATA_IOC_MAGIC, 10)
+#define AXISDATA_IOC_GETMODE		_IO(AXISDATA_IOC_MAGIC, 11)
 
 #endif
