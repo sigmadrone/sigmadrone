@@ -17,7 +17,7 @@ public:
 		memset(m_Coeff,0,sizeof(m_Coeff));
 		m_Coeff[0] = 1.0;
 	}
-	FirFilter(T coeff[N])
+	FirFilter(const T coeff[N])
 	{
 		Reset();
 		memcpy(m_Coeff,coeff,sizeof(m_Coeff));

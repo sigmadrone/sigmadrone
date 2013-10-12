@@ -15,7 +15,7 @@ QuadRotorPilot::QuadRotorPilot() :
 	m_MinRev = 0.0;
 	m_MaxRev = 1.0;
 	m_Counter = 0;
-	m_Skip = 3;
+	m_Skip = 0;
 	m_ErrorAngle = 0;
 	m_Runtime = 0;
 	m_RefCnt = 1;
@@ -49,7 +49,7 @@ int QuadRotorPilot::Start(
 	assert(config);
 	assert(m_Runtime);
 	m_Config = config->Quad;
-	m_PidCtl.Reset(m_Config.Kp,m_Config.Ki,m_Config.Kd,15);
+	m_PidCtl.Reset(m_Config.Kp,m_Config.Ki,m_Config.Kd,30);
 	m_Counter = 0;
 	m_Motors.clear();
 	m_PrevErrQ = QuaternionD(1, 0, 0, 0);
@@ -57,7 +57,7 @@ int QuadRotorPilot::Start(
 	m_Omega.clear();
 	m_AngAccel.clear();
 	m_RotZQ = QuaternionD::fromAxisRot(
-		Vector3d(0,0,1),-m_Config.ImuAngleAxisZ);
+		Vector3d(0,0,1),DEG2RAD(-m_Config.ImuAngleAxisZ));
 	m_GyroFilt.Reset();
 	m_Step = Vector3d(s_InitialStep,s_InitialStep,s_InitialStep);
 	m_MinRev = cmdArgs->GetMinThrust();
@@ -130,17 +130,29 @@ int QuadRotorPilot::IoCallback(
 
 		UpdateState(ioPacket);
 
+#if 0
+		m_Runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> ErrAx : %1.3lf %1.3lf %1.3lf\n",
+				m_ErrorAxis.at(0,0),m_ErrorAxis.at(1,0),m_ErrorAxis.at(2,0));
+		m_Runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> Omega : %1.3lf %1.3lf %1.3lf\n",
+				m_Omega.at(0,0),m_Omega.at(1,0),m_Omega.at(2,0));
+		m_Runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> OmegaD: %1.3lf %1.3lf %1.3lf\n",
+				m_DesiredOmega.at(0,0),m_DesiredOmega.at(1,0),m_DesiredOmega.at(2,0));
+#endif
+
 		/*
 		 *  Set the motor values in the IO structures so it can be used by the
 		 *  rest of the chain
 		 */
 		ioPacket->motors = &m_Motors;
-		if (0 == (m_Counter++%m_Skip))
+		if (0 == (m_Counter++%(m_Skip+1)))
 		{
 			SdServoIoData servoData;
 			SdIoPacket ioPacket;
 
-			CalcThrustFromErrAxis(m_ErrorAxis,m_DesiredRev);
+			CalcThrustFromErrAxis(m_ErrorAxisPid,m_DesiredRev);
 
 			//
 			// Issue commands to the servos. Since the servos are controlled by
@@ -188,10 +200,10 @@ template <typename T> __inline int sign(T val)
 }
 
 int QuadRotorPilot::UpdateState(
-	const SdIoPacket* ioPacket)
+	SdIoPacket* ioPacket)
 {
-	const QuaternionD& attitudeQ = *ioPacket->attitudeQ;
-	const QuaternionD& targetQ = *ioPacket->targetQ;
+	QuaternionD attitudeQ = *ioPacket->attitudeQ;
+	QuaternionD targetQ = QuaternionD(0.9962,0.0872,0,0);//*ioPacket->targetQ;
 	int retVal = 0;
 	Vector3d currentOmega;
 
@@ -205,57 +217,80 @@ int QuadRotorPilot::UpdateState(
 	// m2/m4 rotate clockwise Overall thrust up (alongside) Z is achieved
 	// by rev-ing proportionally all 4 motors.
 	//
+	QuaternionD errQ = targetQ * (~attitudeQ);
 
-	//
-	// Compensate for the angle between the sensors' OX/OY axis and
-	// the motors OX/OY axis and calculate the correction quaternion, -
-	// which is the error.
-	//
-	QuaternionD motorAxisQ =  m_RotZQ * attitudeQ;
-	QuaternionD motorAxisTargetQ = m_RotZQ * targetQ;
-	QuaternionD errQ = motorAxisTargetQ * QuaternionD::reciprocal(motorAxisQ);
-
-	errQ.z = 0;
+#if 0
 	errQ = errQ.normalize();
+#endif
 	currentOmega = m_RotZQ.rotate(*ioPacket->gyroDataDps);
 	currentOmega = m_GyroFilt.DoFilter(currentOmega);
 
 	double angleDeg = RAD2DEG(errQ.angle());
 	if (fabs(angleDeg) > 180) {
 		Vector3d axis = errQ.axis() * -1.0f;
-		errQ = QuaternionD::fromAxisRot(axis,
-				(angleDeg > 0) ? 360-angleDeg : -360+angleDeg);
+		double rad = DEG2RAD((angleDeg > 0) ? 360-angleDeg : -360+angleDeg);
+		errQ = QuaternionD::fromAxisRot(axis,rad);
+#if 0
 		errQ = errQ.normalize();
-		angleDeg = errQ.angle();
+#endif
+		angleDeg = RAD2DEG(errQ.angle());
 	}
 
 	angleDeg = fmin(angleDeg,90);
 
-	Vector3d errAxis = errQ.axis().normalize() * sin(DEG2RAD(angleDeg));
+	Vector3d errAxis;
+	if (angleDeg > 5) {
+		errAxis = errQ.axis().normalize() * sin(DEG2RAD(angleDeg));
+	} else {
+		errAxis = errQ.axis().normalize() * DEG2RAD(angleDeg);
+	}
 	Vector3d angAccel = (currentOmega-m_Omega)/ioPacket->deltaTime;
 	Vector3d desiredOmega = CalcDesiredOmega3d(errAxis);
 
+	errAxis.at(2,0) = 0; // clear Z axis, we will take care of that later
+	errAxis = m_RotZQ.rotate(errAxis);
+
 	m_TorqueEstimate = errAxis;
 
-	errAxis = (desiredOmega - currentOmega) / 500;
-	errAxis.at(2,0) = 0; // clear Z axis, we will take care of that later
+#if 0
+	/*
+	 * The difference between desired omega and actual omega can only be
+	 * used for torque correction
+	 */
+	errAxis = (desiredOmega - currentOmega) / 100;
+#endif
+
+
 	m_TorqueCorrection.at(2,0) = 0;
+
+	m_ErrorAxis = errAxis;
 
 	//
 	// Feed the error into the pid controller
 	//
-	errAxis = m_PidCtl.GetPid(
-			errAxis,
-			ioPacket->deltaTime,
-			ioPacket->deltaTime/4);
-
+	m_ErrorP = m_PidCtl.GetP(errAxis);
+	m_ErrorI = m_PidCtl.GetI(
+			m_ErrorAxis,
+			ioPacket->deltaTime,0);
+			//ioPacket->deltaTime/1000);
+	m_ErrorD = m_PidCtl.GetD(
+			m_ErrorAxis,
+			ioPacket->deltaTime);
+	m_ErrorAxisPid  = m_ErrorP+m_ErrorI+m_ErrorD;
 
 	m_ErrorAngle = angleDeg;
 	m_PrevErrQ = errQ;
-	m_ErrorAxis = errAxis;
 	m_AngAccel = angAccel;
 	m_Omega = currentOmega;
 	m_DesiredOmega = desiredOmega;
+
+	ioPacket->errAxis = &m_ErrorAxis;
+	ioPacket->errAxisPid = &m_ErrorAxisPid;
+	ioPacket->motorAxisQ = &m_RotZQ;
+	ioPacket->errAxisP = &m_ErrorP;
+	ioPacket->errAxisI = &m_ErrorI;
+	ioPacket->errAxisD = &m_ErrorD;
+	ioPacket->errAngle = angleDeg;
 
 	return retVal;
 }

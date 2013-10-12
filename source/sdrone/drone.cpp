@@ -16,6 +16,7 @@
 #include "imuremap.h"
 #include "imufilterplugin.h"
 #include "tracelogplugin.h"
+#include "imulowpassfilter.h"
 
 Drone* Drone::s_Only = 0;
 
@@ -169,6 +170,7 @@ void Drone::InitInternalPlugins()
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_DEVICE);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_REMAP);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_BIAS);
+	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_LOWPASSFILTER);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_FILTER);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_NAVIGATOR);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_QUADPILOT);
@@ -261,6 +263,13 @@ int SdPluginInitialize(
 		if (0 != tracer) {
 			tracer->AttachToChain(droneContext,attachPlugin);
 			tracer->Release();
+		}
+	}
+	if (0 == pluginName || 0 == (strcmp(pluginName,SD_PLUGIN_IMU_LOWPASSFILTER))){
+		ImuLowPassFilter* imuLpf = new ImuLowPassFilter();
+		if (0 != imuLpf) {
+			imuLpf->AttachToChain(droneContext,attachPlugin);
+			imuLpf->Release();
 		}
 	}
 	return 0;

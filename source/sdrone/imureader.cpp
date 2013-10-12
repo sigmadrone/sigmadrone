@@ -259,6 +259,7 @@ int ImuReader::IoDispatchThread()
 	}
 	m_GyroData = m_GyroData / m_ImuData.gyro_samples * m_GyroConfig.Scale /
 			m_GyroConfig.MaxReading;
+	m_GyroData.at(2,0) = 0;
 
 
 	m_AccelData.clear();

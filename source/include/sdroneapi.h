@@ -261,7 +261,7 @@ typedef uint64_t SdDeviceId;
 #define SD_PLUGIN_IMU_DEVICE "sd.imudevice"
 #define SD_PLUGIN_IMU_BIAS "sd.imubias"
 #define SD_PLUGIN_IMU_REMAP "sd.imuremap"
-#define SD_PLUGIN_IMU_PREFILTER "sd.imuprefilter"
+#define SD_PLUGIN_IMU_LOWPASSFILTER "sd.imulowpassfilter"
 #define SD_PLUGIN_IMU_FILTER "sd.imufilter"
 #define SD_PLUGIN_QUADPILOT  "sd.quadpilot"
 #define SD_PLUGIN_PIDPILOT  "sd.pidpilot"
@@ -386,12 +386,19 @@ typedef struct _SdIoPacket
 	 */
 	const QuaternionD* attitudeQ;
 	const QuaternionD* targetQ;
+	const QuaternionD* motorAxisQ;
 	const Vector3d* velocity;
 	const Vector3d* gyroDataDps;
 	const Vector3d* accelData;
 	const Vector3d* magData;
 	const Vector3d* earthG;
 	const Vector4d* motors;
+	const Vector3d* errAxisPid;
+	const Vector3d* errAxis;
+	const Vector3d* errAxisP;
+	const Vector3d* errAxisI;
+	const Vector3d* errAxisD;
+	double errAngle;
 	double droneAltitude;
 	double deltaTime; /*elapsed time since the last sample*/
 	double timeToReadSensors;

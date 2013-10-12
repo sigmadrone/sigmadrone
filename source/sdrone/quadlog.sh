@@ -8,10 +8,9 @@ logFile=$1
 #	echo Assuming flight.log to be the log 
 #        logfile="flight.log"
 #fi
-
-grep -w AngV $logFile | cut --delimiter=' ' --fields=5-7 > angv.dat
-grep -w AngVD $logFile | cut --delimiter=' ' --fields=4-6 > angvdes.dat
-grep -w AngAcc $logFile | cut --delimiter=' ' --fields=3-5 > angacc.dat
-grep -w Torque $logFile | cut --delimiter=' ' --fields=3-5,7-9,11 > torque.dat
+grep -w "Err   :" $logFile | cut --delimiter=' ' --fields=6-9 > torque.dat
+grep -w "ErrPID:" $logFile | cut --delimiter=' ' --fields=3-5 > torquepid.dat
 grep -w "Motor" $logFile | cut --delimiter=' ' --fields=4-7 > motor.dat
 grep "Q     :" $logFile | cut --delimiter=' ' --fields=8-11 > attq.dat
+grep "Accel :" $logFile | cut --delimiter=' ' --fields=4-6 > accel.dat
+grep "Gyro  :" $logFile | cut --delimiter=' ' --fields=5-7 > gyro.dat

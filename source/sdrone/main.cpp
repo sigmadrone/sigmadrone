@@ -116,16 +116,16 @@ int main(int argc, char *argv[])
 	if (g_CmdArgs.IsRoleServer())
 	{
 		// execute the command that came with main
-		theDrone->ExecuteCommand(&g_CmdArgs);
-
-		// wait for server thread to terminate
-		while (0 != clientSrv.IsServerThreadRunning()) {
-			millisleep(1000);
-			if (!theDrone->IsRunning()) {
-				break;
+		if (0 == (err = theDrone->ExecuteCommand(&g_CmdArgs))) {
+			// wait for server thread to terminate
+			while (0 != clientSrv.IsServerThreadRunning()) {
+				millisleep(1000);
+				if (!theDrone->IsRunning()) {
+					break;
+				}
 			}
+			clientSrv.JoinServerThread();
 		}
-		clientSrv.JoinServerThread();
 	}
 
 	__return:

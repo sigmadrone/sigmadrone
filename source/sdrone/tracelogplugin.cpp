@@ -160,28 +160,52 @@ int TraceLogPlugin::IoCallback(
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Motor : %1.3lf %1.3lf %1.3lf %1.3lf\n",
 			mot->at(0,0),mot->at(1,0),mot->at(2,0),mot->at(3,0));
 	}
-#if 0
-	const Vector3d& err = m_Pilot->GetErrorAxis();
-	fprintf(out,"--> AngAcc: %4.3lf %4.3lf %4.3lf\n",
-			m_Pilot->GetAngularAccel().at(0,0),
-			m_Pilot->GetAngularAccel().at(1,0),
-			m_Pilot->GetAngularAccel().at(2,0));
-	fprintf(out,"--> Torque: %4.3lf %4.3lf %4.3lf Tc: %4.3f %4.3f %4.3f ErrAng: %4.3f\n",
-			err.at(0,0),err.at(1,0),err.at(2,0),
-			m_Pilot->GetTorqueCorrection().at(0,0),
-			m_Pilot->GetTorqueCorrection().at(1,0),
-			m_Pilot->GetTorqueCorrection().at(2,0),
-			m_Pilot->GetErrorAngle());
 
-	fprintf(out, "--> IMU %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf \n",
-			m_ImuFilter->GetAccelData().at(0,0),
-			m_ImuFilter->GetAccelData().at(1,0),
-			m_ImuFilter->GetAccelData().at(2,0),
-			gyroDps->at(0,0), gyroDps->at(1,0), gyroDps->at(2,0),
-			m_ImuFilter->GetMagData().at(0,0),
-			m_ImuFilter->GetMagData().at(1,0),
-			m_ImuFilter->GetMagData().at(2,0));
+	if (ioPacket->errAxis) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> Err   : %1.3lf %1.3lf %1.3lf\n",
+				ioPacket->errAxis->at(0,0),ioPacket->errAxis->at(1,0),
+				ioPacket->errAxis->at(2,0));
+	}
+	if (ioPacket->errAxisPid) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> ErrPID: %1.3lf %1.3lf %1.3lf\n",
+				ioPacket->errAxisPid->at(0,0),ioPacket->errAxisPid->at(1,0),
+				ioPacket->errAxisPid->at(2,0));
+	}
+	if (ioPacket->errAxisP && ioPacket->errAxisI && ioPacket->errAxisD) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> ErrP  : %1.3lf %1.3lf %1.3lf\n",
+				ioPacket->errAxisP->at(0,0),ioPacket->errAxisP->at(1,0),
+				ioPacket->errAxisP->at(2,0));
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> ErrI  : %1.3lf %1.3lf %1.3lf\n",
+				ioPacket->errAxisI->at(0,0),ioPacket->errAxisI->at(1,0),
+				ioPacket->errAxisI->at(2,0));
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> ErrD  : %1.3lf %1.3lf %1.3lf\n",
+				ioPacket->errAxisD->at(0,0),ioPacket->errAxisD->at(1,0),
+				ioPacket->errAxisD->at(2,0));
+	}
+	if (ioPacket->motorAxisQ) {
+		QuaternionD motorQ =  (*ioPacket->motorAxisQ) * (*ioPacket->attitudeQ);
+#if 0
+		x = motorQ.rotate(Vector3d(1, 0, 0));
+		y = motorQ.rotate(Vector3d(0, 1, 0));
+		z = motorQ.rotate(Vector3d(0, 0, 1));
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> FrameX: %1.3lf %1.3lf %1.3lf\n",x.at(0,0),x.at(1,0),x.at(2,0));
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> FrameY: %1.3lf %1.3lf %1.3lf\n",y.at(0,0),y.at(1,0),y.at(2,0));
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> FrameZ: %1.3lf %1.3lf %1.3lf\n",z.at(0,0),z.at(1,0),z.at(2,0));
 #endif
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> FrameQ: %1.3lf %1.3lf %1.3lf %1.3lf\n",
+				motorQ.w,motorQ.x,motorQ.y,motorQ.z);
+	}
+
+
 
 	if (m_logRotMatrix) {
 		const QuaternionD* tgtQ = ioPacket->targetQ;

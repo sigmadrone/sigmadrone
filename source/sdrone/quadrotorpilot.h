@@ -54,7 +54,7 @@ private:
 	const Vector3d& GetDesiredOmega() const { return m_DesiredOmega; }
 
 	int UpdateState(
-			const SdIoPacket*
+			SdIoPacket*
 			);
 
 	static double GetTorqueScale(
@@ -89,6 +89,10 @@ private:
 	IPluginRuntime* m_Runtime;
 	Vector4d m_Motors;
 	Vector3d m_ErrorAxis;
+	Vector3d m_ErrorAxisPid;
+	Vector3d m_ErrorI;
+	Vector3d m_ErrorD;
+	Vector3d m_ErrorP;
 	SdQuadRotorConfig m_Config;
 	QuaternionD m_TargetQ;
 	QuaternionD m_PrevErrQ;
