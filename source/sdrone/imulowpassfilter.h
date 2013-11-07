@@ -38,9 +38,6 @@ private:
 	~ImuLowPassFilter();
 
 private:
-	Vector3d m_GyroData;
-	Vector3d m_AccelData;
-	LpPreFilter3d m_GyroFilt;
 	//LpPreFilter3d m_AccelFilt;
 	FirFilter<double,38,3> m_AccelFilt;
 	IPluginRuntime* m_Runtime;

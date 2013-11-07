@@ -219,7 +219,7 @@ void* ClientServer::ServerThread(void* arg)
 	if (-1 != listenSocket) {
 		close(listenSocket);
 	}
-	return *(void**)&err;
+	return 0;
 }
 
 int ClientServer::SendCommandToDrone(

@@ -64,7 +64,7 @@ int ServoDevice::Start(CommandArgs* cmdArgs)
 			goto __return;
 		}
 		fprintf(stdout,"ServoDevice is operating in text mode.\n");
-	} else if (-1 == (m_Fd = open(config->DeviceName,O_RDWR|O_CREAT))) {
+	} else if (-1 == (m_Fd = open(config->DeviceName,O_RDWR))) {
 		fprintf(stdout,"ServoDevice::Init failed to open %s, err=%d\n",
 				config->DeviceName,errno);
 		err = -1;
@@ -172,11 +172,12 @@ const char* ServoDevice::GetDlFileName()
 int ServoDevice::IoCallback(
 	SdIoPacket* ioPacket)
 {
-	if (ioPacket->inData.dataType != SdIoData::TYPE_SERVO ||
-		0 == ioPacket->inData.asServoData) {
+	const SdIoData& ioData = ioPacket->GetIoData(true);
+	if (ioData.dataType != SdIoData::TYPE_SERVO ||
+		0 == ioData.asServoData) {
 		return EINVAL;
 	}
-	const SdServoIoData* servoData =ioPacket->inData.asServoData;
+	const SdServoIoData* servoData = ioData.asServoData;
 	assert(servoData->numChannels <= sizeof(servoData->channels));
 	for (uint32_t i = 0; i < servoData->numChannels; i++) {
 		if (SetPulse(servoData->channels[i],servoData->value[i]) < 0) {

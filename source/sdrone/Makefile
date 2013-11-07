@@ -22,7 +22,8 @@ OBJECTS		= \
 	imuremap.o\
 	imubias.o\
 	tracelogplugin.o\
-	imulowpassfilter.o
+	imulowpassfilter.o\
+	iopacket.o
 
 all : $(TARGET)
 

@@ -51,6 +51,14 @@ public:
 			const char* format,
 			va_list args
 			);
+	SdIoPacket* AllocIoPacket(
+			uint32_t ioCode,
+			SdDeviceId deviceType,
+			const char* pluginName
+			);
+	void FreeIoPacket(
+			SdIoPacket*
+			);
 
 	const std::string& GetLowerDependencies();
 	const std::string& GetUpperDependencies();

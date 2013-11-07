@@ -49,7 +49,6 @@ int ImuLowPassFilter::Start(
 		SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
 		SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
 	m_AccelFilt.Reset();
-	m_GyroFilt.Reset();
 	return SD_ESUCCESS;
 }
 
@@ -98,17 +97,14 @@ const char* ImuLowPassFilter::GetDlFileName()
 int ImuLowPassFilter::IoCallback(
 	SdIoPacket* ioPacket)
 {
-	if (!!ioPacket->accelData && !!ioPacket->gyroDataDps && !!ioPacket->magData) {
-		//m_AccelData = m_AccelFilt.DoFilter(*ioPacket->accelData);
-		double arr[3] = {ioPacket->accelData->at(0,0),ioPacket->accelData->at(1,0),
-				ioPacket->accelData->at(2,0)};
-		m_AccelFilt.DoFilter(arr);
-		m_AccelData.at(0,0) = m_AccelFilt.GetOutput()[0];
-		m_AccelData.at(1,0) = m_AccelFilt.GetOutput()[1];
-		m_AccelData.at(2,0) = m_AccelFilt.GetOutput()[2];
-		m_AccelData = m_AccelData.normalize();
-		ioPacket->accelData = &m_AccelData;
-	}
+	Vector3d accelData = ioPacket->AccelData();
+	double arr[3] = {accelData.at(0,0),accelData.at(1,0),accelData.at(2,0)};
+	m_AccelFilt.DoFilter(arr);
+	accelData.at(0,0) = m_AccelFilt.GetOutput()[0];
+	accelData.at(1,0) = m_AccelFilt.GetOutput()[1];
+	accelData.at(2,0) = m_AccelFilt.GetOutput()[2];
+	accelData = accelData.normalize();
+	ioPacket->SetAttribute(SDIO_ATTR_ACCEL, SdIoData(&accelData));
 	return SD_ESUCCESS;
 }
 

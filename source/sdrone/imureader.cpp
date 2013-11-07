@@ -205,13 +205,16 @@ int ImuReader::IoDispatchThread()
 	double deltaT0 = 0;
 	int ret = 0;
 	static int totalSamples = 0;
+	Vector3d accelData;
+	Vector3d gyroData;
+	Vector3d magData;
 
-	SdIoPacket ioPacket;
-	SdIoPacket::Init(&ioPacket,SD_IOCODE_RECEIVE, GetDeviceId(), GetName());
-	ioPacket.inData.dataType = SdIoData::TYPE_IMU;
-	ioPacket.inData.asImuData = &m_ImuData;
-	ioPacket.startPluginAltitude = m_RunTime->GetMyAltitude();
-
+	SdIoPacket* ioPacket = m_RunTime->AllocIoPacket(
+			SD_IOCODE_RECEIVE, GetDeviceId(), GetName());
+	if (0 == ioPacket) {
+		return ENOMEM;
+	}
+	ioPacket->SetIoData(SdIoData(&m_ImuData),true);
 	if (0 != m_File) {
 		char buffer[256];
 		if (fgets(buffer, sizeof(buffer), m_File)) {
@@ -222,7 +225,7 @@ int ImuReader::IoDispatchThread()
 			m_ImuData.gyro_samples = 1;
 			m_ImuData.acc_samples = 1;
 			m_ImuData.mag_samples = 1;
-			ioPacket.deltaTime = 0.005; //TODO
+			ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,SdIoData(0.005));
 		} else {
 			ret = EIO;
 			goto __return;
@@ -247,49 +250,52 @@ int ImuReader::IoDispatchThread()
 			goto __return;
 		}
 		m_ImuData.mag_samples = ret;
-		ioPacket.timeToReadSensors = DeltaT();
-
-		ioPacket.deltaTime = ioPacket.timeToReadSensors+deltaT0;
+		double timeToReadSensors = DeltaT();
+		ioPacket->SetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS,
+				SdIoData(timeToReadSensors));
+		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
+				SdIoData(timeToReadSensors+deltaT0));
 	}
 
-	m_GyroData.clear();
+	gyroData.clear();
 	for (unsigned int j = 0; j < m_ImuData.gyro_samples; j++) {
-		m_GyroData = m_GyroData + Vector3d(
+		gyroData = gyroData + Vector3d(
 				m_ImuData.gyro[j].x, m_ImuData.gyro[j].y, m_ImuData.gyro[j].z);
 	}
-	m_GyroData = m_GyroData / m_ImuData.gyro_samples * m_GyroConfig.Scale /
+	gyroData = gyroData / m_ImuData.gyro_samples * m_GyroConfig.Scale /
 			m_GyroConfig.MaxReading;
-	m_GyroData.at(2,0) = 0;
 
 
-	m_AccelData.clear();
+	accelData.clear();
 	for (unsigned int j = 0; j < m_ImuData.acc_samples; j++) {
-		m_AccelData = m_AccelData + Vector3d(
+		accelData = accelData + Vector3d(
 				m_ImuData.acc[j].x, m_ImuData.acc[j].y, m_ImuData.acc[j].z);
 	}
-	m_AccelData = m_AccelData / m_ImuData.acc_samples;
-	m_AccelData = m_AccelData.normalize();
+	accelData = accelData / m_ImuData.acc_samples;
+	accelData = accelData.normalize();
 
 	if ((totalSamples++ % 100) == 0) {
 		m_RunTime->Log(SD_LOG_LEVEL_DEBUG,"deltaT0: %1.6f totalDeltaT: %1.6f\n",
-				deltaT0,ioPacket.deltaTime);
+				deltaT0,ioPacket->DeltaTime());
 		m_RunTime->Log(SD_LOG_LEVEL_DEBUG,"--> Gyro  : %d, Acc:  %d samples\n",
 				m_ImuData.gyro_samples,m_ImuData.acc_samples);
 	}
 
-	m_MagData.clear();
+	magData.clear();
 	for (unsigned int j = 0; j < m_ImuData.mag_samples; j++) {
-		m_MagData = m_MagData + Vector3d(
+		magData = magData + Vector3d(
 				m_ImuData.mag[j].x, m_ImuData.mag[j].y, m_ImuData.mag[j].z);
 	}
-	m_MagData = m_MagData / m_ImuData.mag_samples;
+	magData = magData / m_ImuData.mag_samples;
 
-	ioPacket.gyroDataDps = &m_GyroData;
-	ioPacket.accelData = &m_AccelData;
-	ioPacket.magData = &m_MagData;
-	ret = m_RunTime->DispatchIo(&ioPacket,0);
+	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(&accelData));
+	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(&gyroData));
+	ioPacket->SetAttribute(SDIO_ATTR_MAG,SdIoData(&magData));
+	ret = m_RunTime->DispatchIo(ioPacket,0);
 
 	__return:
+
+	m_RunTime->FreeIoPacket(ioPacket);
 
 	return ret;
 }

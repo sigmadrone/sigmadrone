@@ -1058,7 +1058,7 @@ public:
 			if (axis.lengthSq() < EPSILON * EPSILON) // pick another if colinear
 				axis = MatrixMN<T, 3, 1>::cross(MatrixMN<T, 3, 1>(0, 1, 0), v0);
 			axis.normalize();
-			q = fromAxisRot(axis, 180);
+			q = fromAxisRot(axis, M_PI);
 		} else {
 			double s = std::sqrt((1 + d) * 2);
 			double invs = 1 / s;

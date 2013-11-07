@@ -94,15 +94,15 @@ int Navigator::IoCallback(SdIoPacket* ioPacket)
 {
 	assert(!!m_Runtime);
 	int ret = EINVAL;
-	switch (ioPacket->deviceId)
+	switch (ioPacket->DeviceId())
 	{
 	case SD_DEVICEID_IMU:
-		if (SD_IOCODE_RECEIVE == ioPacket->ioCode) {
+		if (SD_IOCODE_RECEIVE == ioPacket->IoCode()) {
 			//
 			// Set up the target quaternion
 			//
-			ioPacket->targetQ = &m_TargetAttitude;
-		} else if (SD_IOCODE_COMMAND == ioPacket->ioCode) {
+			ioPacket->SetAttribute(SDIO_ATTR_TARGET_Q,SdIoData(&m_TargetAttitude));
+		} else if (SD_IOCODE_COMMAND == ioPacket->IoCode()) {
 			// TODO: the target attitude can be controlled here
 		}
 		ret = SD_ESUCCESS;

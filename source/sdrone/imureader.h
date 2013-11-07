@@ -44,9 +44,6 @@ private:
 	ImuDevice m_MagDevice;
 	ImuDevice m_GyroDevice;
 	SdImuData m_ImuData;
-	Vector3d m_AccelData;
-	Vector3d m_GyroData;
-	Vector3d m_MagData;
 	SdImuDeviceConfig m_GyroConfig;
 	IPluginRuntime* m_RunTime;
 	int m_RefCnt;

@@ -37,7 +37,6 @@ private:
 	~ImuBias();
 
 private:
-	Vector3d m_GyroData;
 	Vector3d m_EarthG;
 	Vector3d m_GyroBias;
 	uint32_t m_CurrentBiasSamples;

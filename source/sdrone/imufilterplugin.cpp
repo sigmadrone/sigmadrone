@@ -88,19 +88,28 @@ const char* ImuFilterPlugin::GetDlFileName()
 
 int ImuFilterPlugin::IoCallback(SdIoPacket* ioPacket)
 {
-	assert(SD_DEVICEID_IMU==ioPacket->deviceId);
-	assert(SD_IOCODE_RECEIVE == ioPacket->ioCode);
-	if (0 == ioPacket->accelData || 0 == ioPacket->gyroDataDps || 0 == ioPacket->magData) {
-		return EINVAL;
-	}
+	assert(SD_DEVICEID_IMU == ioPacket->DeviceId());
+	assert(SD_IOCODE_RECEIVE == ioPacket->IoCode());
+
 	if (m_SetEarthG) {
-		m_ImuFilter.SetEarthG(*ioPacket->earthG);
-		m_SetEarthG = false;
+		SdIoData earthG = ioPacket->GetAttribute(SDIO_ATTR_EARTH_G);
+		if (earthG.dataType == SdIoData::TYPE_VECTOR3D) {
+			m_ImuFilter.SetEarthG(*earthG.asVector3d);
+			m_SetEarthG = false;
+		} else {
+			m_Runtime->Log(SD_LOG_LEVEL_ERROR,
+					"ImuFilterPlugin: earth G was expected!\n");
+			return EINVAL;
+		}
 	}
-	ioPacket->attitudeQ = &(m_ImuFilter.Update(
-			*ioPacket->gyroDataDps,
-			*ioPacket->accelData,
-			*ioPacket->magData,
-			ioPacket->deltaTime));
+
+	const QuaternionD& attQ = m_ImuFilter.Update(
+			ioPacket->GyroData(),
+			ioPacket->AccelData(),
+			ioPacket->MagData(),
+			ioPacket->DeltaTime());
+	ioPacket->SetAttribute(SDIO_ATTR_ATTITUDE_Q,SdIoData(&attQ));
+	ioPacket->SetAttribute(SDIO_ATTR_CORR_VELOCITY,
+			SdIoData(&(m_ImuFilter.GetVg())));
 	return SD_ESUCCESS;
 }

@@ -279,6 +279,7 @@ typedef uint64_t SdDeviceId;
 #define SD_EFIRST 		20000
 #define SD_ESTOP_DISPATCH  	SD_EFIRST+0
 #define SD_EINVALID_DEPENDENCY SD_EFIRST+1
+#define SD_INVALID_ATTRIBUTE SD_EFIRST+2
 
 
 typedef int (*SdPluginAttachFunc)(
@@ -310,100 +311,167 @@ typedef struct _SdServoIoData
 	double value [16];
 } SdServoIoData;
 
-typedef struct _SdIoData
-{
-	static const uint32_t TYPE_INVALID = 0;
-	static const uint32_t TYPE_IMU = 1;
-	static const uint32_t TYPE_VOID_PTR = 2; /*any struct*/
-	static const uint32_t TYPE_VECTOR4D = 3;
-	static const uint32_t TYPE_BLOB = 4;
-	static const uint32_t TYPE_FILE = 5;
-	static const uint32_t TYPE_QUATERNION = 6;
-	static const uint32_t TYPE_COMMAND_ARGS = 7;
-	static const uint32_t TYPE_SERVO = 8;
+struct CommandArgs;
 
-	uint32_t dataType; /*one of the above*/
+struct SdIoData
+{
+	static const uint32_t TYPE_INVALID 		= 0;
+	static const uint32_t TYPE_INT32 		= 1;
+	static const uint32_t TYPE_DOUBLE 		= 2;
+	static const uint32_t TYPE_STRING 		= 3;
+	static const uint32_t TYPE_BLOB 		= 4;
+	static const uint32_t TYPE_FILE 		= 5;
+	static const uint32_t TYPE_VECTOR3D 	= 6;
+	static const uint32_t TYPE_VECTOR4D 	= 7;
+	static const uint32_t TYPE_QUATERNION 	= 8;
+	static const uint32_t TYPE_IMU 			= 9;
+	static const uint32_t TYPE_COMMAND_ARGS = 10;
+	static const uint32_t TYPE_SERVO 		= 11;
+	static const uint32_t TYPE_VOID_PTR 	= 12;
+
+	SdIoData() { dataType = TYPE_INVALID; asDouble = 0; }
+	SdIoData(int32_t i) { dataType = TYPE_INT32; asInt32 = i; }
+	SdIoData(uint32_t i) { dataType = TYPE_INT32; asInt32 = i; }
+	SdIoData(double d) { dataType = TYPE_DOUBLE; asDouble = d; }
+	SdIoData(const char* str) { dataType = TYPE_STRING; asString = str; }
+	SdIoData(FILE* f) { dataType = TYPE_FILE; asFile = f; }
+	SdIoData(const Vector3d* v3d) { dataType = TYPE_VECTOR3D; asVector3d = v3d; }
+	SdIoData(const Vector4d* v4d) { dataType = TYPE_VECTOR4D; asVector4d = v4d; }
+	SdIoData(const QuaternionD* qt) { dataType = TYPE_QUATERNION; asQuaternion = qt; }
+	SdIoData(const SdImuData* imu) { dataType = TYPE_IMU; asImuData = imu; }
+	SdIoData(const SdServoIoData* siod) { dataType = TYPE_SERVO; asServoData = siod; }
+	SdIoData(CommandArgs* args) {
+		dataType = TYPE_COMMAND_ARGS; asCommandArgs = args;
+	}
+	SdIoData(const void* p, uint32_t size) {
+			dataType = TYPE_BLOB; asBlob.blob = p; asBlob.blobSize = size;
+	}
+
+	uint32_t dataType; /*one of the above types*/
 	union
 	{
-		const SdImuData* asImuData;
-		struct CommandArgs* asCommandArgs;
-		const SdServoIoData* asServoData;
+		int32_t asInt32;
+		double asDouble;
+		const char* asString;
 		const void* asVoidPtr;
-		const Vector4d* asVector4d;
-		FILE* asFile;
-		const QuaternionD* asQuaternion;
 		struct
 		{
 			uint32_t blobSize;
 			const void* blob;
 		} asBlob;
+		FILE* asFile;
+		const QuaternionD* asQuaternion;
+		const Vector4d* asVector4d;
+		const Vector3d* asVector3d;
+		const SdImuData* asImuData;
+		CommandArgs* asCommandArgs;
+		const SdServoIoData* asServoData;
 	};
-	IPlugin* dataOwner;
-	//SdIoData* next;
-} SdIoData;
+};
 
-typedef struct _SdIoPacket
+
+
+static const uint32_t SDIO_ATTR_ATTITUDE_Q 	= 0;
+static const uint32_t SDIO_ATTR_TARGET_Q 	= 1;
+static const uint32_t SDIO_ATTR_GYRO 		= 2;
+static const uint32_t SDIO_ATTR_ACCEL 		= 3;
+static const uint32_t SDIO_ATTR_MAG 		= 4;
+static const uint32_t SDIO_ATTR_EARTH_G 	= 5;
+static const uint32_t SDIO_ATTR_MOTORS 		= 6;
+static const uint32_t SDIO_ATTR_ERR_PID 	= 7;
+static const uint32_t SDIO_ATTR_ERR_P 		= 8;
+static const uint32_t SDIO_ATTR_ERR_I 		= 9;
+static const uint32_t SDIO_ATTR_ERR_D 		= 10;
+static const uint32_t SDIO_ATTR_ERR_ANGLE	= 11;
+static const uint32_t SDIO_ATTR_ALTITUDE	= 12;
+static const uint32_t SDIO_ATTR_DELTA_TIME	= 13;
+static const uint32_t SDIO_ATTR_CORR_VELOCITY = 14;
+static const uint32_t SDIO_ATTR_TIME_TO_READ_SENSORS = 15;
+static const uint32_t SDIO_ATTR_TEMPERATURE = 16;
+static const uint32_t SDIO_ATTR_COORDINATES = 17;
+
+/*
+ * SdIoPacket describes the IO structure that travels up and down the plugin
+ * chain. SdIoPacket has the following main categories of fields:
+ * - fields that do not change for the life of the object - returned from
+ * IoCode(), PluginName(), DeviceId(), StartingAltitude()
+ * - input/output data - the equivalent of input/output parameters in a function
+ * call. Input data is populated by the issuer and output data is set by the
+ * target plugin, used to return information to the caller/issuer of the SdIoPacket
+ * - drone state attributes - filled-in by different plugins as the packet moves
+ * thru the chain. Attributes are not guaranteed to be always present
+ */
+struct SdIoPacket
 {
-	static void Init(
-		_SdIoPacket* io,
-		uint32_t ioCode,
-		SdDeviceId deviceType,
-		const char* pluginName)
-	{
-		memset(io,0,sizeof(*io));
-		io->size = sizeof(*io);
-		io->ioCode = ioCode;
-		io->deviceId = deviceType;
-		io->pluginName = pluginName;
-	}
-
-	static const uint32_t FLAG_DISPATCH_UP = 0x0001;
-
-	uint32_t size;
-	uint32_t flags;
-	SdPluginAltitude startPluginAltitude;
-	uint32_t ioCode;
-	uint32_t reserved[8];
-
-	const char* pluginName;
-	SdDeviceId deviceId;
+	virtual uint32_t IoCode() = 0;
+	virtual uint32_t Flags() = 0;
 
 	/*
-	 * inData is always used to convey data across the chain, think of
-	 * it as an input parameter of a function call.
+	 * Returns the target plugin name, may be NULL for IOs with
+	 * SD_IOCODE_RECEIVE
 	 */
-	SdIoData inData;
+	virtual const char* PluginName() = 0;
 
 	/*
-	 * outData is used only to return back data to the issuer
-	 * of the IO operation; think of it as an output parameter
-	 * of the function call
+	 * Returns the target device ID, this will be the issuer's ID
+	 * for SD_IOCODE_RECEIVE and the target ID for the rest of the
+	 * SD_IOCODE_XXX.
 	 */
-	SdIoData outData;
+	virtual SdDeviceId DeviceId() = 0;
 
 	/*
-	 * Drone state
+	 * Returns the altitude at which the IO was inserted in the chain;
+	 * for the most part it will equal the altitude of the plugin that
+	 * issued the IO
 	 */
-	const QuaternionD* attitudeQ;
-	const QuaternionD* targetQ;
-	const QuaternionD* motorAxisQ;
-	const Vector3d* velocity;
-	const Vector3d* gyroDataDps;
-	const Vector3d* accelData;
-	const Vector3d* magData;
-	const Vector3d* earthG;
-	const Vector4d* motors;
-	const Vector3d* errAxisPid;
-	const Vector3d* errAxis;
-	const Vector3d* errAxisP;
-	const Vector3d* errAxisI;
-	const Vector3d* errAxisD;
-	double errAngle;
-	double droneAltitude;
-	double deltaTime; /*elapsed time since the last sample*/
-	double timeToReadSensors;
-	// TODO: Gps/Temperature
-} SdIoPacket;
+	virtual SdPluginAltitude StartingAltitude() = 0;
+
+	/*
+	 * Set/GetIoData. Input data conveys data across the chain, think of
+	 * it as an input parameter of a function call. Output data is used
+	 * only to return data back to the issuer of the IO operation; think
+	 * of it as an output parameter of the function call
+	 */
+	virtual const SdIoData& GetIoData(
+			bool input
+			) = 0;
+	virtual void SetIoData(
+			IN const SdIoData&,
+			IN bool input
+			) = 0;
+	/*
+	 * Returns the specified attribute type. If the attribute type has not been
+	 * set prior to the call, then the returned SdIoData will carry data type
+	 * SdIoData::TYPE_INVALID
+	 */
+	virtual SdIoData GetAttribute(
+			IN uint32_t attributeType
+			) = 0;
+
+	/*
+	 * Sets IO attribute.
+	 */
+	virtual int SetAttribute(
+			IN uint32_t attributeType,
+			IN const SdIoData& attribute
+			) = 0;
+
+	/*
+	 * Shortcut getters. These APIs achieve the same functionality
+	 * as GetAttribute/SetAttribute and are provided for easy access to
+	 * the most commonly accessed fields
+	 */
+	virtual const QuaternionD& Attitude() = 0;
+	virtual const Vector3d& GyroData() = 0;
+	virtual const Vector3d& AccelData() = 0;
+	virtual const Vector3d& MagData() = 0;
+	virtual const QuaternionD& TargetAttitude() = 0;
+	virtual double DeltaTime() = 0;
+
+
+protected:
+	virtual ~SdIoPacket() {}
+};
 
 /*
  * If SD_FLAG_DISPATCH_DOWN set the IO is dispatched from higher to lower
@@ -488,6 +556,16 @@ struct IPluginRuntime
 			int logLevel,
 			const char* format,
 			va_list args
+			) = 0;
+
+	virtual SdIoPacket* AllocIoPacket(
+			uint32_t ioCode,
+			SdDeviceId deviceType,
+			const char* pluginName
+			) = 0;
+
+	virtual void FreeIoPacket(
+			SdIoPacket*
 			) = 0;
 
 #if 0

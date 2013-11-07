@@ -93,15 +93,12 @@ const char* ImuRemap::GetDlFileName()
 int ImuRemap::IoCallback(
 	SdIoPacket* ioPacket)
 {
-	if (!!ioPacket->accelData && !!ioPacket->gyroDataDps && !!ioPacket->magData)
-	{
-		m_MagData = m_MagMap * (*ioPacket->magData);
-		m_AccelData = m_AccelMap * (*ioPacket->accelData);
-		m_GyroData = m_GyroMap * (*ioPacket->gyroDataDps);
-		ioPacket->magData = &m_MagData;
-		ioPacket->gyroDataDps = &m_GyroData;
-		ioPacket->accelData = &m_AccelData;
-	}
+	Vector3d accelData = m_AccelMap * ioPacket->AccelData();
+	Vector3d gyroData = m_GyroMap * ioPacket->GyroData();
+	Vector3d magData = m_MagMap * ioPacket->MagData();
+	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(&accelData));
+	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(&gyroData));
+	ioPacket->SetAttribute(SDIO_ATTR_MAG,SdIoData(&magData));
 	return SD_ESUCCESS;
 }
 

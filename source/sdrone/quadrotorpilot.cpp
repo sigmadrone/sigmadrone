@@ -118,16 +118,11 @@ int QuadRotorPilot::IoCallback(
 	SdIoPacket* ioPacket)
 {
 	int err = 0;
-	if (SD_IOCODE_RECEIVE == ioPacket->ioCode) {
+	if (SD_IOCODE_RECEIVE == ioPacket->IoCode()) {
 
 		/*
 		 * Check whether the IO carries all the necessary info for the pilot
 		 */
-		if (0 == ioPacket->attitudeQ || 0 == ioPacket->targetQ ||
-			0 == ioPacket->gyroDataDps) {
-			return EINVAL;
-		}
-
 		UpdateState(ioPacket);
 
 #if 0
@@ -142,18 +137,8 @@ int QuadRotorPilot::IoCallback(
 				m_DesiredOmega.at(0,0),m_DesiredOmega.at(1,0),m_DesiredOmega.at(2,0));
 #endif
 
-		/*
-		 *  Set the motor values in the IO structures so it can be used by the
-		 *  rest of the chain
-		 */
-		ioPacket->motors = &m_Motors;
 		if (0 == (m_Counter++%(m_Skip+1)))
 		{
-			SdServoIoData servoData;
-			SdIoPacket ioPacket;
-
-			CalcThrustFromErrAxis(m_ErrorAxisPid,m_DesiredRev);
-
 			//
 			// Issue commands to the servos. Since the servos are controlled by
 			// different device, we must issue new SdIoPacket "down" to the servo
@@ -161,33 +146,47 @@ int QuadRotorPilot::IoCallback(
 			// be another plugin on top that performs different functions, aka
 			// logging, etc.
 			//
-			servoData.numChannels = 4;
-			for (size_t i = 0; i < ARRAYSIZE(m_Config.Motor); i++) {
-				servoData.channels[i] = m_Config.Motor[i];
-				servoData.value[i] = m_Motors.at(i,0);
+			SdServoIoData servoData;
+			SdIoPacket* ioPacket = m_Runtime->AllocIoPacket(
+					SD_IOCODE_SEND,
+					SD_DEVICEID_SERVO,
+					SD_PLUGIN_SERVO_PCA9685);
+			if (0 != ioPacket) {
+
+				CalcThrustFromErrAxis(m_ErrorAxisPid,m_DesiredRev);
+
+				servoData.numChannels = 4;
+				for (size_t i = 0; i < ARRAYSIZE(m_Config.Motor); i++) {
+					servoData.channels[i] = m_Config.Motor[i];
+					servoData.value[i] = m_Motors.at(i,0);
+				}
+
+				ioPacket->SetIoData(SdIoData(&servoData),true);
+				err = m_Runtime->DispatchIo(ioPacket,SD_FLAG_DISPATCH_DOWN);
+				m_Runtime->FreeIoPacket(ioPacket);
+			} else {
+				m_Runtime->Log(SD_LOG_LEVEL_ERROR,
+						"Quadrotor pilot failed to alloc iopacket!\n");
 			}
+		}
+		/*
+		 *  Set the motor values in the IO structures so it can be used by the
+		 *  rest of the chain
+		 */
+		ioPacket->SetAttribute(SDIO_ATTR_MOTORS,SdIoData(&m_Motors));
 
-			//
-			// Failure to enforce a command here is pretty much a crash waiting
-			// to happen. And by crash I mean drone crash, not an app or OS one.
-			//
-			SdIoPacket::Init(&ioPacket,SD_IOCODE_SEND,
-					SD_DEVICEID_SERVO,SD_PLUGIN_SERVO_PCA9685);
-			ioPacket.inData.dataType = SdIoData::TYPE_SERVO;
-			ioPacket.inData.asServoData = &servoData;
-			err = m_Runtime->DispatchIo(&ioPacket,SD_FLAG_DISPATCH_DOWN);
+	} else if (SD_IOCODE_COMMAND == ioPacket->IoCode()) {
+		if (ioPacket->GetIoData(true).dataType == SdIoData::TYPE_COMMAND_ARGS) {
+			CommandArgs* args = ioPacket->GetIoData(true).asCommandArgs;
+			SetMinRev(args->GetMinThrust());
+			SetMaxRev(args->GetMaxThrust());
+			m_DesiredRev = fmin(args->GetMaxThrust(),args->GetDesiredThrust());
+			m_DesiredRev = fmax(args->GetMinThrust(),m_DesiredRev);
+		} else {
+			assert(false);
+			err = EINVAL;
 		}
 
-	} else if (SD_IOCODE_COMMAND == ioPacket->ioCode) {
-		CommandArgs* args = ioPacket->inData.asCommandArgs;
-		if (ioPacket->inData.dataType != SdIoData::TYPE_COMMAND_ARGS ||
-			0 == args) {
-			return EINVAL;
-		}
-		SetMinRev(args->GetMinThrust());
-		SetMaxRev(args->GetMaxThrust());
-		m_DesiredRev = fmin(args->GetMaxThrust(),args->GetDesiredThrust());
-		m_DesiredRev = fmax(args->GetMinThrust(),m_DesiredRev);
 	} else {
 		assert(false);
 	}
@@ -202,8 +201,8 @@ template <typename T> __inline int sign(T val)
 int QuadRotorPilot::UpdateState(
 	SdIoPacket* ioPacket)
 {
-	QuaternionD attitudeQ = *ioPacket->attitudeQ;
-	QuaternionD targetQ = QuaternionD(0.9962,0.0872,0,0);//*ioPacket->targetQ;
+	QuaternionD attitudeQ = ioPacket->Attitude();
+	const QuaternionD targetQ = ioPacket->TargetAttitude(); //QuaternionD(0.9962,0.0872,0,0);
 	int retVal = 0;
 	Vector3d currentOmega;
 
@@ -222,7 +221,7 @@ int QuadRotorPilot::UpdateState(
 #if 0
 	errQ = errQ.normalize();
 #endif
-	currentOmega = m_RotZQ.rotate(*ioPacket->gyroDataDps);
+	currentOmega = m_RotZQ.rotate(ioPacket->GyroData());
 	currentOmega = m_GyroFilt.DoFilter(currentOmega);
 
 	double angleDeg = RAD2DEG(errQ.angle());
@@ -244,7 +243,7 @@ int QuadRotorPilot::UpdateState(
 	} else {
 		errAxis = errQ.axis().normalize() * DEG2RAD(angleDeg);
 	}
-	Vector3d angAccel = (currentOmega-m_Omega)/ioPacket->deltaTime;
+	Vector3d angAccel = (currentOmega-m_Omega)/ioPacket->DeltaTime();
 	Vector3d desiredOmega = CalcDesiredOmega3d(errAxis);
 
 	errAxis.at(2,0) = 0; // clear Z axis, we will take care of that later
@@ -271,11 +270,11 @@ int QuadRotorPilot::UpdateState(
 	m_ErrorP = m_PidCtl.GetP(errAxis);
 	m_ErrorI = m_PidCtl.GetI(
 			m_ErrorAxis,
-			ioPacket->deltaTime,0);
+			ioPacket->DeltaTime(),0);
 			//ioPacket->deltaTime/1000);
 	m_ErrorD = m_PidCtl.GetD(
 			m_ErrorAxis,
-			ioPacket->deltaTime);
+			ioPacket->DeltaTime());
 	m_ErrorAxisPid  = m_ErrorP+m_ErrorI+m_ErrorD;
 
 	m_ErrorAngle = angleDeg;
@@ -284,13 +283,11 @@ int QuadRotorPilot::UpdateState(
 	m_Omega = currentOmega;
 	m_DesiredOmega = desiredOmega;
 
-	ioPacket->errAxis = &m_ErrorAxis;
-	ioPacket->errAxisPid = &m_ErrorAxisPid;
-	ioPacket->motorAxisQ = &m_RotZQ;
-	ioPacket->errAxisP = &m_ErrorP;
-	ioPacket->errAxisI = &m_ErrorI;
-	ioPacket->errAxisD = &m_ErrorD;
-	ioPacket->errAngle = angleDeg;
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_PID,SdIoData(&m_ErrorAxisPid));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_P,SdIoData(&m_ErrorP));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_I,SdIoData(&m_ErrorI));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_D,SdIoData(&m_ErrorD));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_ANGLE,SdIoData(angleDeg));
 
 	return retVal;
 }

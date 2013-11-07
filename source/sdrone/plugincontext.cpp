@@ -8,6 +8,7 @@
 #include "plugincontext.h"
 #include <dlfcn.h>
 #include "pluginchain.h"
+#include "iopacket.h"
 
 static void* s_myModuleHandle = (void*)-1;
 extern char **g_Argv;
@@ -198,4 +199,24 @@ uint32_t PluginContext::GetPluginDeviceFilter()
 uint32_t PluginContext::GetPluginIoCodeFilter()
 {
 	return m_ioFilter;
+}
+
+SdIoPacket* PluginContext::AllocIoPacket(
+		uint32_t ioCode,
+		SdDeviceId deviceType,
+		const char* pluginName)
+{
+	SdIoPacket* ioPacket = new IoPacket(m_altitude,ioCode,
+			deviceType,pluginName);
+	if (0 == ioPacket) {
+		printf("ERROR: failed to alloc packet,  ioCode %d, "
+				"plugin %s\n", ioCode, pluginName);
+	}
+	return ioPacket;
+}
+
+void PluginContext::FreeIoPacket(
+		SdIoPacket* iop)
+{
+	delete static_cast<IoPacket*>(iop);
 }

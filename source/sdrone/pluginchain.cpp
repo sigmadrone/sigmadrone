@@ -6,6 +6,7 @@
  */
 
 #include "pluginchain.h"
+#include "iopacket.h"
 
 PluginChain::PluginChain()
 {
@@ -277,8 +278,8 @@ int PluginChain::DispatchIo(
 			&it,
 			caller,
 			dispatchFlags,
-			SD_DEVICEID_TO_FLAG(iop->deviceId),
-			SD_IOCODE_TO_FLAG(iop->ioCode));
+			SD_DEVICEID_TO_FLAG(iop->DeviceId()),
+			SD_IOCODE_TO_FLAG(iop->IoCode()));
 	for (it.BeginIterate(); 0 != it.Get() && SD_ESUCCESS == err; it.Next()) {
 		err = it.Get()->m_plugin->IoCallback(iop);
 	}
@@ -331,14 +332,19 @@ int PluginChain::ExecuteCommand(_CommandArgs* cmdArgs)
 {
 	int err = 0;
 	RefedPluginListIterator it;
-	SdIoPacket iop;
-	SdIoPacket::Init(&iop,SD_IOCODE_COMMAND,SD_DEVICEID_ALL,"bcast");
-	iop.inData.asCommandArgs = cmdArgs;
-	iop.inData.dataType = SdIoData::TYPE_COMMAND_ARGS;
+	IoPacket* iop = new IoPacket(SD_ALTITUDE_FIRST,
+			SD_IOCODE_COMMAND,
+			SD_DEVICEID_ALL,
+			"bcast");
+	if (0 == iop) {
+		return ENOMEM;
+	}
+	iop->SetIoData(SdIoData(cmdArgs),true);
 	ReferencePluginList(&it,0,SD_FLAG_DISPATCH_TO_ALL,0,0);
 	for (it.BeginIterate(); 0 != it.Get() && SD_ESUCCESS == err; it.Next()) {
-		it.Get()->m_plugin->IoCallback(&iop);
+		it.Get()->m_plugin->IoCallback(iop);
 	}
+	delete iop;
 	return err;
 }
 

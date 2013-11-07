@@ -40,9 +40,6 @@ private:
 	Matrix3d m_AccelMap;
 	Matrix3d m_GyroMap;
 	Matrix3d m_MagMap;
-	Vector3d m_AccelData;
-	Vector3d m_GyroData;
-	Vector3d m_MagData;
 	IPluginRuntime* m_Runtime;
 	int m_RefCnt;
 };

@@ -98,11 +98,11 @@ int TraceLogPlugin::IoCallback(
 {
 	const QuaternionD* attQ;
 	const Vector4d* mot;
-	const Vector3d* gyroDps;
 	Vector3d x(1, 0, 0), y(0, 1, 0), z(0, 0, 1);
+	SdIoData ioData;
 
 	++m_iteration;
-	m_timeAfterLastLog += ioPacket->deltaTime;
+	m_timeAfterLastLog += ioPacket->DeltaTime();
 
 	if (m_timeAfterLastLog < m_logPeriod) {
 		return SD_ESUCCESS;
@@ -114,12 +114,7 @@ int TraceLogPlugin::IoCallback(
 		return SD_ESUCCESS;
 	}
 
-	if (!ioPacket->attitudeQ) {
-		goto __return;
-	}
-
-	attQ = ioPacket->attitudeQ;
-	mot = ioPacket->motors;
+	attQ = &ioPacket->Attitude();
 	x = attQ->rotate(Vector3d(1, 0, 0));
 	y = attQ->rotate(Vector3d(0, 1, 0));
 	z = attQ->rotate(Vector3d(0, 0, 1));
@@ -135,82 +130,72 @@ int TraceLogPlugin::IoCallback(
 
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
 			"--> dT,s  : %1.6lf  %1.6f (sensor read)\n",
-			ioPacket->deltaTime, ioPacket->timeToReadSensors);
+			ioPacket->DeltaTime(),
+			ioPacket->GetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS).asDouble);
 
-	if (ioPacket->accelData) {
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Accel : %1.3lf %1.3lf %1.3lf\n",
-				ioPacket->accelData->at(0,0),
-				ioPacket->accelData->at(1,0),
-				ioPacket->accelData->at(2,0));
+	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Accel : %1.3lf %1.3lf %1.3lf\n",
+			ioPacket->AccelData().at(0,0),
+			ioPacket->AccelData().at(1,0),
+			ioPacket->AccelData().at(2,0));
+
+	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Gyro  : %4.3lf %4.3lf %4.3lf\n",
+				ioPacket->GyroData().at(0,0),
+				ioPacket->GyroData().at(1,0),
+				ioPacket->GyroData().at(2,0));
+
+	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Mag   : %1.3lf %1.3lf %1.3lf\n",
+			ioPacket->MagData().at(0,0),
+			ioPacket->MagData().at(1,0),
+			ioPacket->MagData().at(2,0));
+
+	ioData = ioPacket->GetAttribute(SDIO_ATTR_CORR_VELOCITY);
+	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
+		assert(ioData.asVector3d);
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Vg    : %1.3lf %1.3lf %1.3lf\n",
+				ioData.asVector3d->at(0,0),
+				ioData.asVector3d->at(1,0),
+				ioData.asVector3d->at(2,0));
 	}
 
-	if (0 != (gyroDps = ioPacket->gyroDataDps)) {
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Gyro  : %4.3lf %4.3lf %4.3lf\n",
-				gyroDps->at(0,0), gyroDps->at(1,0), gyroDps->at(2,0));
-	}
-
-	if (ioPacket->magData) {
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Mag   : %1.3lf %1.3lf %1.3lf\n",
-				ioPacket->magData->at(0,0),
-				ioPacket->magData->at(1,0),
-				ioPacket->magData->at(2,0));
-	}
-
+	mot = ioPacket->GetAttribute(SDIO_ATTR_MOTORS).asVector4d;
 	if (0 != mot) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Motor : %1.3lf %1.3lf %1.3lf %1.3lf\n",
 			mot->at(0,0),mot->at(1,0),mot->at(2,0),mot->at(3,0));
 	}
 
-	if (ioPacket->errAxis) {
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> Err   : %1.3lf %1.3lf %1.3lf\n",
-				ioPacket->errAxis->at(0,0),ioPacket->errAxis->at(1,0),
-				ioPacket->errAxis->at(2,0));
-	}
-	if (ioPacket->errAxisPid) {
+	ioData = ioPacket->GetAttribute(SDIO_ATTR_ERR_PID);
+	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
 				"--> ErrPID: %1.3lf %1.3lf %1.3lf\n",
-				ioPacket->errAxisPid->at(0,0),ioPacket->errAxisPid->at(1,0),
-				ioPacket->errAxisPid->at(2,0));
+				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
+				ioData.asVector3d->at(2,0));
 	}
-	if (ioPacket->errAxisP && ioPacket->errAxisI && ioPacket->errAxisD) {
+	ioData = ioPacket->GetAttribute(SDIO_ATTR_ERR_P);
+	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> ErrP  : %1.3lf %1.3lf %1.3lf\n",
-				ioPacket->errAxisP->at(0,0),ioPacket->errAxisP->at(1,0),
-				ioPacket->errAxisP->at(2,0));
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> ErrI  : %1.3lf %1.3lf %1.3lf\n",
-				ioPacket->errAxisI->at(0,0),ioPacket->errAxisI->at(1,0),
-				ioPacket->errAxisI->at(2,0));
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> ErrD  : %1.3lf %1.3lf %1.3lf\n",
-				ioPacket->errAxisD->at(0,0),ioPacket->errAxisD->at(1,0),
-				ioPacket->errAxisD->at(2,0));
+				"--> ErrP: %1.3lf %1.3lf %1.3lf\n",
+				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
+				ioData.asVector3d->at(2,0));
 	}
-	if (ioPacket->motorAxisQ) {
-		QuaternionD motorQ =  (*ioPacket->motorAxisQ) * (*ioPacket->attitudeQ);
-#if 0
-		x = motorQ.rotate(Vector3d(1, 0, 0));
-		y = motorQ.rotate(Vector3d(0, 1, 0));
-		z = motorQ.rotate(Vector3d(0, 0, 1));
+	ioData = ioPacket->GetAttribute(SDIO_ATTR_ERR_I);
+	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> FrameX: %1.3lf %1.3lf %1.3lf\n",x.at(0,0),x.at(1,0),x.at(2,0));
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> FrameY: %1.3lf %1.3lf %1.3lf\n",y.at(0,0),y.at(1,0),y.at(2,0));
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> FrameZ: %1.3lf %1.3lf %1.3lf\n",z.at(0,0),z.at(1,0),z.at(2,0));
-#endif
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> FrameQ: %1.3lf %1.3lf %1.3lf %1.3lf\n",
-				motorQ.w,motorQ.x,motorQ.y,motorQ.z);
+				"--> ErrI: %1.3lf %1.3lf %1.3lf\n",
+				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
+				ioData.asVector3d->at(2,0));
 	}
-
-
+	ioData = ioPacket->GetAttribute(SDIO_ATTR_ERR_D);
+	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> ErrD: %1.3lf %1.3lf %1.3lf\n",
+				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
+				ioData.asVector3d->at(2,0));
+	}
 
 	if (m_logRotMatrix) {
-		const QuaternionD* tgtQ = ioPacket->targetQ;
+		const QuaternionD& tgtQ = ioPacket->TargetAttitude();
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Tgt Q : %1.3lf %1.3lf %1.3lf %1.3lf\n",
-				tgtQ->w,tgtQ->w,tgtQ->y,tgtQ->z);
+				tgtQ.w,tgtQ.w,tgtQ.y,tgtQ.z);
 		Matrix4d rotMx = attQ->rotMatrix4();
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
 				"%5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf \n",
@@ -219,9 +204,8 @@ int TraceLogPlugin::IoCallback(
 				rotMx.at(2, 0), rotMx.at(2, 1), rotMx.at(2, 2));
 	}
 
-	__return:
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-			"<-- ================ End Iteration %lu ===================\n\n",
+			"--> ================ End Iteration %lu ===================\n\n",
 			(unsigned long)m_iteration);
 
 	return SD_ESUCCESS;
