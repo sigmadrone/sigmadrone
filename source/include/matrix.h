@@ -882,10 +882,12 @@ public:
 	{
 		Quaternion<T> q = *this;
 		T len = length();
-		q.w /= len;
-		q.x /= len;
-		q.y /= len;
-		q.z /= len;
+		if (len > EPSILON) {
+			q.w /= len;
+			q.x /= len;
+			q.y /= len;
+			q.z /= len;
+		}
 		return q;
 	}
 
