@@ -48,7 +48,9 @@ private:
 	IPluginRuntime* m_RunTime;
 	int m_RefCnt;
 	FILE* m_File;
+	FILE* m_SensorLog;
 	timespec m_LastTime;
+	uint32_t m_Counter;
 };
 
 #endif /* IMUREADER_H_ */

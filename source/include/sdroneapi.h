@@ -236,7 +236,7 @@ inline  SdPluginAltitude SD_ALTITUDE_LAST_IN_GROUP(SdPluginAltitude alt) {
 /*
  * SD_IOCODE_COMMAND
  * Used by the framework to notify all the plugins about newly received
- * command
+ * command. Sent against SD_DEVICEID_COMMAND
  */
 #define SD_IOCODE_COMMAND	3
 
@@ -250,6 +250,7 @@ typedef uint64_t SdDeviceId;
 #define SD_DEVICEID_CAMERA		4
 #define SD_DEVICEID_SONAR		5
 #define SD_DEVICEID_FILTER		32
+#define SD_DEVICEID_COMMAND		33
 #define SD_DEVICEID_LAST		63
 #define SD_DEVICEID_ALL		((uint64_t)-1)
 
@@ -263,6 +264,7 @@ typedef uint64_t SdDeviceId;
 #define SD_PLUGIN_IMU_REMAP "sd.imuremap"
 #define SD_PLUGIN_IMU_LOWPASSFILTER "sd.imulowpassfilter"
 #define SD_PLUGIN_IMU_FILTER "sd.imufilter"
+#define SD_PLUGIN_IMU_KALMAN_FILTER "sd.imukalmanfilter"
 #define SD_PLUGIN_QUADPILOT  "sd.quadpilot"
 #define SD_PLUGIN_PIDPILOT  "sd.pidpilot"
 #define SD_PLUGIN_NAVIGATOR "sd.navigator"

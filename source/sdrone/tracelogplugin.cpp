@@ -151,10 +151,10 @@ int TraceLogPlugin::IoCallback(
 	ioData = ioPacket->GetAttribute(SDIO_ATTR_CORR_VELOCITY);
 	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
 		assert(ioData.asVector3d);
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Vg    : %1.3lf %1.3lf %1.3lf\n",
-				ioData.asVector3d->at(0,0),
-				ioData.asVector3d->at(1,0),
-				ioData.asVector3d->at(2,0));
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> GyroC : %1.3lf %1.3lf %1.3lf\n",
+				RAD2DEG(ioData.asVector3d->at(0,0)),
+				RAD2DEG(ioData.asVector3d->at(1,0)),
+				RAD2DEG(ioData.asVector3d->at(2,0)));
 	}
 
 	mot = ioPacket->GetAttribute(SDIO_ATTR_MOTORS).asVector4d;

@@ -191,7 +191,7 @@ void PluginContext::Logv(
 	vfprintf(stdout,format,args);
 }
 
-uint32_t PluginContext::GetPluginDeviceFilter()
+SdDeviceId PluginContext::GetPluginDeviceFilter()
 {
 	return m_deviceFilter;
 }

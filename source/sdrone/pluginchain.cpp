@@ -334,16 +334,13 @@ int PluginChain::ExecuteCommand(_CommandArgs* cmdArgs)
 	RefedPluginListIterator it;
 	IoPacket* iop = new IoPacket(SD_ALTITUDE_FIRST,
 			SD_IOCODE_COMMAND,
-			SD_DEVICEID_ALL,
+			SD_DEVICEID_COMMAND,
 			"bcast");
 	if (0 == iop) {
 		return ENOMEM;
 	}
 	iop->SetIoData(SdIoData(cmdArgs),true);
-	ReferencePluginList(&it,0,SD_FLAG_DISPATCH_TO_ALL,0,0);
-	for (it.BeginIterate(); 0 != it.Get() && SD_ESUCCESS == err; it.Next()) {
-		it.Get()->m_plugin->IoCallback(iop);
-	}
+	err = DispatchIo(0,iop,SD_FLAG_DISPATCH_TO_ALL);
 	delete iop;
 	return err;
 }

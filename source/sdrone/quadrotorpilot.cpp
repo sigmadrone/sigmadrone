@@ -65,7 +65,8 @@ int QuadRotorPilot::Start(
 	m_DesiredRev = cmdArgs->GetDesiredThrust();
 
 	m_Runtime->SetIoFilters(
-			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
+			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU) |
+			SD_DEVICEID_TO_FLAG(SD_DEVICEID_COMMAND),
 			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE)|
 			SD_IOCODE_TO_FLAG(SD_IOCODE_COMMAND));
 
@@ -88,6 +89,12 @@ int QuadRotorPilot::Release()
 
 void QuadRotorPilot::Stop(int flags)
 {
+	/*
+	 * Shutdown the motors
+	 */
+	m_MinRev = m_MaxRev = 0;
+	CalcThrustFromErrAxis(Vector3d(0,0,0),0);
+	IssueCommandToServo();
 	if (!!(flags&FLAG_STOP_AND_DETACH)) {
 		m_Runtime->DetachPlugin();
 	}
@@ -125,18 +132,7 @@ int QuadRotorPilot::IoCallback(
 		 */
 		UpdateState(ioPacket);
 
-#if 0
-		m_Runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> ErrAx : %1.3lf %1.3lf %1.3lf\n",
-				m_ErrorAxis.at(0,0),m_ErrorAxis.at(1,0),m_ErrorAxis.at(2,0));
-		m_Runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> Omega : %1.3lf %1.3lf %1.3lf\n",
-				m_Omega.at(0,0),m_Omega.at(1,0),m_Omega.at(2,0));
-		m_Runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> OmegaD: %1.3lf %1.3lf %1.3lf\n",
-				m_DesiredOmega.at(0,0),m_DesiredOmega.at(1,0),m_DesiredOmega.at(2,0));
-#endif
-
+		CalcThrustFromErrAxis(m_ErrorAxisPid,m_DesiredRev);
 		if (0 == (m_Counter++%(m_Skip+1)))
 		{
 			//
@@ -146,28 +142,7 @@ int QuadRotorPilot::IoCallback(
 			// be another plugin on top that performs different functions, aka
 			// logging, etc.
 			//
-			SdServoIoData servoData;
-			SdIoPacket* ioPacket = m_Runtime->AllocIoPacket(
-					SD_IOCODE_SEND,
-					SD_DEVICEID_SERVO,
-					SD_PLUGIN_SERVO_PCA9685);
-			if (0 != ioPacket) {
-
-				CalcThrustFromErrAxis(m_ErrorAxisPid,m_DesiredRev);
-
-				servoData.numChannels = 4;
-				for (size_t i = 0; i < ARRAYSIZE(m_Config.Motor); i++) {
-					servoData.channels[i] = m_Config.Motor[i];
-					servoData.value[i] = m_Motors.at(i,0);
-				}
-
-				ioPacket->SetIoData(SdIoData(&servoData),true);
-				err = m_Runtime->DispatchIo(ioPacket,SD_FLAG_DISPATCH_DOWN);
-				m_Runtime->FreeIoPacket(ioPacket);
-			} else {
-				m_Runtime->Log(SD_LOG_LEVEL_ERROR,
-						"Quadrotor pilot failed to alloc iopacket!\n");
-			}
+			err = IssueCommandToServo();
 		}
 		/*
 		 *  Set the motor values in the IO structures so it can be used by the
@@ -193,6 +168,34 @@ int QuadRotorPilot::IoCallback(
 	return err;
 }
 
+int QuadRotorPilot::IssueCommandToServo()
+{
+	//
+	// Since the servos are controlled by different device, we must issue new
+	// SdIoPacket "down" to the servo device.
+	//
+	int err = ENOMEM;
+	SdServoIoData servoData;
+	SdIoPacket* ioPacket = m_Runtime->AllocIoPacket(
+			SD_IOCODE_SEND,
+			SD_DEVICEID_SERVO,
+			SD_PLUGIN_SERVO_PCA9685);
+	if (0 != ioPacket) {
+		servoData.numChannels = 4;
+		for (size_t i = 0; i < ARRAYSIZE(m_Config.Motor); i++) {
+			servoData.channels[i] = m_Config.Motor[i];
+			servoData.value[i] = m_Motors.at(i,0);
+		}
+		ioPacket->SetIoData(SdIoData(&servoData),true);
+		err = m_Runtime->DispatchIo(ioPacket,SD_FLAG_DISPATCH_DOWN);
+		m_Runtime->FreeIoPacket(ioPacket);
+	} else {
+		m_Runtime->Log(SD_LOG_LEVEL_ERROR,
+				"Quadrotor pilot failed to alloc iopacket!\n");
+	}
+	return err;
+}
+
 template <typename T> __inline int sign(T val)
 {
 	return (T(0) < val) - (val < T(0));
@@ -205,6 +208,9 @@ int QuadRotorPilot::UpdateState(
 	const QuaternionD targetQ = ioPacket->TargetAttitude(); //QuaternionD(0.9962,0.0872,0,0);
 	int retVal = 0;
 	Vector3d currentOmega;
+
+	attitudeQ.z = 0;
+	attitudeQ = attitudeQ.normalize();
 
 	//
 	// Here we assume that m1 and m3 lie on the X axis, while m2 and m4
@@ -270,8 +276,8 @@ int QuadRotorPilot::UpdateState(
 	m_ErrorP = m_PidCtl.GetP(errAxis);
 	m_ErrorI = m_PidCtl.GetI(
 			m_ErrorAxis,
-			ioPacket->DeltaTime(),0);
-			//ioPacket->deltaTime/1000);
+			ioPacket->DeltaTime(),
+			ioPacket->DeltaTime());
 	m_ErrorD = m_PidCtl.GetD(
 			m_ErrorAxis,
 			ioPacket->DeltaTime());
@@ -297,7 +303,7 @@ void QuadRotorPilot::CalcThrustFromErrAxis(
 		double _targetThrust)
 {
 	//
-	// Control the motors in pairs 0-2 and 1-3.
+	// Control the motors in pairs 1-3 and 2-4.
 	// We use the following equations:
 	// 		torgX = l * k * (m4^2 - m2^2);
 	// 		torgY = l * k * (m3^2 - m1^2);
@@ -307,40 +313,14 @@ void QuadRotorPilot::CalcThrustFromErrAxis(
 	// we need to find w (motor rot velocity) deltas, that satisfy
 	// the equations above.
 	//
-	double deltaX;
-	double deltaY;
-	double deltaZ;
-	double denom;
-	double m1 = m_Motors.at(0,0);
-	double m2 = m_Motors.at(1,0);
-	double m3 = m_Motors.at(2,0);
-	double m4 = m_Motors.at(3,0);
-	double targetThrust = 4*_targetThrust*_targetThrust;
-
-
-	deltaX = err.at(0,0) + m2*m2 - m4*m4;
-	denom = 2 * (m2 + m4);
-	if (abs(denom) > 0.001) {
-		deltaX = deltaX / denom;
-	} else if (0 != denom) {
-		deltaX = deltaX*sign(denom);
-	}
-
-	deltaY = err.at(1,0) + m1*m1 - m3*m3;
-	denom = 2 * (m1 + m3);
-	if (abs(denom) > 0.001) {
-		deltaY = deltaY / denom;
-	} else if (0 != denom) {
-		deltaY = deltaY*sign(denom);
-	}
-
-	deltaZ = err.at(2,0) + m1*m1 - m2*m2 + m3*m3 - m4*m4;
-	denom = 2 * (m1 + m2 + m3 + m4);
-	if (abs(denom) > 0.001) {
-		deltaZ = deltaZ / denom;
-	} else if (0 != denom) {
-		deltaZ = deltaZ * sign(denom);
-	}
+	double targetThrust = fmax(_targetThrust,0.01);
+	double deltaX = err.at(0,0)/(4 * targetThrust);
+	double deltaY = err.at(1,0)/(4 * targetThrust);
+	double deltaZ = err.at(2,0)/(8 * targetThrust);
+	double m1 = targetThrust;
+	double m2 = targetThrust;
+	double m3 = targetThrust;
+	double m4 = targetThrust;
 
 	m2 -= deltaX;
 	m4 += deltaX;
@@ -353,56 +333,6 @@ void QuadRotorPilot::CalcThrustFromErrAxis(
 	m4 += deltaZ;
 
 	SetAndScaleMotors(m1,m2,m3,m4);
-
-	// solving for the thrust deltas entails finding the roots of
-	// quadratic equation (I think)
-	double deltaThrust = 0;
-	double aCoeff = 4;
-	double bCoeff = 2 * m_Motors.sum();
-	for (int i = 0; i < 2; i++) {
-		double cCoeff = m_Motors.lengthSq() - targetThrust;
-		double det = bCoeff * bCoeff - 4 * aCoeff * cCoeff;
-		if (det < 0 && fabs(det) < 0.05) {
-			det = 0;
-		}
-		if (det >= 0) {
-			double x1 = (-bCoeff + sqrt(det)) / (2 * aCoeff);
-			double x2 = (-bCoeff - sqrt(det)) / (2 * aCoeff);
-			// we will pick the root that will result in the smallest
-			// deviation from the min/max values.
-			double med = (m_MaxRev + m_MinRev)/2;
-			Vector4d dev1 = m_Motors;
-			Vector4d dev2 = m_Motors;
-			dev1 = dev1 + x1;
-			dev1 = dev1 - med;
-			dev2 = dev2 + x2;
-			dev2 = dev2 - med;
-			if (dev1.lengthSq() < dev2.lengthSq()) {
-				deltaThrust = x1;
-			} else {
-				deltaThrust = x2;
-			}
-			break;
-		} else {
-			if (i > 0) {
-				printf("WARN: Negative determinant %lf for thrust %1.3lf\n"
-						"\t%1.3lf %1.3lf %1.3lf %1.3lf\n",
-						det, targetThrust,
-						m_Motors.at(0,0),m_Motors.at(1,0),
-						m_Motors.at(2,0),m_Motors.at(3,0));
-				break;
-			}
-			// fixup target thrust, so the det will be 0
-			targetThrust = m_Motors.lengthSq() - bCoeff * bCoeff / (4 * aCoeff);
-		}
-	}
-
-	m_Motors = m_Motors + deltaThrust;
-	SetAndScaleMotors(
-			m_Motors.at(0,0),
-			m_Motors.at(1,0),
-			m_Motors.at(2,0),
-			m_Motors.at(3,0));
 }
 
 void QuadRotorPilot::SetAndScaleMotors(

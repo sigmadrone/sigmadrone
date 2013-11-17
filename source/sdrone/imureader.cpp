@@ -12,11 +12,13 @@
 ImuReader::ImuReader()
 {
 	m_File = 0;
+	m_SensorLog = 0;
 	m_RunTime = 0;
 	memset(&m_ImuData,0,sizeof(m_ImuData));
 	memset(&m_GyroConfig,0,sizeof(m_GyroConfig));
 	clock_gettime(CLOCK_REALTIME, &m_LastTime);
 	m_RefCnt = 1;
+	m_Counter = 0;
 }
 
 ImuReader::~ImuReader()
@@ -45,6 +47,12 @@ void ImuReader::Close()
 		fclose(m_File);
 		m_File = 0;
 	}
+	if (0 != m_SensorLog) {
+		fflush(m_SensorLog);
+		fclose(m_SensorLog);
+		m_SensorLog = 0;
+	}
+	m_Counter = 0;
 }
 
 int ImuReader::Start(
@@ -53,6 +61,7 @@ int ImuReader::Start(
 	int err = EINVAL;
 	Close();
 	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
+	m_SensorLog = fopen("./sensordata.dat", "w");
 	if (droneConfig->Accel.DeviceName == droneConfig->Gyro.DeviceName) {
 		/*
 		 * Operating in text mode
@@ -196,8 +205,7 @@ const char* ImuReader::GetDlFileName()
 int ImuReader::IoCallback(
 	SdIoPacket* ioPacket)
 {
-	assert(false);
-	return EINVAL;
+	return SD_ESUCCESS;
 }
 
 int ImuReader::IoDispatchThread()
@@ -214,31 +222,34 @@ int ImuReader::IoDispatchThread()
 	if (0 == ioPacket) {
 		return ENOMEM;
 	}
+
+	++m_Counter;
+
 	ioPacket->SetIoData(SdIoData(&m_ImuData),true);
 	if (0 != m_File) {
+		float dt = 0;
 		char buffer[256];
 		if (fgets(buffer, sizeof(buffer), m_File)) {
-			sscanf(buffer, "%hd %hd %hd %hd %hd %hd %hd %hd %hd",
+			sscanf(buffer, "%hd %hd %hd %hd %hd %hd %hd %hd %hd %f",
 					&m_ImuData.acc[0].x, &m_ImuData.acc[0].y, &m_ImuData.acc[0].z,
 					&m_ImuData.gyro[0].x, &m_ImuData.gyro[0].y, &m_ImuData.gyro[0].z,
-					&m_ImuData.mag[0].x, &m_ImuData.mag[0].y, &m_ImuData.mag[0].z);
+					&m_ImuData.mag[0].x, &m_ImuData.mag[0].y, &m_ImuData.mag[0].z,&dt);
 			m_ImuData.gyro_samples = 1;
 			m_ImuData.acc_samples = 1;
 			m_ImuData.mag_samples = 1;
-			ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,SdIoData(0.005));
+			ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
+					SdIoData(!!dt ? dt : 1.0f/m_GyroConfig.SamplingRate));
 		} else {
 			ret = EIO;
 			goto __return;
 		}
 	} else {
 		deltaT0 = DeltaT();
-
 		ret = m_GyroDevice.ReadData(m_ImuData.gyro, sizeof(m_ImuData.gyro));
 		if (ret < 0) {
 			goto __return;
 		}
 		m_ImuData.gyro_samples = ret;
-
 		ret = m_AccDevice.ReadData(m_ImuData.acc, sizeof(m_ImuData.acc));
 		if (ret < 0) {
 			goto __return;
@@ -255,6 +266,14 @@ int ImuReader::IoDispatchThread()
 				SdIoData(timeToReadSensors));
 		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
 				SdIoData(timeToReadSensors+deltaT0));
+		if ((totalSamples++ % 20) == 0) {
+			m_RunTime->Log(SD_LOG_LEVEL_DEBUG,
+					"timeToReadSensors: %1.6f totalDeltaT: %1.6f\n",
+					timeToReadSensors, timeToReadSensors+deltaT0);
+			m_RunTime->Log(SD_LOG_LEVEL_DEBUG,
+					"--> Gyro  : %d, Acc:  %d samples\n",
+					m_ImuData.gyro_samples,m_ImuData.acc_samples);
+		}
 	}
 
 	gyroData.clear();
@@ -262,9 +281,7 @@ int ImuReader::IoDispatchThread()
 		gyroData = gyroData + Vector3d(
 				m_ImuData.gyro[j].x, m_ImuData.gyro[j].y, m_ImuData.gyro[j].z);
 	}
-	gyroData = gyroData / m_ImuData.gyro_samples * m_GyroConfig.Scale /
-			m_GyroConfig.MaxReading;
-
+	gyroData = gyroData / m_ImuData.gyro_samples;
 
 	accelData.clear();
 	for (unsigned int j = 0; j < m_ImuData.acc_samples; j++) {
@@ -272,14 +289,6 @@ int ImuReader::IoDispatchThread()
 				m_ImuData.acc[j].x, m_ImuData.acc[j].y, m_ImuData.acc[j].z);
 	}
 	accelData = accelData / m_ImuData.acc_samples;
-	accelData = accelData.normalize();
-
-	if ((totalSamples++ % 100) == 0) {
-		m_RunTime->Log(SD_LOG_LEVEL_DEBUG,"deltaT0: %1.6f totalDeltaT: %1.6f\n",
-				deltaT0,ioPacket->DeltaTime());
-		m_RunTime->Log(SD_LOG_LEVEL_DEBUG,"--> Gyro  : %d, Acc:  %d samples\n",
-				m_ImuData.gyro_samples,m_ImuData.acc_samples);
-	}
 
 	magData.clear();
 	for (unsigned int j = 0; j < m_ImuData.mag_samples; j++) {
@@ -287,6 +296,22 @@ int ImuReader::IoDispatchThread()
 				m_ImuData.mag[j].x, m_ImuData.mag[j].y, m_ImuData.mag[j].z);
 	}
 	magData = magData / m_ImuData.mag_samples;
+
+	fprintf(m_SensorLog, "%7d %7d %7d %7d %7d %7d %7d %7d %7d %0.4f\n",
+			(int32_t)accelData.at(0,0),
+			(int32_t)accelData.at(1,0),
+			(int32_t)accelData.at(2,0),
+			(int32_t)gyroData.at(0,0),
+			(int32_t)gyroData.at(1,0),
+			(int32_t)gyroData.at(2,0),
+			(int32_t)magData.at(0,0),
+			(int32_t)magData.at(1,0),
+			(int32_t)magData.at(2,0),
+			ioPacket->DeltaTime());
+
+	gyroData = gyroData * m_GyroConfig.Scale / m_GyroConfig.MaxReading;
+	accelData = accelData.normalize();
+	magData = magData.normalize();
 
 	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(&accelData));
 	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(&gyroData));

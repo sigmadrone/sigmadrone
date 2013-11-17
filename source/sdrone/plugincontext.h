@@ -63,7 +63,7 @@ public:
 	const std::string& GetLowerDependencies();
 	const std::string& GetUpperDependencies();
 	bool IsInitialized();
-	uint32_t GetPluginDeviceFilter();
+	SdDeviceId GetPluginDeviceFilter();
 	uint32_t GetPluginIoCodeFilter();
 
 private:
@@ -78,7 +78,7 @@ private:
 	SdPluginAltitude m_altitude;
 	std::string m_lowerDependencies;
 	std::string m_upperDependencies;
-	uint32_t m_deviceFilter;
+	SdDeviceId m_deviceFilter;
 	uint32_t m_ioFilter;
 	pthread_t m_dispatchThread;
 	int m_refCnt;

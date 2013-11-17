@@ -56,6 +56,7 @@ private:
 	int UpdateState(
 			SdIoPacket*
 			);
+	int IssueCommandToServo();
 
 	static double GetTorqueScale(
 			double errAngle

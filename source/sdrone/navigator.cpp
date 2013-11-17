@@ -41,7 +41,8 @@ int Navigator::Start(CommandArgs* cmdArgs)
 	m_Runtime->SetIoFilters(
 			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU) |
 			SD_DEVICEID_TO_FLAG(SD_DEVICEID_BAR) |
-			SD_DEVICEID_TO_FLAG(SD_DEVICEID_GPS),
+			SD_DEVICEID_TO_FLAG(SD_DEVICEID_GPS) |
+			SD_DEVICEID_TO_FLAG(SD_DEVICEID_COMMAND),
 			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE)|
 			SD_IOCODE_TO_FLAG(SD_IOCODE_COMMAND));
 	return 0;
@@ -108,8 +109,9 @@ int Navigator::IoCallback(SdIoPacket* ioPacket)
 		ret = SD_ESUCCESS;
 		break;
 	case SD_DEVICEID_GPS: // TODO
-		break;
 	case SD_DEVICEID_BAR: // TODO
+	case SD_DEVICEID_COMMAND:
+		ret = SD_ESUCCESS;
 		break;
 	default:;
 	}
