@@ -172,8 +172,8 @@ void Drone::InitInternalPlugins()
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_REMAP);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_BIAS);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_LOWPASSFILTER);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_FILTER);
-	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_KALMAN_FILTER);
+	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_FILTER);
+	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_KALMAN_FILTER);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_SERVO_PCA9685);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_NAVIGATOR);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_QUADPILOT);
@@ -274,7 +274,7 @@ int SdPluginInitialize(
 			imuLpf->Release();
 		}
 	}
-#if 0
+//#if 0
 	if (0 == pluginName || 0 == (strcmp(pluginName,SD_PLUGIN_IMU_KALMAN_FILTER))){
 		KalmanAttitudeFilter* kf = new KalmanAttitudeFilter();
 		if (0 != kf) {
@@ -282,7 +282,7 @@ int SdPluginInitialize(
 			kf->Release();
 		}
 	}
-#endif
+//#endif
 	return 0;
 }
 

@@ -50,6 +50,7 @@ public:
 	};
 
 private:
+	static Vector3d Qt2Euler(const QuaternionD& q);
 	virtual ~KalmanAttitudeFilter();
 
 private:

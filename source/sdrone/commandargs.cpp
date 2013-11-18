@@ -22,7 +22,7 @@ _CommandArgs::_CommandArgs() :
 	m_parsedArgs.DroneCfg.Gyro.SamplingRate = 200;
 	m_parsedArgs.DroneCfg.Gyro.Scale = 2000;
 	m_parsedArgs.DroneCfg.Gyro.MaxReading = 32768;
-	m_parsedArgs.DroneCfg.Gyro.NumBiasSamples = 1000;
+	m_parsedArgs.DroneCfg.Gyro.NumBiasSamples = 4000;
 	m_parsedArgs.DroneCfg.Gyro.Watermark = 2;
 	m_parsedArgs.DroneCfg.Mag.DeviceName = "/dev/mag0";
 	m_parsedArgs.DroneCfg.Servo.DeviceName = "/dev/pwm0";

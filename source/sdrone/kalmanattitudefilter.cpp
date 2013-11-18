@@ -87,7 +87,6 @@ const char* KalmanAttitudeFilter::GetDlFileName()
 
 int KalmanAttitudeFilter::IoCallback(SdIoPacket* ioPacket)
 {
-	static const QuaternionD s_nullQ = QuaternionD(1,0,0,0);
 	assert(SD_DEVICEID_IMU == ioPacket->DeviceId());
 	assert(SD_IOCODE_RECEIVE == ioPacket->IoCode());
 
@@ -101,15 +100,13 @@ int KalmanAttitudeFilter::IoCallback(SdIoPacket* ioPacket)
 	Vector3d accelEst = (~m_AttQ).rotate(earthG);
 	QuaternionD qdiff = QuaternionD::fromVectors(
 			accel,accelEst);
-	Vector3d gyroFromAccel = QuaternionD::angularVelocity(
-			s_nullQ,qdiff,ioPacket->DeltaTime()/3);
+	Vector3d gyroFromAccel = Qt2Euler(qdiff) / ioPacket->DeltaTime() / 3;
 
 	/*
 	 * Obtain the kalman estimate for the actual angular speed
 	 */
-	Vector3d gyro = ioPacket->GyroData();
-	gyro = gyro * M_PI / 180.0;
-	Vector3d gyroEst = gyroFromAccel; //m_State.Update(gyro, gyroFromAccel);
+	Vector3d gyro = ioPacket->GyroData() * M_PI / 180.0;
+	Vector3d gyroEst = m_State.Update(gyro, gyroFromAccel);
 
 	/*
 	 * Integrate the angular speed to obtain the quaternion
@@ -118,12 +115,35 @@ int KalmanAttitudeFilter::IoCallback(SdIoPacket* ioPacket)
 	dq = m_AttQ * dq;
 	dq = dq * 0.5 * ioPacket->DeltaTime();
 	m_AttQ = m_AttQ + dq;
+	m_AttQ.z = 0;
 	m_AttQ = m_AttQ.normalize();
 
 	gyroEst = RAD2DEG(gyroEst);
 	ioPacket->SetAttribute(SDIO_ATTR_ATTITUDE_Q,SdIoData(&m_AttQ));
 	ioPacket->SetAttribute(SDIO_ATTR_CORR_VELOCITY,SdIoData(&gyroEst));
 	return SD_ESUCCESS;
+}
+
+Vector3d KalmanAttitudeFilter::Qt2Euler(const QuaternionD& q)
+{
+	Vector3d angle(0,0,0);
+	static const double eps = 0.0000001;
+
+	double nom = 2*(q.y*q.z-q.w*q.x);
+	double denom = 2*q.w*q.w-1+2*q.z*q.z;
+	if (fabs(nom) > eps || fabs(denom) > eps) {
+	    angle.at(0,0) = atan2(-nom,denom);
+	}
+
+	angle.at(1,0) = asin(2*(q.x*q.z+q.w*q.y));
+
+	nom = -2*(q.x*q.y-q.w*q.z);
+	denom = 2*q.w*q.w-1+2*q.x*q.x;
+	if (fabs(nom) > eps || fabs(denom) > eps) {
+	    angle.at(2,0) = atan2(nom,denom);
+	}
+
+	return angle;
 }
 
 KalmanAttitudeFilter::KalmanState::KalmanState() :
@@ -140,7 +160,7 @@ KalmanAttitudeFilter::KalmanState::KalmanState() :
 	 * Init the measurement noise - the variance in the accelerometer
 	 * measurements
 	 */
-	m_Rk = Vector3d(0.1110,0.1550,0.1000);
+	m_Rk = Vector3d(0.1110,0.1550,0.1000)*0.5;
 }
 
 KalmanAttitudeFilter::KalmanState::~KalmanState() {}
@@ -186,8 +206,8 @@ Vector3d /*gyro estimate*/ KalmanAttitudeFilter::KalmanState::Update(
 	 * X[k|k] = X[k|k-1] + Kk *Yk
 	 */
 	Yk.at(0,0) = Yk.at(0,0) * m_Kk.at(0,0);
-	Yk.at(2,0) = Yk.at(1,0) * m_Kk.at(1,0);
-	Yk.at(1,0) = Yk.at(2,0) * m_Kk.at(2,0);
+	Yk.at(1,0) = Yk.at(1,0) * m_Kk.at(1,0);
+	Yk.at(2,0) = Yk.at(2,0) * m_Kk.at(2,0);
 	Vector3d Xk = XkEst;
 	Xk = Xk + Yk;
 
