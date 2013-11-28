@@ -14,3 +14,4 @@ grep -w "Motor" $logFile | cut --delimiter=' ' --fields=4-7 > motor.dat
 grep "Q     :" $logFile | cut --delimiter=' ' --fields=8-11 > attq.dat
 grep "Accel :" $logFile | cut --delimiter=' ' --fields=4-6 > accel.dat
 grep "Gyro  :" $logFile | cut --delimiter=' ' --fields=5-7 > gyro.dat
+grep "Mag   :" $logFile | cut --delimiter=' ' --fields=6-8 > mag.dat
