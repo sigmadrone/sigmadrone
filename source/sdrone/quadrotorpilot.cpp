@@ -133,7 +133,7 @@ int QuadRotorPilot::IoCallback(
 		UpdateState(ioPacket);
 
 		CalcThrustFromErrAxis(m_ErrorAxisPid,m_DesiredRev);
-		if (0 == (m_Counter++%(m_Skip+1)))
+		//if (0 == (m_Counter++%(m_Skip+1)))
 		{
 			//
 			// Issue commands to the servos. Since the servos are controlled by
@@ -206,6 +206,8 @@ int QuadRotorPilot::UpdateState(
 {
 	QuaternionD attitudeQ = ioPacket->Attitude();
 	const QuaternionD targetQ = ioPacket->TargetAttitude(); //QuaternionD(0.9962,0.0872,0,0);
+	//const QuaternionD targetQ = QuaternionD(0.9914,0.1306,0,0);
+	//const QuaternionD targetQ = QuaternionD(0.9999,0.011,0.007,0);
 	int retVal = 0;
 	Vector3d currentOmega;
 
@@ -275,11 +277,11 @@ int QuadRotorPilot::UpdateState(
 	//
 	m_ErrorP = m_PidCtl.GetP(errAxis);
 	m_ErrorI = m_PidCtl.GetI(
-			m_ErrorAxis,
+			errAxis,
 			ioPacket->DeltaTime(),
-			ioPacket->DeltaTime());
+			ioPacket->DeltaTime()/1.5);
 	m_ErrorD = m_PidCtl.GetD(
-			m_ErrorAxis,
+			errAxis,
 			ioPacket->DeltaTime());
 	m_ErrorAxisPid  = m_ErrorP+m_ErrorI+m_ErrorD;
 
@@ -350,6 +352,7 @@ void QuadRotorPilot::SetAndScaleMotors(
 	if (maxVal > m_MaxRev) {
 		mv = mv - (maxVal - m_MaxRev);
 	}
+	maxVal = mv.maxValue();
 	minVal = mv.minValue();
 	if (minVal < m_MinRev || maxVal > m_MaxRev) {
 		double scale = (m_MaxRev-m_MinRev)/(maxVal-minVal);
