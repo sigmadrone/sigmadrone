@@ -67,9 +67,9 @@ public:
 			const T& err,
 			double dt)
 	{
-		m_IntegralErr = (m_IntegralErr + err * dt) * m_Ki;
+		m_IntegralErr = m_IntegralErr + err * dt;
 		// TODO: must limit the max error
-		return m_IntegralErr;
+		return m_IntegralErr * m_Ki;
 	}
 
 	T GetI(
