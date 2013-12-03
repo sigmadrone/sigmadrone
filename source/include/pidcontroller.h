@@ -12,10 +12,12 @@
 
 #include "matrix.h"
 
-template <typename T>
+template <int M>
 class PidController
 {
 public:
+
+	typedef MatrixMN<double, M, 1> PidVector;
 
 	PidController(
 			double kp,
@@ -34,17 +36,17 @@ public:
 		m_Kp = kp;
 		m_Ki = ki;
 		m_Kd = kd;
-		m_Err = T();
-		m_IntegralErr = T();
-		m_LastDErr = T();
-		m_LastInput = T();
+		m_Err.clear();
+		m_IntegralErr.clear();
+		m_LastDErr.clear();
+		m_LastInput.clear();
 		m_Filter = (fCutoff > 0.0) ? (1 / (2 * M_PI * fCutoff)) : 0;
 		m_AfterReset = true;
 	}
 
-	T GetD(const T& err, double dt)
+	PidVector GetD(const PidVector& err, double dt)
 	{
-		T derivative = T();
+		PidVector derivative;
 		double filter = dt / (m_Filter + dt);
 		if (!m_AfterReset) {
 			derivative = (err - m_LastInput) / dt;
@@ -52,55 +54,91 @@ public:
 			m_AfterReset = false;
 		}
 		derivative = m_LastDErr + (derivative - m_LastDErr) * filter;
-		derivative = derivative * m_Kd;
 		m_LastInput = err;
 		m_LastDErr = derivative;
-		return derivative;
+		return derivative * m_Kd;
 	}
 
-	T GetP(const T& err)
+	PidVector GetP(const PidVector& err)
 	{
 		return err * m_Kp;
 	}
 
-	T GetI(
-			const T& err,
+	PidVector GetI(
+			const PidVector& err,
 			double dt)
 	{
-		m_IntegralErr = m_IntegralErr + err * dt;
-		// TODO: must limit the max error
-		return m_IntegralErr * m_Ki;
+		return _GetI(err,dt,0);
 	}
 
-	T GetI(
-			const T& err,
+
+	PidVector GetI(
+			const PidVector& err,
+			double dt,
+			const PidVector& limit)
+	{
+		return _GetI(err,dt,&limit);
+	}
+
+	PidVector GetI(
+			const PidVector& err,
 			double dt,
 			double leakRate) // 0..1
 	{
-		m_IntegralErr = m_IntegralErr - m_IntegralErr*leakRate;
-		return GetI(err,dt);
+		return _GetI(err,dt,leakRate,0);
 	}
 
-	T GetPid(const T& err, double dt)
+	PidVector GetI(
+			const PidVector& err,
+			double dt,
+			double leakRate, // 0..1
+			const PidVector& limit)
+	{
+		m_IntegralErr = m_IntegralErr - m_IntegralErr*leakRate;
+		return _GetI(err,dt,&limit);
+	}
+
+	PidVector GetPid(const PidVector& err, double dt)
 	{
 		return GetP(err) + GetD(err, dt) + GetI(err,dt);
 	}
 
-	T GetPid(
-			const T& err,
+	PidVector GetPid(
+			const PidVector& err,
 			double dt,
 			double leakRate)
 	{
 		return GetP(err) + GetD(err, dt) + GetI(err,dt,leakRate);
 	}
 
-	const T& IntegralError() const { return m_IntegralErr; }
+	const PidVector& IntegralError() const { return m_IntegralErr; }
 
 private:
-	T m_Err;
-	T m_IntegralErr;   // accumulated integral error
-	T m_LastDErr; // last derivative err
-	T m_LastInput;
+	PidVector _GetI(
+			const PidVector& err,
+			double dt,
+			const PidVector* limit)
+	{
+		m_IntegralErr = m_IntegralErr + err * dt;
+		LimitVector(&m_IntegralErr,limit);
+		return m_IntegralErr * m_Ki;
+	}
+
+	static void LimitVector(PidVector* v, const PidVector* limit)
+	{
+		if (!!limit) {
+			for (size_t i = 0; i < 3; i++) {
+				v->at(i,0) = fmin(v->at(i,0),limit->at(i,0));
+				v->at(i,0) = fmax(v->at(i,0),-limit->at(i,0));
+			}
+		}
+	}
+
+private:
+	PidVector m_Err;
+	PidVector m_IntegralErr;   // accumulated integral error
+	PidVector m_LastDErr; // last derivative err
+	PidVector m_LastInput;
 	double m_Kp; /*proportional gain*/
 	double m_Ki; /*integral gain*/
 	double m_Kd; /*derivative gain*/
@@ -114,7 +152,9 @@ private:
 	bool m_AfterReset;
 };
 
-typedef PidController<Vector3d> PidController3d;
-typedef PidController<Vector4d> PidController4d;
+
+
+typedef PidController<3> PidController3d;
+typedef PidController<4> PidController4d;
 
 #endif /* PIDCONTROLLER_H_ */

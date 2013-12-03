@@ -161,6 +161,18 @@ int TraceLogPlugin::IoCallback(
 	if (0 != mot) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Motor : %1.3lf %1.3lf %1.3lf %1.3lf\n",
 			mot->at(0,0),mot->at(1,0),mot->at(2,0),mot->at(3,0));
+#if 0
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Tq&Th : %1.3f",
+				mot->at(0,0)*mot->at(0,0) - mot->at(2,0)*mot->at(2,0));
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE," %1.3f",
+						mot->at(1,0)*mot->at(1,0) - mot->at(3,0)*mot->at(3,0));
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE," %1.3f",
+				mot->at(0,0)*mot->at(0,0) + mot->at(2,0)*mot->at(2,0) -
+				mot->at(1,0)*mot->at(1,0) - mot->at(3,0)*mot->at(3,0));
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE," %1.3f\n",
+				mot->at(0,0)*mot->at(0,0) + mot->at(2,0)*mot->at(2,0) +
+				mot->at(1,0)*mot->at(1,0) + mot->at(3,0)*mot->at(3,0));
+#endif
 	}
 
 	ioData = ioPacket->GetAttribute(SDIO_ATTR_ERR_PID);
@@ -173,21 +185,28 @@ int TraceLogPlugin::IoCallback(
 	ioData = ioPacket->GetAttribute(SDIO_ATTR_ERR_P);
 	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> ErrP: %1.3lf %1.3lf %1.3lf\n",
+				"--> ErrP:   %1.3lf %1.3lf %1.3lf\n",
 				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
 				ioData.asVector3d->at(2,0));
 	}
 	ioData = ioPacket->GetAttribute(SDIO_ATTR_ERR_I);
 	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> ErrI: %1.3lf %1.3lf %1.3lf\n",
+				"--> ErrI:   %1.3lf %1.3lf %1.3lf\n",
 				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
 				ioData.asVector3d->at(2,0));
 	}
 	ioData = ioPacket->GetAttribute(SDIO_ATTR_ERR_D);
 	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"--> ErrD: %1.3lf %1.3lf %1.3lf\n",
+				"--> ErrD:   %1.3lf %1.3lf %1.3lf\n",
+				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
+				ioData.asVector3d->at(2,0));
+	}
+	ioData = ioPacket->GetAttribute(SDIO_ATTR_ERR_OMEGA);
+	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> ErrOm: %1.3lf %1.3lf %1.3lf\n",
 				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
 				ioData.asVector3d->at(2,0));
 	}

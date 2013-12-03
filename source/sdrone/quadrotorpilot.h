@@ -48,10 +48,8 @@ private:
 	double GetMaxRev() const { return m_MaxRev; }
 	const double GetErrorAngle() const { return m_ErrorAngle; }
 	const Vector3d& GetErrorAxis() const { return m_ErrorAxis; }
-	const QuaternionD& GetErrorQt() const { return m_PrevErrQ; }
 	const Vector3d& GetOmega() const { return m_Omega; }
 	const Vector3d& GetAngularAccel() const { return m_AngAccel; }
-	const Vector3d& GetDesiredOmega() const { return m_DesiredOmega; }
 
 	int UpdateState(
 			SdIoPacket*
@@ -86,6 +84,8 @@ private:
 			int axis
 			);
 
+	static Vector3d FromQtToTorqueVector(const QuaternionD& q);
+
 private:
 	IPluginRuntime* m_Runtime;
 	Vector4d m_Motors;
@@ -96,9 +96,10 @@ private:
 	Vector3d m_ErrorP;
 	SdQuadRotorConfig m_Config;
 	QuaternionD m_TargetQ;
-	QuaternionD m_PrevErrQ;
+	QuaternionD m_PrevQ;
 	QuaternionD m_RotZQ;
 	PidController3d m_PidCtl;
+	PidController3d m_OmegaPidCtl;
 	LpPreFilter3d m_GyroFilt;
 	LpPreFilter3d m_ErrFilt;
 	LpPreFilter3d m_TcFilt;
@@ -107,11 +108,8 @@ private:
 	double m_DesiredRev;
 	int m_Counter;
 	double m_ErrorAngle;
-	Vector3d m_TorqueCorrection;
-	Vector3d m_TorqueEstimate;
 	Vector3d m_Omega;
 	Vector3d m_AngAccel;
-	Vector3d m_DesiredOmega;
 	Vector3d m_Step;
 	int m_Skip;
 	int m_RefCnt;

@@ -118,6 +118,8 @@ SdIoData IoPacket::GetAttribute(
 		return SdIoData(&m_velocityFromAcc);
 	case SDIO_ATTR_TIME_TO_READ_SENSORS:
 		return SdIoData(m_timeToReadSensors);
+	case SDIO_ATTR_ERR_OMEGA:
+		return SdIoData(&m_errOmega);
 	case SDIO_ATTR_ALTITUDE:
 	case SDIO_ATTR_TEMPERATURE:
 	case SDIO_ATTR_COORDINATES:
@@ -162,6 +164,8 @@ int IoPacket::SetAttribute(
 		return SetAttrVector3d(attr, &m_velocityFromAcc);
 	case SDIO_ATTR_TIME_TO_READ_SENSORS:
 		return SetAttrDouble(attr, &m_timeToReadSensors);
+	case SDIO_ATTR_ERR_OMEGA:
+		return SetAttrVector3d(attr, &m_errOmega);
 	case SDIO_ATTR_ALTITUDE:
 	case SDIO_ATTR_TEMPERATURE:
 	case SDIO_ATTR_COORDINATES:

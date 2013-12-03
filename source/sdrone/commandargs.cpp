@@ -33,9 +33,15 @@ _CommandArgs::_CommandArgs() :
 	m_parsedArgs.DroneCfg.Quad.Motor[2] = 2;
 	m_parsedArgs.DroneCfg.Quad.Motor[3] = 3;
 	m_parsedArgs.DroneCfg.Quad.ImuAngleAxisZ = 45;
-	m_parsedArgs.DroneCfg.Quad.Kp = 0.6;
-	m_parsedArgs.DroneCfg.Quad.Ki = 0.00000005;
-	m_parsedArgs.DroneCfg.Quad.Kd = 0.0015;
+	/*
+	 * PID coefficients for big props on DJI F450
+	 * Kp = 1.0 <-> 1.3
+	 * Ki = 1.2, with leak rate dT
+	 * Kd = 0.3 <-> 0.45
+	 */
+	m_parsedArgs.DroneCfg.Quad.Kp = 1.0;
+	m_parsedArgs.DroneCfg.Quad.Ki = 1.2;
+	m_parsedArgs.DroneCfg.Quad.Kd = 0.35;
 	m_parsedArgs.DroneCfg.LogLevel = SD_LOG_LEVEL_VERBOSE;
 	m_parsedArgs.DroneCfg.LogRate = 1;
 

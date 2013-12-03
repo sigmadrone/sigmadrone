@@ -391,6 +391,7 @@ static const uint32_t SDIO_ATTR_CORR_VELOCITY = 14;
 static const uint32_t SDIO_ATTR_TIME_TO_READ_SENSORS = 15;
 static const uint32_t SDIO_ATTR_TEMPERATURE = 16;
 static const uint32_t SDIO_ATTR_COORDINATES = 17;
+static const uint32_t SDIO_ATTR_ERR_OMEGA 	= 18;
 
 /*
  * SdIoPacket describes the IO structure that travels up and down the plugin

@@ -80,6 +80,7 @@ private:
 	Vector3d m_errAxisI;
 	Vector3d m_errAxisD;
 	Vector3d m_velocityFromAcc;
+	Vector3d m_errOmega;
 	double m_errAngle;
 	double m_droneAltitude;
 	double m_deltaTime; /*elapsed time since the last sample*/

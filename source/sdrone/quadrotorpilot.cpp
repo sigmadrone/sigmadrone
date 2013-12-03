@@ -10,6 +10,7 @@ static const double s_InitialStep = 0.005;
 
 QuadRotorPilot::QuadRotorPilot() :
 		m_PidCtl(0,0,0,0),
+		m_OmegaPidCtl(0,0,0,0),
 		m_Step(s_InitialStep,s_InitialStep,s_InitialStep)
 {
 	m_MinRev = 0.0;
@@ -50,10 +51,10 @@ int QuadRotorPilot::Start(
 	assert(m_Runtime);
 	m_Config = config->Quad;
 	m_PidCtl.Reset(m_Config.Kp,m_Config.Ki,m_Config.Kd,30);
+	m_OmegaPidCtl.Reset(0,m_Config.Ki/2,m_Config.Kd/4,10);
 	m_Counter = 0;
 	m_Motors.clear();
-	m_PrevErrQ = QuaternionD(1, 0, 0, 0);
-	m_TorqueCorrection.clear();
+	m_PrevQ = QuaternionD(1, 0, 0, 0);
 	m_Omega.clear();
 	m_AngAccel.clear();
 	m_RotZQ = QuaternionD::fromAxisRot(
@@ -133,7 +134,7 @@ int QuadRotorPilot::IoCallback(
 		UpdateState(ioPacket);
 
 		CalcThrustFromErrAxis(m_ErrorAxisPid,m_DesiredRev);
-		//if (0 == (m_Counter++%(m_Skip+1)))
+		if (0 == (m_Counter++%(m_Skip+1)))
 		{
 			//
 			// Issue commands to the servos. Since the servos are controlled by
@@ -201,6 +202,7 @@ template <typename T> __inline int sign(T val)
 	return (T(0) < val) - (val < T(0));
 }
 
+
 int QuadRotorPilot::UpdateState(
 	SdIoPacket* ioPacket)
 {
@@ -229,8 +231,6 @@ int QuadRotorPilot::UpdateState(
 #if 0
 	errQ = errQ.normalize();
 #endif
-	currentOmega = m_RotZQ.rotate(ioPacket->GyroData());
-	currentOmega = m_GyroFilt.DoFilter(currentOmega);
 
 	double angleDeg = RAD2DEG(errQ.angle());
 	if (fabs(angleDeg) > 180) {
@@ -251,24 +251,9 @@ int QuadRotorPilot::UpdateState(
 	} else {
 		errAxis = errQ.axis().normalize() * DEG2RAD(angleDeg);
 	}
-	Vector3d angAccel = (currentOmega-m_Omega)/ioPacket->DeltaTime();
-	Vector3d desiredOmega = CalcDesiredOmega3d(errAxis);
 
 	errAxis.at(2,0) = 0; // clear Z axis, we will take care of that later
 	errAxis = m_RotZQ.rotate(errAxis);
-
-	m_TorqueEstimate = errAxis;
-
-#if 0
-	/*
-	 * The difference between desired omega and actual omega can only be
-	 * used for torque correction
-	 */
-	errAxis = (desiredOmega - currentOmega) / 100;
-#endif
-
-
-	m_TorqueCorrection.at(2,0) = 0;
 
 	m_ErrorAxis = errAxis;
 
@@ -279,23 +264,62 @@ int QuadRotorPilot::UpdateState(
 	m_ErrorI = m_PidCtl.GetI(
 			errAxis,
 			ioPacket->DeltaTime(),
-			ioPacket->DeltaTime()/1.5);
+			ioPacket->DeltaTime(),
+			Vector3d(0.5,0.5,0.5));
 	m_ErrorD = m_PidCtl.GetD(
 			errAxis,
 			ioPacket->DeltaTime());
 	m_ErrorAxisPid  = m_ErrorP+m_ErrorI+m_ErrorD;
 
+	currentOmega = QuaternionD::angularVelocity(attitudeQ,m_PrevQ,
+			ioPacket->DeltaTime()) * 180 / M_PI;
+	currentOmega = m_RotZQ.rotate(currentOmega);
+	currentOmega = m_GyroFilt.DoFilter(currentOmega);
+	Vector3d angAccel = (currentOmega-m_Omega)/ioPacket->DeltaTime();
+	Vector3d desiredOmega = CalcDesiredOmega3d(m_ErrorAxisPid);
+
+	/*
+	 * The difference between desired omega and actual omega can only be
+	 * used for torque correction
+	 */
+	Vector3d omegaErr = (desiredOmega - currentOmega) / (2*RAD2DEG(2*M_PI));
+	Vector3d omegaErrPid;
+
+	omegaErrPid  = omegaErrPid+m_OmegaPidCtl.GetP(omegaErr);
+	omegaErrPid = omegaErrPid + m_OmegaPidCtl.GetI(
+			omegaErr,
+			ioPacket->DeltaTime(),
+			0.0,
+			Vector3d(0.2,0.2,0.2));
+	omegaErrPid = omegaErrPid + m_OmegaPidCtl.GetD(
+			omegaErrPid,ioPacket->DeltaTime());
+
+	m_ErrorAxisPid = m_ErrorAxisPid + omegaErrPid;
+
+#if 0
+	QuaternionD qdiff = attitudeQ * ~m_PrevQ;
+	double diffAngle = qdiff.angle();
+	if (diffAngle > RAD2DEG(5)) {
+		diffAngle = sin(diffAngle);
+	}
+	Vector3d diffErrAxis = qdiff.axis().normalize() * diffAngle;
+	diffErrAxis = m_RotZQ.rotate(diffErrAxis);
+	m_ErrorD = m_PidCtl.GetD(
+				diffErrAxis,
+				ioPacket->DeltaTime());
+	m_ErrorAxisPid  = m_ErrorP+m_ErrorI-m_ErrorD;
+#endif
 	m_ErrorAngle = angleDeg;
-	m_PrevErrQ = errQ;
+	m_PrevQ = attitudeQ;
 	m_AngAccel = angAccel;
 	m_Omega = currentOmega;
-	m_DesiredOmega = desiredOmega;
 
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_PID,SdIoData(&m_ErrorAxisPid));
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_P,SdIoData(&m_ErrorP));
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_I,SdIoData(&m_ErrorI));
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_D,SdIoData(&m_ErrorD));
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_ANGLE,SdIoData(angleDeg));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_OMEGA,SdIoData(&omegaErrPid));
 
 	return retVal;
 }
@@ -381,7 +405,7 @@ void QuadRotorPilot::SetMaxRev(double maxRev)
 double QuadRotorPilot::CalcDesiredOmega(double _err)
 {
 	double err = fabs(fmin(_err*100,100));
-	double omega = pow(err,2)/50;
+	double omega = fmin(pow(err,2)/10,RAD2DEG(2*M_PI));
 	return (_err > 0) ? omega : -omega;
 }
 
@@ -394,108 +418,3 @@ Vector3d QuadRotorPilot::CalcDesiredOmega3d(
 	omega.at(2,0) = CalcDesiredOmega(err.at(2,0));
 	return omega;
 }
-
-double QuadRotorPilot::CalcTorqueCorrection(
-		double torqueEst,
-		double omega,
-		double desiredOmega,
-		double angAccel,
-		int axis)
-{
-	double tc = 0;
-	static const double step = 0.05;
-	if (fabs(torqueEst) > fabs(m_TorqueEstimate.at(axis,0))) {
-		// moving away from the target, inc the torque
-		tc += 2*step;
-	} else if ((omega >= 0 && omega < desiredOmega) ||
-			(omega < 0 && omega > desiredOmega)) {
-		// still need to accel, inc the torque
-		tc += step;
-		if (angAccel <= 0) {
-			tc += step;
-		}
-	} else {
-		// closing in on the target
-		tc -= step;
-		if (angAccel > 0) {
-			tc -= step;
-		}
-	}
-	return tc;
-}
-
-#if 0
-double QuadRotorPilot::CalcTorqueCorrection(
-		double torqueEst,
-		double omega,
-		double desiredOmega,
-		double angAccel,
-		int axis)
-{
-	double omegaErr = fabs(desiredOmega-omega);
-	double prevOmegaErr = fabs(m_Omega.at(axis,0)-m_DesiredOmega.at(axis,0));
-	double desiredOmegaAccel = (desiredOmega-m_DesiredOmega.at(axis,0))/m_Dt;
-	double nextOmega = omega + angAccel*m_Dt;
-	double nextDesiredOmega = desiredOmega + desiredOmegaAccel*m_Dt;
-	double nextOmegaErr = fabs(nextDesiredOmega-nextOmega);
-	double tc = 0;
-	int closingTarget = 1;
-	if (fabs(torqueEst) > fabs(m_TorqueEstimate.at(axis,0))) {
-		closingTarget = -1;
-	}
-	nextOmegaErr *= nextOmegaErr;
-	prevOmegaErr *= prevOmegaErr;
-	tc = omegaErr*omegaErr;
-	tc /= omega*omega + desiredOmega*desiredOmega + 0.1;
-	tc *= fabs(omega)/500;
-	tc = fmin(tc,1);
-	static const double epsilon = 0.5;
-	static const double step = 0.05;
-	double tcStep = 0;
-#if 0
-	if (prevOmegaErr > omegaErr) {
-		if ((desiredOmega-omega)*(nextDesiredOmega-nextOmega) < 0) {
-			tc = -tc;
-		} else if (omegaErr > fabs(desiredOmega-nextOmega)) {
-			tc = -tc/4;
-		}
-	}
-	//return desiredOmega>=omega ? tc : -tc;
-	return tc * sign(torqueEst);
-	static const double epsilon = 0.5;
-	static const double step = 0.05;
-	double tcStep = 0;
-	if (omegaErr < 1.0 && desiredOmega < 1.0) {
-		m_TorqueCorrection.at(axis,0) = 0;
-	}
-	else if (fabs(prevOmegaErr-omegaErr) < epsilon) {
-		if (fabs(omegaErr-nextOmegaErr) < epsilon) {
-			tcStep += closingTarget*step;
-		} else if (omegaErr < nextOmegaErr) {
-			tcStep += closingTarget*2*step;
-		} else { // omegaErr > nextOmegaErr
-			tcStep -= step/2;
-		}
-	} else if (prevOmegaErr < omegaErr) {
-		if (fabs(omegaErr-nextOmegaErr) < epsilon) {
-			tcStep = 0;
-		} else if (omegaErr < nextOmegaErr) {
-			tcStep += closingTarget*2*step;
-		} else { // omegaErr > nextOmegaErr
-			tcStep -= step;
-		}
-	} else { // prevOmegaErr > omegaErr
-		if (fabs(omegaErr-nextOmegaErr) < epsilon) {
-			tcStep = 0;
-		} else if (omegaErr < nextOmegaErr) {
-			tcStep += closingTarget*step/2;
-		} else { // omegaErr > nextOmegaErr
-			tcStep -= 2*step;
-		}
-	}
-	tcStep *= sign(torqueEst+0.0001);
-	tc = tc * tcStep;
-	return tc;
-#endif
-}
-#endif

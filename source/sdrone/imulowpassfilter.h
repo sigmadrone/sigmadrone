@@ -38,7 +38,7 @@ private:
 	~ImuLowPassFilter();
 
 private:
-	//LpPreFilter3d m_AccelFilt;
+	LpPreFilter3d m_GyroFilt;
 	FirFilter<double,38,3> m_AccelFilt;
 	IPluginRuntime* m_Runtime;
 	int m_RefCnt;
