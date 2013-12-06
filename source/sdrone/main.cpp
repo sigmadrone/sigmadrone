@@ -1,12 +1,14 @@
 #include "commoninc.h"
 
-using namespace std;
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <sys/file.h>
+#include <sys/stat.h>
+#include <sys/signal.h>
 
+#include "filelock.h"
 #include "matrix.h"
 #include "axesdata.h"
 #include "drone.h"
@@ -54,9 +56,42 @@ int CommandCallback(
 	return err;
 }
 
+void fatal_error_signal (int sig)
+{
+	static int fatal_error_in_progress = 0;
+	/* Since this handler is established for more than one kind of signal,
+          it might still get invoked recursively by delivery of some other kind
+          of signal.  Use a static variable to keep track of that. */
+	if (fatal_error_in_progress) {
+		raise (sig);
+	}
+	fatal_error_in_progress = 1;
+
+	/*
+	 * Now do the clean up actions:
+	 * 		- reset terminal modes
+	 * 		- kill child processes
+	 * 		- remove lock files
+     */
+
+	printf("FATAL: error signal %d raised, shutting down the drone!\n",
+			sig);
+	Drone::Only()->Reset(0,true);
+
+	/*
+	 * Now reraise the signal.  We reactivate the signal's
+	 * default handling, which is to terminate the process.
+	 * We could just call exit or abort,
+	 * but reraising the signal sets the return status
+	 * from the process correctly.
+	 */
+	signal (sig, SIG_DFL);
+	raise (sig);
+}
 
 int main(int argc, char *argv[])
 {
+	FileLock globalLock("sigmadrone");
 
 #ifdef _WHANT_FPE_
 	feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
@@ -86,6 +121,20 @@ int main(int argc, char *argv[])
 
 	if (g_CmdArgs.IsRoleServer())
 	{
+		if (!globalLock.Lock()) {
+			printf("Failed to obtain global lock: %s\n",strerror(errno));
+			goto __return;
+		}
+
+		/*
+		 * Register error signal handlers
+		 */
+		signal(SIGFPE,fatal_error_signal);
+		signal(SIGILL,fatal_error_signal);
+		signal(SIGSEGV,fatal_error_signal);
+		signal(SIGBUS,fatal_error_signal);
+		signal(SIGABRT,fatal_error_signal);
+
 		//
 		// Daemonize, if not client as well.
 		// Kick off a listening thread
