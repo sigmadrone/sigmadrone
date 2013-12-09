@@ -1,4 +1,4 @@
-
+SUBDIRS += cmdargs
 
 all:
 	@for dir in $(SUBDIRS); do \
