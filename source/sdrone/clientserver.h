@@ -17,7 +17,7 @@ typedef int (*ExecuteCommandCallbackT)(
 		void* context,
 		int argc,
 		char* argv[],
-		SdCommand* cmd
+		SdCommandCode* cmd
 		);
 
 class ClientServer {

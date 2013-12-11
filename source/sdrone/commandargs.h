@@ -12,7 +12,7 @@
 
 struct ParsedArgs
 {
-	SdCommand Command;
+	SdCommandCode Command;
 	SdDroneConfig DroneCfg;
 	double Thrust;
 	double MinThrust;
@@ -32,7 +32,7 @@ public:
 	virtual ~_CommandArgs();
 	void PrintUsage();
 	bool ParseArgs(int argc, char* argv[]);
-	SdCommand GetCommand();
+	SdCommandCode GetCommand();
 	const char* GetArgAsString(
 			int index
 			);

@@ -238,7 +238,7 @@ _CommandArgs::ParseArgs(
 	return true;
 }
 
-SdCommand _CommandArgs::GetCommand() {
+SdCommandCode _CommandArgs::GetCommand() {
 	return m_parsedArgs.Command;
 }
 

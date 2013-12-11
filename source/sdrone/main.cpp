@@ -38,7 +38,7 @@ int CommandCallback(
 		void* context,
 		int argc,
 		char* argv[],
-		SdCommand* command)
+		SdCommandCode* command)
 {
 	Drone* drone = (Drone*)context;
 	int err = EINVAL;

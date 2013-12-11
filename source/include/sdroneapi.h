@@ -30,14 +30,14 @@
 #define SD_LOG_LEVEL_VERBOSE 4
 #define SD_LOG_LEVEL_DEBUG 5
 
-typedef enum _SdCommand {
+typedef enum _SdCommandCode {
 	SD_COMMAND_NONE = 0,
 	SD_COMMAND_RUN,
 	SD_COMMAND_RESET,
 	SD_COMMAND_EXIT,
 	SD_COMMAND_LOAD_PLUGIN,
 	SD_COMMAND_UNLOAD_PLUGIN
-} SdCommand;
+} SdCommandCode;
 
 typedef enum _SdDroneType
 {
@@ -694,7 +694,7 @@ protected:
 
 struct CommandArgs
 {
-	virtual SdCommand GetCommand() = 0;
+	virtual SdCommandCode GetCommand() = 0;
 	virtual const char* GetArgAsString(
 			int index
 			) = 0;

@@ -186,7 +186,7 @@ void* ClientServer::ServerThread(void* arg)
 				if (0 != argv) {
 					assert(argc>0);
 					if (0 == strcmp(argv[0],DRONZONE_PROTOCOL)) {
-						SdCommand command = SD_COMMAND_NONE;
+						SdCommandCode command = SD_COMMAND_NONE;
 						err = _this->m_CommandCallback(
 								_this->m_CallbackContext,
 								argc,
