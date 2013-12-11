@@ -255,8 +255,6 @@ int QuadRotorPilot::UpdateState(
 	errAxis.at(2,0) = 0; // clear Z axis, we will take care of that later
 	errAxis = m_RotZQ.rotate(errAxis);
 
-	m_ErrorAxis = errAxis;
-
 	//
 	// Feed the error into the pid controller
 	//
@@ -266,10 +264,28 @@ int QuadRotorPilot::UpdateState(
 			ioPacket->DeltaTime(),
 			ioPacket->DeltaTime(),
 			Vector3d(0.5,0.5,0.5));
+#if 1
 	m_ErrorD = m_PidCtl.GetD(
 			errAxis,
 			ioPacket->DeltaTime());
 	m_ErrorAxisPid  = m_ErrorP+m_ErrorI+m_ErrorD;
+#else
+	/*
+	 * Differential error scheme based on the differential of the plant
+	 * output as opposed the error.
+	 */
+	QuaternionD qdiff = attitudeQ * ~m_PrevQ;
+	double diffAngle = qdiff.angle();
+	if (RAD2DEG(diffAngle) > 5) {
+		diffAngle = sin(diffAngle);
+	}
+	Vector3d diffErrAxis = qdiff.axis().normalize() * diffAngle;
+	diffErrAxis = m_RotZQ.rotate(diffErrAxis);
+	m_ErrorD = m_PidCtl.GetD(
+				diffErrAxis,
+				ioPacket->DeltaTime());
+	m_ErrorAxisPid  = m_ErrorP+m_ErrorI-m_ErrorD;
+#endif
 
 	currentOmega = QuaternionD::angularVelocity(attitudeQ,m_PrevQ,
 			ioPacket->DeltaTime()) * 180 / M_PI;
@@ -295,20 +311,8 @@ int QuadRotorPilot::UpdateState(
 			omegaErrPid,ioPacket->DeltaTime());
 
 	m_ErrorAxisPid = m_ErrorAxisPid + omegaErrPid;
+	m_ErrorAxis = errAxis;
 
-#if 0
-	QuaternionD qdiff = attitudeQ * ~m_PrevQ;
-	double diffAngle = qdiff.angle();
-	if (diffAngle > RAD2DEG(5)) {
-		diffAngle = sin(diffAngle);
-	}
-	Vector3d diffErrAxis = qdiff.axis().normalize() * diffAngle;
-	diffErrAxis = m_RotZQ.rotate(diffErrAxis);
-	m_ErrorD = m_PidCtl.GetD(
-				diffErrAxis,
-				ioPacket->DeltaTime());
-	m_ErrorAxisPid  = m_ErrorP+m_ErrorI-m_ErrorD;
-#endif
 	m_ErrorAngle = angleDeg;
 	m_PrevQ = attitudeQ;
 	m_AngAccel = angAccel;
