@@ -1,4 +1,4 @@
-CROSS_COMPILE=arm-linux-gnueabi-
+#CROSS_COMPILE=arm-linux-gnueabi-
 CPP	    	= $(CROSS_COMPILE)g++
 CC          = $(CROSS_COMPILE)gcc
 INCLUDES    = -I../include
@@ -23,7 +23,8 @@ OBJECTS		= \
 	imubias.o\
 	tracelogplugin.o\
 	imulowpassfilter.o\
-	iopacket.o
+	iopacket.o\
+	kalmanattitudefilter.o
 
 all : $(TARGET)
 
