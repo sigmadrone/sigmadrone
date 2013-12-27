@@ -166,9 +166,9 @@ typedef enum _SdImuDeviceId
 
 typedef struct _SdImuData
 {
-	short3d_t gyro[64];
-	short3d_t acc[64];
-	short3d_t mag[64];
+	short3d_t gyro[16];
+	short3d_t acc[16];
+	short3d_t mag[16];
 	size_t gyro_samples;
 	size_t acc_samples;
 	size_t mag_samples;
