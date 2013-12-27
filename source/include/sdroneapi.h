@@ -30,14 +30,43 @@
 #define SD_LOG_LEVEL_VERBOSE 4
 #define SD_LOG_LEVEL_DEBUG 5
 
+__inline uint32_t SdStringToLogLevel(const char* str) {
+	if (str) {
+		if (0 == strcmp("SD_LOG_LEVEL_NONE",str)) { return SD_LOG_LEVEL_NONE; }
+		if (0 == strcmp("SD_LOG_LEVEL_ERROR",str)) { return SD_LOG_LEVEL_ERROR; }
+		if (0 == strcmp("SD_LOG_LEVEL_WARNING",str)) { return SD_LOG_LEVEL_WARNING; }
+		if (0 == strcmp("SD_LOG_LEVEL_INFO",str)) { return SD_LOG_LEVEL_INFO; }
+		if (0 == strcmp("SD_LOG_LEVEL_VERBOSE",str)) { return SD_LOG_LEVEL_VERBOSE; }
+		if (0 == strcmp("SD_LOG_LEVEL_DEBUG",str)) { return SD_LOG_LEVEL_DEBUG; }
+	}
+	return SD_LOG_LEVEL_VERBOSE;
+}
+
 typedef enum _SdCommandCode {
 	SD_COMMAND_NONE = 0,
 	SD_COMMAND_RUN,
 	SD_COMMAND_RESET,
 	SD_COMMAND_EXIT,
 	SD_COMMAND_LOAD_PLUGIN,
-	SD_COMMAND_UNLOAD_PLUGIN
+	SD_COMMAND_UNLOAD_PLUGIN,
+	SD_COMMAND_PING,
+	SD_COMMAND_CONFIG,
+	SD_COMMAND_GET_STATE
 } SdCommandCode;
+
+__inline SdCommandCode SdStringToCommandCode(const char* str) {
+	if (str) {
+		if (0 == strcmp("SD_COMMAND_RUN",str)) { return SD_COMMAND_RUN; }
+		if (0 == strcmp("SD_COMMAND_RESET",str)) { return SD_COMMAND_RESET; }
+		if (0 == strcmp("SD_COMMAND_EXIT",str)) { return SD_COMMAND_EXIT; }
+		if (0 == strcmp("SD_COMMAND_LOAD_PLUGIN",str)) { return SD_COMMAND_LOAD_PLUGIN; }
+		if (0 == strcmp("SD_COMMAND_UNLOAD_PLUGIN",str)) { return SD_COMMAND_UNLOAD_PLUGIN; }
+		if (0 == strcmp("SD_COMMAND_PING",str)) { return SD_COMMAND_PING; }
+		if (0 == strcmp("SD_COMMAND_CONFIG",str)) { return SD_COMMAND_CONFIG; }
+		if (0 == strcmp("SD_COMMAND_GET_STATE",str)) { return SD_COMMAND_GET_STATE; }
+	}
+	return SD_COMMAND_NONE;
+}
 
 typedef enum _SdDroneType
 {
@@ -49,19 +78,12 @@ typedef enum _SdDroneType
 	SD_DRONE_TYPE_OCTOROTOR
 } SdDroneType;
 
-typedef enum _SdPilotType
-{
-	SD_PILOT_TYPE_NONE = 0,
-	SD_PILOT_TYPE_QUADROTOR,
-	SD_PILOT_TYPE_PID,
-} SdPilotType;
-
 typedef struct _SdImuDeviceConfig
 {
 	const char* DeviceName;
 
 	/*
-	 * Sampling rate
+	 * Sampling rate - how many times per seconds data is read from the sensor
 	 */
 	int SamplingRate;
 
@@ -85,6 +107,12 @@ typedef struct _SdImuDeviceConfig
 	 * How many samples to collect prior to firing an interrupt
 	 */
 	int Watermark;
+
+	/*
+	 * Used to remap coordinates of the read samples; needed due to different
+	 * IMU sensors may having unaligned coordinate systems.
+	 */
+	Matrix3d CoordinateMap;
 } SdImuDeviceConfig;
 
 typedef struct _SdServoConfig
@@ -116,10 +144,6 @@ typedef struct _SdDroneConfig
 	SdImuDeviceConfig Mag;
 	SdServoConfig Servo;
 	SdQuadRotorConfig Quad;
-	SdPilotType Pilot;
-	Matrix3d GyroMap;
-	Matrix3d AccMap;
-	Matrix3d MagMap;
 	const char* ServerAddress;
 	int ServerPort;
 	int LogRotationMatrix;
@@ -692,6 +716,157 @@ protected:
 	virtual ~IPlugin() {}
 };
 
+enum SdJsonValueType
+{
+	SD_JSONVALUE_NULL,
+	SD_JSONVALUE_STRING,
+	SD_JSONVALUE_INT,
+	SD_JSONVALUE_DOUBLE,
+	SD_JSONVALUE_BOOL,
+	SD_JSONVALUE_OBJECT,
+	SD_JSONVALUE_ARRAY,
+};
+
+struct IParsedJsonValue;
+struct IParsedJsonArray;
+
+struct IParsedJsonObject
+{
+	virtual void AddRef() = 0;
+	virtual void Release() = 0;
+	virtual size_t GetMemberCount() = 0;
+	virtual const char* GetMemberName(
+			IN size_t index
+			) = 0;
+	virtual IParsedJsonValue* RefMember(
+			IN const char* name
+			) = 0;
+	virtual IParsedJsonObject* RefMemberAsObject(
+			IN const char* name) = 0;
+	virtual IParsedJsonArray* RefMemberAsArray(
+			IN const char* name) = 0;
+	virtual bool GetMemberAsDoubleValue(
+			IN const char* name,
+			OUT double* value) = 0;
+	virtual bool GetMemberAsIntValue(
+			IN const char* name,
+			OUT int32_t* value) = 0;
+	virtual bool GetMemberAsIntValue(
+			IN const char* name,
+			OUT int64_t* value) = 0;
+	virtual bool GetMemberAsIntValue(
+			IN const char* name,
+			OUT int16_t* value) = 0;
+	virtual bool GetMemberAsBoolValue(
+			IN const char* name,
+			OUT bool* value) = 0;
+	virtual bool GetMemberAsStringValue(
+			IN const char* name,
+			OUT const char** value) = 0;
+protected:
+	virtual ~IParsedJsonObject() {}
+};
+
+struct IParsedJsonValue
+{
+	virtual void AddRef() = 0;
+	virtual void Release() = 0;
+	virtual SdJsonValueType GetType() = 0;
+	virtual const char* GetTypeAsString() = 0;
+
+	/*
+	 * The RefXXX and AsXXX virtual members below assume that the caller is
+	 * asking for the correct value type
+	 */
+	virtual double AsDouble() = 0;
+	virtual int64_t AsInt() = 0;
+	virtual int32_t AsInt32() = 0;
+	virtual int16_t AsInt16() = 0;
+	virtual bool AsBool() = 0;
+	virtual const char* AsString() = 0;
+
+	/*
+	 * The returned object must be released by the caller.
+	 */
+	virtual IParsedJsonArray* RefAsArray() = 0;
+	virtual IParsedJsonObject* RefAsObject() = 0;
+
+	/*
+	 * Ref/AsxxxSafe routines allow for 1)NULL val to be passed; 2)the value
+	 * type to be different from the one asked for. If non-null the passed
+	 * value object is dereferenced by the routine, thus the safe routines allow
+	 * for the following constructs:
+	 *
+	 * 	 str = IParsedJsonValue::AsStringSafe(obj->RefMember('membername'));
+	 * 	 IParsedJsonValue::AsInt(arr->RefElement(0),&myInt64);
+	 */
+	static inline IParsedJsonArray* RefAsArraySafe(IParsedJsonValue* val);
+	static inline IParsedJsonObject* RefAsObjectSafe(IParsedJsonValue* val);
+	static inline const char* AsStringSafe(IParsedJsonValue* val);
+	static inline bool AsDoubleSafe(IParsedJsonValue* val, double* d);
+	static inline bool AsBoolSafe(IParsedJsonValue* val, bool* b);
+	static inline bool AsIntSafe(IParsedJsonValue* val, int64_t* i64);
+	static inline bool AsIntSafe(IParsedJsonValue* val, int32_t* i32);
+	static inline bool AsIntSafe(IParsedJsonValue* val, int16_t* i16);
+protected:
+	virtual ~IParsedJsonValue() {}
+};
+
+struct IParsedJsonArray
+{
+	virtual void AddRef() = 0;
+	virtual void Release() = 0;
+	virtual uint32_t ElementCount() = 0;
+	virtual IParsedJsonValue* RefElement(
+			uint32_t index
+			) = 0;
+	virtual IParsedJsonObject* RefElementAsObject(
+			IN uint32_t index) = 0;
+	virtual IParsedJsonArray* RefElementAsArray(
+			IN uint32_t index) = 0;
+	virtual bool GetElementAsDoubleValue(
+			IN uint32_t index,
+			OUT double* value) = 0;
+	virtual bool GetElementAsIntValue(
+			IN uint32_t index,
+			OUT int32_t* value) = 0;
+	virtual bool GetElementAsIntValue(
+			IN uint32_t index,
+			OUT int64_t* value) = 0;
+	virtual bool GetElementAsIntValue(
+			IN uint32_t index,
+			OUT int16_t* value) = 0;
+	virtual bool GetElementAsBoolValue(
+			IN uint32_t index,
+			OUT bool* value) = 0;
+	virtual bool GetElementAsStringValue(
+			IN uint32_t index,
+			OUT const char** value) = 0;
+
+protected:
+	virtual ~IParsedJsonArray() {}
+};
+
+struct ICommandArgs
+{
+	virtual SdCommandCode GetCommandCode() = 0;
+	virtual double GetMinThrust() = 0;
+	virtual double GetMaxThrust() = 0;
+	virtual double GetDesiredThrust() = 0;
+	virtual const QuaternionD* GetTargetAttitude() = 0;
+	virtual const SdDroneConfig* GetDroneConfig() = 0;
+
+	virtual const char* GetRawJsonSchema(uint32_t* length) = 0;
+	virtual const IParsedJsonObject* RefJsonSchema() = 0;
+	virtual const IParsedJsonObject* RefJsonObjectForPlugin(
+			const char* pluginName
+			) = 0;
+
+protected:
+	virtual ~ICommandArgs() {}
+};
+
+
 struct CommandArgs
 {
 	virtual SdCommandCode GetCommand() = 0;
@@ -723,5 +898,73 @@ struct CommandArgs
 protected:
 	virtual ~CommandArgs() {}
 };
+
+IParsedJsonArray* IParsedJsonValue::RefAsArraySafe(IParsedJsonValue* val) {
+	IParsedJsonArray* arr = (!!val && val->GetType() == SD_JSONVALUE_ARRAY) ?
+			val->RefAsArray() : 0;
+	if (!!val) { val->Release(); }
+	return arr;
+}
+IParsedJsonObject* IParsedJsonValue::RefAsObjectSafe(IParsedJsonValue* val) {
+	IParsedJsonObject* obj = (!!val && val->GetType() == SD_JSONVALUE_OBJECT) ?
+			val->RefAsObject() : 0;
+	if (!!val) {val->Release();}
+	return obj;
+}
+const char* IParsedJsonValue::AsStringSafe(IParsedJsonValue* val) {
+	const char* str = (0 != val && val->GetType() == SD_JSONVALUE_STRING) ?
+			val->AsString() : "";
+	if (!!val) { val->Release(); }
+	return str;
+}
+bool IParsedJsonValue::AsDoubleSafe(IParsedJsonValue* val, double* d) {
+	bool ret = false;
+	if (0 != val && val->GetType() == SD_JSONVALUE_DOUBLE) {
+		*d = val->AsDouble();
+		ret = true;
+	}
+	if (!!val) { val->Release(); }
+	return ret;
+}
+bool IParsedJsonValue::AsBoolSafe(IParsedJsonValue* val, bool* b) {
+	bool ret = false;
+	assert(b);
+	if (0 != val && val->GetType() == SD_JSONVALUE_BOOL) {
+		*b = val->AsBool();
+		ret = true;
+	}
+	if (!!val) { val->Release(); }
+	return ret;
+}
+bool IParsedJsonValue::AsIntSafe(IParsedJsonValue* val, int64_t* i64) {
+	bool ret = false;
+	assert(i64);
+	if (0 != val && val->GetType() == SD_JSONVALUE_INT) {
+		*i64 = val->AsInt();
+		ret = true;
+	}
+	if (!!val) { val->Release(); }
+	return ret;
+}
+bool IParsedJsonValue::AsIntSafe(IParsedJsonValue* val, int32_t* i32) {
+	bool ret = false;
+	assert(i32);
+	if (0 != val && val->GetType() == SD_JSONVALUE_INT) {
+		*i32 = (int32_t)val->AsInt();
+		ret = true;
+	}
+	if (!!val) { val->Release(); }
+	return ret;
+}
+bool IParsedJsonValue::AsIntSafe(IParsedJsonValue* val, int16_t* i16) {
+	bool ret = false;
+	assert(i16);
+	if (0 != val && val->GetType() == SD_JSONVALUE_INT) {
+		*i16 = (int16_t)val->AsInt();
+		ret = true;
+	}
+	if (!!val) { val->Release(); }
+	return ret;
+}
 
 #endif // SDRONE_API_H_

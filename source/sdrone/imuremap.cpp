@@ -38,9 +38,9 @@ int ImuRemap::Start(
 	CommandArgs* cmdArgs)
 {
 	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
-	m_AccelMap = droneConfig->AccMap;
-	m_GyroMap = droneConfig->GyroMap;
-	m_MagMap = droneConfig->MagMap;
+	m_AccelMap = droneConfig->Accel.CoordinateMap;
+	m_GyroMap = droneConfig->Gyro.CoordinateMap;
+	m_MagMap = droneConfig->Mag.CoordinateMap;
 	m_Runtime->SetIoFilters(
 		SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
 		SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));

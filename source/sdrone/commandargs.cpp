@@ -7,6 +7,8 @@
 
 #include "commandargs.h"
 
+#include <json-glib/json-glib.h>
+
 
 _CommandArgs::_CommandArgs() :
 	m_argc(0),
@@ -124,19 +126,20 @@ _CommandArgs::ParseArgs(
 	m_parsedArgs.HostAddress = "127.0.0.1";
 	m_parsedArgs.ServerPort = SD_DEFAULT_PORT;
 	m_parsedArgs.IsClient = m_parsedArgs.IsServer = false;
-	m_parsedArgs.DroneCfg.Pilot = SD_PILOT_TYPE_QUADROTOR;
 	m_parsedArgs.MinThrust = 0.3;
 	m_parsedArgs.MaxThrust = 0.99;
 	m_parsedArgs.Thrust = 0.5;
 
 	// TODO: must be controlled from cmd line
-	m_parsedArgs.DroneCfg.AccMap = Matrix3d( 0,-1, 0,
-											1, 0, 0,
-											0, 0, 1);
-	m_parsedArgs.DroneCfg.MagMap = m_parsedArgs.DroneCfg.AccMap;
-	m_parsedArgs.DroneCfg.GyroMap = Matrix3d(1, 0, 0,
-											0, 1, 0,
-											0, 0, 1);
+	m_parsedArgs.DroneCfg.Accel.CoordinateMap = Matrix3d(
+			0,-1, 0,
+			1, 0, 0,
+			0, 0, 1);
+	m_parsedArgs.DroneCfg.Mag.CoordinateMap = m_parsedArgs.DroneCfg.Accel.CoordinateMap;
+	m_parsedArgs.DroneCfg.Gyro.CoordinateMap = Matrix3d(
+			1, 0, 0,
+			0, 1, 0,
+			0, 0, 1);
 
 	if (i < m_argc) {
 		if (strcmp(m_argv[i], "run") == 0) {
@@ -227,8 +230,6 @@ _CommandArgs::ParseArgs(
 			if (++i < m_argc) {
 				droneCfg->Quad.ImuAngleAxisZ = atoi(m_argv[i]);
 			}
-		} else if (strcmp(m_argv[i], "--pid-pilot") == 0) {
-			droneCfg->Pilot = SD_PILOT_TYPE_PID;
 		} else if (strcmp(m_argv[i], "--rot-matrix") == 0) {
 			droneCfg->LogRotationMatrix = 1;
 		} else {
