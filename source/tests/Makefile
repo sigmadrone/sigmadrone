@@ -1,4 +1,5 @@
 SUBDIRS += cmdargs
+SUBDIRS += jsonrpc
 
 all:
 	@for dir in $(SUBDIRS); do \
