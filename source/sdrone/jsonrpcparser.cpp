@@ -372,43 +372,96 @@ JsonRpcParser::JsonRpcParser() {
 }
 
 JsonRpcParser::~JsonRpcParser() {
-	if (m_jsonParser) {
-		g_object_unref(m_jsonParser);
-	}
-	if (m_rootObj) {
-		m_rootObj->Release();
-	}
+	Reset();
 }
 
-bool JsonRpcParser::Parse(
-		const char* buffer,
-		uint32_t len)
+void JsonRpcParser::Reset()
 {
-	GError* gerr=0;
-	IParsedJsonValue* jvalue = 0;
-	IParsedJsonObject* rootObj = 0;
-
 	if (m_jsonParser) {
 		g_object_unref(m_jsonParser);
+		m_jsonParser = 0;
 	}
-	if (!(m_jsonParser = json_parser_new())) {
-		goto __return;
-	}
-	if (!json_parser_load_from_file(m_jsonParser,
-			"/home/svassilev/workspace/sigmadrone/doc/configuration/droneconfig.json",
-			&gerr)) {
-		printf("JsonRpcParser error: %s\n", gerr->message);
-		goto __return;
-	}
-
 	if (m_rootObj) {
 		m_rootObj->Release();
 		m_rootObj = 0;
 	}
 
+}
+
+bool JsonRpcParser::ParseFile(
+		const char* fileName)
+{
+	GError* gerr=0;
+	JsonNode* rootNode = 0;
+	IParsedJsonValue* jvalue = 0;
+
+	Reset();
+
+	if (!(m_jsonParser = json_parser_new())) {
+		printf("JsonRpcParser error: json_parser_new failed!\n");
+		goto __return;
+	}
+
+	if (!json_parser_load_from_file(m_jsonParser,fileName,&gerr)) {
+		printf("JsonRpcParser error: %s\n", gerr->message);
+		return false;
+	}
+
+	if (!(rootNode = json_parser_get_root(m_jsonParser))) {
+		goto __return;
+	}
+
+	if (0 == (jvalue = new ParsedJsonValue(
+			m_jsonParser,
+			rootNode))) {
+		goto __return;
+	}
+
+	if (jvalue->GetType() != SD_JSONVALUE_OBJECT) {
+		printf("JsonRpcParser error: unexpected root type %s\n",
+				jvalue->GetTypeAsString());
+		goto __return;
+	}
+
+	if (0 == (m_rootObj = jvalue->RefAsObject())) {
+		printf("JsonRpcParser error: failed to ref root object!\n");
+	}
+
+	__return:
+	if (jvalue) {
+		jvalue->Release();
+	}
+
+	return !!m_rootObj;
+}
+
+bool JsonRpcParser::ParseBuffer(
+		const char* buffer,
+		uint32_t len,
+		uint32_t* usedLen)
+{
+	GError* gerr=0;
+	IParsedJsonValue* jvalue = 0;
+
+	if (usedLen) {
+		*usedLen = 0;
+	}
+
+	Reset();
+
+	if (!(m_jsonParser = json_parser_new())) {
+		goto __return;
+	}
+
+	if (!json_parser_load_from_data(m_jsonParser, buffer, len, &gerr)) {
+		printf("JsonRpcParser error: %s\n", gerr->message);
+		goto __return;
+	}
+
 	if (!json_parser_get_root(m_jsonParser)) {
 		goto __return;
 	}
+
 	if (0 == (jvalue = new ParsedJsonValue(
 			m_jsonParser,
 			json_parser_get_root(m_jsonParser)))) {
@@ -421,40 +474,67 @@ bool JsonRpcParser::Parse(
 		goto __return;
 	}
 
-	if (0 == (rootObj = jvalue->RefAsObject())) {
+	if (0 == (m_rootObj = jvalue->RefAsObject())) {
+		printf("JsonRpcParser error: failed to ref root object!\n");
 		goto __return;
 	}
 
-	jvalue->Release();
-	if (0 == (jvalue = rootObj->RefMember("jsonrpc"))) {
-		printf("JsonRpcParser error: jsonrpc not found in root object!\n");
-		goto __return;
+	if (usedLen) {
+		/*
+		 * Could not find a way to figure out how much of the buffer
+		 * json_parser_load_from_data has used, so will try to figure it out
+		 * by iterating over the '{' and '}'
+		 */
+		const char* cursor = buffer;
+		int sum = 1;
+		bool inStr = false;
+		bool foundBegin = false;
+		while ((uint32_t)(cursor - buffer) < len) {
+			if (0 == sum) {
+				/*
+				 * We are past the schema that was just parsed and found a new
+				 * opening bracket, so break out.
+				 */
+				if (*cursor == '{') {
+					break;
+				}
+			}
+			else if (!foundBegin) {
+				if ('{' == *cursor) {
+					foundBegin = true;
+				}
+			}
+			else if (inStr) {
+				if (*cursor == '"') {
+					inStr = false;
+				}
+			} else {
+				switch(*cursor) {
+				case '"': inStr = true; break;
+				case '{': ++sum; break;
+				case '}': --sum; break;
+				}
+			}
+			++cursor;
+		}
+		*usedLen = cursor-buffer;
 	}
-
-	if (jvalue->GetType() != SD_JSONVALUE_STRING) {
-		printf("JsonRpcParser error: unexpected version type %s\n",
-				jvalue->GetTypeAsString());
-		goto __return;
-	}
-
-	if (0 != strcmp(jvalue->AsString(), "2.0")) {
-		printf("JsonRpcParser error: only JSON RPC 2.0 is supported, read %s\n",
-				jvalue->AsString());
-		goto __return;
-	}
-
-	rootObj->AddRef();
-	m_rootObj = rootObj;
 
 	__return:
 	if (jvalue) {
 		jvalue->Release();
 	}
-	if (rootObj) {
-		rootObj->Release();
-	}
-
 	return !!m_rootObj;
+}
+
+bool JsonRpcParser::IsValidRpcSchema()
+{
+	const char* strVal = 0;
+	strVal = IParsedJsonValue::AsStringSafe(m_rootObj->RefMember("jsonrpc"));
+	if (0 != strVal && 0 == strcmp(strVal,"2.0")) {
+		return true;
+	}
+	return false;
 }
 
 SdCommandCode JsonRpcParser::GetRpcMethod()
@@ -525,7 +605,7 @@ void JsonRpcParser::ParseImuConfig(
 	}
 }
 
-void JsonRpcParser::GetDroneConfig(SdDroneConfig* cfg)
+bool JsonRpcParser::GetDroneConfig(SdDroneConfig* cfg)
 {
 	IParsedJsonObject* config = 0;
 	IParsedJsonObject* obj = 0;
@@ -582,9 +662,48 @@ void JsonRpcParser::GetDroneConfig(SdDroneConfig* cfg)
 	config->GetMemberAsDoubleValue("LogRate", &cfg->LogRate);
 
 	__return:
+	if (config) {
+		config->Release();
+	}
 	if (params) {
 		params->Release();
 	}
+	return !!config;
+}
+
+bool JsonRpcParser::GetThrust(
+		double* thrust,
+		double* minThrust,
+		double* maxThrust)
+{
+	IParsedJsonObject* flight = 0;
+	IParsedJsonObject* params = 0;
+
+	if (0 == (params=GetRpcParams())) {
+		goto __return;
+	}
+	if (0 == (flight = params->RefMemberAsObject("Flight"))) {
+		goto __return;
+	}
+
+	if (thrust) {
+		flight->GetMemberAsDoubleValue("Thrust",thrust);
+	}
+	if (maxThrust) {
+		flight->GetMemberAsDoubleValue("MaxThrust",maxThrust);
+	}
+	if (minThrust) {
+		flight->GetMemberAsDoubleValue("MinThrust",minThrust);
+	}
+
+	__return:
+	if (flight) {
+		flight->Release();
+	}
+	if (params) {
+		params->Release();
+	}
+	return !!flight;
 }
 
 void JsonRpcParser::ParseObject(IParsedJsonObject* jobj)
@@ -619,7 +738,7 @@ void JsonRpcParser::ParseNode(IParsedJsonValue* jnode)
 			printf("%d\n",jnode->AsBool());
 			break;
 		case SD_JSONVALUE_INT:
-			printf("%ld\n",jnode->AsInt());
+			printf("%lld\n",(long long)jnode->AsInt());
 			break;
 		case SD_JSONVALUE_DOUBLE:
 			printf("%f\n",jnode->AsDouble());

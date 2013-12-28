@@ -17,20 +17,27 @@ class JsonRpcParser {
 public:
 	JsonRpcParser();
 	~JsonRpcParser();
-	bool Parse(
+	bool ParseBuffer(
 		const char* buffer,
-		uint32_t len
+		uint32_t len,
+		uint32_t* usedLen
 		);
+	bool ParseFile(const char* fileName);
 	SdCommandCode GetRpcMethod();
 	IParsedJsonObject* GetRpcParams();
 	uint64_t GetRpcCallId();
-	void GetDroneConfig(SdDroneConfig*);
-
+	bool GetDroneConfig(SdDroneConfig*);
+	bool GetThrust(
+			double* thrust,
+			double* minThrust,
+			double* maxThrust);
+	bool IsValidRpcSchema();
 private:
 	void ParseImuConfig(
 			IParsedJsonObject* obj,
 			SdImuDeviceConfig* imu
 			);
+	void Reset();
 
 	static void ParseObject(IParsedJsonObject* jobj);
 	static void ParseNode(IParsedJsonValue* jNode);

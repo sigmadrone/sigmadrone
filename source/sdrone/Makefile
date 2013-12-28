@@ -3,7 +3,7 @@ CPP	    	= $(CROSS_COMPILE)g++
 CC          = $(CROSS_COMPILE)gcc
 INCLUDES    = -I../include
 INCLUDES   += $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
-LIBS		= -lm -lrt -lpthread -ldl -ljson-glib-1.0 -lglib-2.0
+LIBS		= -lm -lrt -lpthread -ldl
 LIBS        += $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs json-glib-1.0)
 #use -Wno-psabi to turn off warnings about ABI changes for va-list in GCC 4.4
 CFLAGS		= -g -O0 -Wall -Wno-psabi
