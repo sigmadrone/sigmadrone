@@ -1,5 +1,6 @@
 #include <iostream>
 #include "jsonrpcparser.h"
+#include <string>
 
 struct TestControl
 {
@@ -24,6 +25,7 @@ struct TestControl
 	void OnTestPassed() {
 		printf("<-- TEST PASSED: %s\n",currentTestName);
 		++testsPassed;
+		currentTestName = 0;
 	}
 	void PrintStats() {
 		printf("--> Tests RUN:    %d\n", testsRun);
@@ -76,9 +78,97 @@ void TestParseJsonRpcFile()
 	return;
 }
 
+
+void TestParseJsonRpcFromBuffer()
+{
+	TEST_BEGIN("TestParseJsonRpcFromBuffer");
+	std::string jsonBuf;
+	JsonRpcParser parser;
+	uint32_t usedLen = 0;
+	static const char* schema1 =
+		"{"
+		    "\"jsonrpc\": \"2.0\", \"method\": \"run\", \"params\": "
+		    "{"
+				"\"Flight\": "
+				"{"
+				 	 "\"Thrust\": 0.5,"
+				 	 "\"MinThrust\":  0.3,"
+				 	 "\"MaxThrust\": 0.7"
+				"}"
+			"}, "
+			"\"id\": 0"
+		"}";
+
+	static const char* schema2 =
+		"{"
+		    "\"jsonrpc\": \"2.0\", \"method\": \"run\", \"params\": "
+		    "{"
+				"\"Flight\": "
+				"{"
+				 	 "\"Thrust\": 0.6,"
+				 	 "\"MinThrust\":  0.4,"
+				 	 "\"MaxThrust\": 0.8"
+				"}"
+			"}, "
+			"\"id\": 0"
+		"}";
+
+
+	jsonBuf += schema1;
+
+	if (!parser.ParseBuffer(jsonBuf.c_str(),jsonBuf.length(), &usedLen)) {
+		TEST_FAILED();
+		return;
+	}
+
+	if (usedLen != jsonBuf.length()) {
+		TEST_FAILED();
+		return;
+	}
+
+	double thrust=0, minThrust=0, maxThrust=0;
+	parser.GetThrust(&thrust, &minThrust, &maxThrust);
+	if (thrust != 0.5 || minThrust != 0.3 || maxThrust != 0.7) {
+		TEST_FAILED();
+		return;
+	}
+
+	/*
+	 * Now add the second schema, parse, advance and then parse again
+	 */
+	jsonBuf += schema2;
+	if (!parser.ParseBuffer(jsonBuf.c_str(),jsonBuf.length(), &usedLen)) {
+		TEST_FAILED();
+		return;
+	}
+
+	parser.GetThrust(&thrust, &minThrust, &maxThrust);
+	if (thrust != 0.5 || minThrust != 0.3 || maxThrust != 0.7) {
+		TEST_FAILED();
+		return;
+	}
+
+	if (!parser.ParseBuffer(
+			jsonBuf.c_str()+usedLen,
+			jsonBuf.length()-usedLen,
+			&usedLen)) {
+		TEST_FAILED();
+		return;
+	}
+
+	parser.GetThrust(&thrust, &minThrust, &maxThrust);
+	if (thrust != 0.6 || minThrust != 0.4 || maxThrust != 0.8) {
+		TEST_FAILED();
+		return;
+	}
+
+	TEST_PASSED();
+}
+
 int main(int argc, char *argv[])
 {
 	TestParseJsonRpcFile();
+	TestParseJsonRpcFromBuffer();
 
 	TEST_STATS();
 
