@@ -6,8 +6,34 @@
  */
 
 #include "commandargs.h"
+#include <stdexcept>
 
 #include <json-glib/json-glib.h>
+
+
+static CmdArgSpec s_argSpec[] = {
+		{"help",		"h", "Display this help", CMD_ARG_BOOL},
+		{"command",		"c", "reset|exit|run|ping|loadplugin|unloadplugin", CMD_ARG_STRING},
+		{"server",		"s", "Run as server and control drone hardware", CMD_ARG_BOOL},
+		{"daemon",		"d", "Run as daemon, note: server must be specified", CMD_ARG_BOOL},
+		{"rot-matrix",	"",	 "Print rotational matrix", CMD_ARG_BOOL},
+		{"host",        "",	 "Server IP address; client role assumed  when arg present", CMD_ARG_STRING},
+		{"port",        "",	 "Server port, default port is 2222", CMD_ARG_STRING},
+		{"maxdps",      "",	 "Gyro max angular speed in deg/s", CMD_ARG_STRING},
+		{"rate",        "",	 "Gyro and accelerometer sampling rate", CMD_ARG_STRING},
+		{"thrust",      "",	 "Set desired thrust per motor [0..1], used with --command=run", CMD_ARG_STRING},
+		{"maxthrust",   "",	 "Set min thrust per motor [0..1], used with --command=run", CMD_ARG_STRING},
+		{"minthrust",   "",	 "Set max thrust per motor [0..1], used with --command=run", CMD_ARG_STRING},
+		{"lograte",     "",	 "How many times to log per second", CMD_ARG_STRING},
+		{"logfile",     "",	 "Capture daemon output to file", CMD_ARG_STRING},
+		{"infile",      "",	 "Input file for sensor readings (testing only)", CMD_ARG_STRING},
+		{"outfile",     "",	 "Output file for servo commands (testing only)", CMD_ARG_STRING},
+		{"imuangle",    "",	 "Yaw angle between sensor's and motor's axis", CMD_ARG_STRING},
+		{"Kp",          "",	 "PID controller proportional coefficient", CMD_ARG_STRING},
+		{"Ki",          "",	 "PID controller integral coefficient", CMD_ARG_STRING},
+		{"Kd",          "",	 "PID controller derivative coefficient", CMD_ARG_STRING},
+		{"configfile",  "",  "Configuration file name", CMD_ARG_STRING},
+};
 
 
 _CommandArgs::_CommandArgs() :
@@ -48,64 +74,29 @@ _CommandArgs::_CommandArgs() :
 	m_parsedArgs.DroneCfg.LogRate = 1;
 
 	m_targetAttitude = QuaternionD(1,0,0,0);
+
+	m_cmdArgs.AddSpecs(s_argSpec,sizeof(s_argSpec)/sizeof(s_argSpec[0]));
 }
 
 _CommandArgs::~_CommandArgs()
 {
 }
 
+
 void _CommandArgs::PrintUsage()
 {
-	fprintf(stdout, "\nSigma Drone 0.1\n");
-	fprintf(stdout, "Controls the drone hardware, runs as a daemon server or "
-			        "client process.\n\n");
-	fprintf(stdout, "Usage: \n");
-	fprintf(stdout, "%s [command] [options]\n\n", !!m_argv ? m_argv[0] : "sdroned");
-	fprintf(stdout, "command:\n");
-	fprintf(stdout, " run                     Start the main control loop or execute\n"
-			        "                         flight control command, aka --thrust\n");
-	fprintf(stdout, " reset                   Reset drone hardware\n");
-	fprintf(stdout, " exit                    Exit/terminate the daemon server\n");
-	fprintf(stdout,"\n");
-	fprintf(stdout, "options:\n");
-	fprintf(stdout, " --help                  Display this help and exit\n");
-	fprintf(stdout,"\n");
-	fprintf(stdout, " --srv                   Execute as daemon server\n");
-	fprintf(stdout, " --pid-pilot             Use PID pilot\n");
-	fprintf(stdout, " --rot-matrix            Print the rotation matrix\n");
-	fprintf(stdout, " --host    <HOSTNAME>    Execute as client and connect to\n"
-			        "                         HOSTNAME\n");
-	fprintf(stdout, " --port    <PORT>        Server TCP port. Default port is %d\n",SD_DEFAULT_PORT);
-	fprintf(stdout,"\n");
-	fprintf(stdout, " --maxdps  <DPS>         Gyro max angular speed in deg/s\n");
-	fprintf(stdout, " --rate    <RATE>        Gyro and accel sampling rate\n");
-	fprintf(stdout, " --motor   <NO> <CHANN>  Mapping between motor No and servo channel\n");
-	fprintf(stdout, " --thrust  <0..1>        Set desired thrust per motor.\n"
-					"                         NOTE: this will fire-up the engines!\n");
-	fprintf(stdout, " --minthrust <0..9>      Min thrust value per motor, default is %1.2f\n",
-			0.3);
-	fprintf(stdout, " --maxthrust <0..99>     Max thrust value per motor, default is %1.2f\n",
-			0.99);
-	fprintf(stdout, " --lograte               How many times to log per second\n");
-	fprintf(stdout, " --log     <FILENAME>    Capture daemon output to file\n");
-	fprintf(stdout, " --infile  <FILENAME>    Input file for IMU readings, testing only\n");
-	fprintf(stdout, " --outfile <FILENAME>    Out file for servo, testing only\n");
-	fprintf(stdout, " --imuangle <ANGLE DEG>  Angle between the IMU and motor axis\n");
-	fprintf(stdout,"\n");
-	fprintf(stdout,
-			"Additional notes:\n"
-			"When command is not specified changes in the configuration\n"
-			"are accumulated until following reset/run. Multiple run commands\n"
-			"can be issued in order to control the flight; currently only\n"
-			"--thrust is supported. Server process can be started just by\n"
-			"specifying --srv; if command is specified in conjunction with\n"
-			"--srv then the daemon will carry out the command and will wait\n"
-			"for further instructions. If neither --srv nor --host are \n"
-			"specified then the process will assume both client and server\n"
-			"roles and will execute as console app.\n");
-	fprintf(stdout,"\n");
+	printf("Sigma Drone 0.1\n\n");
+	printf("Usage: %s <options>\n", !!m_argv ? m_argv[0] : "sdroned");
+	printf("%s\n",m_cmdArgs.HelpMessage().c_str());
 
-	//fprintf(stdout, "	--config  <FILENAME>    Configuration file name (todo)\n");
+	printf( "Additional notes:\n"
+			"When command is not specified changes in the configuration are accumulated \n"
+			"until following reset/run. Multiple run commands can be issued in order to \n"
+			"control the flight; currently only --thrust is supported. Server process can \n"
+			"be started just by specifying --server; if command is specified in conjunction \n"
+			"with --server then the daemon will carry out the command and will wait for \n"
+			"further instructions. If neither --server nor --host are specified then the \n"
+			"process will assume both client and server roles and will execute as console app.\n");
 }
 
 bool
@@ -113,7 +104,6 @@ _CommandArgs::ParseArgs(
 		int argc,
 		char* argv[])
 {
-	int i = 1;
 	SdDroneConfig* droneCfg = &m_parsedArgs.DroneCfg;
 
 	m_argc = argc;
@@ -130,7 +120,6 @@ _CommandArgs::ParseArgs(
 	m_parsedArgs.MaxThrust = 0.99;
 	m_parsedArgs.Thrust = 0.5;
 
-	// TODO: must be controlled from cmd line
 	m_parsedArgs.DroneCfg.Accel.CoordinateMap = Matrix3d(
 			0,-1, 0,
 			1, 0, 0,
@@ -141,101 +130,55 @@ _CommandArgs::ParseArgs(
 			0, 1, 0,
 			0, 0, 1);
 
-	if (i < m_argc) {
-		if (strcmp(m_argv[i], "run") == 0) {
-			++i;
-			m_parsedArgs.Command = SD_COMMAND_RUN;
-		} else if (strcmp(m_argv[i], "reset") == 0) {
-			++i;
-			m_parsedArgs.Command = SD_COMMAND_RESET;
-		}
-		else if (strcmp(m_argv[i], "exit") == 0) {
-			++i;
-			m_parsedArgs.Command = SD_COMMAND_EXIT;
-		}
+	try {
+		m_cmdArgs.Parse(argc, argv);
+	} catch (std::out_of_range exc) {
+		printf("%s\n",exc.what());
+		return false;
 	}
 
-	for (; i < m_argc; i++) {
-		if (strcmp(m_argv[i], "--help") == 0 ||
-			strcmp(m_argv[i], "/?") == 0 ||
-			strcmp(m_argv[i], "-?") == 0) {
-			return false;
-		} else if (strcmp(m_argv[i], "--maxdps") == 0) {
-			if (++i < m_argc) {
-				droneCfg->Gyro.Scale = atoi(m_argv[i]);
-			}
-		} else if (strcmp(m_argv[i], "--rate") == 0) {
-			if (++i < m_argc) {
-				droneCfg->Accel.SamplingRate = droneCfg->Gyro.SamplingRate = atoi(m_argv[i]);
-			}
-		} else if (strcmp(m_argv[i], "--motor") == 0) {
-			if (i+2 < m_argc) {
-				int motor = atoi(m_argv[++i]);
-				if ((size_t)motor < ARRAYSIZE(droneCfg->Quad.Motor)) {
-					droneCfg->Quad.Motor[motor]= atoi(m_argv[++i]);
-				}
-			}
-		} else if (strcmp(m_argv[i], "--host") == 0) {
-			if (++i < m_argc) {
-				m_parsedArgs.HostAddress = m_argv[i];
-				m_parsedArgs.IsClient = true;
-			}
-		} else if (strcmp(m_argv[i], "--port") == 0) {
-			if (++i < m_argc) {
-				m_parsedArgs.ServerPort = atoi(m_argv[i]);
-			}
-		} else if (strcmp(m_argv[i], "--thrust") == 0) {
-			if (++i < m_argc) {
-				m_parsedArgs.Thrust = atof(m_argv[i]);
-			}
-		} else if (strcmp(m_argv[i], "--minthrust") == 0) {
-			if (++i < m_argc) {
-				m_parsedArgs.MinThrust = atof(m_argv[i]);
-			}
-		} else if (strcmp(m_argv[i], "--maxthrust") == 0) {
-			if (++i < m_argc) {
-				m_parsedArgs.MaxThrust = atof(m_argv[i]);
-			}
-		} else if (strcmp(m_argv[i], "--Kd") == 0) {
-			if (++i < m_argc) {
-				m_parsedArgs.DroneCfg.Quad.Kd = atof(m_argv[i]);
-			}
-		} else if (strcmp(m_argv[i], "--Kp") == 0) {
-			if (++i < m_argc) {
-				m_parsedArgs.DroneCfg.Quad.Kp = atof(m_argv[i]);
-			}
-		} else if (strcmp(m_argv[i], "--Ki") == 0) {
-			if (++i < m_argc) {
-				m_parsedArgs.DroneCfg.Quad.Ki = atof(m_argv[i]);
-			}
-		} else if (strcmp(m_argv[i], "--srv") == 0) {
-			m_parsedArgs.IsServer = true;
-		} else if (strcmp(m_argv[i], "--infile") == 0) {
-			if (++i < m_argc) {
-				droneCfg->Gyro.DeviceName = droneCfg->Accel.DeviceName = m_argv[i];
-			}
-		} else if (strcmp(m_argv[i], "--log") == 0) {
-			if (++i < m_argc) {
-				m_parsedArgs.LogFile = m_argv[i];
-			}
-		} else if (strcmp(m_argv[i], "--outfile") == 0) {
-			if (++i < m_argc) {
-				droneCfg->Servo.DeviceName = m_argv[i];
-			}
-		} else if (strcmp(m_argv[i], "--lograte") == 0) {
-			if (++i < m_argc) {
-				droneCfg->LogRate = atof(m_argv[i]);
-			}
-		} else if (strcmp(m_argv[i], "--imuangle") == 0) {
-			if (++i < m_argc) {
-				droneCfg->Quad.ImuAngleAxisZ = atoi(m_argv[i]);
-			}
-		} else if (strcmp(m_argv[i], "--rot-matrix") == 0) {
-			droneCfg->LogRotationMatrix = 1;
-		} else {
-			return false;
-		}
+	if (m_cmdArgs.GetBoolValue("help")) {
+		return false;
 	}
+
+	if (m_cmdArgs.GetValue("command").c_str() == std::string("run")) {
+		m_parsedArgs.Command = SD_COMMAND_RUN;
+	} else if (m_cmdArgs.GetValue("command").c_str() == std::string("reset")) {
+		m_parsedArgs.Command = SD_COMMAND_RESET;
+	} else if (m_cmdArgs.GetValue("command").c_str() == std::string("run")) {
+		m_parsedArgs.Command = SD_COMMAND_EXIT;
+	} else if (m_cmdArgs.GetValue("command").c_str() == std::string("ping")) {
+		m_parsedArgs.Command = SD_COMMAND_PING;
+	}
+	m_cmdArgs.GetValueAsInt("maxdps",&droneCfg->Gyro.Scale);
+	m_cmdArgs.GetValueAsInt("rate",&droneCfg->Gyro.SamplingRate);
+	droneCfg->Accel.SamplingRate = droneCfg->Gyro.SamplingRate;
+	if (m_cmdArgs.GetValue("host").length() > 0) {
+		m_parsedArgs.HostAddress = m_cmdArgs.GetValue("host").c_str();
+		m_parsedArgs.IsClient = true;
+	}
+	m_parsedArgs.IsServer = m_cmdArgs.GetBoolValue("server");
+	m_cmdArgs.GetValueAsInt("port",&m_parsedArgs.ServerPort);
+	m_cmdArgs.GetValueAsDouble("thrust",&m_parsedArgs.Thrust);
+	m_cmdArgs.GetValueAsDouble("minthrust",&m_parsedArgs.MinThrust);
+	m_cmdArgs.GetValueAsDouble("maxthrust",&m_parsedArgs.MaxThrust);
+	if (m_cmdArgs.GetValue("infile").length() > 0) {
+		droneCfg->Gyro.DeviceName =m_cmdArgs.GetValue("infile").c_str();
+		droneCfg->Accel.DeviceName = droneCfg->Gyro.DeviceName;
+		droneCfg->Mag.DeviceName = droneCfg->Gyro.DeviceName;
+	}
+	if (m_cmdArgs.GetValue("outfile").length() > 0) {
+		droneCfg->Servo.DeviceName =m_cmdArgs.GetValue("outfile").c_str();
+	}
+	if (m_cmdArgs.GetValue("log").length() > 0) {
+		m_parsedArgs.LogFile = m_cmdArgs.GetValue("log").c_str();
+	}
+	m_cmdArgs.GetValueAsDouble("lograte", &droneCfg->LogRate);
+	droneCfg->LogRotationMatrix = m_cmdArgs.GetBoolValue("rot-matrix");
+	m_cmdArgs.GetValueAsInt("imuangle",&droneCfg->Quad.ImuAngleAxisZ);
+	m_cmdArgs.GetValueAsDouble("Kp", &droneCfg->Quad.Kp);
+	m_cmdArgs.GetValueAsDouble("Ki", &droneCfg->Quad.Ki);
+	m_cmdArgs.GetValueAsDouble("Kd", &droneCfg->Quad.Kd);
 	return true;
 }
 

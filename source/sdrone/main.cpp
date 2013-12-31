@@ -109,7 +109,6 @@ int main(int argc, char *argv[])
 	}
 
 	if (!g_CmdArgs.ParseArgs(argc,argv)) {
-		printf("FAILED to parse the command line!\n\n");
 		g_CmdArgs.PrintUsage();
 		goto __return;
 	}

@@ -1,6 +1,9 @@
 #include <sstream>
 #include <stdexcept>
 #include "cmdargs.h"
+#include <stdlib.h>
+
+const std::string CmdArgs::s_emptyValue = "";
 
 CmdArgs::CmdArgs(
 		const std::string &argprefix,
@@ -142,17 +145,38 @@ void CmdArgs::Parse(int argc, char *argv[]) throw(std::exception)
 }
 
 
-std::string CmdArgs::GetValue(const std::string &name)
+const std::string& CmdArgs::GetValue(const std::string &name)
 {
-	std::string ret;
 	std::map<std::string, std::vector<std::string> >::const_iterator it;
-
 	it = m_args.find(name);
 	if (it != m_args.end()) {
-		ret = *it->second.begin();
+		return *it->second.begin();
 	}
 
-	return ret;
+	return s_emptyValue;
+}
+
+bool CmdArgs::GetValueAsDouble(const std::string &name, double* value)
+{
+	std::string strVal = GetValue(name);
+	if (strVal.length()) {
+		*value = atof(strVal.c_str());
+	}
+	return !!strVal.length();
+}
+
+bool CmdArgs::GetValueAsInt(const std::string &name, int32_t* value)
+{
+	std::string strVal = GetValue(name);
+	if (strVal.length()) {
+		*value = atoi(strVal.c_str());
+	}
+	return !!strVal.length();
+}
+
+bool CmdArgs::GetBoolValue(const std::string &name)
+{
+	return GetValue(name) == "1";
 }
 
 std::vector<std::string> CmdArgs::GetValues(const std::string &name)

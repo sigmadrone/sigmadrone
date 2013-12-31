@@ -9,6 +9,7 @@
 #define COMMANDARGS_H_
 
 #include "commoninc.h"
+#include "cmdargs.h"
 
 struct ParsedArgs
 {
@@ -57,7 +58,6 @@ public:
 
 	bool IsRoleServer();
 	bool IsRoleClient();
-	const ParsedArgs& GetParsedArgs() { return m_parsedArgs; }
 	int GetServerPort() { return m_parsedArgs.ServerPort; }
 	const char* GetHostAddress() { return m_parsedArgs.HostAddress; }
 	const SdDroneConfig* GetDroneConfig() { return &m_parsedArgs.DroneCfg; }
@@ -66,6 +66,7 @@ private:
 	char** m_argv;
 	ParsedArgs m_parsedArgs;
 	QuaternionD m_targetAttitude;
+	CmdArgs m_cmdArgs;
 };
 
 #endif /* COMMANDARGS_H_ */

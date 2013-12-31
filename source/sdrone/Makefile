@@ -27,7 +27,8 @@ OBJECTS		= \
 	imulowpassfilter.o\
 	iopacket.o\
 	kalmanattitudefilter.o\
-	jsonrpcparser.o
+	jsonrpcparser.o\
+	cmdargs.o
 
 all : $(TARGET)
 
