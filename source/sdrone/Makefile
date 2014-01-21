@@ -1,6 +1,6 @@
 #CROSS_COMPILE=arm-linux-gnueabi-
-CPP	    	= $(CROSS_COMPILE)g++
-CC          = $(CROSS_COMPILE)gcc
+CXX	    ?= $(CROSS_COMPILE)g++
+CC          ?= $(CROSS_COMPILE)gcc
 INCLUDES    = -I../include
 INCLUDES   += $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
 LIBS		= -lm -lrt -lpthread -ldl
@@ -38,13 +38,13 @@ all : $(TARGET)
 	$(CC) -c $< $(CFLAGS) $(INCLUDES)
 
 .cxx.o: 
-	$(CPP) -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -c $< $(CFLAGS) $(INCLUDES)
 
 .cpp.o: 
-	$(CPP) -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -c $< $(CFLAGS) $(INCLUDES)
 
 $(TARGET) : $(OBJECTS)
-	$(CPP) $^ -o $(TARGET) $(LIBS)
+	$(CXX) $^ -o $(TARGET) $(LIBS)
 
 clean:
 	rm -f *.o *~ $(TARGET)
