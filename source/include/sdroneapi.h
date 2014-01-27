@@ -767,6 +767,20 @@ protected:
 	virtual ~IParsedJsonObject() {}
 };
 
+struct IJsonObjectBuilder
+{
+	virtual void AddRef() = 0;
+	virtual void Release() = 0;
+	virtual void Reset() = 0;
+	virtual bool AddMember(
+			IN const char* name,
+			IN IParsedJsonValue* member
+			) = 0;
+	virtual IParsedJsonObject* RefObject() = 0;
+protected:
+	virtual ~IJsonObjectBuilder() {}
+};
+
 struct IParsedJsonValue
 {
 	virtual void AddRef() = 0;
@@ -812,6 +826,36 @@ protected:
 	virtual ~IParsedJsonValue() {}
 };
 
+struct IJsonValueBuilder
+{
+	virtual void AddRef() = 0;
+	virtual void Release() = 0;
+
+	virtual void Reset() = 0;
+
+	virtual bool SetValueAsObject(
+			IN IParsedJsonObject*) = 0;
+	virtual bool SetValueAsArray(
+			IN IParsedJsonArray*) = 0;
+	virtual bool SetValueAsDouble(
+			IN double value) = 0;
+	virtual bool SetValueAsInt(
+			IN int32_t value) = 0;
+	virtual bool SetValueAsInt64(
+			OUT int64_t value) = 0;
+	virtual bool SetValueAsBool(
+			IN bool value) = 0;
+	virtual bool SetValueAsString(
+			IN const char* value
+			) = 0;
+
+	virtual IParsedJsonValue* RefValue() = 0;
+
+protected:
+	virtual ~IJsonValueBuilder() {}
+};
+
+
 struct IParsedJsonArray
 {
 	virtual void AddRef() = 0;
@@ -847,6 +891,20 @@ protected:
 	virtual ~IParsedJsonArray() {}
 };
 
+struct IJsonArrayBuilder
+{
+	virtual void AddRef() = 0;
+	virtual void Release() = 0;
+	virtual void Reset() = 0;
+	virtual bool AddElement(
+			IN IParsedJsonValue*
+			) = 0;
+	virtual IParsedJsonArray* RefArray() = 0;
+protected:
+	virtual ~IJsonArrayBuilder() {}
+};
+
+
 struct ICommandArgs
 {
 	virtual SdCommandCode GetCommandCode() = 0;
@@ -856,9 +914,9 @@ struct ICommandArgs
 	virtual const QuaternionD* GetTargetAttitude() = 0;
 	virtual const SdDroneConfig* GetDroneConfig() = 0;
 
-	virtual const char* GetRawJsonSchema(uint32_t* length) = 0;
-	virtual const IParsedJsonObject* RefJsonSchema() = 0;
-	virtual const IParsedJsonObject* RefJsonObjectForPlugin(
+	virtual const char* GetRawJsonSchema(OUT uint32_t* length) = 0;
+	virtual IParsedJsonObject* RefJsonSchema() = 0;
+	virtual IParsedJsonObject* RefJsonObjectForPlugin(
 			const char* pluginName
 			) = 0;
 
