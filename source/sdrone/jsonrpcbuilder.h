@@ -19,9 +19,9 @@ public:
 	void Release();
 	void Reset();
 	bool SetValueAsObject(
-			IN IParsedJsonObject*);
+			IN IJsonObjectReader*);
 	bool SetValueAsArray(
-			IN IParsedJsonArray*);
+			IN IJsonArrayReader*);
 	bool SetValueAsDouble(
 			IN double value);
 	bool SetValueAsInt(
@@ -33,7 +33,7 @@ public:
 	bool SetValueAsString(
 			IN const char* value
 			);
-	IParsedJsonValue* RefValue();
+	IJsonValueReader* RefValue();
 
 protected:
 	~JsonValueBuilder() {}
@@ -46,13 +46,15 @@ public:
 	~JsonRpcBuilder();
 	void BeginRequest(const char* method, uint32_t id);
 	void BeginReply(uint32_t id);
+	void Finalize();
 	void Reset();
-	int AddParams(IParsedJsonValue*);
-	const char*
+	int AddParams(IJsonValueReader*);
+	const char* GetSchema() const;
+	size_t GetSchemaLen() consts;
 
 private:
 	JsonGenerator* m_jsonGenerator;
-	IParsedJsonValue* m_root;
+	IJsonValueReader* m_root;
 };
 
 #endif /* JSONRPCBUILDER_H_ */

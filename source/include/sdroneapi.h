@@ -727,10 +727,10 @@ enum SdJsonValueType
 	SD_JSONVALUE_ARRAY,
 };
 
-struct IParsedJsonValue;
-struct IParsedJsonArray;
+struct IJsonValueReader;
+struct IJsonArrayReader;
 
-struct IParsedJsonObject
+struct IJsonObjectReader
 {
 	virtual void AddRef() = 0;
 	virtual void Release() = 0;
@@ -738,12 +738,12 @@ struct IParsedJsonObject
 	virtual const char* GetMemberName(
 			IN size_t index
 			) = 0;
-	virtual IParsedJsonValue* RefMember(
+	virtual IJsonValueReader* RefMember(
 			IN const char* name
 			) = 0;
-	virtual IParsedJsonObject* RefMemberAsObject(
+	virtual IJsonObjectReader* RefMemberAsObject(
 			IN const char* name) = 0;
-	virtual IParsedJsonArray* RefMemberAsArray(
+	virtual IJsonArrayReader* RefMemberAsArray(
 			IN const char* name) = 0;
 	virtual bool GetMemberAsDoubleValue(
 			IN const char* name,
@@ -764,7 +764,7 @@ struct IParsedJsonObject
 			IN const char* name,
 			OUT const char** value) = 0;
 protected:
-	virtual ~IParsedJsonObject() {}
+	virtual ~IJsonObjectReader() {}
 };
 
 struct IJsonObjectBuilder
@@ -774,14 +774,14 @@ struct IJsonObjectBuilder
 	virtual void Reset() = 0;
 	virtual bool AddMember(
 			IN const char* name,
-			IN IParsedJsonValue* member
+			IN IJsonValueReader* member
 			) = 0;
-	virtual IParsedJsonObject* RefObject() = 0;
+	virtual IJsonObjectReader* RefObject() = 0;
 protected:
 	virtual ~IJsonObjectBuilder() {}
 };
 
-struct IParsedJsonValue
+struct IJsonValueReader
 {
 	virtual void AddRef() = 0;
 	virtual void Release() = 0;
@@ -802,8 +802,8 @@ struct IParsedJsonValue
 	/*
 	 * The returned object must be released by the caller.
 	 */
-	virtual IParsedJsonArray* RefAsArray() = 0;
-	virtual IParsedJsonObject* RefAsObject() = 0;
+	virtual IJsonArrayReader* RefAsArray() = 0;
+	virtual IJsonObjectReader* RefAsObject() = 0;
 
 	/*
 	 * Ref/AsxxxSafe routines allow for 1)NULL val to be passed; 2)the value
@@ -814,16 +814,16 @@ struct IParsedJsonValue
 	 * 	 str = IParsedJsonValue::AsStringSafe(obj->RefMember('membername'));
 	 * 	 IParsedJsonValue::AsInt(arr->RefElement(0),&myInt64);
 	 */
-	static inline IParsedJsonArray* RefAsArraySafe(IParsedJsonValue* val);
-	static inline IParsedJsonObject* RefAsObjectSafe(IParsedJsonValue* val);
-	static inline const char* AsStringSafe(IParsedJsonValue* val);
-	static inline bool AsDoubleSafe(IParsedJsonValue* val, double* d);
-	static inline bool AsBoolSafe(IParsedJsonValue* val, bool* b);
-	static inline bool AsIntSafe(IParsedJsonValue* val, int64_t* i64);
-	static inline bool AsIntSafe(IParsedJsonValue* val, int32_t* i32);
-	static inline bool AsIntSafe(IParsedJsonValue* val, int16_t* i16);
+	static inline IJsonArrayReader* RefAsArraySafe(IJsonValueReader* val);
+	static inline IJsonObjectReader* RefAsObjectSafe(IJsonValueReader* val);
+	static inline const char* AsStringSafe(IJsonValueReader* val);
+	static inline bool AsDoubleSafe(IJsonValueReader* val, double* d);
+	static inline bool AsBoolSafe(IJsonValueReader* val, bool* b);
+	static inline bool AsIntSafe(IJsonValueReader* val, int64_t* i64);
+	static inline bool AsIntSafe(IJsonValueReader* val, int32_t* i32);
+	static inline bool AsIntSafe(IJsonValueReader* val, int16_t* i16);
 protected:
-	virtual ~IParsedJsonValue() {}
+	virtual ~IJsonValueReader() {}
 };
 
 struct IJsonValueBuilder
@@ -834,9 +834,9 @@ struct IJsonValueBuilder
 	virtual void Reset() = 0;
 
 	virtual bool SetValueAsObject(
-			IN IParsedJsonObject*) = 0;
+			IN IJsonObjectReader*) = 0;
 	virtual bool SetValueAsArray(
-			IN IParsedJsonArray*) = 0;
+			IN IJsonArrayReader*) = 0;
 	virtual bool SetValueAsDouble(
 			IN double value) = 0;
 	virtual bool SetValueAsInt(
@@ -849,24 +849,24 @@ struct IJsonValueBuilder
 			IN const char* value
 			) = 0;
 
-	virtual IParsedJsonValue* RefValue() = 0;
+	virtual IJsonValueReader* RefValue() = 0;
 
 protected:
 	virtual ~IJsonValueBuilder() {}
 };
 
 
-struct IParsedJsonArray
+struct IJsonArrayReader
 {
 	virtual void AddRef() = 0;
 	virtual void Release() = 0;
 	virtual uint32_t ElementCount() = 0;
-	virtual IParsedJsonValue* RefElement(
+	virtual IJsonValueReader* RefElement(
 			uint32_t index
 			) = 0;
-	virtual IParsedJsonObject* RefElementAsObject(
+	virtual IJsonObjectReader* RefElementAsObject(
 			IN uint32_t index) = 0;
-	virtual IParsedJsonArray* RefElementAsArray(
+	virtual IJsonArrayReader* RefElementAsArray(
 			IN uint32_t index) = 0;
 	virtual bool GetElementAsDoubleValue(
 			IN uint32_t index,
@@ -888,7 +888,7 @@ struct IParsedJsonArray
 			OUT const char** value) = 0;
 
 protected:
-	virtual ~IParsedJsonArray() {}
+	virtual ~IJsonArrayReader() {}
 };
 
 struct IJsonArrayBuilder
@@ -897,9 +897,9 @@ struct IJsonArrayBuilder
 	virtual void Release() = 0;
 	virtual void Reset() = 0;
 	virtual bool AddElement(
-			IN IParsedJsonValue*
+			IN IJsonValueReader*
 			) = 0;
-	virtual IParsedJsonArray* RefArray() = 0;
+	virtual IJsonArrayReader* RefArray() = 0;
 protected:
 	virtual ~IJsonArrayBuilder() {}
 };
@@ -915,8 +915,8 @@ struct ICommandArgs
 	virtual const SdDroneConfig* GetDroneConfig() = 0;
 
 	virtual const char* GetRawJsonSchema(OUT uint32_t* length) = 0;
-	virtual IParsedJsonObject* RefJsonSchema() = 0;
-	virtual IParsedJsonObject* RefJsonObjectForPlugin(
+	virtual IJsonObjectReader* RefJsonSchema() = 0;
+	virtual IJsonObjectReader* RefJsonObjectForPlugin(
 			const char* pluginName
 			) = 0;
 
@@ -957,25 +957,25 @@ protected:
 	virtual ~CommandArgs() {}
 };
 
-IParsedJsonArray* IParsedJsonValue::RefAsArraySafe(IParsedJsonValue* val) {
-	IParsedJsonArray* arr = (!!val && val->GetType() == SD_JSONVALUE_ARRAY) ?
+IJsonArrayReader* IJsonValueReader::RefAsArraySafe(IJsonValueReader* val) {
+	IJsonArrayReader* arr = (!!val && val->GetType() == SD_JSONVALUE_ARRAY) ?
 			val->RefAsArray() : 0;
 	if (!!val) { val->Release(); }
 	return arr;
 }
-IParsedJsonObject* IParsedJsonValue::RefAsObjectSafe(IParsedJsonValue* val) {
-	IParsedJsonObject* obj = (!!val && val->GetType() == SD_JSONVALUE_OBJECT) ?
+IJsonObjectReader* IJsonValueReader::RefAsObjectSafe(IJsonValueReader* val) {
+	IJsonObjectReader* obj = (!!val && val->GetType() == SD_JSONVALUE_OBJECT) ?
 			val->RefAsObject() : 0;
 	if (!!val) {val->Release();}
 	return obj;
 }
-const char* IParsedJsonValue::AsStringSafe(IParsedJsonValue* val) {
+const char* IJsonValueReader::AsStringSafe(IJsonValueReader* val) {
 	const char* str = (0 != val && val->GetType() == SD_JSONVALUE_STRING) ?
 			val->AsString() : "";
 	if (!!val) { val->Release(); }
 	return str;
 }
-bool IParsedJsonValue::AsDoubleSafe(IParsedJsonValue* val, double* d) {
+bool IJsonValueReader::AsDoubleSafe(IJsonValueReader* val, double* d) {
 	bool ret = false;
 	if (0 != val && val->GetType() == SD_JSONVALUE_DOUBLE) {
 		*d = val->AsDouble();
@@ -984,7 +984,7 @@ bool IParsedJsonValue::AsDoubleSafe(IParsedJsonValue* val, double* d) {
 	if (!!val) { val->Release(); }
 	return ret;
 }
-bool IParsedJsonValue::AsBoolSafe(IParsedJsonValue* val, bool* b) {
+bool IJsonValueReader::AsBoolSafe(IJsonValueReader* val, bool* b) {
 	bool ret = false;
 	assert(b);
 	if (0 != val && val->GetType() == SD_JSONVALUE_BOOL) {
@@ -994,7 +994,7 @@ bool IParsedJsonValue::AsBoolSafe(IParsedJsonValue* val, bool* b) {
 	if (!!val) { val->Release(); }
 	return ret;
 }
-bool IParsedJsonValue::AsIntSafe(IParsedJsonValue* val, int64_t* i64) {
+bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int64_t* i64) {
 	bool ret = false;
 	assert(i64);
 	if (0 != val && val->GetType() == SD_JSONVALUE_INT) {
@@ -1004,7 +1004,7 @@ bool IParsedJsonValue::AsIntSafe(IParsedJsonValue* val, int64_t* i64) {
 	if (!!val) { val->Release(); }
 	return ret;
 }
-bool IParsedJsonValue::AsIntSafe(IParsedJsonValue* val, int32_t* i32) {
+bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int32_t* i32) {
 	bool ret = false;
 	assert(i32);
 	if (0 != val && val->GetType() == SD_JSONVALUE_INT) {
@@ -1014,7 +1014,7 @@ bool IParsedJsonValue::AsIntSafe(IParsedJsonValue* val, int32_t* i32) {
 	if (!!val) { val->Release(); }
 	return ret;
 }
-bool IParsedJsonValue::AsIntSafe(IParsedJsonValue* val, int16_t* i16) {
+bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int16_t* i16) {
 	bool ret = false;
 	assert(i16);
 	if (0 != val && val->GetType() == SD_JSONVALUE_INT) {

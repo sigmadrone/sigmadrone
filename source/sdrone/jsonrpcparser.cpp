@@ -12,52 +12,51 @@ struct GLibInit {
 	GLibInit() { g_type_init(); }
 } glibInit;
 
-class ParsedJsonObject: public IParsedJsonObject {
+class ParsedJsonObject: public IJsonObjectReader {
 public:
 	ParsedJsonObject(
-			JsonParser* parser,
 			JsonObject* obj);
 	void AddRef();
 	void Release();
 	size_t GetMemberCount();
 	const char* GetMemberName(size_t index);
-	IParsedJsonValue* RefMember(const char* name);
-	IParsedJsonObject* RefMemberAsObject(const char* name) {
-		return IParsedJsonValue::RefAsObjectSafe(RefMember(name));
+	IJsonValueReader* RefMember(const char* name);
+	IJsonObjectReader* RefMemberAsObject(const char* name) {
+		return IJsonValueReader::RefAsObjectSafe(RefMember(name));
 	}
-	IParsedJsonArray* RefMemberAsArray(
+	IJsonArrayReader* RefMemberAsArray(
 			IN const char* name) {
-		return IParsedJsonValue::RefAsArraySafe(RefMember(name));
+		return IJsonValueReader::RefAsArraySafe(RefMember(name));
 	}
 	bool GetMemberAsDoubleValue(
 			IN const char* name,
 			OUT double* value) {
-		return IParsedJsonValue::AsDoubleSafe(RefMember(name),value);
+		return IJsonValueReader::AsDoubleSafe(RefMember(name),value);
 	}
 	bool GetMemberAsIntValue(
 			IN const char* name,
 			OUT int64_t* value) {
-		return IParsedJsonValue::AsIntSafe(RefMember(name),value);
+		return IJsonValueReader::AsIntSafe(RefMember(name),value);
 	}
 	bool GetMemberAsIntValue(
 			IN const char* name,
 			OUT int32_t* value) {
-		return IParsedJsonValue::AsIntSafe(RefMember(name),value);
+		return IJsonValueReader::AsIntSafe(RefMember(name),value);
 	}
 	bool GetMemberAsIntValue(
 			IN const char* name,
 			OUT int16_t* value) {
-		return IParsedJsonValue::AsIntSafe(RefMember(name),value);
+		return IJsonValueReader::AsIntSafe(RefMember(name),value);
 	}
 	bool GetMemberAsBoolValue(
 			IN const char* name,
 			OUT bool* value) {
-		return IParsedJsonValue::AsBoolSafe(RefMember(name),value);
+		return IJsonValueReader::AsBoolSafe(RefMember(name),value);
 	}
 	bool GetMemberAsStringValue(
 			IN const char* name,
 			OUT const char** value) {
-		*value = IParsedJsonValue::AsStringSafe(RefMember(name));
+		*value = IJsonValueReader::AsStringSafe(RefMember(name));
 		return !!(*value);
 	}
 
@@ -65,16 +64,14 @@ protected:
 	~ParsedJsonObject();
 private:
 	JsonObject* m_jobj;
-	JsonParser* m_parser;
 	std::vector<char*> m_members;
 	int m_refCnt;
 };
 
-class ParsedJsonValue: public IParsedJsonValue
+class ParsedJsonValue: public IJsonValueReader
 {
 public:
 	ParsedJsonValue(
-			JsonParser* parser,
 			JsonNode* jnode);
 	void AddRef();
 	void Release();
@@ -86,89 +83,84 @@ public:
 	int16_t AsInt16() { return (int16_t)AsInt(); }
 	bool AsBool();
 	const char* AsString();
-	IParsedJsonArray* RefAsArray();
-	IParsedJsonObject* RefAsObject();
+	IJsonArrayReader* RefAsArray();
+	IJsonObjectReader* RefAsObject();
 protected:
 	~ParsedJsonValue();
 private:
 	JsonNode* m_jnode;
-	JsonParser* m_parser;
 	SdJsonValueType m_type;
 	const char* m_typeAsStr;
 	int m_refCnt;
 };
 
-class ParsedJsonArray: public IParsedJsonArray
+class ParsedJsonArray: public IJsonArrayReader
 {
 public:
 	ParsedJsonArray(
-			JsonParser* parser,
 			JsonArray* jarr);
 	void AddRef();
 	void Release();
 	uint32_t ElementCount();
-	IParsedJsonValue* RefElement(
+	IJsonValueReader* RefElement(
 			uint32_t index);
-	IParsedJsonObject* RefElementAsObject(
+	IJsonObjectReader* RefElementAsObject(
 			IN uint32_t index) {
-		return IParsedJsonValue::RefAsObjectSafe(RefElement(index));
+		return IJsonValueReader::RefAsObjectSafe(RefElement(index));
 	}
-	IParsedJsonArray* RefElementAsArray(
+	IJsonArrayReader* RefElementAsArray(
 			IN uint32_t index) {
-		return IParsedJsonValue::RefAsArraySafe(RefElement(index));
+		return IJsonValueReader::RefAsArraySafe(RefElement(index));
 	}
 	bool GetElementAsDoubleValue(
 			IN uint32_t index,
 			OUT double* value) {
-		return IParsedJsonValue::AsDoubleSafe(RefElement(index),value);
+		return IJsonValueReader::AsDoubleSafe(RefElement(index),value);
 	}
 	bool GetElementAsIntValue(
 			IN uint32_t index,
 			OUT int32_t* value) {
-		return IParsedJsonValue::AsIntSafe(RefElement(index),value);
+		return IJsonValueReader::AsIntSafe(RefElement(index),value);
 	}
 	bool GetElementAsIntValue(
 			IN uint32_t index,
 			OUT int64_t* value) {
-		return IParsedJsonValue::AsIntSafe(RefElement(index),value);
+		return IJsonValueReader::AsIntSafe(RefElement(index),value);
 	}
 	bool GetElementAsIntValue(
 			IN uint32_t index,
 			OUT int16_t* value) {
-		return IParsedJsonValue::AsIntSafe(RefElement(index),value);
+		return IJsonValueReader::AsIntSafe(RefElement(index),value);
 	}
 	virtual bool GetElementAsBoolValue(
 			IN uint32_t index,
 			OUT bool* value) {
-		return IParsedJsonValue::AsBoolSafe(RefElement(index),value);
+		return IJsonValueReader::AsBoolSafe(RefElement(index),value);
 	}
 	virtual bool GetElementAsStringValue(
 			IN uint32_t index,
 			OUT const char** value) {
-		*value = IParsedJsonValue::AsStringSafe(RefElement(index));
+		*value = IJsonValueReader::AsStringSafe(RefElement(index));
 		return !!(*value);
 	}
 protected:
 	~ParsedJsonArray();
 private:
 	JsonArray* m_jarr;
-	JsonParser* m_parser;
 	int m_refCnt;
 };
 
 ParsedJsonObject::ParsedJsonObject(
-		JsonParser* parser,
 		JsonObject* obj) :
-		m_jobj(obj),m_parser(parser),m_refCnt(1)
+		m_jobj(obj),m_refCnt(1)
 {
-	assert(m_parser);
 	assert(m_jobj);
-	g_object_ref(m_parser);
+	json_object_ref(m_jobj);
 }
 
 ParsedJsonObject::~ParsedJsonObject()
 {
-	g_object_unref(m_parser);
+	json_object_unref(m_jobj);
 }
 
 void ParsedJsonObject::AddRef() {
@@ -203,13 +195,13 @@ const char* ParsedJsonObject::GetMemberName(size_t index)
 	return GetMemberCount() > index ? m_members.at(index) : 0;
 }
 
-IParsedJsonValue* ParsedJsonObject::RefMember(const char* name)
+IJsonValueReader* ParsedJsonObject::RefMember(const char* name)
 {
 	assert(name);
-	IParsedJsonValue* parsedValue = 0;
+	IJsonValueReader* parsedValue = 0;
 	JsonNode* jnode = json_object_get_member(m_jobj,name);
 	if (0 != jnode) {
-		parsedValue = new ParsedJsonValue(m_parser,jnode);
+		parsedValue = new ParsedJsonValue(jnode);
 	}
 	return parsedValue;
 }
@@ -219,16 +211,15 @@ IParsedJsonValue* ParsedJsonObject::RefMember(const char* name)
 // ParsedJsonArray implementation
 //
 ParsedJsonArray::ParsedJsonArray(
-		JsonParser* parser,
 		JsonArray* jarr) :
-		m_jarr(jarr), m_parser(parser), m_refCnt(1)
+		m_jarr(jarr), m_refCnt(1)
 {
-	g_object_ref(m_parser);
+	assert(m_jarr);
+	json_array_ref(m_jarr);
 }
 
-ParsedJsonArray::~ParsedJsonArray()
-{
-	g_object_unref(m_parser);
+ParsedJsonArray::~ParsedJsonArray() {
+	json_array_unref(m_jarr);
 }
 
 void ParsedJsonArray::AddRef() {
@@ -245,12 +236,12 @@ uint32_t ParsedJsonArray::ElementCount() {
 	return json_array_get_length(m_jarr);
 }
 
-IParsedJsonValue* ParsedJsonArray::RefElement(uint32_t index) {
-	IParsedJsonValue* parsedJsonVal = 0;
+IJsonValueReader* ParsedJsonArray::RefElement(uint32_t index) {
+	IJsonValueReader* parsedJsonVal = 0;
 	if (index < ElementCount()) {
 		JsonNode* jnode = json_array_get_element(m_jarr,index);
 		if (0 != jnode) {
-			parsedJsonVal = new ParsedJsonValue(m_parser,jnode);
+			parsedJsonVal = new ParsedJsonValue(jnode);
 		}
 	}
 	return parsedJsonVal;
@@ -259,52 +250,53 @@ IParsedJsonValue* ParsedJsonArray::RefElement(uint32_t index) {
 //
 // ParsedJsonValue implementation
 //
-ParsedJsonValue::ParsedJsonValue(JsonParser* parser, JsonNode* jnode) :
-		m_jnode(jnode),
-		m_parser(parser),
+ParsedJsonValue::ParsedJsonValue(JsonNode* jnode) :
+		m_jnode(0),
 		m_type(SD_JSONVALUE_NULL),
 		m_typeAsStr("SD_JSONVALUE_NULL"),
 		m_refCnt(1)
 {
 	assert(jnode);
-	JsonNodeType nodeType = json_node_get_node_type(jnode);
-	if (JSON_NODE_OBJECT == nodeType) {
-		m_type = SD_JSONVALUE_OBJECT;
-		m_typeAsStr = "SD_JSONVALUE_OBJECT";
-	} else if (JSON_NODE_VALUE == nodeType) {
-		GType valType = json_node_get_value_type(jnode);
-		switch(valType) {
-		case G_TYPE_BOOLEAN:
-			m_type = SD_JSONVALUE_BOOL;
-			m_typeAsStr = "SD_JSONVALUE_BOOL";
-			break;
-		case G_TYPE_CHAR:case G_TYPE_UCHAR:case G_TYPE_INT:
-		case G_TYPE_UINT:case G_TYPE_INT64:case G_TYPE_UINT64:
-			m_type = SD_JSONVALUE_INT;
-			m_typeAsStr = "SD_JSONVALUE_INT";
-			break;
-		case G_TYPE_DOUBLE:
-			m_type = SD_JSONVALUE_DOUBLE;
-			m_typeAsStr = "SD_JSONVALUE_DOUBLE";
-			break;
-		case 64:
-			m_type = SD_JSONVALUE_STRING;
-			m_typeAsStr = "SD_JSONVALUE_STRING";
-			break;
-		default:
-			printf("ParsedJsonValue: unrecognized value type: %ld\n", valType);
+	m_jnode = json_node_copy(jnode);
+	if (!!m_jnode) {
+		JsonNodeType nodeType = json_node_get_node_type(jnode);
+		if (JSON_NODE_OBJECT == nodeType) {
+			m_type = SD_JSONVALUE_OBJECT;
+			m_typeAsStr = "SD_JSONVALUE_OBJECT";
+		} else if (JSON_NODE_VALUE == nodeType) {
+			GType valType = json_node_get_value_type(jnode);
+			switch(valType) {
+			case G_TYPE_BOOLEAN:
+				m_type = SD_JSONVALUE_BOOL;
+				m_typeAsStr = "SD_JSONVALUE_BOOL";
+				break;
+			case G_TYPE_CHAR:case G_TYPE_UCHAR:case G_TYPE_INT:
+			case G_TYPE_UINT:case G_TYPE_INT64:case G_TYPE_UINT64:
+				m_type = SD_JSONVALUE_INT;
+				m_typeAsStr = "SD_JSONVALUE_INT";
+				break;
+			case G_TYPE_DOUBLE:
+				m_type = SD_JSONVALUE_DOUBLE;
+				m_typeAsStr = "SD_JSONVALUE_DOUBLE";
+				break;
+			case 64:
+				m_type = SD_JSONVALUE_STRING;
+				m_typeAsStr = "SD_JSONVALUE_STRING";
+				break;
+			default:
+				printf("ParsedJsonValue: unrecognized value type: %ld\n", valType);
+			}
+		} else if (JSON_NODE_ARRAY == nodeType) {
+			m_type = SD_JSONVALUE_ARRAY;
+			m_typeAsStr = "SD_JSONVALUE_ARRAY";
 		}
-	} else if (JSON_NODE_ARRAY == nodeType) {
-		m_type = SD_JSONVALUE_ARRAY;
-		m_typeAsStr = "SD_JSONVALUE_ARRAY";
 	}
-
-	g_object_ref(m_parser);
 }
 
-ParsedJsonValue::~ParsedJsonValue()
-{
-	g_object_unref(m_parser);
+ParsedJsonValue::~ParsedJsonValue() {
+	if (!!m_jnode) {
+		json_node_free(m_jnode);
+	}
 }
 
 void ParsedJsonValue::AddRef() {
@@ -345,22 +337,22 @@ const char* ParsedJsonValue::AsString() {
 	return json_node_get_string(m_jnode);
 }
 
-IParsedJsonArray* ParsedJsonValue::RefAsArray() {
+IJsonArrayReader* ParsedJsonValue::RefAsArray() {
 	assert(GetType() == SD_JSONVALUE_ARRAY);
-	IParsedJsonArray* parsedJar = 0;
+	IJsonArrayReader* parsedJar = 0;
 	JsonArray* jar = json_node_get_array(m_jnode);
 	if (0 != jar) {
-		parsedJar = new ParsedJsonArray(m_parser,jar);
+		parsedJar = new ParsedJsonArray(jar);
 	}
 	return parsedJar;
 }
 
-IParsedJsonObject* ParsedJsonValue::RefAsObject() {
+IJsonObjectReader* ParsedJsonValue::RefAsObject() {
 	assert(GetType() == SD_JSONVALUE_OBJECT);
-	IParsedJsonObject* parsedJobj = 0;
+	IJsonObjectReader* parsedJobj = 0;
 	JsonObject* jobj = json_node_get_object(m_jnode);
 	if (0 != jobj) {
-		parsedJobj = new ParsedJsonObject(m_parser,jobj);
+		parsedJobj = new ParsedJsonObject(jobj);
 	}
 	return parsedJobj;
 }
@@ -393,7 +385,7 @@ bool JsonRpcParser::ParseFile(
 {
 	GError* gerr=0;
 	JsonNode* rootNode = 0;
-	IParsedJsonValue* jvalue = 0;
+	IJsonValueReader* jvalue = 0;
 
 	Reset();
 
@@ -411,9 +403,7 @@ bool JsonRpcParser::ParseFile(
 		goto __return;
 	}
 
-	if (0 == (jvalue = new ParsedJsonValue(
-			m_jsonParser,
-			rootNode))) {
+	if (0 == (jvalue = new ParsedJsonValue(rootNode))) {
 		goto __return;
 	}
 
@@ -441,7 +431,7 @@ bool JsonRpcParser::ParseBuffer(
 		uint32_t* usedLen)
 {
 	GError* gerr=0;
-	IParsedJsonValue* jvalue = 0;
+	IJsonValueReader* jvalue = 0;
 
 	if (usedLen) {
 		*usedLen = 0;
@@ -463,7 +453,6 @@ bool JsonRpcParser::ParseBuffer(
 	}
 
 	if (0 == (jvalue = new ParsedJsonValue(
-			m_jsonParser,
 			json_parser_get_root(m_jsonParser)))) {
 		goto __return;
 	}
@@ -530,7 +519,7 @@ bool JsonRpcParser::ParseBuffer(
 bool JsonRpcParser::IsValidRpcSchema()
 {
 	const char* strVal = 0;
-	strVal = IParsedJsonValue::AsStringSafe(m_rootObj->RefMember("jsonrpc"));
+	strVal = IJsonValueReader::AsStringSafe(m_rootObj->RefMember("jsonrpc"));
 	if (0 != strVal && 0 == strcmp(strVal,"2.0")) {
 		return true;
 	}
@@ -540,7 +529,7 @@ bool JsonRpcParser::IsValidRpcSchema()
 SdCommandCode JsonRpcParser::GetRpcMethod()
 {
 	SdCommandCode cmdCode = SD_COMMAND_NONE;
-	IParsedJsonValue* jval = 0;
+	IJsonValueReader* jval = 0;
 	if (!m_rootObj) {
 		goto __return;
 	}
@@ -564,7 +553,7 @@ SdCommandCode JsonRpcParser::GetRpcMethod()
 	return cmdCode;
 }
 
-IParsedJsonObject* JsonRpcParser::GetRpcParams()
+IJsonObjectReader* JsonRpcParser::GetRpcParams()
 {
 	return !!m_rootObj ? m_rootObj->RefMemberAsObject("params") : 0;
 }
@@ -579,7 +568,7 @@ uint64_t JsonRpcParser::GetRpcCallId()
 }
 
 void JsonRpcParser::ParseImuConfig(
-	IParsedJsonObject* obj,
+	IJsonObjectReader* obj,
 	SdImuDeviceConfig* imu)
 {
 	if (obj) {
@@ -589,7 +578,7 @@ void JsonRpcParser::ParseImuConfig(
 		obj->GetMemberAsIntValue("MaxReading",&imu->MaxReading);
 		obj->GetMemberAsIntValue("Watermark",&imu->Watermark);
 		obj->GetMemberAsIntValue("NumBiasSamples",&imu->NumBiasSamples);
-		IParsedJsonArray* arr;
+		IJsonArrayReader* arr;
 		if (0 != (arr = obj->RefMemberAsArray("CoordinateMap"))) {
 			if (arr->ElementCount() == 9) {
 				for (uint32_t i = 0; i < 9; i++) {
@@ -607,11 +596,11 @@ void JsonRpcParser::ParseImuConfig(
 
 bool JsonRpcParser::GetDroneConfig(SdDroneConfig* cfg)
 {
-	IParsedJsonObject* config = 0;
-	IParsedJsonObject* obj = 0;
-	IParsedJsonArray* arr = 0;
+	IJsonObjectReader* config = 0;
+	IJsonObjectReader* obj = 0;
+	IJsonArrayReader* arr = 0;
 	const char* strVal = 0;
-	IParsedJsonObject* params = GetRpcParams();
+	IJsonObjectReader* params = GetRpcParams();
 
 	if (!params) {
 		goto __return;
@@ -676,8 +665,8 @@ bool JsonRpcParser::GetThrust(
 		double* minThrust,
 		double* maxThrust)
 {
-	IParsedJsonObject* flight = 0;
-	IParsedJsonObject* params = 0;
+	IJsonObjectReader* flight = 0;
+	IJsonObjectReader* params = 0;
 
 	if (0 == (params=GetRpcParams())) {
 		goto __return;
@@ -706,21 +695,21 @@ bool JsonRpcParser::GetThrust(
 	return !!flight;
 }
 
-void JsonRpcParser::ParseObject(IParsedJsonObject* jobj)
+void JsonRpcParser::ParseObject(IJsonObjectReader* jobj)
 {
 	if (!jobj) {
 		return;
 	}
 	for (size_t i = 0; i < jobj->GetMemberCount(); i++) {
 		const char* memberName = jobj->GetMemberName(i);
-		IParsedJsonValue* jval = jobj->RefMember(memberName);
+		IJsonValueReader* jval = jobj->RefMember(memberName);
 		printf("%s: ",memberName);
 		ParseNode(jval);
 	}
 	jobj->Release();
 }
 
-void JsonRpcParser::ParseNode(IParsedJsonValue* jnode)
+void JsonRpcParser::ParseNode(IJsonValueReader* jnode)
 {
 	if (!jnode) {
 		return;
@@ -753,7 +742,7 @@ void JsonRpcParser::ParseNode(IParsedJsonValue* jnode)
 	jnode->Release();
 }
 
-void JsonRpcParser::ParseArray(IParsedJsonArray* jarr)
+void JsonRpcParser::ParseArray(IJsonArrayReader* jarr)
 {
 	if (!jarr) {
 		return;
