@@ -1,6 +1,6 @@
-CPP	    	= $(CROSS_COMPILE)g++
-CC          = $(CROSS_COMPILE)gcc
-INCLUDES    = -I../../include
+CXX	    	?= $(CROSS_COMPILE)g++
+CC          	?= $(CROSS_COMPILE)gcc
+INCLUDES    	= -I../../include
 LIBS		= -lm -lrt
 CFLAGS		= -g -O0 -Wall
 TARGET		= attifilt
@@ -16,13 +16,13 @@ all : $(TARGET)
 	$(CC) -c $< $(CFLAGS) $(INCLUDES)
 
 .cxx.o: 
-	$(CPP) -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -c $< $(CFLAGS) $(INCLUDES)
 
 .cpp.o: 
-	$(CPP) -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -c $< $(CFLAGS) $(INCLUDES)
 
 $(TARGET) : $(OBJECTS)
-	$(CPP) $^ -o $(TARGET) $(LIBS)
+	$(CXX) $^ -o $(TARGET) $(LIBS)
 
 clean:
 	rm -f *.o *~ $(TARGET)

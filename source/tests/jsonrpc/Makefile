@@ -1,5 +1,5 @@
-CPP		= $(CROSS_COMPILE)g++
-CC		= $(CROSS_COMPILE)gcc
+CXX		?= $(CROSS_COMPILE)g++
+CC		?= $(CROSS_COMPILE)gcc
 ROOTDIR	= ../..
 SDRONE_SRCDIR = $(ROOTDIR)/sdrone
 INCLUDES	= -I$(SDRONE_SRCDIR) -I$(ROOTDIR)/include
@@ -22,16 +22,16 @@ all : $(TARGET)
 	$(CC) -c $< $(CFLAGS) $(INCLUDES)
 
 .cxx.o: 
-	$(CPP) -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -c $< $(CFLAGS) $(INCLUDES)
 
 .cpp.o: 
-	$(CPP) -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -c $< $(CFLAGS) $(INCLUDES)
 
 %.o: $(SDRONE_SRCDIR)/%.cpp
-	$(CPP) $(CFLAGS) -o $*.o -c $(SDRONE_SRCDIR)/$*.cpp $(INCLUDES)
+	$(CXX) $(CFLAGS) -o $*.o -c $(SDRONE_SRCDIR)/$*.cpp $(INCLUDES)
 
 $(TARGET) : $(OBJECTS)
-	$(CPP) $^ -o $(TARGET) $(LIBS)
+	$(CXX) $^ -o $(TARGET) $(LIBS)
 
 clean:
 	rm -f *.o *~ $(TARGET)

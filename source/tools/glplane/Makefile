@@ -1,5 +1,5 @@
-CPP	    	= g++
-CC          	= gcc
+CXX	    	?= g++
+CC          	?= gcc
 INCLUDES    	= -I../../include -I../mmath
 LIBS		= -lglut -lGL -lGLEW -lX11 -lm -lrt
 CFLAGS		= -g -O0 -Wall
@@ -15,13 +15,13 @@ all : $(TARGET)
 	$(CC) -c $< $(CFLAGS) $(INCLUDES)
 
 .cxx.o: 
-	$(CPP) -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -c $< $(CFLAGS) $(INCLUDES)
 
 .cpp.o: 
-	$(CPP) -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -c $< $(CFLAGS) $(INCLUDES)
 
 $(TARGET) : $(OBJECTS)
-	$(CPP) $^ -o $(TARGET) $(LIBS)
+	$(CXX) $^ -o $(TARGET) $(LIBS)
 
 clean:
 	rm -f *.o *~ $(TARGET)
