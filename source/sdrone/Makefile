@@ -28,6 +28,8 @@ OBJECTS		= \
 	iopacket.o\
 	kalmanattitudefilter.o\
 	jsonrpcparser.o\
+	jsonreadwrite.o\
+	jsonrpcbuilder.o\
 	cmdargs.o
 
 all : $(TARGET)

@@ -738,8 +738,11 @@ struct IJsonObjectReader
 	virtual const char* GetMemberName(
 			IN size_t index
 			) = 0;
+	virtual SdJsonValueType GetMemberType(
+			IN const char* memberName
+			) = 0;
 	virtual IJsonValueReader* RefMember(
-			IN const char* name
+			IN const char* memberName
 			) = 0;
 	virtual IJsonObjectReader* RefMemberAsObject(
 			IN const char* name) = 0;
@@ -750,13 +753,7 @@ struct IJsonObjectReader
 			OUT double* value) = 0;
 	virtual bool GetMemberAsIntValue(
 			IN const char* name,
-			OUT int32_t* value) = 0;
-	virtual bool GetMemberAsIntValue(
-			IN const char* name,
 			OUT int64_t* value) = 0;
-	virtual bool GetMemberAsIntValue(
-			IN const char* name,
-			OUT int16_t* value) = 0;
 	virtual bool GetMemberAsBoolValue(
 			IN const char* name,
 			OUT bool* value) = 0;
@@ -767,7 +764,7 @@ protected:
 	virtual ~IJsonObjectReader() {}
 };
 
-struct IJsonObjectBuilder
+struct IJsonObjectWriter
 {
 	virtual void AddRef() = 0;
 	virtual void Release() = 0;
@@ -778,7 +775,7 @@ struct IJsonObjectBuilder
 			) = 0;
 	virtual IJsonObjectReader* RefObject() = 0;
 protected:
-	virtual ~IJsonObjectBuilder() {}
+	virtual ~IJsonObjectWriter() {}
 };
 
 struct IJsonValueReader
@@ -794,8 +791,6 @@ struct IJsonValueReader
 	 */
 	virtual double AsDouble() = 0;
 	virtual int64_t AsInt() = 0;
-	virtual int32_t AsInt32() = 0;
-	virtual int16_t AsInt16() = 0;
 	virtual bool AsBool() = 0;
 	virtual const char* AsString() = 0;
 
@@ -820,13 +815,11 @@ struct IJsonValueReader
 	static inline bool AsDoubleSafe(IJsonValueReader* val, double* d);
 	static inline bool AsBoolSafe(IJsonValueReader* val, bool* b);
 	static inline bool AsIntSafe(IJsonValueReader* val, int64_t* i64);
-	static inline bool AsIntSafe(IJsonValueReader* val, int32_t* i32);
-	static inline bool AsIntSafe(IJsonValueReader* val, int16_t* i16);
 protected:
 	virtual ~IJsonValueReader() {}
 };
 
-struct IJsonValueBuilder
+struct IJsonValueWriter
 {
 	virtual void AddRef() = 0;
 	virtual void Release() = 0;
@@ -840,8 +833,6 @@ struct IJsonValueBuilder
 	virtual bool SetValueAsDouble(
 			IN double value) = 0;
 	virtual bool SetValueAsInt(
-			IN int32_t value) = 0;
-	virtual bool SetValueAsInt64(
 			OUT int64_t value) = 0;
 	virtual bool SetValueAsBool(
 			IN bool value) = 0;
@@ -852,7 +843,7 @@ struct IJsonValueBuilder
 	virtual IJsonValueReader* RefValue() = 0;
 
 protected:
-	virtual ~IJsonValueBuilder() {}
+	virtual ~IJsonValueWriter() {}
 };
 
 
@@ -873,13 +864,7 @@ struct IJsonArrayReader
 			OUT double* value) = 0;
 	virtual bool GetElementAsIntValue(
 			IN uint32_t index,
-			OUT int32_t* value) = 0;
-	virtual bool GetElementAsIntValue(
-			IN uint32_t index,
 			OUT int64_t* value) = 0;
-	virtual bool GetElementAsIntValue(
-			IN uint32_t index,
-			OUT int16_t* value) = 0;
 	virtual bool GetElementAsBoolValue(
 			IN uint32_t index,
 			OUT bool* value) = 0;
@@ -891,7 +876,7 @@ protected:
 	virtual ~IJsonArrayReader() {}
 };
 
-struct IJsonArrayBuilder
+struct IJsonArrayWriter
 {
 	virtual void AddRef() = 0;
 	virtual void Release() = 0;
@@ -901,7 +886,7 @@ struct IJsonArrayBuilder
 			) = 0;
 	virtual IJsonArrayReader* RefArray() = 0;
 protected:
-	virtual ~IJsonArrayBuilder() {}
+	virtual ~IJsonArrayWriter() {}
 };
 
 
@@ -1004,6 +989,7 @@ bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int64_t* i64) {
 	if (!!val) { val->Release(); }
 	return ret;
 }
+#if 0
 bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int32_t* i32) {
 	bool ret = false;
 	assert(i32);
@@ -1024,5 +1010,5 @@ bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int16_t* i16) {
 	if (!!val) { val->Release(); }
 	return ret;
 }
-
+#endif
 #endif // SDRONE_API_H_

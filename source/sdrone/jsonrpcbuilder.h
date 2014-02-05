@@ -9,36 +9,7 @@
 #define JSONRPCBUILDER_H_
 
 #include "commoninc.h"
-#include <json-glib/json-glib.h>
-#include <json-glib/json-gobject.h>
-
-class JsonValueBuilder: public IJsonValueBuilder
-{
-public:
-	void AddRef();
-	void Release();
-	void Reset();
-	bool SetValueAsObject(
-			IN IJsonObjectReader*);
-	bool SetValueAsArray(
-			IN IJsonArrayReader*);
-	bool SetValueAsDouble(
-			IN double value);
-	bool SetValueAsInt(
-			IN int32_t value);
-	bool SetValueAsInt64(
-			OUT int64_t value);
-	bool SetValueAsBool(
-			IN bool value);
-	bool SetValueAsString(
-			IN const char* value
-			);
-	IJsonValueReader* RefValue();
-
-protected:
-	~JsonValueBuilder() {}
-};
-
+#include "jsonreadwrite.h"
 
 class JsonRpcBuilder {
 public:
@@ -49,8 +20,8 @@ public:
 	void Finalize();
 	void Reset();
 	int AddParams(IJsonValueReader*);
-	const char* GetSchema() const;
-	size_t GetSchemaLen() consts;
+	const char* GetSchema();
+	size_t GetSchemaLen();
 
 private:
 	JsonGenerator* m_jsonGenerator;

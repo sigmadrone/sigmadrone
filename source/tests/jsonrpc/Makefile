@@ -11,7 +11,8 @@ CFLAGS		= -g -O0 -Wall -Wno-psabi
 TARGET		= test_jsonrpc
 OBJECTS		= \
 		test_jsonrpc.o \
-		jsonrpcparser.o
+		jsonrpcparser.o\
+		jsonreadwrite.o
 
 
 all : $(TARGET)
