@@ -391,3 +391,57 @@ JsonArray* JsonArrayWriter::AllocGlibArray()
 	}
 	return m_jarr;
 }
+
+JsonObjectWriter::JsonObjectWriter() : m_jobj(0), m_refCnt(1)
+{
+}
+
+void JsonObjectWriter::AddRef() {
+	__sync_fetch_and_add(&m_refCnt,1);
+}
+
+void JsonObjectWriter::Release() {
+	if (0 == __sync_sub_and_fetch(&m_refCnt,1)) {
+		delete this;
+	}
+}
+
+void JsonObjectWriter::Reset() {
+	if (m_jobj) {
+		json_object_unref(m_jobj);
+		m_jobj = 0;
+	}
+}
+
+bool JsonObjectWriter::AddMember(
+		const char* memberName,
+		IJsonValueReader* member)
+{
+	bool ret = false;
+	JsonValueReader* jvalReader = dynamic_cast<JsonValueReader*>(member);
+	if (AllocGlibObject() && !!jvalReader) {
+		JsonNode* glibJnode = jvalReader->DupGlibNode();
+		if (glibJnode) {
+			json_object_set_member(m_jobj,memberName,glibJnode);
+			ret = true;
+		}
+	}
+	return ret;
+}
+
+IJsonObjectReader* JsonObjectWriter::RefObject() {
+	return new JsonObjectReader(m_jobj);
+}
+
+JsonObjectWriter::~JsonObjectWriter()
+{
+	Reset();
+}
+
+JsonObject* JsonObjectWriter::AllocGlibObject()
+{
+	if (!m_jobj) {
+		m_jobj = json_object_new();
+	}
+	return m_jobj;
+}

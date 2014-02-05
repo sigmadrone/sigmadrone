@@ -207,11 +207,31 @@ class JsonArrayWriter: public IJsonArrayWriter
 			IN IJsonValueReader*
 			);
 	IJsonArrayReader* RefArray();
-private:
+protected:
 	JsonArray* AllocGlibArray();
 	~JsonArrayWriter();
-
+private:
 	JsonArray* m_jarr;
+	int m_refCnt;
+};
+
+class JsonObjectWriter: public IJsonObjectWriter
+{
+public:
+	JsonObjectWriter();
+	void AddRef();
+	void Release();
+	void Reset();
+	bool AddMember(
+			IN const char* name,
+			IN IJsonValueReader* member
+			);
+	IJsonObjectReader* RefObject();
+protected:
+	JsonObject* AllocGlibObject();
+	~JsonObjectWriter();
+private:
+	JsonObject* m_jobj;
 	int m_refCnt;
 };
 
