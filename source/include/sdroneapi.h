@@ -754,6 +754,9 @@ struct IJsonObjectReader
 	virtual bool GetMemberAsIntValue(
 			IN const char* name,
 			OUT int64_t* value) = 0;
+	virtual bool GetMemberAsIntValue(
+			IN const char* name,
+			OUT int32_t* value) = 0;
 	virtual bool GetMemberAsBoolValue(
 			IN const char* name,
 			OUT bool* value) = 0;
@@ -815,6 +818,7 @@ struct IJsonValueReader
 	static inline bool AsDoubleSafe(IJsonValueReader* val, double* d);
 	static inline bool AsBoolSafe(IJsonValueReader* val, bool* b);
 	static inline bool AsIntSafe(IJsonValueReader* val, int64_t* i64);
+	static inline bool AsIntSafe(IJsonValueReader* val, int32_t* i32);
 protected:
 	virtual ~IJsonValueReader() {}
 };
@@ -865,6 +869,9 @@ struct IJsonArrayReader
 	virtual bool GetElementAsIntValue(
 			IN uint32_t index,
 			OUT int64_t* value) = 0;
+	virtual bool GetElementAsIntValue(
+			IN uint32_t index,
+			OUT int32_t* value) = 0;
 	virtual bool GetElementAsBoolValue(
 			IN uint32_t index,
 			OUT bool* value) = 0;
@@ -989,7 +996,6 @@ bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int64_t* i64) {
 	if (!!val) { val->Release(); }
 	return ret;
 }
-#if 0
 bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int32_t* i32) {
 	bool ret = false;
 	assert(i32);
@@ -1000,6 +1006,7 @@ bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int32_t* i32) {
 	if (!!val) { val->Release(); }
 	return ret;
 }
+#if 0
 bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int16_t* i16) {
 	bool ret = false;
 	assert(i16);

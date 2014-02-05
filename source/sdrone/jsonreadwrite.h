@@ -40,12 +40,12 @@ public:
 			OUT int64_t* value) {
 		return IJsonValueReader::AsIntSafe(RefMember(name),value);
 	}
-#if 0
 	bool GetMemberAsIntValue(
 			IN const char* name,
 			OUT int32_t* value) {
 		return IJsonValueReader::AsIntSafe(RefMember(name),value);
 	}
+#if 0
 	bool GetMemberAsIntValue(
 			IN const char* name,
 			OUT int16_t* value) {
@@ -130,12 +130,12 @@ public:
 			OUT int64_t* value) {
 		return IJsonValueReader::AsIntSafe(RefElement(index),value);
 	}
-#if 0
 	bool GetElementAsIntValue(
 			IN uint32_t index,
 			OUT int32_t* value) {
 		return IJsonValueReader::AsIntSafe(RefElement(index),value);
 	}
+#if 0
 	bool GetElementAsIntValue(
 			IN uint32_t index,
 			OUT int16_t* value) {
