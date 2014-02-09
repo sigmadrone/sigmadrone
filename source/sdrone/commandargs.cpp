@@ -145,7 +145,7 @@ _CommandArgs::ParseArgs(
 		m_parsedArgs.Command = SD_COMMAND_RUN;
 	} else if (m_cmdArgs.GetValue("command").c_str() == std::string("reset")) {
 		m_parsedArgs.Command = SD_COMMAND_RESET;
-	} else if (m_cmdArgs.GetValue("command").c_str() == std::string("run")) {
+	} else if (m_cmdArgs.GetValue("command").c_str() == std::string("exit")) {
 		m_parsedArgs.Command = SD_COMMAND_EXIT;
 	} else if (m_cmdArgs.GetValue("command").c_str() == std::string("ping")) {
 		m_parsedArgs.Command = SD_COMMAND_PING;
