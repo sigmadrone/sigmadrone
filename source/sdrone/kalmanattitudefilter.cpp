@@ -65,7 +65,7 @@ void KalmanAttitudeFilter::Stop(int flags)
 
 const char* KalmanAttitudeFilter::GetName()
 {
-	return SD_PLUGIN_IMU_FILTER;
+	return SD_PLUGIN_IMU_KALMAN_FILTER;
 }
 
 SdDeviceId KalmanAttitudeFilter::GetDeviceId()
@@ -160,7 +160,9 @@ KalmanAttitudeFilter::KalmanState::KalmanState() :
 	 * Init the measurement noise - the variance in the accelerometer
 	 * measurements
 	 */
-	m_Rk = Vector3d(0.1110,0.1550,0.1000)*0.5;
+	//m_Rk = Vector3d(0.1110,0.1550,0.1000)*0.5;
+	//m_Rk = Vector3d(0.1,0.1,0.1);
+	m_Rk = Vector3d(0.0571,0.0975,0.0959);
 }
 
 KalmanAttitudeFilter::KalmanState::~KalmanState() {}
