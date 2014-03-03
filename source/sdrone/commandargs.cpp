@@ -121,13 +121,13 @@ _CommandArgs::ParseArgs(
 	m_parsedArgs.Thrust = 0.5;
 
 	m_parsedArgs.DroneCfg.Accel.CoordinateMap = Matrix3d(
-			0,-1, 0,
-			1, 0, 0,
-			0, 0, 1);
+			-1, 0, 0,
+			 0, 1, 0,
+			 0, 0, -1);
 	m_parsedArgs.DroneCfg.Mag.CoordinateMap = m_parsedArgs.DroneCfg.Accel.CoordinateMap;
 	m_parsedArgs.DroneCfg.Gyro.CoordinateMap = Matrix3d(
-			1, 0, 0,
-			0, 1, 0,
+			0, -1, 0,
+			-1, 0, 0,
 			0, 0, 1);
 
 	try {
