@@ -207,9 +207,8 @@ int QuadRotorPilot::UpdateState(
 	SdIoPacket* ioPacket)
 {
 	QuaternionD attitudeQ = ioPacket->Attitude();
-	const QuaternionD targetQ = ioPacket->TargetAttitude(); //QuaternionD(0.9962,0.0872,0,0);
-	//const QuaternionD targetQ = QuaternionD(0.9914,0.1306,0,0);
-	//const QuaternionD targetQ = QuaternionD(0.9999,0.011,0.007,0);
+	//const QuaternionD targetQ = ioPacket->TargetAttitude(); //QuaternionD(0.9962,0.0872,0,0);
+	const QuaternionD targetQ = QuaternionD(0.9999,-0.04,0.02,0);
 	int retVal = 0;
 	Vector3d currentOmega;
 
@@ -292,14 +291,15 @@ int QuadRotorPilot::UpdateState(
 	currentOmega = m_RotZQ.rotate(currentOmega);
 	currentOmega = m_GyroFilt.DoFilter(currentOmega);
 	Vector3d angAccel = (currentOmega-m_Omega)/ioPacket->DeltaTime();
-	Vector3d desiredOmega = CalcDesiredOmega3d(m_ErrorAxisPid);
 
+	Vector3d omegaErrPid;
+#if 0
 	/*
 	 * The difference between desired omega and actual omega can only be
 	 * used for torque correction
 	 */
+	Vector3d desiredOmega = CalcDesiredOmega3d(m_ErrorAxisPid);
 	Vector3d omegaErr = (desiredOmega - currentOmega) / (2*RAD2DEG(2*M_PI));
-	Vector3d omegaErrPid;
 
 	omegaErrPid  = omegaErrPid+m_OmegaPidCtl.GetP(omegaErr);
 	omegaErrPid = omegaErrPid + m_OmegaPidCtl.GetI(
@@ -311,6 +311,8 @@ int QuadRotorPilot::UpdateState(
 			omegaErrPid,ioPacket->DeltaTime());
 
 	m_ErrorAxisPid = m_ErrorAxisPid + omegaErrPid;
+#endif
+
 	m_ErrorAxis = errAxis;
 
 	m_ErrorAngle = angleDeg;
