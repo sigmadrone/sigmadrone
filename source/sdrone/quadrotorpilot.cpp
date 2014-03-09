@@ -207,8 +207,8 @@ int QuadRotorPilot::UpdateState(
 	SdIoPacket* ioPacket)
 {
 	QuaternionD attitudeQ = ioPacket->Attitude();
-	//const QuaternionD targetQ = ioPacket->TargetAttitude(); //QuaternionD(0.9962,0.0872,0,0);
-	const QuaternionD targetQ = QuaternionD(0.9999,-0.04,0.02,0);
+	const QuaternionD targetQ = ioPacket->TargetAttitude();
+	//const QuaternionD targetQ = QuaternionD(0.9999,-0.04,0.02,0);
 	int retVal = 0;
 	Vector3d currentOmega;
 
