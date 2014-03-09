@@ -54,24 +54,24 @@ int ServoDevice::Start(CommandArgs* cmdArgs)
 	m_MaxValue = (config->BitCount > 0) ? (1 << config->BitCount) : (1 << 12);
 	m_ChannelMask = config->ChannelMask;
 
-	if (0 != strncmp(config->DeviceName,"/dev/", strlen("/dev/"))) {
-		if (0 == strcmp(config->DeviceName,"stdout")) {
+	if (0 != config->DeviceName.find("/dev/")){
+		if (config->DeviceName == "stdout") {
 			m_File = stdout;
-		} else if (0 == (m_File = fopen(config->DeviceName,"w"))) {
+		} else if (0 == (m_File = fopen(config->DeviceName.c_str(),"w"))) {
 			fprintf(stdout,"ServoDevice::Init failed to open %s, err=%d\n",
-					config->DeviceName,errno);
+					config->DeviceName.c_str(),errno);
 			err = -1;
 			goto __return;
 		}
 		fprintf(stdout,"ServoDevice is operating in text mode.\n");
-	} else if (-1 == (m_Fd = open(config->DeviceName,O_RDWR))) {
+	} else if (-1 == (m_Fd = open(config->DeviceName.c_str(),O_RDWR))) {
 		fprintf(stdout,"ServoDevice::Init failed to open %s, err=%d\n",
-				config->DeviceName,errno);
+				config->DeviceName.c_str(),errno);
 		err = -1;
 		goto __return;
 	}
 
-	fprintf(stdout,"ServoDevice opened %s\n",config->DeviceName);
+	fprintf(stdout,"ServoDevice opened %s\n",config->DeviceName.c_str());
 	fprintf(stdout,"ServoDevice channel mask 0x%x\n",config->ChannelMask);
 
 	if (0 == (err = SetRate((config->Rate > 0) ? config->Rate : 50))) {

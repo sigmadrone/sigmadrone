@@ -43,7 +43,6 @@ Drone::Drone()
 		return;
 	}
 
-	memset(&m_config,0,sizeof(m_config));
 	m_config.Accel.DeviceName = "/dev/accel0";
 	m_config.Accel.SamplingRate = 200;
 	m_config.Accel.Scale = 4;
@@ -126,15 +125,15 @@ int Drone::ExecuteCommand(
 void Drone::PrintConfig(const SdDroneConfig* config)
 {
 	printf("Drone configuration:\n");
-	printf("Gyro device:    %s\n",config->Gyro.DeviceName);
+	printf("Gyro device:    %s\n",config->Gyro.DeviceName.c_str());
 	printf("Gyro rate:      %d Hz\n",config->Gyro.SamplingRate);
 	printf("Gyro scale:     %d DPS\n",config->Gyro.Scale);
 	printf("Gyro watermark: %d\n",config->Gyro.Watermark);
-	printf("Accel device:   %s\n",config->Accel.DeviceName);
+	printf("Accel device:   %s\n",config->Accel.DeviceName.c_str());
 	printf("Accel rate:     %d Hz\n",config->Accel.SamplingRate);
 	printf("Accel scale:    %d G\n",config->Accel.Scale);
 	printf("Accel watermrk: %d\n",config->Accel.Watermark);
-	printf("Compass:        %s\n",config->Mag.DeviceName);
+	printf("Compass:        %s\n",config->Mag.DeviceName.c_str());
 	printf("IMU Angle:      %d\n",config->Quad.ImuAngleAxisZ);
 	for (int i = 0; (size_t)i < ARRAYSIZE(config->Quad.Motor); i++) {
 		printf("Quad M%d:        Servo %d\n",i,config->Quad.Motor[i]);

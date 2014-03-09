@@ -59,9 +59,9 @@ public:
 	}
 	bool GetMemberAsStringValue(
 			IN const char* name,
-			OUT const char** value) {
+			OUT std::string* value) {
 		*value = IJsonValueReader::AsStringSafe(RefMember(name));
-		return !!(*value);
+		return !!value->length();
 	}
 
 	JsonObject* RefGlibJsonObject();
@@ -149,9 +149,9 @@ public:
 	}
 	virtual bool GetElementAsStringValue(
 			IN uint32_t index,
-			OUT const char** value) {
+			OUT std::string* value) {
 		*value = IJsonValueReader::AsStringSafe(RefElement(index));
-		return !!(*value);
+		return !!value->length();
 	}
 	JsonArray* RefGlibJsonArray();
 protected:

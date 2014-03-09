@@ -40,7 +40,6 @@ _CommandArgs::_CommandArgs() :
 	m_argc(0),
 	m_argv(0)
 {
-	memset(&m_parsedArgs,0,sizeof(m_parsedArgs));
 	m_parsedArgs.DroneCfg.Accel.DeviceName = "/dev/accel0";
 	m_parsedArgs.DroneCfg.Accel.SamplingRate = 200;
 	m_parsedArgs.DroneCfg.Accel.Scale = 4;
@@ -56,6 +55,7 @@ _CommandArgs::_CommandArgs() :
 	m_parsedArgs.DroneCfg.Servo.DeviceName = "/dev/pwm0";
 	m_parsedArgs.DroneCfg.Servo.ChannelMask = 0xff;
 	m_parsedArgs.DroneCfg.Servo.Rate = 390;
+	m_parsedArgs.DroneCfg.Servo.BitCount = 0;
 	m_parsedArgs.DroneCfg.Quad.Motor[0] = 0;
 	m_parsedArgs.DroneCfg.Quad.Motor[1] = 1;
 	m_parsedArgs.DroneCfg.Quad.Motor[2] = 2;

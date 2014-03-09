@@ -11,6 +11,7 @@
 #define SDRONE_API_H_
 
 #include <stdarg.h>
+#include <string>
 #include "matrix.h"
 
 #ifndef IN
@@ -80,7 +81,10 @@ typedef enum _SdDroneType
 
 typedef struct _SdImuDeviceConfig
 {
-	const char* DeviceName;
+	inline _SdImuDeviceConfig() {
+		SamplingRate=Scale=MaxReading=NumBiasSamples=Watermark=0;
+	}
+	std::string DeviceName;
 
 	/*
 	 * Sampling rate - how many times per seconds data is read from the sensor
@@ -117,7 +121,8 @@ typedef struct _SdImuDeviceConfig
 
 typedef struct _SdServoConfig
 {
-	const char* DeviceName;
+	inline _SdServoConfig() { Rate=BitCount=ChannelMask=0; }
+	std::string DeviceName;
 	int Rate;
 	uint32_t BitCount;
 	uint32_t ChannelMask;
@@ -139,16 +144,20 @@ typedef struct _SdQuadRotorConfig
 
 typedef struct _SdDroneConfig
 {
+	inline _SdDroneConfig() {
+		ServerPort=SD_DEFAULT_PORT;
+		LogRotationMatrix=LogLevel=LogRate=0;
+	}
 	SdImuDeviceConfig Gyro;
 	SdImuDeviceConfig Accel;
 	SdImuDeviceConfig Mag;
 	SdServoConfig Servo;
 	SdQuadRotorConfig Quad;
-	const char* ServerAddress;
+	std::string ServerAddress;
 	int ServerPort;
 	int LogRotationMatrix;
 	int LogLevel;
-	const char* LogFileName;
+	std::string LogFileName;
 
 	/*
 	 * How many times per second the logger should log
@@ -762,7 +771,7 @@ struct IJsonObjectReader
 			OUT bool* value) = 0;
 	virtual bool GetMemberAsStringValue(
 			IN const char* name,
-			OUT const char** value) = 0;
+			OUT std::string* value) = 0;
 protected:
 	virtual ~IJsonObjectReader() {}
 };
@@ -814,7 +823,7 @@ struct IJsonValueReader
 	 */
 	static inline IJsonArrayReader* RefAsArraySafe(IJsonValueReader* val);
 	static inline IJsonObjectReader* RefAsObjectSafe(IJsonValueReader* val);
-	static inline const char* AsStringSafe(IJsonValueReader* val);
+	static inline std::string AsStringSafe(IJsonValueReader* val);
 	static inline bool AsDoubleSafe(IJsonValueReader* val, double* d);
 	static inline bool AsBoolSafe(IJsonValueReader* val, bool* b);
 	static inline bool AsIntSafe(IJsonValueReader* val, int64_t* i64);
@@ -877,7 +886,7 @@ struct IJsonArrayReader
 			OUT bool* value) = 0;
 	virtual bool GetElementAsStringValue(
 			IN uint32_t index,
-			OUT const char** value) = 0;
+			OUT std::string* value) = 0;
 
 protected:
 	virtual ~IJsonArrayReader() {}
@@ -961,8 +970,8 @@ IJsonObjectReader* IJsonValueReader::RefAsObjectSafe(IJsonValueReader* val) {
 	if (!!val) {val->Release();}
 	return obj;
 }
-const char* IJsonValueReader::AsStringSafe(IJsonValueReader* val) {
-	const char* str = (0 != val && val->GetType() == SD_JSONVALUE_STRING) ?
+std::string IJsonValueReader::AsStringSafe(IJsonValueReader* val) {
+	std::string str = (0 != val && val->GetType() == SD_JSONVALUE_STRING) ?
 			val->AsString() : "";
 	if (!!val) { val->Release(); }
 	return str;

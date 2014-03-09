@@ -15,7 +15,6 @@ ImuReader::ImuReader()
 	m_SensorLog = 0;
 	m_RunTime = 0;
 	memset(&m_ImuData,0,sizeof(m_ImuData));
-	memset(&m_GyroConfig,0,sizeof(m_GyroConfig));
 	clock_gettime(CLOCK_REALTIME, &m_LastTime);
 	m_RefCnt = 1;
 	m_Counter = 0;
@@ -61,32 +60,34 @@ int ImuReader::Start(
 	int err = EINVAL;
 	Close();
 	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
+	remove("./sensordata.dat_bak");
+	rename("./sensordata.dat","./sensordata.dat_bak");
 	m_SensorLog = fopen("./sensordata.dat", "w");
 	if (droneConfig->Accel.DeviceName == droneConfig->Gyro.DeviceName) {
 		/*
 		 * Operating in text mode
 		 */
-		m_File = fopen(droneConfig->Accel.DeviceName,"r");
+		m_File = fopen(droneConfig->Accel.DeviceName.c_str(),"r");
 		if (0 == m_File) {
 			fprintf(stdout,"ImuReader::Init failed to open %s, err %d\n",
-				droneConfig->Accel.DeviceName,errno);
+				droneConfig->Accel.DeviceName.c_str(),errno);
 			goto __return;
 		}
 		err = 0;
 		fprintf(stdout,"ImuReader opened text file %s\n",
-			droneConfig->Accel.DeviceName);
+			droneConfig->Accel.DeviceName.c_str());
 	} else {
 		int readValue = 0;
 		if (0 != (err = m_GyroDevice.Open(
-			droneConfig->Gyro.DeviceName,SD_IMU_DEVICE_GYRO))) {
+			droneConfig->Gyro.DeviceName.c_str(),SD_IMU_DEVICE_GYRO))) {
 			goto __return;
 		}
 		if (0 != (err = m_AccDevice.Open(
-			droneConfig->Accel.DeviceName,SD_IMU_DEVICE_ACCEL))) {
+			droneConfig->Accel.DeviceName.c_str(),SD_IMU_DEVICE_ACCEL))) {
 			goto __return;
 		}
 		if (0 != (err = m_MagDevice.Open(
-			droneConfig->Mag.DeviceName,SD_IMU_DEVICE_MAG))) {
+			droneConfig->Mag.DeviceName.c_str(),SD_IMU_DEVICE_MAG))) {
 			goto __return;
 		}
 		m_AccDevice.SetRate(droneConfig->Accel.SamplingRate);

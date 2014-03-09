@@ -174,9 +174,9 @@ bool JsonRpcParser::ParseBuffer(
 
 bool JsonRpcParser::IsValidRpcSchema()
 {
-	const char* strVal = 0;
+	std::string strVal;
 	strVal = IJsonValueReader::AsStringSafe(m_rootObj->RefMember("jsonrpc"));
-	if (0 != strVal && 0 == strcmp(strVal,"2.0")) {
+	if (strVal == "2.0") {
 		return true;
 	}
 	return false;
@@ -255,7 +255,7 @@ bool JsonRpcParser::GetDroneConfig(SdDroneConfig* cfg)
 	IJsonObjectReader* config = 0;
 	IJsonObjectReader* obj = 0;
 	IJsonArrayReader* arr = 0;
-	const char* strVal = 0;
+	std::string strVal;
 	IJsonObjectReader* params = GetRpcParams();
 
 	if (!params) {
@@ -300,7 +300,7 @@ bool JsonRpcParser::GetDroneConfig(SdDroneConfig* cfg)
 	}
 
 	if (config->GetMemberAsStringValue("LogLevel",&strVal)) {
-		cfg->LogLevel = SdStringToLogLevel(strVal);
+		cfg->LogLevel = SdStringToLogLevel(strVal.c_str());
 	}
 	config->GetMemberAsStringValue("LogFileName",&cfg->LogFileName);
 	config->GetMemberAsIntValue("LogRotationMatrix", &cfg->LogRotationMatrix);
