@@ -1,6 +1,7 @@
 #include <iostream>
 #include "jsonrpcparser.h"
 #include <string>
+#include "cmdargs.h"
 
 struct TestControl
 {
@@ -18,8 +19,8 @@ struct TestControl
 			int line,
 			int err) {
 		assert(currentTestName);
-		printf("<-- TEST FAILED: %s, line %d, err %d\n",
-				currentTestName,line,err);
+		printf("<-- TEST FAILED: %s, line %d, err %d \"%s\"\n",
+				currentTestName,line,err,strerror(err));
 		currentTestName= 0;
 	}
 	void OnTestPassed() {
@@ -44,12 +45,11 @@ private:
 #define TEST_PASSED() g_TestControl.OnTestPassed()
 #define TEST_STATS() g_TestControl.PrintStats()
 
-void TestParseJsonRpcFile()
+void TestParseJsonRpcFile(const std::string& fileName)
 {
 	TEST_BEGIN("TestParseJsonRpcFile");
 	JsonRpcParser parser;
-	if (!parser.ParseFile("/home/svassilev/workspace/sigmadrone"
-			"/doc/configuration/droneconfig.json")) {
+	if (!parser.ParseFile(fileName.c_str())) {
 		TEST_FAILED();
 		return;
 	}
@@ -59,7 +59,6 @@ void TestParseJsonRpcFile()
 	}
 
 	SdDroneConfig config;
-	memset(&config,0,sizeof(config));
 	if (!parser.GetDroneConfig(&config)) {
 		TEST_FAILED();
 		return;
@@ -68,8 +67,8 @@ void TestParseJsonRpcFile()
 	/*
 	 * Spot check on parameters
 	 */
-	if (!config.Accel.DeviceName || 0 == config.Accel.SamplingRate ||
-		!config.Gyro.DeviceName || 0 == config.Gyro.SamplingRate) {
+	if (!config.Accel.DeviceName.length() || 0 == config.Accel.SamplingRate ||
+		!config.Gyro.DeviceName.length() || 0 == config.Gyro.SamplingRate) {
 		TEST_FAILED();
 		return;
 	}
@@ -165,9 +164,40 @@ void TestParseJsonRpcFromBuffer()
 	TEST_PASSED();
 }
 
+CmdArgs g_args;
+
+/*
+ * Cmd args spec:
+ * "argument name" "argument alias" "Help message"
+ */
+static CmdArgSpec g_argspec[] = {
+		{"help",	"h",	"Display this help", CMD_ARG_BOOL},
+		{"jsonfile","",		"Path to json file to be parsed", CMD_ARG_STRING},
+
+};
+
+
+void usage(int argc, char *argv[])
+{
+	std::cout << argv[0] << " <options>" << std::endl;
+	std::cout << g_args.HelpMessage() << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
-	TestParseJsonRpcFile();
+	g_args.AddSpecs(g_argspec, sizeof(g_argspec)/sizeof(*g_argspec));
+	g_args.Parse(argc, argv);
+	if (!g_args.GetValue("help").empty()) {
+		usage(argc, argv);
+		return 0;
+	}
+
+	std::string jsonFileName = g_args.GetValue("jsonfile");
+	if (0 == jsonFileName.length()) {
+		jsonFileName = "/home/svassilev/workspace/sigmadrone/"
+				"doc/configuration/droneconfig.json";
+	}
+	TestParseJsonRpcFile(jsonFileName);
 	TestParseJsonRpcFromBuffer();
 
 	TEST_STATS();

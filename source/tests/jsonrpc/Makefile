@@ -12,7 +12,8 @@ TARGET		= test_jsonrpc
 OBJECTS		= \
 		test_jsonrpc.o \
 		jsonrpcparser.o\
-		jsonreadwrite.o
+		jsonreadwrite.o\
+		cmdargs.o
 
 
 all : $(TARGET)
