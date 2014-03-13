@@ -161,6 +161,8 @@ private:
 	int m_refCnt;
 };
 
+class JsonArrayWriter;
+class JsonObjectWriter;
 
 class JsonValueWriter: public IJsonValueWriter
 {
@@ -176,15 +178,18 @@ public:
 	bool SetValueAsDouble(
 			IN double value);
 	bool SetValueAsInt(
-			IN int32_t value);
-	bool SetValueAsInt64(
-			OUT int64_t value);
+			IN int64_t value);
 	bool SetValueAsBool(
 			IN bool value);
 	bool SetValueAsString(
 			IN const char* value
 			);
-	IJsonValueReader* RefValue();
+	IJsonValueReader* RefReader();
+
+	bool SetValueAsObject(JsonObjectWriter* obj);
+	bool SetValueAsArray(JsonArrayWriter* arr);
+
+	JsonNode* GetJNode() { return m_jnode; }
 
 protected:
 	~JsonValueWriter();
@@ -199,6 +204,7 @@ private:
 
 class JsonArrayWriter: public IJsonArrayWriter
 {
+public:
 	JsonArrayWriter();
 	void AddRef();
 	void Release();
@@ -207,6 +213,7 @@ class JsonArrayWriter: public IJsonArrayWriter
 			IN IJsonValueReader*
 			);
 	IJsonArrayReader* RefArray();
+	JsonArray* PeekGlibArray() { return m_jarr; }
 protected:
 	JsonArray* AllocGlibArray();
 	~JsonArrayWriter();
@@ -224,12 +231,42 @@ public:
 	void Reset();
 	bool AddMember(
 			IN const char* name,
-			IN IJsonValueReader* member
-			);
+			IN IJsonValueReader* member);
+	bool AddObjectMember(
+			IN const char* name,
+			IN IJsonObjectReader*);
+	bool AddArrayMember(
+			IN const char* name,
+			IN IJsonArrayReader*);
+	bool AddDoubleMember(
+			IN const char* name,
+			IN double value);
+	bool AddIntMember(
+			IN const char* name,
+			IN int64_t value);
+	bool AddBoolMember(
+			IN const char* name,
+			IN bool value);
+	bool AddStringMember(
+			IN const char* name,
+			IN const char* value);
 	IJsonObjectReader* RefObject();
+	bool AddMember(
+			IN const char* name,
+			IN JsonValueWriter* member);
+	bool AddObjectMember(
+			IN const char* name,
+			IN JsonObjectWriter*);
+	bool AddArrayMember(
+			IN const char* name,
+			IN JsonArrayWriter*);
+	JsonObject* PeekGlibJobj() { return m_jobj; }
 protected:
 	JsonObject* AllocGlibObject();
 	~JsonObjectWriter();
+	bool AddMemberAndDeref(
+		IN const char* name,
+		IN IJsonValueReader* member);
 private:
 	JsonObject* m_jobj;
 	int m_refCnt;

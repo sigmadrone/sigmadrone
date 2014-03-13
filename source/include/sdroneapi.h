@@ -783,8 +783,25 @@ struct IJsonObjectWriter
 	virtual void Reset() = 0;
 	virtual bool AddMember(
 			IN const char* name,
-			IN IJsonValueReader* member
-			) = 0;
+			IN IJsonValueReader* member) = 0;
+	virtual bool AddObjectMember(
+			IN const char* name,
+			IN IJsonObjectReader*) = 0;
+	virtual bool AddArrayMember(
+			IN const char* name,
+			IN IJsonArrayReader*) = 0;
+	virtual bool AddDoubleMember(
+			IN const char* name,
+			IN double value) = 0;
+	virtual bool AddIntMember(
+			IN const char* name,
+			IN int64_t value) = 0;
+	virtual bool AddBoolMember(
+			IN const char* name,
+			IN bool value) = 0;
+	virtual bool AddStringMember(
+			IN const char* name,
+			IN const char* value) = 0;
 	virtual IJsonObjectReader* RefObject() = 0;
 protected:
 	virtual ~IJsonObjectWriter() {}
@@ -846,14 +863,14 @@ struct IJsonValueWriter
 	virtual bool SetValueAsDouble(
 			IN double value) = 0;
 	virtual bool SetValueAsInt(
-			OUT int64_t value) = 0;
+			IN int64_t value) = 0;
 	virtual bool SetValueAsBool(
 			IN bool value) = 0;
 	virtual bool SetValueAsString(
 			IN const char* value
 			) = 0;
 
-	virtual IJsonValueReader* RefValue() = 0;
+	virtual IJsonValueReader* RefReader() = 0;
 
 protected:
 	virtual ~IJsonValueWriter() {}

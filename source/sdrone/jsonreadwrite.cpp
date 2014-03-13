@@ -241,7 +241,30 @@ IJsonObjectReader* JsonValueReader::RefAsObject() {
 
 JsonNode* JsonValueReader::DupGlibNode()
 {
-	return json_node_copy(m_jnode);
+	if (GetType() != SD_JSONVALUE_ARRAY &&
+		GetType() != SD_JSONVALUE_OBJECT) {
+		return json_node_copy(m_jnode);
+	}
+	JsonNode* jnode = json_node_new(json_node_get_node_type(m_jnode));
+	if (jnode) {
+		JsonArray* jarr = 0;
+		JsonObject* jobj = 0;
+		if (GetType() == SD_JSONVALUE_ARRAY) {
+			if (0 != (jarr=json_node_dup_array(m_jnode))) {
+				json_node_set_array(jnode,jarr);
+			}
+		} else {
+			assert(GetType() == SD_JSONVALUE_OBJECT);
+			if (0 != (jobj=json_node_dup_object(m_jnode))) {
+				json_node_set_object(jnode,jobj);
+			}
+		}
+		if (!jobj && !jarr) {
+			json_node_free(jnode);
+			jnode = 0;
+		}
+	}
+	return jnode;
 }
 
 /*
@@ -252,11 +275,8 @@ JsonValueWriter::JsonValueWriter() : m_jnode(0), m_refCnt(1)
 {
 }
 
-JsonValueWriter::~JsonValueWriter()
-{
-	if (!!m_jnode) {
-		json_node_free(m_jnode);
-	}
+JsonValueWriter::~JsonValueWriter() {
+	Reset();
 }
 
 void JsonValueWriter::AddRef() {
@@ -270,12 +290,14 @@ void JsonValueWriter::Release() {
 }
 
 void JsonValueWriter::Reset() {
+	if (!!m_jnode) {
+		json_node_free(m_jnode);
+		m_jnode = 0;
+	}
 }
 
 bool JsonValueWriter::AllocGlibNode(JsonNodeType nodeType) {
-	if (!!m_jnode) {
-		json_node_free(m_jnode);
-	}
+	Reset();
 	return !!(m_jnode = json_node_new(nodeType));
 }
 
@@ -307,6 +329,26 @@ bool JsonValueWriter::SetValueAsArray(IJsonArrayReader* _reader) {
 	return !!m_jnode;
 }
 
+bool JsonValueWriter::SetValueAsObject(JsonObjectWriter* obj)
+{
+	bool ret = false;
+	if (AllocGlibNode(JSON_NODE_OBJECT) && !!obj && !!obj->PeekGlibJobj()) {
+		json_node_set_object(m_jnode, obj->PeekGlibJobj());
+		ret = true;
+	}
+	return ret;
+}
+
+bool JsonValueWriter::SetValueAsArray(JsonArrayWriter* arr)
+{
+	bool ret = false;
+	if (AllocGlibNode(JSON_NODE_ARRAY) && !!arr && !!arr->PeekGlibArray()) {
+		json_node_set_array(m_jnode, arr->PeekGlibArray());
+		ret = true;
+	}
+	return ret;
+}
+
 bool JsonValueWriter::SetValueAsDouble(double value) {
 	if (AllocGlibNode(JSON_NODE_VALUE)) {
 		json_node_set_double(m_jnode,value);
@@ -314,11 +356,7 @@ bool JsonValueWriter::SetValueAsDouble(double value) {
 	return !!m_jnode;
 }
 
-bool JsonValueWriter::SetValueAsInt(int32_t value) {
-	return SetValueAsInt64(value);
-}
-
-bool JsonValueWriter::SetValueAsInt64(int64_t value) {
+bool JsonValueWriter::SetValueAsInt(int64_t value) {
 	if (AllocGlibNode(JSON_NODE_VALUE)) {
 		json_node_set_int(m_jnode,value);
 	}
@@ -339,7 +377,7 @@ bool JsonValueWriter::SetValueAsString(const char* value) {
 	return !!m_jnode;
 }
 
-IJsonValueReader* JsonValueWriter::RefValue() {
+IJsonValueReader* JsonValueWriter::RefReader() {
 	return new JsonValueReader(m_jnode);
 }
 
@@ -425,6 +463,116 @@ bool JsonObjectWriter::AddMember(
 			json_object_set_member(m_jobj,memberName,glibJnode);
 			ret = true;
 		}
+	}
+	return ret;
+}
+
+bool JsonObjectWriter::AddMemberAndDeref(
+	IN const char* name,
+	IN IJsonValueReader* member)
+{
+	bool ret = false;
+	if (member) {
+		ret = AddMember(name,member);
+		member->Release();
+	}
+	return ret;
+}
+
+bool JsonObjectWriter::AddObjectMember(
+	IN const char* name,
+	IN IJsonObjectReader* member)
+{
+	bool ret = false;
+	JsonValueWriter* val = new JsonValueWriter();
+	if (val) {
+		val->SetValueAsObject(member);
+		ret = AddMemberAndDeref(name,val->RefReader());
+		val->Release();
+	}
+	return ret;
+}
+
+bool JsonObjectWriter::AddArrayMember(
+	IN const char* name,
+	IN IJsonArrayReader* member)
+{
+	bool ret = false;
+	JsonValueWriter* val = new JsonValueWriter();
+	if (val) {
+		val->SetValueAsArray(member);
+		ret = AddMemberAndDeref(name,val->RefReader());
+		val->Release();
+	}
+	return ret;
+}
+
+bool JsonObjectWriter::AddObjectMember(
+		const char* name,
+		JsonObjectWriter* obj)
+{
+	return false;
+}
+
+bool JsonObjectWriter::AddArrayMember(
+		const char* name,
+		JsonArrayWriter* arr)
+{
+	return false;
+}
+
+bool JsonObjectWriter::AddDoubleMember(
+	IN const char* name,
+	IN double member)
+{
+	bool ret = false;
+	JsonValueWriter* val = new JsonValueWriter();
+	if (val) {
+		val->SetValueAsDouble(member);
+		ret = AddMemberAndDeref(name,val->RefReader());
+		val->Release();
+	}
+	return ret;
+}
+
+bool JsonObjectWriter::AddIntMember(
+	IN const char* name,
+	IN int64_t member)
+{
+	bool ret = false;
+	JsonValueWriter* val = new JsonValueWriter();
+	if (val) {
+		val->SetValueAsInt(member);
+		ret = AddMemberAndDeref(name,val->RefReader());
+		val->Release();
+	}
+	return ret;
+}
+
+bool JsonObjectWriter::AddBoolMember(
+		IN const char* name,
+		IN bool member)
+{
+	bool ret = false;
+	JsonValueWriter* val = new JsonValueWriter();
+	if (val) {
+		val->SetValueAsBool(member);
+		ret = AddMemberAndDeref(name,val->RefReader());
+		val->Release();
+	}
+	return ret;
+}
+
+bool JsonObjectWriter::AddStringMember(
+	IN const char* name,
+	IN const char* member)
+{
+	bool ret = false;
+	JsonValueWriter* val = new JsonValueWriter();
+	if (val) {
+		val->SetValueAsString(member);
+		ret = AddMemberAndDeref(name,val->RefReader());
+		val->Release();
 	}
 	return ret;
 }

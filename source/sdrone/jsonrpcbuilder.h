@@ -11,21 +11,30 @@
 #include "commoninc.h"
 #include "jsonreadwrite.h"
 
+static const uint32_t SD_INVALID_RPC_ID = 0;
+
 class JsonRpcBuilder {
 public:
 	JsonRpcBuilder();
 	~JsonRpcBuilder();
-	void BeginRequest(const char* method, uint32_t id);
-	void BeginReply(uint32_t id);
-	void Finalize();
+	bool BuildRequest(
+			const char* method,
+			IJsonValueReader* params = 0,
+			uint32_t rpcId = SD_INVALID_RPC_ID);
+	bool BuildReply(
+			IJsonValueReader* result,
+			uint32_t id,
+			bool error);
 	void Reset();
-	int AddParams(IJsonValueReader*);
-	const char* GetSchema();
-	size_t GetSchemaLen();
+	const char* GetJsonStream();
+	size_t GetJsonStreamSize();
 
+	static uint32_t GenerateRpcId();
 private:
+	static uint32_t s_rpcId;
 	JsonGenerator* m_jsonGenerator;
-	IJsonValueReader* m_root;
+	char* m_jsonStream;
+	size_t m_jsonStreamSize;
 };
 
 #endif /* JSONRPCBUILDER_H_ */
