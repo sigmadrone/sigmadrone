@@ -27,13 +27,15 @@ public:
 	SdJsonValue(const SdJsonArray& arr);
 	SdJsonValue(const SdJsonObject& obj);
 	SdJsonValue(int64_t i);
-	SdJsonValue(uint64_t i);
 	SdJsonValue(int32_t i);
-	SdJsonValue(uint32_t i);
 	SdJsonValue(int16_t i);
+	SdJsonValue(uint64_t i);
+	SdJsonValue(uint32_t i);
 	SdJsonValue(uint16_t i);
+	SdJsonValue(char i);
 	SdJsonValue(bool b);
 	SdJsonValue(const std::string&);
+	SdJsonValue(const char*);
 	SdJsonValue(double d);
 	~SdJsonValue();
 	SdJsonValueType GetType() const;

@@ -56,7 +56,7 @@ bool SdJsonRpcBuilder::BuildRequest(
 
 bool SdJsonRpcBuilder::BuildRequest(
 		const char* method,
-		IJsonObject* params,
+		const IJsonObject* params,
 		uint32_t rpcId)
 {
 	SdJsonValue jval;
@@ -68,7 +68,7 @@ bool SdJsonRpcBuilder::BuildRequest(
 
 bool SdJsonRpcBuilder::BuildRequest(
 		const char* method,
-		IJsonArray* params,
+		const IJsonArray* params,
 		uint32_t rpcId)
 {
 	SdJsonValue jval;
@@ -79,7 +79,7 @@ bool SdJsonRpcBuilder::BuildRequest(
 }
 
 bool SdJsonRpcBuilder::BuildReply(
-		IJsonValue* result,
+		const IJsonValue* result,
 		uint32_t id,
 		bool error)
 {
@@ -100,17 +100,17 @@ void SdJsonRpcBuilder::Reset() {
 
 const char* SdJsonRpcBuilder::GetJsonStream()
 {
-	if (0 != m_jsonStream) {
+	if (0 == m_jsonStream) {
 		m_jsonStream = json_generator_to_data(m_jsonGenerator,
 				&m_jsonStreamSize);
 	}
 	return m_jsonStream;
 }
 
-size_t SdJsonRpcBuilder::GetJsonStreamSize()
+uint32_t SdJsonRpcBuilder::GetJsonStreamSize()
 {
 	GetJsonStream();
-	return m_jsonStreamSize;
+	return (uint32_t)m_jsonStreamSize;
 }
 
 uint32_t SdJsonRpcBuilder::GenerateRpcId()

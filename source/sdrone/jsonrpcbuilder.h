@@ -25,19 +25,19 @@ public:
 			uint32_t rpcId = SD_INVALID_RPC_ID);
 	bool BuildRequest(
 			const char* method,
-			IJsonObject* params = 0,
+			const IJsonObject* params = 0,
 			uint32_t rpcId = SD_INVALID_RPC_ID);
 	bool BuildRequest(
 			const char* method,
-			IJsonArray* params = 0,
+			const IJsonArray* params = 0,
 			uint32_t rpcId = SD_INVALID_RPC_ID);
 	bool BuildReply(
-			IJsonValue* result,
+			const IJsonValue* result,
 			uint32_t id,
 			bool error);
 	void Reset();
 	const char* GetJsonStream();
-	size_t GetJsonStreamSize();
+	uint32_t GetJsonStreamSize();
 
 	static uint32_t GenerateRpcId();
 private:

@@ -23,14 +23,101 @@ SdJsonValue::SdJsonValue() :
 }
 
 SdJsonValue::SdJsonValue(JsonNode* jnode) :
-		m_jnode(0),
-		m_type(SD_JSONVALUE_NULL),
-		m_typeAsStr("SD_JSONVALUE_NONE"),
-		m_asObj(0)
+		m_jnode(0),m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"),m_asObj(0)
 {
 	assert(jnode);
 	m_jnode = json_node_copy(jnode);
 	Init();
+}
+
+SdJsonValue::SdJsonValue(const SdJsonValue& val) :
+	m_jnode(0), m_type(SD_JSONVALUE_NULL),
+	m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	*this = val;
+}
+
+SdJsonValue::SdJsonValue(const SdJsonArray& arr) :
+	m_jnode(0), m_type(SD_JSONVALUE_NULL),
+	m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsArray(&arr);
+}
+
+SdJsonValue::SdJsonValue(const SdJsonObject& obj) :
+	m_jnode(0), m_type(SD_JSONVALUE_NULL),
+	m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsObject(&obj);
+}
+
+SdJsonValue::SdJsonValue(int64_t i) :
+		m_jnode(0), m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsInt(i);
+}
+SdJsonValue::SdJsonValue(uint64_t i) :
+		m_jnode(0), m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsInt(i);
+}
+SdJsonValue::SdJsonValue(int32_t i) :
+		m_jnode(0), m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsInt(i);
+}
+SdJsonValue::SdJsonValue(uint32_t i) :
+		m_jnode(0), m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsInt(i);
+}
+SdJsonValue::SdJsonValue(int16_t i) :
+		m_jnode(0), m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsInt(i);
+}
+SdJsonValue::SdJsonValue(uint16_t i) :
+		m_jnode(0), m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsInt(i);
+}
+
+SdJsonValue::SdJsonValue(bool b) :
+		m_jnode(0), m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsBool(b);
+}
+
+SdJsonValue::SdJsonValue(const std::string& str) :
+		m_jnode(0), m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsString(str.c_str());
+}
+SdJsonValue::SdJsonValue(const char* str) :
+		m_jnode(0), m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsString(str);
+}
+
+SdJsonValue::SdJsonValue(double d) :
+		m_jnode(0), m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	SetValueAsDouble(d);
+}
+
+SdJsonValue::~SdJsonValue() {
+	Reset();
 }
 
 void SdJsonValue::Init()
@@ -75,53 +162,6 @@ void SdJsonValue::Init()
 	} else {
 		Reset();
 	}
-}
-
-SdJsonValue::SdJsonValue(const SdJsonValue& val) {
-	*this = val;
-}
-
-SdJsonValue::SdJsonValue(const SdJsonArray& arr) {
-	SetValueAsArray(&arr);
-}
-
-SdJsonValue::SdJsonValue(const SdJsonObject& obj) {
-	SetValueAsObject(&obj);
-}
-
-SdJsonValue::SdJsonValue(int64_t i) {
-	SetValueAsInt(i);
-}
-SdJsonValue::SdJsonValue(uint64_t i) {
-	SetValueAsInt(i);
-}
-SdJsonValue::SdJsonValue(int32_t i) {
-	SetValueAsInt(i);
-}
-SdJsonValue::SdJsonValue(uint32_t i) {
-	SetValueAsInt(i);
-}
-SdJsonValue::SdJsonValue(int16_t i) {
-	SetValueAsInt(i);
-}
-SdJsonValue::SdJsonValue(uint16_t i) {
-	SetValueAsInt(i);
-}
-
-SdJsonValue::SdJsonValue(bool b) {
-	SetValueAsBool(b);
-}
-
-SdJsonValue::SdJsonValue(const std::string& str) {
-	SetValueAsString(str.c_str());
-}
-
-SdJsonValue::SdJsonValue(double d) {
-	SetValueAsDouble(d);
-}
-
-SdJsonValue::~SdJsonValue() {
-	Reset();
 }
 
 void SdJsonValue::Reset()
@@ -437,11 +477,14 @@ bool SdJsonObject::AddMember(
 		const IJsonValue* _member)
 {
 	const SdJsonValue* member = dynamic_cast<const SdJsonValue*>(_member);
+	if (!m_jobj) {
+		m_jobj = json_object_new();
+	}
 	if (member && m_jobj) {
 		JsonNode* dup = member->DupGlibNode();
 		if (dup) {
-			json_object_set_member(m_jobj,name,dup);
 			InitMemberNames();
+			json_object_set_member(m_jobj,name,dup);
 			m_names.push_back(name);
 			return true;
 		}
@@ -468,7 +511,7 @@ SdJsonArray::SdJsonArray(JsonArray* jarr) : m_jarr(jarr) {
 	json_array_ref(m_jarr);
 }
 
-SdJsonArray::SdJsonArray(const SdJsonArray& arr) {
+SdJsonArray::SdJsonArray(const SdJsonArray& arr) : m_jarr(0) {
 	*this = arr;
 }
 
@@ -499,7 +542,10 @@ bool SdJsonArray::AddElement(const IJsonValue* _val)
 {
 	const SdJsonValue* val = dynamic_cast<const SdJsonValue*>(_val);
 	JsonNode* dup = 0;
-	if (val) {
+	if (!m_jarr) {
+		m_jarr = json_array_new();
+	}
+	if (val && m_jarr) {
 		if (0 != (dup = val->DupGlibNode())) {
 			json_array_add_element(m_jarr,dup);
 		}

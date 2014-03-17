@@ -179,10 +179,11 @@ void TestParseJsonRpcFromBuffer()
 }
 
 
-void TestJsonWriter()
+void TestJsonRpcBuilder()
 {
-	TEST_BEGIN("TestJsonWriter");
+	TEST_BEGIN("TestJsonRpcBuilder");
 
+#if 0
 	static const char* schema1 =
 		"{"
 			"\"jsonrpc\": \"2.0\", \"method\": \"run\", \"params\": "
@@ -192,11 +193,15 @@ void TestJsonWriter()
 					 "\"Thrust\": 0.5,"
 					 "\"MinThrust\":  0.3,"
 					 "\"MaxThrust\": 0.7"
-				"}"
+				"}",
+				"\"SkyIsTheLimit\": true",
+				"\"Grounded\": false",
 			"}, "
 			"\"id\": 10"
 		"}";
+#endif
 
+	SdJsonRpcParser parser;
 	SdJsonRpcBuilder bldr;
 	SdJsonObject params;
 	SdJsonObject flight;
@@ -205,7 +210,46 @@ void TestJsonWriter()
 	flight.AddMember("MinThrust",SdJsonValue(0.3));
 	flight.AddMember("MaxThrust",SdJsonValue(0.7));
 	params.AddMember("Flight",SdJsonValue(flight));
-	//bldr.BuildRequest("run",);
+	params.AddMember("SkyIsTheLimit",SdJsonValue(true));
+	params.AddMember("Grounded",SdJsonValue(false));
+	bldr.BuildRequest("run",&params,10);
+	if (!bldr.GetJsonStream()) {
+		TEST_FAILED();
+		return;
+	}
+	parser.ParseBuffer(bldr.GetJsonStream(),bldr.GetJsonStreamSize(),0);
+	const IJsonObject* parsedParams = parser.GetRpcParams();
+	if (parsedParams->GetMember("SkyIsTheLimit")->AsBool() !=
+			params.GetMember("SkyIsTheLimit")->AsBool()) {
+		TEST_FAILED();
+		return;
+	}
+	if (parsedParams->GetMember("Grounded")->AsBool() !=
+			params.GetMember("Grounded")->AsBool()) {
+		TEST_FAILED();
+		return;
+	}
+	const IJsonObject* parsedFlight = parsedParams->GetMember("Flight")->AsObject();
+	if (!parsedFlight) {
+		TEST_FAILED();
+		return;
+	}
+	if (parsedFlight->GetMember("MinThrust")->AsDouble() !=
+		flight.GetMember("MinThrust")->AsDouble()) {
+		TEST_FAILED();
+		return;
+	}
+	if (parsedFlight->GetMember("MaxThrust")->AsDouble() !=
+			flight.GetMember("MaxThrust")->AsDouble()) {
+		TEST_FAILED();
+		return;
+	}
+	if (parsedFlight->GetMember("Thrust")->AsDouble() !=
+			flight.GetMember("Thrust")->AsDouble()) {
+		TEST_FAILED();
+		return;
+	}
+
 	TEST_PASSED();
 	return;
 }
@@ -246,6 +290,7 @@ int main(int argc, char *argv[])
 	}
 	TestParseJsonRpcFile(jsonFileName);
 	TestParseJsonRpcFromBuffer();
+	TestJsonRpcBuilder();
 
 	TEST_STATS();
 
