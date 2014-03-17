@@ -6,154 +6,53 @@
  */
 
 #include "jsonreadwrite.h"
-
-/*
- *  Readers implementation
- */
-
-JsonObjectReader::JsonObjectReader(
-		JsonObject* obj) :
-		m_jobj(obj),m_refCnt(1)
-{
-	assert(m_jobj);
-	json_object_ref(m_jobj);
-}
-
-JsonObject* JsonObjectReader::RefGlibJsonObject() {
-	json_object_ref(m_jobj);
-	return m_jobj;
-}
-
-JsonObjectReader::~JsonObjectReader() {
-	json_object_unref(m_jobj);
-}
-
-void JsonObjectReader::AddRef() {
-	__sync_fetch_and_add(&m_refCnt,1);
-}
-
-void JsonObjectReader::Release() {
-	if (0 == __sync_sub_and_fetch(&m_refCnt,1)) {
-		delete this;
-	}
-}
-
-size_t JsonObjectReader::GetMemberCount()
-{
-	if (0 == m_members.size()) {
-		GList* memberNames = json_object_get_members(m_jobj);
-		if (0 != memberNames) {
-			m_members.reserve(8);
-			GList* it = g_list_first(memberNames);
-			while (0 != it) {
-				m_members.push_back((char*)it->data);
-				it = g_list_next(it);
-			}
-			g_list_free(memberNames);
-		}
-	}
-	return m_members.size();
-}
-
-const char* JsonObjectReader::GetMemberName(size_t index)
-{
-	return GetMemberCount() > index ? m_members.at(index) : 0;
-}
-
-IJsonValueReader* JsonObjectReader::RefMember(const char* name)
-{
-	assert(name);
-	IJsonValueReader* parsedValue = 0;
-	JsonNode* jnode = json_object_get_member(m_jobj,name);
-	if (0 != jnode) {
-		parsedValue = new JsonValueReader(jnode);
-	}
-	return parsedValue;
-}
-
-SdJsonValueType JsonObjectReader::GetMemberType(
-		const char* name)
-{
-	SdJsonValueType type = SD_JSONVALUE_NULL;
-	IJsonValueReader* val = RefMember(name);
-	if (val) {
-		type = val->GetType();
-		val->Release();
-	}
-	return type;
-}
+#include <json-glib/json-glib.h>
+#include <json-glib/json-gobject.h>
 
 
-/*
- * JsonArrayReader implementation
- */
-JsonArrayReader::JsonArrayReader(
-		JsonArray* jarr) :
-		m_jarr(jarr), m_refCnt(1)
-{
-	assert(m_jarr);
-	json_array_ref(m_jarr);
-}
+static const SdJsonValue s_nullJsonValue;
+static const SdJsonObject s_nullJsonObject;
+static const SdJsonArray s_nullJsonArray;
 
-JsonArray* JsonArrayReader::RefGlibJsonArray() {
-	json_array_ref(m_jarr);
-	return m_jarr;
-}
-
-JsonArrayReader::~JsonArrayReader() {
-	json_array_unref(m_jarr);
-}
-
-void JsonArrayReader::AddRef() {
-	__sync_fetch_and_add(&m_refCnt,1);
-}
-
-void JsonArrayReader::Release() {
-	if (0 == __sync_sub_and_fetch(&m_refCnt,1)) {
-		delete this;
-	}
-}
-
-uint32_t JsonArrayReader::ElementCount() {
-	return json_array_get_length(m_jarr);
-}
-
-IJsonValueReader* JsonArrayReader::RefElement(uint32_t index) {
-	IJsonValueReader* parsedJsonVal = 0;
-	if (index < ElementCount()) {
-		JsonNode* jnode = json_array_get_element(m_jarr,index);
-		if (0 != jnode) {
-			parsedJsonVal = new JsonValueReader(jnode);
-		}
-	}
-	return parsedJsonVal;
-}
-
-/*
- * JsonValueReader implementation
- */
-JsonValueReader::JsonValueReader(JsonNode* jnode) :
+SdJsonValue::SdJsonValue() :
 		m_jnode(0),
 		m_type(SD_JSONVALUE_NULL),
-		m_typeAsStr("SD_JSONVALUE_NULL"),
-		m_refCnt(1)
+		m_typeAsStr("SD_JSONVALUE_NONE"),
+		m_asObj(0)
+{
+}
+
+SdJsonValue::SdJsonValue(JsonNode* jnode) :
+		m_jnode(0),
+		m_type(SD_JSONVALUE_NULL),
+		m_typeAsStr("SD_JSONVALUE_NONE"),
+		m_asObj(0)
 {
 	assert(jnode);
 	m_jnode = json_node_copy(jnode);
-	if (!!m_jnode) {
-		JsonNodeType nodeType = json_node_get_node_type(jnode);
+	Init();
+}
+
+void SdJsonValue::Init()
+{
+	if (0 != m_jnode) {
+		JsonNodeType nodeType = json_node_get_node_type(m_jnode);
 		if (JSON_NODE_OBJECT == nodeType) {
 			m_type = SD_JSONVALUE_OBJECT;
 			m_typeAsStr = "SD_JSONVALUE_OBJECT";
 		} else if (JSON_NODE_VALUE == nodeType) {
-			GType valType = json_node_get_value_type(jnode);
-			switch(valType) {
+			GType valType = json_node_get_value_type(m_jnode);
+			switch (valType) {
 			case G_TYPE_BOOLEAN:
 				m_type = SD_JSONVALUE_BOOL;
 				m_typeAsStr = "SD_JSONVALUE_BOOL";
 				break;
-			case G_TYPE_CHAR:case G_TYPE_UCHAR:case G_TYPE_INT:
-			case G_TYPE_UINT:case G_TYPE_INT64:case G_TYPE_UINT64:
+			case G_TYPE_CHAR:
+			case G_TYPE_UCHAR:
+			case G_TYPE_INT:
+			case G_TYPE_UINT:
+			case G_TYPE_INT64:
+			case G_TYPE_UINT64:
 				m_type = SD_JSONVALUE_INT;
 				m_typeAsStr = "SD_JSONVALUE_INT";
 				break;
@@ -166,97 +65,202 @@ JsonValueReader::JsonValueReader(JsonNode* jnode) :
 				m_typeAsStr = "SD_JSONVALUE_STRING";
 				break;
 			default:
-				printf("JsonValueReader: unrecognized value type: %ld\n", valType);
+				printf("SdJsonValue: unrecognized value type: %ld\n",
+						valType);
 			}
 		} else if (JSON_NODE_ARRAY == nodeType) {
 			m_type = SD_JSONVALUE_ARRAY;
 			m_typeAsStr = "SD_JSONVALUE_ARRAY";
 		}
+	} else {
+		Reset();
 	}
 }
 
-JsonValueReader::~JsonValueReader() {
+SdJsonValue::SdJsonValue(const SdJsonValue& val) {
+	*this = val;
+}
+
+SdJsonValue::SdJsonValue(const SdJsonArray& arr) {
+	SetValueAsArray(&arr);
+}
+
+SdJsonValue::SdJsonValue(const SdJsonObject& obj) {
+	SetValueAsObject(&obj);
+}
+
+SdJsonValue::SdJsonValue(int64_t i) {
+	SetValueAsInt(i);
+}
+SdJsonValue::SdJsonValue(uint64_t i) {
+	SetValueAsInt(i);
+}
+SdJsonValue::SdJsonValue(int32_t i) {
+	SetValueAsInt(i);
+}
+SdJsonValue::SdJsonValue(uint32_t i) {
+	SetValueAsInt(i);
+}
+SdJsonValue::SdJsonValue(int16_t i) {
+	SetValueAsInt(i);
+}
+SdJsonValue::SdJsonValue(uint16_t i) {
+	SetValueAsInt(i);
+}
+
+SdJsonValue::SdJsonValue(bool b) {
+	SetValueAsBool(b);
+}
+
+SdJsonValue::SdJsonValue(const std::string& str) {
+	SetValueAsString(str.c_str());
+}
+
+SdJsonValue::SdJsonValue(double d) {
+	SetValueAsDouble(d);
+}
+
+SdJsonValue::~SdJsonValue() {
+	Reset();
+}
+
+void SdJsonValue::Reset()
+{
+	if (SD_JSONVALUE_ARRAY == GetType()) {
+		if (m_asArr) {
+			delete m_asArr;
+		}
+	} else if (SD_JSONVALUE_OBJECT == GetType()) {
+		if (m_asObj) {
+			delete m_asObj;
+		}
+	}
+	m_asObj = 0;
+	m_asStr.clear();
 	if (!!m_jnode) {
 		json_node_free(m_jnode);
+		m_jnode = 0;
 	}
+	m_type = SD_JSONVALUE_NULL;
+	m_typeAsStr = "SD_JSONVALUE_NULL";
 }
 
-void JsonValueReader::AddRef() {
-	__sync_fetch_and_add(&m_refCnt,1);
-}
-
-void JsonValueReader::Release() {
-	if (0 == __sync_sub_and_fetch(&m_refCnt,1)) {
-		delete this;
-	}
-}
-
-SdJsonValueType JsonValueReader::GetType() {
+SdJsonValueType SdJsonValue::GetType() const {
 	return m_type;
 }
 
-const char* JsonValueReader::GetTypeAsString() {
+const char* SdJsonValue::GetTypeAsString() const {
 	return m_typeAsStr;
 }
 
-double JsonValueReader::AsDouble() {
-	assert(GetType() == SD_JSONVALUE_DOUBLE);
-	return json_node_get_double(m_jnode);
-}
-
-int64_t JsonValueReader::AsInt() {
-	assert(GetType() == SD_JSONVALUE_INT);
-	return json_node_get_int(m_jnode);
-}
-
-bool JsonValueReader::AsBool() {
-	assert(GetType() == SD_JSONVALUE_BOOL);
-	return json_node_get_boolean(m_jnode);
-}
-
-const char* JsonValueReader::AsString() {
-	assert(GetType() == SD_JSONVALUE_STRING);
-	return json_node_get_string(m_jnode);
-}
-
-IJsonArrayReader* JsonValueReader::RefAsArray() {
-	assert(GetType() == SD_JSONVALUE_ARRAY);
-	IJsonArrayReader* parsedJar = 0;
-	JsonArray* jar = json_node_get_array(m_jnode);
-	if (0 != jar) {
-		parsedJar = new JsonArrayReader(jar);
+double SdJsonValue::AsDouble() const {
+	if (GetType() == SD_JSONVALUE_DOUBLE) {
+		return json_node_get_double(const_cast<JsonNode*>(m_jnode));
 	}
-	return parsedJar;
+	return 0;
 }
 
-IJsonObjectReader* JsonValueReader::RefAsObject() {
-	assert(GetType() == SD_JSONVALUE_OBJECT);
-	IJsonObjectReader* parsedJobj = 0;
-	JsonObject* jobj = json_node_get_object(m_jnode);
-	if (0 != jobj) {
-		parsedJobj = new JsonObjectReader(jobj);
+int64_t SdJsonValue::AsInt() const {
+	if (GetType() == SD_JSONVALUE_INT) {
+		return json_node_get_int(const_cast<JsonNode*>(m_jnode));
 	}
-	return parsedJobj;
+	return 0;
 }
 
-JsonNode* JsonValueReader::DupGlibNode()
+bool SdJsonValue::AsBool() const {
+	if (GetType() == SD_JSONVALUE_BOOL) {
+		return json_node_get_boolean(const_cast<JsonNode*>(m_jnode));
+	}
+	return 0;
+}
+
+bool SdJsonValue::AsDoubleSafe(double* val) const
 {
-	if (GetType() != SD_JSONVALUE_ARRAY &&
-		GetType() != SD_JSONVALUE_OBJECT) {
-		return json_node_copy(m_jnode);
+	if (GetType() == SD_JSONVALUE_DOUBLE) {
+		*val = AsDouble();
+		return true;
 	}
-	JsonNode* jnode = json_node_new(json_node_get_node_type(m_jnode));
+	return false;
+}
+
+bool SdJsonValue::AsIntSafe(int64_t* val) const
+{
+	if (GetType() == SD_JSONVALUE_INT) {
+		*val = AsInt();
+		return true;
+	}
+	return false;
+}
+
+bool SdJsonValue::AsBoolSafe(bool* val) const
+{
+	if (GetType() == SD_JSONVALUE_BOOL) {
+		*val = AsBool();
+		return true;
+	}
+	return false;
+}
+
+std::string SdJsonValue::AsString() const {
+	assert(GetType() == SD_JSONVALUE_STRING);
+	if (!m_asStr.size()) {
+		*const_cast<std::string*>(&m_asStr) =
+				json_node_get_string(const_cast<JsonNode*>(m_jnode));
+	}
+	return m_asStr;
+}
+
+const IJsonArray* SdJsonValue::AsArray() const
+{
+	if (GetType()==SD_JSONVALUE_ARRAY) {
+		if (0 == m_asArr) {
+			SdJsonValue* _this = const_cast<SdJsonValue*>(this);
+			_this->m_asArr = new SdJsonArray(json_node_get_array(_this->m_jnode));
+		}
+		return m_asArr;
+	}
+	return 0;
+}
+
+const IJsonObject* SdJsonValue::AsObject() const
+{
+	if (GetType()==SD_JSONVALUE_OBJECT) {
+		if (0 == m_asObj) {
+			SdJsonValue* _this = const_cast<SdJsonValue*>(this);
+			_this->m_asObj = new SdJsonObject(json_node_get_object(
+					_this->m_jnode));
+		}
+		return m_asObj;
+	}
+	return 0;
+}
+
+IJsonValue* SdJsonValue::Clone() const
+{
+	return new SdJsonValue(*this);
+}
+
+JsonNode* SdJsonValue::DupGlibNode() const
+{
+	JsonNode* thisNode = const_cast<JsonNode*>(m_jnode);
+	if (GetType() == SD_JSONVALUE_NULL) {
+		return NULL;
+	}
+	if (GetType() != SD_JSONVALUE_ARRAY && GetType() != SD_JSONVALUE_OBJECT) {
+		return json_node_copy(thisNode);
+	}
+	JsonNode* jnode = json_node_new(json_node_get_node_type(thisNode));
 	if (jnode) {
 		JsonArray* jarr = 0;
 		JsonObject* jobj = 0;
 		if (GetType() == SD_JSONVALUE_ARRAY) {
-			if (0 != (jarr=json_node_dup_array(m_jnode))) {
-				json_node_set_array(jnode,jarr);
+			if (0 != (jarr = json_node_dup_array(thisNode))) {
+				json_node_set_array(jnode, jarr);
 			}
 		} else {
 			assert(GetType() == SD_JSONVALUE_OBJECT);
-			if (0 != (jobj=json_node_dup_object(m_jnode))) {
-				json_node_set_object(jnode,jobj);
+			if (0 != (jobj = json_node_dup_object(thisNode))) {
+				json_node_set_object(jnode, jobj);
 			}
 		}
 		if (!jobj && !jarr) {
@@ -267,329 +271,261 @@ JsonNode* JsonValueReader::DupGlibNode()
 	return jnode;
 }
 
-/*
- * Writers implementation
- */
-
-JsonValueWriter::JsonValueWriter() : m_jnode(0), m_refCnt(1)
+bool SdJsonValue::SetValueAsObject(const IJsonObject* _obj)
 {
-}
-
-JsonValueWriter::~JsonValueWriter() {
+	bool retVal = false;
+	SdJsonObject* obj = dynamic_cast<SdJsonObject*>(_obj->Clone());
 	Reset();
-}
-
-void JsonValueWriter::AddRef() {
-	__sync_fetch_and_add(&m_refCnt,1);
-}
-
-void JsonValueWriter::Release() {
-	if (0 == __sync_sub_and_fetch(&m_refCnt,1)) {
-		delete this;
-	}
-}
-
-void JsonValueWriter::Reset() {
-	if (!!m_jnode) {
-		json_node_free(m_jnode);
-		m_jnode = 0;
-	}
-}
-
-bool JsonValueWriter::AllocGlibNode(JsonNodeType nodeType) {
-	Reset();
-	return !!(m_jnode = json_node_new(nodeType));
-}
-
-bool JsonValueWriter::SetValueAsObject(IJsonObjectReader* _reader) {
-	if (_reader && AllocGlibNode(JSON_NODE_OBJECT)) {
-		JsonObjectReader* reader = dynamic_cast<JsonObjectReader*>(_reader);
-		if (reader) {
-			JsonObject* glibObj = reader->RefGlibJsonObject();
-			if (glibObj) {
-				json_node_set_object(m_jnode, glibObj);
-				json_object_unref(glibObj);
-			}
-		} //else oops
-	}
-	return !!m_jnode;
-}
-
-bool JsonValueWriter::SetValueAsArray(IJsonArrayReader* _reader) {
-	if (_reader && AllocGlibNode(JSON_NODE_ARRAY)) {
-		JsonArrayReader* reader = dynamic_cast<JsonArrayReader*>(_reader);
-		if (reader) {
-			JsonArray* glibArr = reader->RefGlibJsonArray();
-			if (glibArr) {
-				json_node_set_array(m_jnode, glibArr);
-				json_array_unref(glibArr);
-			}
+	if (0 != obj) {
+		if (0 != (m_jnode = json_node_new(JSON_NODE_OBJECT))) {
+			json_node_set_object(m_jnode,obj->PeekGlibObj());
+			Init();
+			retVal = true;
 		}
+		delete obj;
 	}
-	return !!m_jnode;
+	return retVal;
 }
 
-bool JsonValueWriter::SetValueAsObject(JsonObjectWriter* obj)
+bool SdJsonValue::SetValueAsArray(const IJsonArray* _arr)
 {
-	bool ret = false;
-	if (AllocGlibNode(JSON_NODE_OBJECT) && !!obj && !!obj->PeekGlibJobj()) {
-		json_node_set_object(m_jnode, obj->PeekGlibJobj());
-		ret = true;
+	bool retVal = false;
+	SdJsonArray* arr = dynamic_cast<SdJsonArray*>(_arr->Clone());
+	Reset();
+	if (0 != arr) {
+		if (0 != (m_jnode = json_node_new(JSON_NODE_ARRAY))) {
+			json_node_set_array(m_jnode,arr->PeekGlibArr());
+			Init();
+			retVal = true;
+		}
+		delete arr;
 	}
-	return ret;
+	return retVal;
 }
 
-bool JsonValueWriter::SetValueAsArray(JsonArrayWriter* arr)
+bool SdJsonValue::SetValueAsDouble(double value)
 {
-	bool ret = false;
-	if (AllocGlibNode(JSON_NODE_ARRAY) && !!arr && !!arr->PeekGlibArray()) {
-		json_node_set_array(m_jnode, arr->PeekGlibArray());
-		ret = true;
-	}
-	return ret;
-}
-
-bool JsonValueWriter::SetValueAsDouble(double value) {
-	if (AllocGlibNode(JSON_NODE_VALUE)) {
+	Reset();
+	if (0 != (m_jnode = json_node_new(JSON_NODE_VALUE))) {
 		json_node_set_double(m_jnode,value);
+		Init();
 	}
 	return !!m_jnode;
 }
 
-bool JsonValueWriter::SetValueAsInt(int64_t value) {
-	if (AllocGlibNode(JSON_NODE_VALUE)) {
+bool SdJsonValue::SetValueAsInt(int64_t value)
+{
+	Reset();
+	if (0 != (m_jnode = json_node_new(JSON_NODE_VALUE))) {
 		json_node_set_int(m_jnode,value);
+		Init();
 	}
 	return !!m_jnode;
+
 }
 
-bool JsonValueWriter::SetValueAsBool(bool value) {
-	if (AllocGlibNode(JSON_NODE_VALUE)) {
+bool SdJsonValue::SetValueAsBool(bool value)
+{
+	Reset();
+	if (0 != (m_jnode = json_node_new(JSON_NODE_VALUE))) {
 		json_node_set_boolean(m_jnode,value);
+		Init();
 	}
 	return !!m_jnode;
 }
 
-bool JsonValueWriter::SetValueAsString(const char* value) {
-	if (AllocGlibNode(JSON_NODE_VALUE)) {
+bool SdJsonValue::SetValueAsString(const char* value)
+{
+	Reset();
+	if (0 != (m_jnode = json_node_new(JSON_NODE_VALUE))) {
 		json_node_set_string(m_jnode,value);
+		Init();
 	}
 	return !!m_jnode;
 }
 
-IJsonValueReader* JsonValueWriter::RefReader() {
-	return new JsonValueReader(m_jnode);
+const SdJsonValue& SdJsonValue::operator=(const SdJsonValue& rhs)
+{
+	Reset();
+	m_jnode = const_cast<SdJsonValue*>(&rhs)->DupGlibNode();
+	Init();
+	return *this;
 }
 
-JsonArrayWriter::JsonArrayWriter() : m_jarr(0), m_refCnt(1) {
+SdJsonObject::SdJsonObject() : m_jobj(0) {
 }
 
-void JsonArrayWriter::AddRef() {
-	__sync_fetch_and_add(&m_refCnt,1);
+SdJsonObject::SdJsonObject(JsonObject* obj) : m_jobj(obj) {
+	json_object_ref(m_jobj);
 }
 
-void JsonArrayWriter::Release() {
-	if (0 == __sync_sub_and_fetch(&m_refCnt,1)) {
-		delete this;
-	}
+SdJsonObject::SdJsonObject(const SdJsonObject& obj) : m_jobj(0) {
+	*this = obj;
 }
 
-void JsonArrayWriter::Reset() {
-	if (!!m_jarr) {
-		json_array_unref(m_jarr);
-		m_jarr=0;
-	}
-}
-
-bool JsonArrayWriter::AddElement(IJsonValueReader* _jvalReader) {
-	bool ret = false;
-	JsonValueReader* jvalReader = dynamic_cast<JsonValueReader*>(_jvalReader);
-	if (AllocGlibArray() && !!jvalReader) {
-		JsonNode* glibJnode = jvalReader->DupGlibNode();
-		if (glibJnode) {
-			json_array_add_element(m_jarr,glibJnode);
-			ret = true;
-		}
-	}
-	return ret;
-}
-
-IJsonArrayReader* JsonArrayWriter::RefArray() {
-	return new JsonArrayReader(m_jarr);
-}
-
-JsonArrayWriter::~JsonArrayWriter() {
+SdJsonObject::~SdJsonObject() {
 	Reset();
 }
 
-JsonArray* JsonArrayWriter::AllocGlibArray()
+void SdJsonObject::Reset()
 {
-	if (0 == m_jarr) {
-		m_jarr = json_array_new();
-	}
-	return m_jarr;
-}
-
-JsonObjectWriter::JsonObjectWriter() : m_jobj(0), m_refCnt(1)
-{
-}
-
-void JsonObjectWriter::AddRef() {
-	__sync_fetch_and_add(&m_refCnt,1);
-}
-
-void JsonObjectWriter::Release() {
-	if (0 == __sync_sub_and_fetch(&m_refCnt,1)) {
-		delete this;
-	}
-}
-
-void JsonObjectWriter::Reset() {
 	if (m_jobj) {
 		json_object_unref(m_jobj);
 		m_jobj = 0;
 	}
+	MemberMapIt it = m_members.begin();
+	while (it != m_members.end()) {
+		m_members.erase(it);
+		delete it->second;
+		it = m_members.begin();
+	}
+	m_names.clear();
 }
 
-bool JsonObjectWriter::AddMember(
-		const char* memberName,
-		IJsonValueReader* member)
+size_t SdJsonObject::GetMemberCount() const
 {
-	bool ret = false;
-	JsonValueReader* jvalReader = dynamic_cast<JsonValueReader*>(member);
-	if (AllocGlibObject() && !!jvalReader) {
-		JsonNode* glibJnode = jvalReader->DupGlibNode();
-		if (glibJnode) {
-			json_object_set_member(m_jobj,memberName,glibJnode);
-			ret = true;
+	const_cast<SdJsonObject*>(this)->InitMemberNames();
+	return m_names.size();
+}
+
+void SdJsonObject::InitMemberNames()
+{
+	if (0 != m_jobj && 0 == m_names.size()) {
+		GList* memberNames = json_object_get_members(m_jobj);
+		if (0 != memberNames) {
+			m_names.reserve(8);
+			GList* it = g_list_first(memberNames);
+			while (0 != it) {
+				m_names.push_back((char*)it->data);
+				it = g_list_next(it);
+			}
+			g_list_free(memberNames);
+		}
+	}
+}
+
+const char* SdJsonObject::GetMemberName(size_t index) const
+{
+	return (index < GetMemberCount()) ? m_names[index].c_str() : 0;
+}
+
+const IJsonValue* SdJsonObject::GetMember(
+	const char* memberName) const
+{
+	ConstMemberMapIt it = m_members.find(memberName);
+	if (it == m_members.end()) {
+		JsonNode* jnode = json_object_get_member(m_jobj, memberName);
+		if (jnode) {
+			SdJsonValue* sdNode = new SdJsonValue(jnode);
+			if (sdNode) {
+				const_cast<SdJsonObject*>(this)->m_members[memberName] = sdNode;
+			}
+			it = m_members.find(memberName);
+		}
+	}
+	return it != m_members.end() ? it->second : &s_nullJsonValue;
+}
+
+bool SdJsonObject::IsMemberPreset(
+	IN const char* memberName) const
+{
+	return GetMember(memberName)->GetType() != SD_JSONVALUE_NULL;
+}
+
+bool SdJsonObject::AddMember(
+		const char* name,
+		const IJsonValue* _member)
+{
+	const SdJsonValue* member = dynamic_cast<const SdJsonValue*>(_member);
+	if (member && m_jobj) {
+		JsonNode* dup = member->DupGlibNode();
+		if (dup) {
+			json_object_set_member(m_jobj,name,dup);
+			InitMemberNames();
+			m_names.push_back(name);
+			return true;
+		}
+	}
+	return false;
+}
+
+IJsonObject* SdJsonObject::Clone() const
+{
+	return new SdJsonObject(*this);
+}
+
+const SdJsonObject& SdJsonObject::operator=(const SdJsonObject& rhs)
+{
+	Reset();
+	m_jobj = rhs.m_jobj;
+	json_object_ref(m_jobj);
+	return *this;
+}
+
+SdJsonArray::SdJsonArray() : m_jarr(0) {}
+
+SdJsonArray::SdJsonArray(JsonArray* jarr) : m_jarr(jarr) {
+	json_array_ref(m_jarr);
+}
+
+SdJsonArray::SdJsonArray(const SdJsonArray& arr) {
+	*this = arr;
+}
+
+SdJsonArray::~SdJsonArray() {
+	Reset();
+}
+
+uint32_t SdJsonArray::ElementCount() const {
+	return json_array_get_length(m_jarr);
+}
+
+const IJsonValue* SdJsonArray::GetElement(uint32_t index) const
+{
+	SdJsonValue* ret = 0;
+	if (index < ElementCount()) {
+		const_cast<SdJsonArray*>(this)->m_elements.resize(ElementCount(),0);
+		if (m_elements.size() == ElementCount()) {
+			if (0 == (ret = m_elements[index])) {
+				ret = new SdJsonValue(json_array_get_element(m_jarr,index));
+				const_cast<SdJsonArray*>(this)->m_elements[index] = ret;
+			}
 		}
 	}
 	return ret;
 }
 
-bool JsonObjectWriter::AddMemberAndDeref(
-	IN const char* name,
-	IN IJsonValueReader* member)
+bool SdJsonArray::AddElement(const IJsonValue* _val)
 {
-	bool ret = false;
-	if (member) {
-		ret = AddMember(name,member);
-		member->Release();
-	}
-	return ret;
-}
-
-bool JsonObjectWriter::AddObjectMember(
-	IN const char* name,
-	IN IJsonObjectReader* member)
-{
-	bool ret = false;
-	JsonValueWriter* val = new JsonValueWriter();
+	const SdJsonValue* val = dynamic_cast<const SdJsonValue*>(_val);
+	JsonNode* dup = 0;
 	if (val) {
-		val->SetValueAsObject(member);
-		ret = AddMemberAndDeref(name,val->RefReader());
-		val->Release();
+		if (0 != (dup = val->DupGlibNode())) {
+			json_array_add_element(m_jarr,dup);
+		}
 	}
-	return ret;
+	return !!dup;
 }
 
-bool JsonObjectWriter::AddArrayMember(
-	IN const char* name,
-	IN IJsonArrayReader* member)
+IJsonArray* SdJsonArray::Clone() const {
+	return new SdJsonArray(*this);
+}
+
+void SdJsonArray::Reset()
 {
-	bool ret = false;
-	JsonValueWriter* val = new JsonValueWriter();
-	if (val) {
-		val->SetValueAsArray(member);
-		ret = AddMemberAndDeref(name,val->RefReader());
-		val->Release();
+	for (size_t i = 0; i < m_elements.size(); i++) {
+		if (m_elements[i]) {
+			delete m_elements[i];
+		}
 	}
-	return ret;
+	m_elements.clear();
+	json_array_unref(m_jarr);
 }
 
-bool JsonObjectWriter::AddObjectMember(
-		const char* name,
-		JsonObjectWriter* obj)
-{
-	return false;
-}
-
-bool JsonObjectWriter::AddArrayMember(
-		const char* name,
-		JsonArrayWriter* arr)
-{
-	return false;
-}
-
-bool JsonObjectWriter::AddDoubleMember(
-	IN const char* name,
-	IN double member)
-{
-	bool ret = false;
-	JsonValueWriter* val = new JsonValueWriter();
-	if (val) {
-		val->SetValueAsDouble(member);
-		ret = AddMemberAndDeref(name,val->RefReader());
-		val->Release();
-	}
-	return ret;
-}
-
-bool JsonObjectWriter::AddIntMember(
-	IN const char* name,
-	IN int64_t member)
-{
-	bool ret = false;
-	JsonValueWriter* val = new JsonValueWriter();
-	if (val) {
-		val->SetValueAsInt(member);
-		ret = AddMemberAndDeref(name,val->RefReader());
-		val->Release();
-	}
-	return ret;
-}
-
-bool JsonObjectWriter::AddBoolMember(
-		IN const char* name,
-		IN bool member)
-{
-	bool ret = false;
-	JsonValueWriter* val = new JsonValueWriter();
-	if (val) {
-		val->SetValueAsBool(member);
-		ret = AddMemberAndDeref(name,val->RefReader());
-		val->Release();
-	}
-	return ret;
-}
-
-bool JsonObjectWriter::AddStringMember(
-	IN const char* name,
-	IN const char* member)
-{
-	bool ret = false;
-	JsonValueWriter* val = new JsonValueWriter();
-	if (val) {
-		val->SetValueAsString(member);
-		ret = AddMemberAndDeref(name,val->RefReader());
-		val->Release();
-	}
-	return ret;
-}
-
-IJsonObjectReader* JsonObjectWriter::RefObject() {
-	return new JsonObjectReader(m_jobj);
-}
-
-JsonObjectWriter::~JsonObjectWriter()
+const SdJsonArray& SdJsonArray::operator=(const SdJsonArray& rhs)
 {
 	Reset();
-}
-
-JsonObject* JsonObjectWriter::AllocGlibObject()
-{
-	if (!m_jobj) {
-		m_jobj = json_object_new();
-	}
-	return m_jobj;
+	m_jarr = rhs.m_jarr;
+	json_array_ref(m_jarr);
+	return *this;
 }

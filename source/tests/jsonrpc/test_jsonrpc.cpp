@@ -1,7 +1,8 @@
 #include <iostream>
-#include "jsonrpcparser.h"
 #include <string>
 #include "cmdargs.h"
+#include "jsonrpcparser.h"
+#include "jsonrpcbuilder.h"
 
 struct TestControl
 {
@@ -48,7 +49,7 @@ private:
 void TestParseJsonRpcFile(const std::string& fileName)
 {
 	TEST_BEGIN("TestParseJsonRpcFile");
-	JsonRpcParser parser;
+	SdJsonRpcParser parser;
 	if (!parser.ParseFile(fileName.c_str())) {
 		TEST_FAILED();
 		return;
@@ -57,9 +58,22 @@ void TestParseJsonRpcFile(const std::string& fileName)
 		TEST_FAILED();
 		return;
 	}
+	if (parser.GetRpcCallId() == 0) {
+		TEST_FAILED();
+		return;
+	}
+	if (parser.GetRpcParams() == 0) {
+		TEST_FAILED();
+		return;
+	}
+	if (parser.GetRpcMethod().size() == 0) {
+		TEST_FAILED();
+		return;
+	}
+
 
 	SdDroneConfig config;
-	if (!parser.GetDroneConfig(&config)) {
+	if (!SdJsonParseDroneConfig(parser.GetRpcParams(),&config)) {
 		TEST_FAILED();
 		return;
 	}
@@ -82,7 +96,7 @@ void TestParseJsonRpcFromBuffer()
 {
 	TEST_BEGIN("TestParseJsonRpcFromBuffer");
 	std::string jsonBuf;
-	JsonRpcParser parser;
+	SdJsonRpcParser parser;
 	uint32_t usedLen = 0;
 	static const char* schema1 =
 		"{"
@@ -126,7 +140,7 @@ void TestParseJsonRpcFromBuffer()
 	}
 
 	double thrust=0, minThrust=0, maxThrust=0;
-	parser.GetThrust(&thrust, &minThrust, &maxThrust);
+	SdJsonParseParseThrust(parser.GetRpcParams(), &thrust, &minThrust, &maxThrust);
 	if (thrust != 0.5 || minThrust != 0.3 || maxThrust != 0.7) {
 		TEST_FAILED();
 		return;
@@ -141,7 +155,7 @@ void TestParseJsonRpcFromBuffer()
 		return;
 	}
 
-	parser.GetThrust(&thrust, &minThrust, &maxThrust);
+	SdJsonParseParseThrust(parser.GetRpcParams(), &thrust, &minThrust, &maxThrust);
 	if (thrust != 0.5 || minThrust != 0.3 || maxThrust != 0.7) {
 		TEST_FAILED();
 		return;
@@ -155,7 +169,7 @@ void TestParseJsonRpcFromBuffer()
 		return;
 	}
 
-	parser.GetThrust(&thrust, &minThrust, &maxThrust);
+	SdJsonParseParseThrust(parser.GetRpcParams(), &thrust, &minThrust, &maxThrust);
 	if (thrust != 0.6 || minThrust != 0.4 || maxThrust != 0.8) {
 		TEST_FAILED();
 		return;
@@ -163,6 +177,39 @@ void TestParseJsonRpcFromBuffer()
 
 	TEST_PASSED();
 }
+
+
+void TestJsonWriter()
+{
+	TEST_BEGIN("TestJsonWriter");
+
+	static const char* schema1 =
+		"{"
+			"\"jsonrpc\": \"2.0\", \"method\": \"run\", \"params\": "
+			"{"
+				"\"Flight\": "
+				"{"
+					 "\"Thrust\": 0.5,"
+					 "\"MinThrust\":  0.3,"
+					 "\"MaxThrust\": 0.7"
+				"}"
+			"}, "
+			"\"id\": 10"
+		"}";
+
+	SdJsonRpcBuilder bldr;
+	SdJsonObject params;
+	SdJsonObject flight;
+
+	flight.AddMember("Thrust",SdJsonValue(0.5));
+	flight.AddMember("MinThrust",SdJsonValue(0.3));
+	flight.AddMember("MaxThrust",SdJsonValue(0.7));
+	params.AddMember("Flight",SdJsonValue(flight));
+	//bldr.BuildRequest("run",);
+	TEST_PASSED();
+	return;
+}
+
 
 CmdArgs g_args;
 

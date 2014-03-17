@@ -10,267 +10,141 @@
 
 #include "commoninc.h"
 #include <vector>
-#include <json-glib/json-glib.h>
-#include <json-glib/json-gobject.h>
+#include <map>
 
-class JsonObjectReader: public IJsonObjectReader {
+struct _JsonNode;
+struct _JsonArray;
+struct _JsonObject;
+
+class SdJsonArray;
+class SdJsonObject;
+
+class SdJsonValue: public IJsonValue {
 public:
-	JsonObjectReader(
-			JsonObject* obj);
-	void AddRef();
-	void Release();
-	size_t GetMemberCount();
-	const char* GetMemberName(size_t index);
-	SdJsonValueType GetMemberType(const char* name);
-	IJsonValueReader* RefMember(const char* name);
-	IJsonObjectReader* RefMemberAsObject(const char* name) {
-		return IJsonValueReader::RefAsObjectSafe(RefMember(name));
-	}
-	IJsonArrayReader* RefMemberAsArray(
-			IN const char* name) {
-		return IJsonValueReader::RefAsArraySafe(RefMember(name));
-	}
-	bool GetMemberAsDoubleValue(
-			IN const char* name,
-			OUT double* value) {
-		return IJsonValueReader::AsDoubleSafe(RefMember(name),value);
-	}
-	bool GetMemberAsIntValue(
-			IN const char* name,
-			OUT int64_t* value) {
-		return IJsonValueReader::AsIntSafe(RefMember(name),value);
-	}
-	bool GetMemberAsIntValue(
-			IN const char* name,
-			OUT int32_t* value) {
-		return IJsonValueReader::AsIntSafe(RefMember(name),value);
-	}
-#if 0
-	bool GetMemberAsIntValue(
-			IN const char* name,
-			OUT int16_t* value) {
-		return IJsonValueReader::AsIntSafe(RefMember(name),value);
-	}
-#endif
-	bool GetMemberAsBoolValue(
-			IN const char* name,
-			OUT bool* value) {
-		return IJsonValueReader::AsBoolSafe(RefMember(name),value);
-	}
-	bool GetMemberAsStringValue(
-			IN const char* name,
-			OUT std::string* value) {
-		*value = IJsonValueReader::AsStringSafe(RefMember(name));
-		return !!value->length();
-	}
+	SdJsonValue();
+	SdJsonValue(_JsonNode* jnode);
+	SdJsonValue(const SdJsonValue&);
+	SdJsonValue(const SdJsonArray& arr);
+	SdJsonValue(const SdJsonObject& obj);
+	SdJsonValue(int64_t i);
+	SdJsonValue(uint64_t i);
+	SdJsonValue(int32_t i);
+	SdJsonValue(uint32_t i);
+	SdJsonValue(int16_t i);
+	SdJsonValue(uint16_t i);
+	SdJsonValue(bool b);
+	SdJsonValue(const std::string&);
+	SdJsonValue(double d);
+	~SdJsonValue();
+	SdJsonValueType GetType() const;
+	const char* GetTypeAsString() const;
+	double AsDouble() const;
+	int64_t AsInt() const;
+	bool AsBool() const;
+	std::string AsString() const;
+	const IJsonArray* AsArray() const;
+	const IJsonObject* AsObject() const;
+	bool AsDoubleSafe(double*) const;
+	bool AsIntSafe(int64_t*) const;
+	bool AsBoolSafe(bool*) const;
 
-	JsonObject* RefGlibJsonObject();
+	IJsonValue* Clone() const;
+
+	bool SetValueAsObject( IN const IJsonObject*);
+	bool SetValueAsArray( IN const IJsonArray*);
+	bool SetValueAsDouble( IN double value);
+	bool SetValueAsInt( IN int64_t value);
+	bool SetValueAsBool( IN bool value);
+	bool SetValueAsString( IN const char* value);
+
+	const SdJsonValue& operator=(const SdJsonValue&);
+	_JsonNode* DupGlibNode() const;
+	_JsonNode* PeekGlibNode() { return m_jnode; }
 
 protected:
-	~JsonObjectReader();
-private:
-	JsonObject* m_jobj;
-	std::vector<char*> m_members;
-	int m_refCnt;
-};
+	void Init();
+	void Reset();
 
-class JsonValueReader: public IJsonValueReader
-{
-public:
-	JsonValueReader(
-			JsonNode* jnode);
-	void AddRef();
-	void Release();
-	SdJsonValueType GetType();
-	const char* GetTypeAsString();
-	double AsDouble();
-	int64_t AsInt();
-	int32_t AsInt32() { return (int32_t)AsInt(); }
-	int16_t AsInt16() { return (int16_t)AsInt(); }
-	bool AsBool();
-	const char* AsString();
-	IJsonArrayReader* RefAsArray();
-	IJsonObjectReader* RefAsObject();
-	JsonNode* DupGlibNode();
 protected:
-	~JsonValueReader();
-private:
-	JsonNode* m_jnode;
+	_JsonNode* m_jnode;
 	SdJsonValueType m_type;
 	const char* m_typeAsStr;
-	int m_refCnt;
+	std::string m_asStr;
+	union {
+		SdJsonArray* m_asArr;
+		SdJsonObject* m_asObj;
+	};
 };
 
-class JsonArrayReader: public IJsonArrayReader
+class SdJsonObject: public IJsonObject
 {
 public:
-	JsonArrayReader(
-			JsonArray* jarr);
-	void AddRef();
-	void Release();
-	uint32_t ElementCount();
-	IJsonValueReader* RefElement(
-			uint32_t index);
-	IJsonObjectReader* RefElementAsObject(
-			IN uint32_t index) {
-		return IJsonValueReader::RefAsObjectSafe(RefElement(index));
-	}
-	IJsonArrayReader* RefElementAsArray(
-			IN uint32_t index) {
-		return IJsonValueReader::RefAsArraySafe(RefElement(index));
-	}
-	bool GetElementAsDoubleValue(
-			IN uint32_t index,
-			OUT double* value) {
-		return IJsonValueReader::AsDoubleSafe(RefElement(index),value);
-	}
-
-	bool GetElementAsIntValue(
-			IN uint32_t index,
-			OUT int64_t* value) {
-		return IJsonValueReader::AsIntSafe(RefElement(index),value);
-	}
-	bool GetElementAsIntValue(
-			IN uint32_t index,
-			OUT int32_t* value) {
-		return IJsonValueReader::AsIntSafe(RefElement(index),value);
-	}
-#if 0
-	bool GetElementAsIntValue(
-			IN uint32_t index,
-			OUT int16_t* value) {
-		return IJsonValueReader::AsIntSafe(RefElement(index),value);
-	}
-#endif
-	virtual bool GetElementAsBoolValue(
-			IN uint32_t index,
-			OUT bool* value) {
-		return IJsonValueReader::AsBoolSafe(RefElement(index),value);
-	}
-	virtual bool GetElementAsStringValue(
-			IN uint32_t index,
-			OUT std::string* value) {
-		*value = IJsonValueReader::AsStringSafe(RefElement(index));
-		return !!value->length();
-	}
-	JsonArray* RefGlibJsonArray();
-protected:
-	~JsonArrayReader();
-private:
-	JsonArray* m_jarr;
-	int m_refCnt;
-};
-
-class JsonArrayWriter;
-class JsonObjectWriter;
-
-class JsonValueWriter: public IJsonValueWriter
-{
-public:
-	JsonValueWriter();
-	void AddRef();
-	void Release();
+	SdJsonObject();
+	SdJsonObject(_JsonObject*);
+	SdJsonObject(const SdJsonObject&);
+	~SdJsonObject();
 	void Reset();
-	bool SetValueAsObject(
-			IN IJsonObjectReader*);
-	bool SetValueAsArray(
-			IN IJsonArrayReader*);
-	bool SetValueAsDouble(
-			IN double value);
-	bool SetValueAsInt(
-			IN int64_t value);
-	bool SetValueAsBool(
-			IN bool value);
-	bool SetValueAsString(
-			IN const char* value
-			);
-	IJsonValueReader* RefReader();
+	size_t GetMemberCount() const;
+	const char* GetMemberName(
+			IN size_t index
+			) const;
+	const IJsonValue* GetMember(
+			IN const char* memberName
+			) const;
+	bool IsMemberPreset(
+			IN const char* memberName
+			) const;
+	bool AddMember(
+			IN const char* name,
+			IN const IJsonValue* member);
+	bool AddMember(
+			IN const char* name,
+			IN const SdJsonValue& member) {
+		return AddMember(name,&member);
+	}
 
-	bool SetValueAsObject(JsonObjectWriter* obj);
-	bool SetValueAsArray(JsonArrayWriter* arr);
-
-	JsonNode* GetJNode() { return m_jnode; }
-
-protected:
-	~JsonValueWriter();
-
-	bool AllocGlibNode(JsonNodeType nodeType);
+	IJsonObject* Clone() const;
+	const SdJsonObject& operator=(const SdJsonObject& rhs);
+	_JsonObject* PeekGlibObj() { return m_jobj; }
 
 private:
-	JsonNode* m_jnode;
-	int m_refCnt;
+
+	void InitMemberNames();
+
+	typedef std::map<std::string,SdJsonValue*> MemberMap;
+	typedef MemberMap::iterator MemberMapIt;
+	typedef MemberMap::const_iterator ConstMemberMapIt;
+
+	MemberMap m_members;
+	std::vector<std::string> m_names;
+	_JsonObject* m_jobj;
 };
 
-
-class JsonArrayWriter: public IJsonArrayWriter
+class SdJsonArray: public IJsonArray
 {
 public:
-	JsonArrayWriter();
-	void AddRef();
-	void Release();
-	void Reset();
+	SdJsonArray();
+	SdJsonArray(_JsonArray*);
+	SdJsonArray(const SdJsonArray&);
+	~SdJsonArray();
+
+	uint32_t ElementCount() const;
+	const IJsonValue* GetElement(
+			uint32_t index
+			) const;
 	bool AddElement(
-			IN IJsonValueReader*
+			const IJsonValue*
 			);
-	IJsonArrayReader* RefArray();
-	JsonArray* PeekGlibArray() { return m_jarr; }
-protected:
-	JsonArray* AllocGlibArray();
-	~JsonArrayWriter();
-private:
-	JsonArray* m_jarr;
-	int m_refCnt;
-};
-
-class JsonObjectWriter: public IJsonObjectWriter
-{
-public:
-	JsonObjectWriter();
-	void AddRef();
-	void Release();
+	IJsonArray* Clone() const;
 	void Reset();
-	bool AddMember(
-			IN const char* name,
-			IN IJsonValueReader* member);
-	bool AddObjectMember(
-			IN const char* name,
-			IN IJsonObjectReader*);
-	bool AddArrayMember(
-			IN const char* name,
-			IN IJsonArrayReader*);
-	bool AddDoubleMember(
-			IN const char* name,
-			IN double value);
-	bool AddIntMember(
-			IN const char* name,
-			IN int64_t value);
-	bool AddBoolMember(
-			IN const char* name,
-			IN bool value);
-	bool AddStringMember(
-			IN const char* name,
-			IN const char* value);
-	IJsonObjectReader* RefObject();
-	bool AddMember(
-			IN const char* name,
-			IN JsonValueWriter* member);
-	bool AddObjectMember(
-			IN const char* name,
-			IN JsonObjectWriter*);
-	bool AddArrayMember(
-			IN const char* name,
-			IN JsonArrayWriter*);
-	JsonObject* PeekGlibJobj() { return m_jobj; }
-protected:
-	JsonObject* AllocGlibObject();
-	~JsonObjectWriter();
-	bool AddMemberAndDeref(
-		IN const char* name,
-		IN IJsonValueReader* member);
-private:
-	JsonObject* m_jobj;
-	int m_refCnt;
-};
+	const SdJsonArray& operator=(const SdJsonArray&);
 
+	_JsonArray* PeekGlibArr() { return m_jarr; }
+
+private:
+	_JsonArray* m_jarr;
+	std::vector<SdJsonValue*> m_elements;
+};
 
 #endif /* JSONREADWRITE_H_ */
+

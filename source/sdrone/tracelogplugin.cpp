@@ -138,6 +138,14 @@ int TraceLogPlugin::IoCallback(
 			ioPacket->AccelData().at(1,0),
 			ioPacket->AccelData().at(2,0));
 
+	ioData = ioPacket->GetAttribute(SDIO_ATTR_EARTH_G);
+	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
+				"--> EarthG: %1.3lf %1.3lf %1.3lf\n",
+				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
+				ioData.asVector3d->at(2,0));
+	}
+
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Gyro  : %4.3lf %4.3lf %4.3lf\n",
 				ioPacket->GyroData().at(0,0),
 				ioPacket->GyroData().at(1,0),

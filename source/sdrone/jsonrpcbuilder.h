@@ -13,16 +13,26 @@
 
 static const uint32_t SD_INVALID_RPC_ID = 0;
 
-class JsonRpcBuilder {
+struct _JsonGenerator;
+
+class SdJsonRpcBuilder {
 public:
-	JsonRpcBuilder();
-	~JsonRpcBuilder();
+	SdJsonRpcBuilder();
+	~SdJsonRpcBuilder();
 	bool BuildRequest(
 			const char* method,
-			IJsonValueReader* params = 0,
+			const IJsonValue* params = 0,
+			uint32_t rpcId = SD_INVALID_RPC_ID);
+	bool BuildRequest(
+			const char* method,
+			IJsonObject* params = 0,
+			uint32_t rpcId = SD_INVALID_RPC_ID);
+	bool BuildRequest(
+			const char* method,
+			IJsonArray* params = 0,
 			uint32_t rpcId = SD_INVALID_RPC_ID);
 	bool BuildReply(
-			IJsonValueReader* result,
+			IJsonValue* result,
 			uint32_t id,
 			bool error);
 	void Reset();
@@ -32,7 +42,7 @@ public:
 	static uint32_t GenerateRpcId();
 private:
 	static uint32_t s_rpcId;
-	JsonGenerator* m_jsonGenerator;
+	_JsonGenerator* m_jsonGenerator;
 	char* m_jsonStream;
 	size_t m_jsonStreamSize;
 };

@@ -13,6 +13,7 @@ OBJECTS		= \
 		test_jsonrpc.o \
 		jsonrpcparser.o\
 		jsonreadwrite.o\
+		jsonrpcbuilder.o\
 		cmdargs.o
 
 

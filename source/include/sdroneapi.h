@@ -736,130 +736,39 @@ enum SdJsonValueType
 	SD_JSONVALUE_ARRAY,
 };
 
-struct IJsonValueReader;
-struct IJsonArrayReader;
+struct IJsonArray;
+struct IJsonObject;
 
-struct IJsonObjectReader
+struct IJsonValue
 {
-	virtual void AddRef() = 0;
-	virtual void Release() = 0;
-	virtual size_t GetMemberCount() = 0;
-	virtual const char* GetMemberName(
-			IN size_t index
-			) = 0;
-	virtual SdJsonValueType GetMemberType(
-			IN const char* memberName
-			) = 0;
-	virtual IJsonValueReader* RefMember(
-			IN const char* memberName
-			) = 0;
-	virtual IJsonObjectReader* RefMemberAsObject(
-			IN const char* name) = 0;
-	virtual IJsonArrayReader* RefMemberAsArray(
-			IN const char* name) = 0;
-	virtual bool GetMemberAsDoubleValue(
-			IN const char* name,
-			OUT double* value) = 0;
-	virtual bool GetMemberAsIntValue(
-			IN const char* name,
-			OUT int64_t* value) = 0;
-	virtual bool GetMemberAsIntValue(
-			IN const char* name,
-			OUT int32_t* value) = 0;
-	virtual bool GetMemberAsBoolValue(
-			IN const char* name,
-			OUT bool* value) = 0;
-	virtual bool GetMemberAsStringValue(
-			IN const char* name,
-			OUT std::string* value) = 0;
-protected:
-	virtual ~IJsonObjectReader() {}
-};
-
-struct IJsonObjectWriter
-{
-	virtual void AddRef() = 0;
-	virtual void Release() = 0;
-	virtual void Reset() = 0;
-	virtual bool AddMember(
-			IN const char* name,
-			IN IJsonValueReader* member) = 0;
-	virtual bool AddObjectMember(
-			IN const char* name,
-			IN IJsonObjectReader*) = 0;
-	virtual bool AddArrayMember(
-			IN const char* name,
-			IN IJsonArrayReader*) = 0;
-	virtual bool AddDoubleMember(
-			IN const char* name,
-			IN double value) = 0;
-	virtual bool AddIntMember(
-			IN const char* name,
-			IN int64_t value) = 0;
-	virtual bool AddBoolMember(
-			IN const char* name,
-			IN bool value) = 0;
-	virtual bool AddStringMember(
-			IN const char* name,
-			IN const char* value) = 0;
-	virtual IJsonObjectReader* RefObject() = 0;
-protected:
-	virtual ~IJsonObjectWriter() {}
-};
-
-struct IJsonValueReader
-{
-	virtual void AddRef() = 0;
-	virtual void Release() = 0;
-	virtual SdJsonValueType GetType() = 0;
-	virtual const char* GetTypeAsString() = 0;
+	virtual SdJsonValueType GetType() const = 0;
+	virtual const char* GetTypeAsString() const = 0;
 
 	/*
-	 * The RefXXX and AsXXX virtual members below assume that the caller is
-	 * asking for the correct value type
+	 * The AsDouble/Int/Bool virtual members below assume that the caller is
+	 * asking for the correct value type; if the value is of different type
+	 * then 0 is returned. AsString/Array/Object will return
+	 * NULL if the value is of different type than the asked type.
 	 */
-	virtual double AsDouble() = 0;
-	virtual int64_t AsInt() = 0;
-	virtual bool AsBool() = 0;
-	virtual const char* AsString() = 0;
+	virtual double AsDouble() const = 0;
+	virtual int64_t AsInt() const = 0;
+	virtual bool AsBool() const = 0;
+	virtual std::string AsString() const = 0;
+	virtual const IJsonArray* AsArray() const = 0;
+	virtual const IJsonObject* AsObject() const = 0;
 
 	/*
-	 * The returned object must be released by the caller.
+	 * Safe routines for extracting ordinal types. The output parameter will
+	 * not be set if, the value contains different value
 	 */
-	virtual IJsonArrayReader* RefAsArray() = 0;
-	virtual IJsonObjectReader* RefAsObject() = 0;
-
-	/*
-	 * Ref/AsxxxSafe routines allow for 1)NULL val to be passed; 2)the value
-	 * type to be different from the one asked for. If non-null the passed
-	 * value object is dereferenced by the routine, thus the safe routines allow
-	 * for the following constructs:
-	 *
-	 * 	 str = IParsedJsonValue::AsStringSafe(obj->RefMember('membername'));
-	 * 	 IParsedJsonValue::AsInt(arr->RefElement(0),&myInt64);
-	 */
-	static inline IJsonArrayReader* RefAsArraySafe(IJsonValueReader* val);
-	static inline IJsonObjectReader* RefAsObjectSafe(IJsonValueReader* val);
-	static inline std::string AsStringSafe(IJsonValueReader* val);
-	static inline bool AsDoubleSafe(IJsonValueReader* val, double* d);
-	static inline bool AsBoolSafe(IJsonValueReader* val, bool* b);
-	static inline bool AsIntSafe(IJsonValueReader* val, int64_t* i64);
-	static inline bool AsIntSafe(IJsonValueReader* val, int32_t* i32);
-protected:
-	virtual ~IJsonValueReader() {}
-};
-
-struct IJsonValueWriter
-{
-	virtual void AddRef() = 0;
-	virtual void Release() = 0;
-
-	virtual void Reset() = 0;
+	virtual bool AsDoubleSafe(OUT double*) const = 0;
+	virtual bool AsIntSafe(OUT int64_t*) const = 0;
+	virtual bool AsBoolSafe(OUT bool*) const = 0;
 
 	virtual bool SetValueAsObject(
-			IN IJsonObjectReader*) = 0;
+			IN const IJsonObject*) = 0;
 	virtual bool SetValueAsArray(
-			IN IJsonArrayReader*) = 0;
+			IN const IJsonArray*) = 0;
 	virtual bool SetValueAsDouble(
 			IN double value) = 0;
 	virtual bool SetValueAsInt(
@@ -867,61 +776,53 @@ struct IJsonValueWriter
 	virtual bool SetValueAsBool(
 			IN bool value) = 0;
 	virtual bool SetValueAsString(
-			IN const char* value
-			) = 0;
+			IN const char*) = 0;
 
-	virtual IJsonValueReader* RefReader() = 0;
-
+	virtual IJsonValue* Clone() const = 0;
 protected:
-	virtual ~IJsonValueWriter() {}
+	virtual ~IJsonValue() {}
 };
 
-
-struct IJsonArrayReader
+struct IJsonArray
 {
-	virtual void AddRef() = 0;
-	virtual void Release() = 0;
-	virtual uint32_t ElementCount() = 0;
-	virtual IJsonValueReader* RefElement(
+	virtual uint32_t ElementCount() const = 0;
+	virtual const IJsonValue* GetElement(
 			uint32_t index
-			) = 0;
-	virtual IJsonObjectReader* RefElementAsObject(
-			IN uint32_t index) = 0;
-	virtual IJsonArrayReader* RefElementAsArray(
-			IN uint32_t index) = 0;
-	virtual bool GetElementAsDoubleValue(
-			IN uint32_t index,
-			OUT double* value) = 0;
-	virtual bool GetElementAsIntValue(
-			IN uint32_t index,
-			OUT int64_t* value) = 0;
-	virtual bool GetElementAsIntValue(
-			IN uint32_t index,
-			OUT int32_t* value) = 0;
-	virtual bool GetElementAsBoolValue(
-			IN uint32_t index,
-			OUT bool* value) = 0;
-	virtual bool GetElementAsStringValue(
-			IN uint32_t index,
-			OUT std::string* value) = 0;
-
-protected:
-	virtual ~IJsonArrayReader() {}
-};
-
-struct IJsonArrayWriter
-{
-	virtual void AddRef() = 0;
-	virtual void Release() = 0;
-	virtual void Reset() = 0;
+			) const = 0;
 	virtual bool AddElement(
-			IN IJsonValueReader*
+			const IJsonValue*
 			) = 0;
-	virtual IJsonArrayReader* RefArray() = 0;
+	virtual void Reset() = 0;
+	virtual IJsonArray* Clone() const = 0;
 protected:
-	virtual ~IJsonArrayWriter() {}
+	virtual ~IJsonArray() {}
 };
 
+struct IJsonObject
+{
+	virtual size_t GetMemberCount() const = 0;
+	virtual const char* GetMemberName(
+				IN size_t index
+				) const = 0;
+	/*
+	 * If member is not present will return IJsonValue of type SD_JSONVALUE_NULL
+	 */
+	virtual const IJsonValue* GetMember(
+			IN const char* memberName
+			) const = 0;
+	virtual bool IsMemberPreset(
+			IN const char* memberName
+			) const = 0;
+	virtual bool AddMember(
+			IN const char* name,
+			IN const IJsonValue* member) = 0;
+
+	virtual void Reset() = 0;
+	virtual IJsonObject* Clone() const = 0;
+
+protected:
+	virtual ~IJsonObject() {}
+};
 
 struct ICommandArgs
 {
@@ -933,8 +834,8 @@ struct ICommandArgs
 	virtual const SdDroneConfig* GetDroneConfig() = 0;
 
 	virtual const char* GetRawJsonSchema(OUT uint32_t* length) = 0;
-	virtual IJsonObjectReader* RefJsonSchema() = 0;
-	virtual IJsonObjectReader* RefJsonObjectForPlugin(
+	virtual const IJsonObject* RefJsonSchema() = 0;
+	virtual const IJsonObject* RefJsonObjectForPlugin(
 			const char* pluginName
 			) = 0;
 
@@ -975,73 +876,4 @@ protected:
 	virtual ~CommandArgs() {}
 };
 
-IJsonArrayReader* IJsonValueReader::RefAsArraySafe(IJsonValueReader* val) {
-	IJsonArrayReader* arr = (!!val && val->GetType() == SD_JSONVALUE_ARRAY) ?
-			val->RefAsArray() : 0;
-	if (!!val) { val->Release(); }
-	return arr;
-}
-IJsonObjectReader* IJsonValueReader::RefAsObjectSafe(IJsonValueReader* val) {
-	IJsonObjectReader* obj = (!!val && val->GetType() == SD_JSONVALUE_OBJECT) ?
-			val->RefAsObject() : 0;
-	if (!!val) {val->Release();}
-	return obj;
-}
-std::string IJsonValueReader::AsStringSafe(IJsonValueReader* val) {
-	std::string str = (0 != val && val->GetType() == SD_JSONVALUE_STRING) ?
-			val->AsString() : "";
-	if (!!val) { val->Release(); }
-	return str;
-}
-bool IJsonValueReader::AsDoubleSafe(IJsonValueReader* val, double* d) {
-	bool ret = false;
-	if (0 != val && val->GetType() == SD_JSONVALUE_DOUBLE) {
-		*d = val->AsDouble();
-		ret = true;
-	}
-	if (!!val) { val->Release(); }
-	return ret;
-}
-bool IJsonValueReader::AsBoolSafe(IJsonValueReader* val, bool* b) {
-	bool ret = false;
-	assert(b);
-	if (0 != val && val->GetType() == SD_JSONVALUE_BOOL) {
-		*b = val->AsBool();
-		ret = true;
-	}
-	if (!!val) { val->Release(); }
-	return ret;
-}
-bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int64_t* i64) {
-	bool ret = false;
-	assert(i64);
-	if (0 != val && val->GetType() == SD_JSONVALUE_INT) {
-		*i64 = val->AsInt();
-		ret = true;
-	}
-	if (!!val) { val->Release(); }
-	return ret;
-}
-bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int32_t* i32) {
-	bool ret = false;
-	assert(i32);
-	if (0 != val && val->GetType() == SD_JSONVALUE_INT) {
-		*i32 = (int32_t)val->AsInt();
-		ret = true;
-	}
-	if (!!val) { val->Release(); }
-	return ret;
-}
-#if 0
-bool IJsonValueReader::AsIntSafe(IJsonValueReader* val, int16_t* i16) {
-	bool ret = false;
-	assert(i16);
-	if (0 != val && val->GetType() == SD_JSONVALUE_INT) {
-		*i16 = (int16_t)val->AsInt();
-		ret = true;
-	}
-	if (!!val) { val->Release(); }
-	return ret;
-}
-#endif
 #endif // SDRONE_API_H_

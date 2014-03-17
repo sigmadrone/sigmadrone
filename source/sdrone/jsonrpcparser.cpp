@@ -7,120 +7,76 @@
 
 #include "jsonrpcparser.h"
 #include "jsonreadwrite.h"
+#include <json-glib/json-glib.h>
+#include <json-glib/json-gobject.h>
 
 struct GLibInit {
 	GLibInit() { g_type_init(); }
 } glibInit;
 
 
+SdJsonParser::SdJsonParser() {}
 
-JsonRpcParser::JsonRpcParser() {
-	m_jsonParser = 0;
-	m_rootObj = 0;
-}
+SdJsonParser::~SdJsonParser() {}
 
-JsonRpcParser::~JsonRpcParser() {
-	Reset();
-}
-
-void JsonRpcParser::Reset()
-{
-	if (m_jsonParser) {
-		g_object_unref(m_jsonParser);
-		m_jsonParser = 0;
-	}
-	if (m_rootObj) {
-		m_rootObj->Release();
-		m_rootObj = 0;
-	}
-
-}
-
-bool JsonRpcParser::ParseFile(
+bool SdJsonParser::ParseFile(
 		const char* fileName)
 {
 	GError* gerr=0;
-	JsonNode* rootNode = 0;
-	IJsonValueReader* jvalue = 0;
+	JsonParser* jsonParser = 0;
 
-	Reset();
-
-	if (!(m_jsonParser = json_parser_new())) {
-		printf("JsonRpcParser error: json_parser_new failed!\n");
+	m_rootNode = SdJsonValue();
+	if (!(jsonParser = json_parser_new())) {
+		printf("SdJsonParser error: json_parser_new failed!\n");
 		goto __return;
 	}
 
-	if (!json_parser_load_from_file(m_jsonParser,fileName,&gerr)) {
-		printf("JsonRpcParser error: %s\n", gerr->message);
-		return false;
-	}
-
-	if (!(rootNode = json_parser_get_root(m_jsonParser))) {
+	if (!json_parser_load_from_file(jsonParser,fileName,&gerr)) {
+		printf("SdJsonParser error: %s\n", gerr->message);
 		goto __return;
 	}
 
-	if (0 == (jvalue = new JsonValueReader(rootNode))) {
+	m_rootNode = SdJsonValue(json_parser_get_root(jsonParser));
+	if (m_rootNode.GetType() != SD_JSONVALUE_OBJECT) {
+		printf("SdJsonParser error: unexpected root type %s\n",
+				m_rootNode.GetTypeAsString());
 		goto __return;
-	}
-
-	if (jvalue->GetType() != SD_JSONVALUE_OBJECT) {
-		printf("JsonRpcParser error: unexpected root type %s\n",
-				jvalue->GetTypeAsString());
-		goto __return;
-	}
-
-	if (0 == (m_rootObj = jvalue->RefAsObject())) {
-		printf("JsonRpcParser error: failed to ref root object!\n");
 	}
 
 	__return:
-	if (jvalue) {
-		jvalue->Release();
+	if (jsonParser) {
+		g_object_unref(jsonParser);
 	}
-
-	return !!m_rootObj;
+	return m_rootNode.AsObject();
 }
 
-bool JsonRpcParser::ParseBuffer(
+bool SdJsonParser::ParseBuffer(
 		const char* buffer,
 		uint32_t len,
 		uint32_t* usedLen)
 {
 	GError* gerr=0;
-	IJsonValueReader* jvalue = 0;
+	JsonParser* jsonParser = 0;
 
 	if (usedLen) {
 		*usedLen = 0;
 	}
 
-	Reset();
+	m_rootNode = SdJsonValue();
 
-	if (!(m_jsonParser = json_parser_new())) {
+	if (!(jsonParser = json_parser_new())) {
 		goto __return;
 	}
 
-	if (!json_parser_load_from_data(m_jsonParser, buffer, len, &gerr)) {
+	if (!json_parser_load_from_data(jsonParser, buffer, len, &gerr)) {
 		printf("JsonRpcParser error: %s\n", gerr->message);
 		goto __return;
 	}
 
-	if (!json_parser_get_root(m_jsonParser)) {
-		goto __return;
-	}
-
-	if (0 == (jvalue = new JsonValueReader(
-			json_parser_get_root(m_jsonParser)))) {
-		goto __return;
-	}
-
-	if (jvalue->GetType() != SD_JSONVALUE_OBJECT) {
-		printf("JsonRpcParser error: unexpected root type %s\n",
-				jvalue->GetTypeAsString());
-		goto __return;
-	}
-
-	if (0 == (m_rootObj = jvalue->RefAsObject())) {
-		printf("JsonRpcParser error: failed to ref root object!\n");
+	m_rootNode = SdJsonValue(json_parser_get_root(jsonParser));
+	if (m_rootNode.GetType() != SD_JSONVALUE_OBJECT) {
+		printf("SdJsonParser error: unexpected root type %s\n",
+				m_rootNode.GetTypeAsString());
 		goto __return;
 	}
 
@@ -166,206 +122,25 @@ bool JsonRpcParser::ParseBuffer(
 	}
 
 	__return:
-	if (jvalue) {
-		jvalue->Release();
+	if (jsonParser) {
+		g_object_unref(jsonParser);
 	}
-	return !!m_rootObj;
+	return !!m_rootNode.AsObject();
 }
 
-bool JsonRpcParser::IsValidRpcSchema()
+
+void SdJsonParser::PrintJsonObject(const IJsonObject* jobj)
 {
-	std::string strVal;
-	strVal = IJsonValueReader::AsStringSafe(m_rootObj->RefMember("jsonrpc"));
-	if (strVal == "2.0") {
-		return true;
-	}
-	return false;
-}
-
-SdCommandCode JsonRpcParser::GetRpcMethod()
-{
-	SdCommandCode cmdCode = SD_COMMAND_NONE;
-	IJsonValueReader* jval = 0;
-	if (!m_rootObj) {
-		goto __return;
-	}
-
-	if (0 == (jval = m_rootObj->RefMember("method"))) {
-		printf("JsonRpcParser::GetRpcMethod: member method not found!\n");
-		goto __return;
-	}
-	if (jval->GetType() != SD_JSONVALUE_STRING) {
-		printf("JsonRpcParser::GetRpcMethod: unexpected method type %s\n",
-				jval->GetTypeAsString());
-		goto __return;
-	}
-
-	cmdCode = SdStringToCommandCode(jval->AsString());
-
-	__return:
-	if (jval) {
-		jval->Release();
-	}
-	return cmdCode;
-}
-
-IJsonObjectReader* JsonRpcParser::GetRpcParams()
-{
-	return !!m_rootObj ? m_rootObj->RefMemberAsObject("params") : 0;
-}
-
-uint64_t JsonRpcParser::GetRpcCallId()
-{
-	uint64_t callId = -1;
-	if (m_rootObj) {
-		m_rootObj->GetMemberAsIntValue("id",(int64_t*)&callId);
-	}
-	return callId;
-}
-
-void JsonRpcParser::ParseImuConfig(
-	IJsonObjectReader* obj,
-	SdImuDeviceConfig* imu)
-{
-	if (obj) {
-		obj->GetMemberAsStringValue("DeviceName",&imu->DeviceName);
-		obj->GetMemberAsIntValue("SamplingRate",&imu->SamplingRate);
-		obj->GetMemberAsIntValue("Scale",&imu->Scale);
-		obj->GetMemberAsIntValue("MaxReading",&imu->MaxReading);
-		obj->GetMemberAsIntValue("Watermark",&imu->Watermark);
-		obj->GetMemberAsIntValue("NumBiasSamples",&imu->NumBiasSamples);
-		IJsonArrayReader* arr;
-		if (0 != (arr = obj->RefMemberAsArray("CoordinateMap"))) {
-			if (arr->ElementCount() == 9) {
-				for (uint32_t i = 0; i < 9; i++) {
-					int32_t intVal;
-					if (arr->GetElementAsIntValue(i,&intVal)) {
-						imu->CoordinateMap.at(i/3,i%3)=intVal;
-					}
-				}
-			}
-			arr->Release();
+	if (jobj) {
+		for (size_t i = 0; i < jobj->GetMemberCount(); i++) {
+			const char* memberName = jobj->GetMemberName(i);
+			printf("%s: ",memberName);
+			PrintJsonNode(jobj->GetMember(memberName));
 		}
-		obj->Release();
 	}
 }
 
-bool JsonRpcParser::GetDroneConfig(SdDroneConfig* cfg)
-{
-	IJsonObjectReader* config = 0;
-	IJsonObjectReader* obj = 0;
-	IJsonArrayReader* arr = 0;
-	std::string strVal;
-	IJsonObjectReader* params = GetRpcParams();
-
-	if (!params) {
-		goto __return;
-	}
-	if (0 == (config = params->RefMemberAsObject("GlobalConfig"))) {
-		goto __return;
-	}
-
-	ParseImuConfig(config->RefMemberAsObject("Gyro"),&cfg->Gyro);
-	ParseImuConfig(config->RefMemberAsObject("Accelerometer"),&cfg->Accel);
-	ParseImuConfig(config->RefMemberAsObject("Magnetometer"),&cfg->Mag);
-
-	if (0 != (obj = config->RefMemberAsObject("Servo"))) {
-		obj->GetMemberAsStringValue("DeviceName",&cfg->Servo.DeviceName);
-		obj->GetMemberAsIntValue("SamplingRate",&cfg->Servo.Rate);
-		obj->GetMemberAsIntValue("ChannelMask",(int32_t*)&cfg->Servo.ChannelMask);
-		obj->GetMemberAsIntValue("BitCount",(int32_t*)&cfg->Servo.BitCount);
-		obj->Release();
-	}
-
-	if (0 != (obj = config->RefMemberAsObject("QuadPilot"))) {
-		obj->GetMemberAsDoubleValue("Kp",&cfg->Quad.Kp);
-		obj->GetMemberAsDoubleValue("Ki",&cfg->Quad.Ki);
-		obj->GetMemberAsDoubleValue("Kd",&cfg->Quad.Kd);
-		if (0 != (arr = obj->RefMemberAsArray("MotorToServoMap"))) {
-			for (size_t i = 0; i < 4; i++) {
-				arr->GetElementAsIntValue(i,&cfg->Quad.Motor[i]);
-			}
-			arr->Release();
-		}
-		if (0 != (arr = obj->RefMemberAsArray("ImuCoordinateAngles"))) {
-			arr->GetElementAsIntValue(2,&cfg->Quad.ImuAngleAxisZ);
-		}
-		obj->Release();
-	}
-
-	if (0 != (obj = config->RefMemberAsObject("ControlChannel"))) {
-		obj->GetMemberAsStringValue("ServerAddress",&cfg->ServerAddress);
-		obj->GetMemberAsIntValue("ServerPort",&cfg->ServerPort);
-		obj->Release();
-	}
-
-	if (config->GetMemberAsStringValue("LogLevel",&strVal)) {
-		cfg->LogLevel = SdStringToLogLevel(strVal.c_str());
-	}
-	config->GetMemberAsStringValue("LogFileName",&cfg->LogFileName);
-	config->GetMemberAsIntValue("LogRotationMatrix", &cfg->LogRotationMatrix);
-	config->GetMemberAsDoubleValue("LogRate", &cfg->LogRate);
-
-	__return:
-	if (config) {
-		config->Release();
-	}
-	if (params) {
-		params->Release();
-	}
-	return !!config;
-}
-
-bool JsonRpcParser::GetThrust(
-		double* thrust,
-		double* minThrust,
-		double* maxThrust)
-{
-	IJsonObjectReader* flight = 0;
-	IJsonObjectReader* params = 0;
-
-	if (0 == (params=GetRpcParams())) {
-		goto __return;
-	}
-	if (0 == (flight = params->RefMemberAsObject("Flight"))) {
-		goto __return;
-	}
-
-	if (thrust) {
-		flight->GetMemberAsDoubleValue("Thrust",thrust);
-	}
-	if (maxThrust) {
-		flight->GetMemberAsDoubleValue("MaxThrust",maxThrust);
-	}
-	if (minThrust) {
-		flight->GetMemberAsDoubleValue("MinThrust",minThrust);
-	}
-
-	__return:
-	if (flight) {
-		flight->Release();
-	}
-	if (params) {
-		params->Release();
-	}
-	return !!flight;
-}
-
-void JsonRpcParser::ParseObject(IJsonObjectReader* jobj)
-{
-	if (!jobj) {
-		return;
-	}
-	for (size_t i = 0; i < jobj->GetMemberCount(); i++) {
-		const char* memberName = jobj->GetMemberName(i);
-		IJsonValueReader* jval = jobj->RefMember(memberName);
-		printf("%s: ",memberName);
-		ParseNode(jval);
-	}
-	jobj->Release();
-}
-
-void JsonRpcParser::ParseNode(IJsonValueReader* jnode)
+void SdJsonParser::PrintJsonNode(const IJsonValue* jnode)
 {
 	if (!jnode) {
 		return;
@@ -374,9 +149,9 @@ void JsonRpcParser::ParseNode(IJsonValueReader* jnode)
 	//printf("Node type %s\n", json_node_type_name(jnode));
 	if (SD_JSONVALUE_OBJECT == valType) {
 		printf("\n");
-		ParseObject(jnode->RefAsObject());
+		PrintJsonObject(jnode->AsObject());
 	} else if (SD_JSONVALUE_ARRAY == valType) {
-		ParseArray(jnode->RefAsArray());
+		PrintJsonArray(jnode->AsArray());
 	} else {
 		switch(valType) {
 		case SD_JSONVALUE_BOOL:
@@ -389,22 +164,156 @@ void JsonRpcParser::ParseNode(IJsonValueReader* jnode)
 			printf("%f\n",jnode->AsDouble());
 			break;
 		case SD_JSONVALUE_STRING:
-			printf("%s\n",jnode->AsString());
+			printf("%s\n",jnode->AsString().c_str());
 			break;
 		default:
 			printf("fatal: unrecognized value type: %d\n", valType);
 		}
 	}
-	jnode->Release();
 }
 
-void JsonRpcParser::ParseArray(IJsonArrayReader* jarr)
+void SdJsonParser::PrintJsonArray(const IJsonArray* jarr)
 {
-	if (!jarr) {
-		return;
+	if (jarr) {
+		for (uint32_t i = 0; i < jarr->ElementCount(); i++) {
+			PrintJsonNode(jarr->GetElement(i));
+		}
 	}
-	uint32_t len = jarr->ElementCount();
-	for (uint32_t i = 0; i < len; i++) {
-		ParseNode(jarr->RefElement(i));
+}
+
+
+bool SdJsonRpcParser::IsValidRpcSchema()
+{
+	if (RootObj() && RootObj()->GetMember("jsonrpc")) {
+		return RootObj()->GetMember("jsonrpc")->AsString() == "2.0";
 	}
+	return false;
+}
+
+std::string SdJsonRpcParser::GetRpcMethod()
+{
+	if (RootObj() && RootObj()->GetMember("method")) {
+		return RootObj()->GetMember("method")->AsString();
+	}
+	return "";
+}
+
+const IJsonObject* SdJsonRpcParser::GetRpcParams()
+{
+	return !!RootObj() ? RootObj()->GetMember("params")->AsObject() : 0;
+}
+
+uint64_t SdJsonRpcParser::GetRpcCallId()
+{
+	uint64_t callId = 0;
+	if (RootObj()) {
+		RootObj()->GetMember("id")->AsIntSafe((int64_t*)&callId);
+	}
+	return callId;
+}
+
+
+// TODO: The standalone parse routine will have to be moved to the corresponding
+// rpc callback routines
+bool SdJsonParseImuConfig(
+	const IJsonObject* obj,
+	SdImuDeviceConfig* imu)
+{
+	if (obj) {
+		imu->DeviceName = obj->GetMember("DeviceName")->AsString();
+		imu->SamplingRate = obj->GetMember("SamplingRate")->AsInt();
+		imu->Scale = obj->GetMember("Scale")->AsInt();
+		imu->MaxReading = obj->GetMember("MaxReading")->AsInt();
+		imu->Watermark = obj->GetMember("Watermark")->AsInt();
+		imu->NumBiasSamples = obj->GetMember("NumBiasSamples")->AsInt();
+		const IJsonArray* arr;
+		if (0 != (arr = obj->GetMember("CoordinateMap")->AsArray())) {
+			if (arr->ElementCount() == 9) {
+				for (uint32_t i = 0; i < 9; i++) {
+					imu->CoordinateMap.at(i/3,i%3)=arr->GetElement(i)->AsInt();
+				}
+			}
+		}
+	}
+	return !!obj;
+}
+
+bool SdJsonParseDroneConfig(
+		const IJsonObject* params,
+		SdDroneConfig* droneCfg)
+{
+	const IJsonObject* config = 0;
+	const IJsonObject* obj = 0;
+	const IJsonArray* arr = 0;
+
+	if (0 == (config = params->GetMember("GlobalConfig")->AsObject())) {
+		return false;
+	}
+
+	SdJsonParseImuConfig(config->GetMember("Gyro")->AsObject(),
+			&droneCfg->Gyro);
+	SdJsonParseImuConfig(config->GetMember("Accelerometer")->AsObject(),
+			&droneCfg->Accel);
+	SdJsonParseImuConfig(config->GetMember("Magnetometer")->AsObject(),
+			&droneCfg->Mag);
+
+	if (0 != (obj = config->GetMember("Servo")->AsObject())) {
+		droneCfg->Servo.DeviceName = obj->GetMember("DeviceName")->AsString();
+		droneCfg->Servo.Rate = (uint32_t)obj->GetMember("SamplingRate")->AsInt();
+		droneCfg->Servo.ChannelMask = (uint32_t)obj->GetMember("ChannelMask")->AsInt();
+		droneCfg->Servo.BitCount = (uint32_t)obj->GetMember("BitCount")->AsInt();
+	}
+
+	if (0 != (obj = config->GetMember("QuadPilot")->AsObject())) {
+		droneCfg->Quad.Kp = obj->GetMember("Kp")->AsDouble();
+		droneCfg->Quad.Ki = obj->GetMember("Ki")->AsDouble();
+		droneCfg->Quad.Kd = obj->GetMember("Kd")->AsDouble();
+		if (0 != (arr = obj->GetMember("MotorToServoMap")->AsArray()) &&
+			arr->ElementCount() == 4) {
+			for (size_t i = 0; i < 4; i++) {
+				droneCfg->Quad.Motor[i] = (uint32_t)arr->GetElement(i)->AsInt();
+			}
+		}
+
+		if (0 != (arr = obj->GetMember("ImuCoordinateAngles")->AsArray()) &&
+			arr->ElementCount() == 3) {
+			droneCfg->Quad.ImuAngleAxisZ = arr->GetElement(2)->AsInt();
+		}
+	}
+
+	if (0 != (obj = config->GetMember("ControlChannel")->AsObject())) {
+		droneCfg->ServerAddress = obj->GetMember("ServerAddress")->AsString();
+		droneCfg->ServerPort = (int32_t)obj->GetMember("ServerPort")->AsInt();
+	}
+	if (config->GetMember("LogLevel")->GetType() == SD_JSONVALUE_STRING) {
+		droneCfg->LogLevel = SdStringToLogLevel(
+				config->GetMember("LogLevel")->AsString().c_str());
+	}
+
+	droneCfg->LogFileName = config->GetMember("LogFileName")->AsString();
+	droneCfg->LogRotationMatrix = (int32_t)
+			config->GetMember("LogRotationMatrix")->AsInt();
+	droneCfg->LogRate = config->GetMember("LogRate")->AsDouble();
+	return true;
+}
+
+bool SdJsonParseParseThrust(
+		const IJsonObject* rpcParams,
+		double* thrust,
+		double* minThrust,
+		double* maxThrust)
+{
+	const IJsonObject* flight = 0;
+	if (0 != (flight = rpcParams->GetMember("Flight")->AsObject())) {
+		if (thrust) {
+			*thrust = flight->GetMember("Thrust")->AsDouble();
+		}
+		if (maxThrust) {
+			*maxThrust = flight->GetMember("MaxThrust")->AsDouble();
+		}
+		if (minThrust) {
+			*minThrust = flight->GetMember("MinThrust")->AsDouble();
+		}
+	}
+	return !!flight;
 }
