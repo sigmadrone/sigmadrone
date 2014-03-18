@@ -565,7 +565,10 @@ void SdJsonArray::Reset()
 		}
 	}
 	m_elements.clear();
-	json_array_unref(m_jarr);
+	if (m_jarr) {
+		json_array_unref(m_jarr);
+		m_jarr = 0;
+	}
 }
 
 const SdJsonArray& SdJsonArray::operator=(const SdJsonArray& rhs)
