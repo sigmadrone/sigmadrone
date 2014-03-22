@@ -1,0 +1,162 @@
+//
+// connection.cpp
+// ~~~~~~~~~~~~~~
+//
+// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+//
+// Distributed under the Boost Software License, Version 1.0. (See accompanying
+// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+//
+
+#include <vector>
+#include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include "connection_manager.hpp"
+#include "request_handler.hpp"
+#include "connection.hpp"
+#include "server.hpp"
+
+namespace http {
+namespace server {
+
+
+connection::connection(server& server, connection_manager& manager, request_handler& handler)
+	: server_(server)
+	, socket_(server_.io_service())
+	, timer_(server_.io_service())
+	, connection_manager_(manager)
+	, request_handler_(handler)
+	, serial_(0)
+{
+
+}
+
+boost::asio::ip::tcp::socket& connection::socket()
+{
+	return socket_;
+}
+
+void connection::start()
+{
+	schedule_headers_read();
+	server_.log_debug_message("connection::start port: %d", socket_.remote_endpoint().port());
+}
+
+void connection::stop()
+{
+	// Initiate graceful connection closure.
+	boost::system::error_code ignored_ec;
+	socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
+	socket_.close();
+}
+
+void connection::scheduel_timeout()
+{
+	timer_.cancel();
+	timer_.expires_from_now(boost::posix_time::seconds(default_timeout));
+	timer_.async_wait(boost::bind(&connection::handle_connection_timeout, this, boost::asio::placeholders::error));
+}
+
+void connection::schedule_headers_read()
+{
+	scheduel_timeout();
+	socket_.async_read_some(boost::asio::buffer(buffer_),
+		boost::bind(&connection::handle_headers_read,
+					shared_from_this(),
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred));
+}
+
+void connection::schedule_content_read()
+{
+	scheduel_timeout();
+	socket_.async_read_some(boost::asio::buffer(buffer_),
+		boost::bind(&connection::handle_content_read,
+					shared_from_this(),
+					boost::asio::placeholders::error,
+					boost::asio::placeholders::bytes_transferred));
+}
+
+void connection::schedule_reply_write()
+{
+	scheduel_timeout();
+	boost::asio::async_write(
+		socket_,
+		reply_.to_buffers(),
+		boost::bind(&connection::handle_reply_write, shared_from_this(), boost::asio::placeholders::error));
+}
+
+void connection::handle_connection_timeout(const boost::system::error_code& e)
+{
+	if ( e != boost::asio::error::operation_aborted) {
+		connection_manager_.stop(shared_from_this());
+	}
+}
+
+void connection::handle_content_read(const boost::system::error_code& e, std::size_t bytes_transferred)
+{
+	++serial_;
+	if (!e) {
+		request_.payload.append(buffer_.data(), buffer_.data() + bytes_transferred);
+
+		if (request_.payload.size() < request_.headers.content_length()) {
+			schedule_content_read();
+		} else {
+			request_handler_.handle_request(request_, reply_, serial_);
+			schedule_reply_write();
+		}
+	} else if (e != boost::asio::error::operation_aborted) {
+		connection_manager_.stop(shared_from_this());
+	}
+}
+
+void connection::handle_headers_read(const boost::system::error_code& e, std::size_t bytes_transferred)
+{
+	++serial_;
+
+	if (!e) {
+		boost::tribool result;
+		size_t parsed_size = 0;
+		boost::tie(result, parsed_size) = request_parser_.parse_headers(request_, buffer_.data(), buffer_.data() + bytes_transferred);
+
+		if (result) {
+			request_.payload.append(buffer_.data() + parsed_size, buffer_.data() + bytes_transferred);
+			if (request_.payload.size() < request_.headers.content_length()) {
+				schedule_content_read();
+			} else {
+				request_handler_.handle_request(request_, reply_, serial_);
+				schedule_reply_write();
+			}
+		} else if (!result) {
+			reply_ = reply::stock_reply(reply::bad_request);
+			schedule_reply_write();
+		} else {
+			schedule_headers_read();
+		}
+	} else if (e != boost::asio::error::operation_aborted) {
+		connection_manager_.stop(shared_from_this());
+		server_.log_debug_message("handle_headers_read connection_manager_.stop wit error: %s", e.message().c_str());
+	}
+}
+
+void connection::handle_reply_write(const boost::system::error_code& e)
+{
+	++serial_;
+	if (!e) {
+		if (reply_.headers["Connection"] == "keep-alive") {
+			request_parser_.reset();
+			request_.reset();
+			reply_.reset();
+			schedule_headers_read();
+		} else {
+			connection_manager_.stop(shared_from_this());
+			server_.log_debug_message("handle_reply_write connection_manager_.stop, Connection header is: %s", reply_.headers["Connection"].c_str());
+		}
+	} else if (e != boost::asio::error::operation_aborted) {
+		connection_manager_.stop(shared_from_this());
+		server_.log_debug_message("handle_reply_write connection_manager_.stop with error: %s", e.message().c_str());
+	}
+}
+
+} // namespace server
+} // namespace http
