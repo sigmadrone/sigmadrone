@@ -51,7 +51,7 @@ void application::echo_request_handler(const http::server::request& req, http::s
 {
 	rep.headers.header("Content-Type", "text/plain");
 
-	rep.content = req.payload;
+	rep.content = req.content;
 	rep.status = http::server::reply::ok;
 }
 
