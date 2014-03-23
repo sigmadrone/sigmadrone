@@ -26,7 +26,8 @@ struct request
 	int http_version_major;
 	int http_version_minor;
 	http::server::headers headers;
-	std::string payload;
+	std::string content;
+	int headers_size;
 
 	std::string request_line() const;
 	void reset();

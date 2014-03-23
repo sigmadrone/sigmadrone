@@ -31,7 +31,7 @@ class service;
 class connection: public boost::enable_shared_from_this<connection>, private boost::noncopyable
 {
 public:
-	typedef boost::array<char, 40> buffer_type;
+	typedef boost::array<char, 8192> buffer_type;
 
 	/// Construct a connection with the given io_service.
 	explicit connection(service& service, connection_manager& manager, request_handler& handler);
@@ -44,8 +44,6 @@ public:
 
 	/// Stop all asynchronous operations associated with the connection.
 	void stop();
-
-	static const int default_timeout = 10;
 
 private:
 	/// Handle completion of a read operation.
@@ -70,6 +68,8 @@ private:
 	void schedule_reply_write();
 
 	void scheduel_timeout();
+
+	void reply_with_error(reply::status_type status);
 
 	/// HTTP Server
 	service& service_;

@@ -11,7 +11,8 @@ void request::reset()
 	uri.clear();
 	http_version_major = http_version_minor = 0;
 	headers.clear();
-	payload.clear();
+	content.clear();
+	headers_size = 0;
 }
 
 std::string request::request_line() const
@@ -31,7 +32,7 @@ std::ostream& operator<<(std::ostream& os, const request& req)
 		os << it->first << ": " << it->second << "\n";
 	}
 	os << "\n";
-	os << req.payload;
+	os << req.content;
 	return os;
 }
 

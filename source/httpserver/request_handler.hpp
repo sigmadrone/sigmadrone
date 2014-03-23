@@ -84,7 +84,6 @@ protected:
 
 	// Registered uri handlers
 	uri_handler_map uri_handlers_;
-
 };
 
 } // namespace server

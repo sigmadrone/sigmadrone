@@ -15,6 +15,7 @@
 #include "request_handler.hpp"
 #include "connection.hpp"
 #include "service.hpp"
+#include "parameters.hpp"
 
 namespace http {
 namespace server {
@@ -39,7 +40,10 @@ boost::asio::ip::tcp::socket& connection::socket()
 void connection::start()
 {
 	schedule_headers_read();
-	service_.log_debug_message("connection::start port: %d", socket_.remote_endpoint().port());
+	service_.log_debug_message("Starting new connection to remote %s:%d",
+			socket_.remote_endpoint().address().to_string().c_str(),
+			(int)socket_.remote_endpoint().port());
+
 }
 
 void connection::stop()
@@ -53,7 +57,7 @@ void connection::stop()
 void connection::scheduel_timeout()
 {
 	timer_.cancel();
-	timer_.expires_from_now(boost::posix_time::seconds(default_timeout));
+	timer_.expires_from_now(boost::posix_time::seconds(http::server::max_inactive_timeout));
 	timer_.async_wait(boost::bind(&connection::handle_connection_timeout, this, boost::asio::placeholders::error));
 }
 
@@ -86,6 +90,13 @@ void connection::schedule_reply_write()
 		boost::bind(&connection::handle_reply_write, shared_from_this(), boost::asio::placeholders::error));
 }
 
+void connection::reply_with_error(reply::status_type status)
+{
+	reply_ = reply::stock_reply(status);
+	reply_.headers.header("Connection", "close");
+	schedule_reply_write();
+}
+
 void connection::handle_connection_timeout(const boost::system::error_code& e)
 {
 	if ( e != boost::asio::error::operation_aborted) {
@@ -97,9 +108,12 @@ void connection::handle_content_read(const boost::system::error_code& e, std::si
 {
 	++serial_;
 	if (!e) {
-		request_.payload.append(buffer_.data(), buffer_.data() + bytes_transferred);
+		request_.content.append(buffer_.data(), buffer_.data() + bytes_transferred);
+		if (request_.content.size() > max_content_size) {
+			connection_manager_.stop(shared_from_this());
+		}
 
-		if (request_.payload.size() < request_.headers.content_length()) {
+		if (request_.content.size() < request_.headers.content_length()) {
 			schedule_content_read();
 		} else {
 			request_handler_.handle_request(request_, reply_, serial_);
@@ -118,10 +132,20 @@ void connection::handle_headers_read(const boost::system::error_code& e, std::si
 		boost::tribool result;
 		size_t parsed_size = 0;
 		boost::tie(result, parsed_size) = request_parser_.parse_headers(request_, buffer_.data(), buffer_.data() + bytes_transferred);
+		request_.headers_size += parsed_size;
+		if (request_.headers_size > max_headers_size || request_.headers.content_length() > max_content_size) {
+			service_.log_error_message("Bad Request from remote %s:%d, headers size: %d, content size: %d",
+					socket_.remote_endpoint().address().to_string().c_str(),
+					(int)socket_.remote_endpoint().port(),
+					(int)request_.headers_size,
+					(int)request_.content.size());
+			reply_with_error(reply::bad_request);
+			return;
+		}
 
 		if (result) {
-			request_.payload.append(buffer_.data() + parsed_size, buffer_.data() + bytes_transferred);
-			if (request_.payload.size() < request_.headers.content_length()) {
+			request_.content.append(buffer_.data() + parsed_size, buffer_.data() + bytes_transferred);
+			if (request_.content.size() < request_.headers.content_length()) {
 				schedule_content_read();
 			} else {
 				request_handler_.handle_request(request_, reply_, serial_);
@@ -134,8 +158,10 @@ void connection::handle_headers_read(const boost::system::error_code& e, std::si
 			schedule_headers_read();
 		}
 	} else if (e != boost::asio::error::operation_aborted) {
+		service_.log_debug_message("Closing connection to remote %s:%d",
+				socket_.remote_endpoint().address().to_string().c_str(),
+				(int)socket_.remote_endpoint().port());
 		connection_manager_.stop(shared_from_this());
-		service_.log_debug_message("handle_headers_read connection_manager_.stop wit error: %s", e.message().c_str());
 	}
 }
 
@@ -149,12 +175,17 @@ void connection::handle_reply_write(const boost::system::error_code& e)
 			reply_.reset();
 			schedule_headers_read();
 		} else {
+			service_.log_debug_message("Closing connection to remote %s:%d, Connection header is set to: %s",
+					socket_.remote_endpoint().address().to_string().c_str(),
+					(int)socket_.remote_endpoint().port(),
+					reply_.headers["Connection"].c_str());
 			connection_manager_.stop(shared_from_this());
-			service_.log_debug_message("handle_reply_write connection_manager_.stop, Connection header is: %s", reply_.headers["Connection"].c_str());
 		}
 	} else if (e != boost::asio::error::operation_aborted) {
+		service_.log_debug_message("Closing connection to remote %s:%d",
+				socket_.remote_endpoint().address().to_string().c_str(),
+				(int)socket_.remote_endpoint().port());
 		connection_manager_.stop(shared_from_this());
-		service_.log_debug_message("handle_reply_write connection_manager_.stop with error: %s", e.message().c_str());
 	}
 }
 

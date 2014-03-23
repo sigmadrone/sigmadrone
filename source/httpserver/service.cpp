@@ -75,7 +75,6 @@ void service::stop()
 	connection_manager_.stop_all();
 }
 
-
 bool service::log_debug_message(const char *fmt, ...)
 {
 	bool result = false;
@@ -113,7 +112,7 @@ bool service::log_error_message(const char *fmt, ...)
 		return result;
 	va_start(args, fmt);
 	std::string format(log_prefix_ + fmt);
-	result = logger_->log_warning_message(format.c_str(), args);
+	result = logger_->log_error_message(format.c_str(), args);
 	va_end(args);
 	return result;
 }
