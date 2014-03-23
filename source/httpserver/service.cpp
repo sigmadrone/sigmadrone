@@ -8,7 +8,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#include "server.hpp"
+#include "service.hpp"
 #include <boost/bind.hpp>
 #include <signal.h>
 
@@ -16,7 +16,7 @@ namespace http {
 namespace server {
 
 
-server::server(boost::asio::io_service& io_service, const std::string& address, const std::string& port)
+service::service(boost::asio::io_service& io_service, const std::string& address, const std::string& port)
 	: address_(address)
 	, port_(port)
 	, io_service_(io_service)
@@ -38,20 +38,20 @@ server::server(boost::asio::io_service& io_service, const std::string& address, 
 	start_accept();
 }
 
-boost::asio::io_service& server::io_service()
+boost::asio::io_service& service::io_service()
 {
 	return io_service_;
 }
 
 
-void server::start_accept()
+void service::start_accept()
 {
 	new_connection_.reset(new connection(*this, connection_manager_, request_handler_));
 	acceptor_.async_accept(new_connection_->socket(),
-			boost::bind(&server::handle_accept, this, boost::asio::placeholders::error));
+			boost::bind(&service::handle_accept, this, boost::asio::placeholders::error));
 }
 
-void server::handle_accept(const boost::system::error_code& e)
+void service::handle_accept(const boost::system::error_code& e)
 {
 	// Check whether the server was stopped by a signal before this completion
 	// handler had a chance to run.
@@ -66,7 +66,7 @@ void server::handle_accept(const boost::system::error_code& e)
 	start_accept();
 }
 
-void server::stop()
+void service::stop()
 {
 	// The server is stopped by cancelling all outstanding asynchronous
 	// operations. Once all operations have finished the io_service::run() call
@@ -76,7 +76,7 @@ void server::stop()
 }
 
 
-bool server::log_debug_message(const char *fmt, ...)
+bool service::log_debug_message(const char *fmt, ...)
 {
 	bool result = false;
 	va_list args;
@@ -90,7 +90,7 @@ bool server::log_debug_message(const char *fmt, ...)
 	return result;
 }
 
-bool server::log_warning_message(const char *fmt, ...)
+bool service::log_warning_message(const char *fmt, ...)
 {
 	bool result = false;
 	va_list args;
@@ -104,7 +104,7 @@ bool server::log_warning_message(const char *fmt, ...)
 	return result;
 }
 
-bool server::log_error_message(const char *fmt, ...)
+bool service::log_error_message(const char *fmt, ...)
 {
 	bool result = false;
 	va_list args;
@@ -118,7 +118,7 @@ bool server::log_error_message(const char *fmt, ...)
 	return result;
 }
 
-void server::set_logger(http::server::logger *ptr)
+void service::set_logger(http::server::logger *ptr)
 {
 	if (ptr)
 		logger_.reset(ptr);

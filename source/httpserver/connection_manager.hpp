@@ -18,14 +18,14 @@
 namespace http {
 namespace server {
 
-class server;
+class service;
 
 /// Manages open connections so that they may be cleanly stopped when the server
 /// needs to shut down.
 class connection_manager: private boost::noncopyable
 {
 public:
-	connection_manager(server& server);
+	connection_manager(service& service);
 
 	/// Add the specified connection to the manager and start it.
 	void start(connection_ptr c);
@@ -37,7 +37,7 @@ public:
 	void stop_all();
 
 private:
-	server& server_;
+	service& service_;
 
 	/// The managed connections.
 	std::set<connection_ptr> connections_;

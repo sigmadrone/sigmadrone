@@ -14,16 +14,16 @@
 #include "connection_manager.hpp"
 #include "request_handler.hpp"
 #include "connection.hpp"
-#include "server.hpp"
+#include "service.hpp"
 
 namespace http {
 namespace server {
 
 
-connection::connection(server& server, connection_manager& manager, request_handler& handler)
-	: server_(server)
-	, socket_(server_.io_service())
-	, timer_(server_.io_service())
+connection::connection(service& service, connection_manager& manager, request_handler& handler)
+	: service_(service)
+	, socket_(service_.io_service())
+	, timer_(service_.io_service())
 	, connection_manager_(manager)
 	, request_handler_(handler)
 	, serial_(0)
@@ -39,7 +39,7 @@ boost::asio::ip::tcp::socket& connection::socket()
 void connection::start()
 {
 	schedule_headers_read();
-	server_.log_debug_message("connection::start port: %d", socket_.remote_endpoint().port());
+	service_.log_debug_message("connection::start port: %d", socket_.remote_endpoint().port());
 }
 
 void connection::stop()
@@ -135,7 +135,7 @@ void connection::handle_headers_read(const boost::system::error_code& e, std::si
 		}
 	} else if (e != boost::asio::error::operation_aborted) {
 		connection_manager_.stop(shared_from_this());
-		server_.log_debug_message("handle_headers_read connection_manager_.stop wit error: %s", e.message().c_str());
+		service_.log_debug_message("handle_headers_read connection_manager_.stop wit error: %s", e.message().c_str());
 	}
 }
 
@@ -150,11 +150,11 @@ void connection::handle_reply_write(const boost::system::error_code& e)
 			schedule_headers_read();
 		} else {
 			connection_manager_.stop(shared_from_this());
-			server_.log_debug_message("handle_reply_write connection_manager_.stop, Connection header is: %s", reply_.headers["Connection"].c_str());
+			service_.log_debug_message("handle_reply_write connection_manager_.stop, Connection header is: %s", reply_.headers["Connection"].c_str());
 		}
 	} else if (e != boost::asio::error::operation_aborted) {
 		connection_manager_.stop(shared_from_this());
-		server_.log_debug_message("handle_reply_write connection_manager_.stop with error: %s", e.message().c_str());
+		service_.log_debug_message("handle_reply_write connection_manager_.stop with error: %s", e.message().c_str());
 	}
 }
 

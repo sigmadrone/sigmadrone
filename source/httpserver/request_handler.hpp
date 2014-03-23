@@ -22,7 +22,7 @@ namespace server {
 
 struct reply;
 struct request;
-class server;
+class service;
 
 struct uri_handler_base
 {
@@ -58,7 +58,7 @@ public:
 	typedef std::map< std::string, boost::shared_ptr<uri_handler_base> > uri_handler_map;
 
 	// Construct with a directory containing files to be served.
-	request_handler(server& server);
+	request_handler(service& service);
 
 	// Handle a request and produce a reply.
 	void handle_request(const request& req, reply& rep, size_t serial);
@@ -80,7 +80,7 @@ protected:
 	void handle_request_internal(const request& req, reply& rep);
 
 protected:
-	server& server_;
+	service& service_;
 
 	// Registered uri handlers
 	uri_handler_map uri_handlers_;

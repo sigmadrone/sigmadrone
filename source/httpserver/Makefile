@@ -66,7 +66,7 @@ OBJS= \
     obj/request.o \
     obj/request_handler.o \
     obj/request_parser.o \
-    obj/server.o \
+    obj/service.o \
 
 
 all: obj libhttpserver.a
@@ -93,7 +93,7 @@ obj:
 	mkdir obj
 
 libhttpserver.a: $(OBJS:obj/%=obj/%)
-	$(AR) -cr $@ $^
+	$(AR) -crs $@ $^
 
 
 clean:

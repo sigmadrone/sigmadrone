@@ -71,7 +71,7 @@ void application::jsonrpc_request_handler(const http::server::request& req, http
 
 int application::run()
 {
-	rpc_server_.reset(new http::server::server(io_service_rpc_, "0.0.0.0", "8080"));
+	rpc_server_.reset(new http::server::service(io_service_rpc_, "0.0.0.0", "8080"));
 
 	/*
 	 * Register member function (request handler)

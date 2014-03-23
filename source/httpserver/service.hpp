@@ -35,12 +35,12 @@ public:
 typedef boost::shared_ptr<http::server::logger> logger_ptr;
 
 /// The top-level class of the HTTP server.
-class server: private boost::noncopyable
+class service: private boost::noncopyable
 {
 public:
 	/// Construct the server to listen on the specified TCP address and port, and
 	/// serve up files from the given directory.
-	explicit server(boost::asio::io_service& io_service, const std::string& address, const std::string& port);
+	explicit service(boost::asio::io_service& io_service, const std::string& address, const std::string& port);
 
 	/// Handle a request to stop the server.
 	void stop();

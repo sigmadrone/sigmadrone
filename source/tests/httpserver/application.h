@@ -6,7 +6,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
-#include "httpserver/server.hpp"
+#include "httpserver/service.hpp"
 
 /// The top-level class of the HTTP server.
 class application : private boost::noncopyable
@@ -28,7 +28,7 @@ protected:
 	boost::asio::io_service io_service_rpc_;
 	boost::asio::signal_set signals_;
 	std::string appname_;
-	boost::scoped_ptr<http::server::server> rpc_server_;
+	boost::scoped_ptr<http::server::service> rpc_server_;
 };
 
 
