@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cstdarg>
+#include <stdexcept>
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -24,13 +25,31 @@ public:
 	/// serve up files from the given directory.
 	explicit http_client();
 	~http_client();
-	boost::system::error_code connect(const std::string& server, const std::string& port);
-	boost::system::error_code request(
-			http::client::response& response,
+	void connect(const std::string& server, const std::string& port, boost::system::error_code& ec);
+	void connect(const std::string& server, const std::string& port) throw(std::exception);
+	void request(http::client::response& response,
 			const std::string& method,
 			const std::string& url,
 			const std::string& content = std::string(),
-			http::headers headers = http::headers());
+			const http::headers& userheaders = headers()) throw(std::exception);
+	void request(http::client::response& response,
+			const std::string& method,
+			const std::string& url,
+			const std::string& content,
+			const http::headers& userheaders,
+			boost::system::error_code& ec);
+	void request(http::client::response& response,
+			const std::string& method,
+			const std::string& url,
+			const std::string& content,
+			boost::system::error_code& ec);
+	void request(http::client::response& response,
+			const std::string& method,
+			const std::string& url,
+			boost::system::error_code& ec);
+
+
+
 	void set_logger(http::logger_ptr ptr);
 
 private:
@@ -52,7 +71,8 @@ private:
 			const std::string& content,
 			const http::headers& headers);
 	void disconnect();
-	boost::system::error_code connect_endpoint();
+	void connect_endpoint();
+	void connect_endpoint(boost::system::error_code& ec);
 	bool log_debug_message(const char *fmt, ...);
 	bool log_warning_message(const char *fmt, ...);
 	bool log_error_message(const char *fmt, ...);

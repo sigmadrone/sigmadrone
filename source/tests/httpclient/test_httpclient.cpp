@@ -2,6 +2,10 @@
 #include <string>
 #include "http/http_client.hpp"
 
+/*
+ * Example:
+ * ./test_httpclient www.google.com /
+ */
 int main(int argc, char *argv[])
 {
 	size_t col;
@@ -20,13 +24,13 @@ int main(int argc, char *argv[])
 		port = server.substr(col + 1);
 	}
 
-	ec = client.connect(address, port);
+	client.connect(address, port, ec);
 	if (ec) {
 		std::cout << "Error Code: " << ec.value() << ", " << ec.message() << std::endl;
 		return 1;
 	}
 	http::client::response response;
-	ec = client.request(response, "GET", url);
+	client.request(response, "GET", url, ec);
 	if (ec) {
 		std::cout << "Error Code: " << ec.value() << ", " << ec.message() << std::endl;
 		return 1;

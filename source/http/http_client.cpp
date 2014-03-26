@@ -25,32 +25,42 @@ http_client::~http_client()
 	disconnect();
 }
 
-boost::system::error_code http_client::connect(const std::string& server, const std::string& port)
+void http_client::connect(const std::string& server, const std::string& port) throw(std::exception)
 {
-	boost::system::error_code ec;
-
 	disconnect();
 	server_ = server;
 	port_ = port;
 	boost::asio::ip::tcp::resolver::query query(server_, port_);
 	log_prefix_ = std::string("HTTP::CLIENT") + "@" + server_ + ":" + port_ + "; ";
-	endpoint_ = resolver_.resolve(query, ec);
-	if (ec) {
-		log_error_message("Failed to resolve address %s", server_.c_str());
-		return ec;
-	}
-	return connect_endpoint();
+	endpoint_ = resolver_.resolve(query);
+	connect_endpoint();
 }
 
 
-boost::system::error_code http_client::connect_endpoint()
+void http_client::connect(const std::string& server, const std::string& port, boost::system::error_code& ec)
 {
-	boost::system::error_code ec;
-	if (boost::asio::connect(socket_, endpoint_, ec) == boost::asio::ip::tcp::resolver::iterator()) {
-		log_error_message("Error: %s, Failed to connect to %s:%s", ec.message().c_str(), server_.c_str(), port_.c_str());
-		return ec;
+	try {
+		connect(server, port);
+	} catch (boost::system::system_error& e) {
+		ec = e.code();
 	}
-	return ec;
+}
+
+
+void http_client::connect_endpoint()
+{
+	if (boost::asio::connect(socket_, endpoint_) == boost::asio::ip::tcp::resolver::iterator()) {
+		log_error_message("Failed to connect to %s:%s", server_.c_str(), port_.c_str());
+	}
+}
+
+void http_client::connect_endpoint(boost::system::error_code& ec)
+{
+	try {
+		connect_endpoint();
+	} catch (boost::system::system_error& e) {
+		ec = e.code();
+	}
 }
 
 void http_client::disconnect()
@@ -106,27 +116,68 @@ void http_client::add_default_headers(http::headers& headers, size_t content_siz
 		headers.header("Connection", "close");
 }
 
-boost::system::error_code http_client::request(
+
+void http_client::request(
 		http::client::response& response,
 		const std::string& method,
 		const std::string& url,
 		const std::string& content,
-		http::headers headers)
+		boost::system::error_code& ec)
+{
+	http::headers userheaders;
+	request(response, method, url, content, userheaders, ec);
+}
+
+void http_client::request(
+		http::client::response& response,
+		const std::string& method,
+		const std::string& url,
+		boost::system::error_code& ec)
+{
+	http::headers userheaders;
+	std::string content;
+	request(response, method, url, content, userheaders, ec);
+}
+
+void http_client::request(http::client::response& response,
+		const std::string& method,
+		const std::string& url,
+		const std::string& content,
+		const http::headers& userheaders,
+		boost::system::error_code& ec)
+{
+	try {
+		request(response, method, url, content, userheaders);
+	} catch (boost::system::system_error& e) {
+		ec = e.code();
+	}
+}
+
+
+void http_client::request(http::client::response& response,
+		const std::string& method,
+		const std::string& url,
+		const std::string& content,
+		const http::headers& userheaders) throw(std::exception)
 {
 	boost::system::error_code ec;
+	http::headers headers(userheaders);
 	add_default_headers(headers, content.size());
 	std::vector<boost::asio::const_buffer> request_buffers = prepare_request_buffers(method, url, content, headers);
 
 	ec = send_request(response, request_buffers);
 	if (ec == boost::asio::error::eof || ec == boost::asio::error::bad_descriptor) {
 		disconnect();
-		ec = connect_endpoint();
-		if (!ec)
-			ec = send_request(response, request_buffers);
+		connect_endpoint();
+		ec = send_request(response, request_buffers);
 	}
-	if (ec)
+	if (ec) {
 		log_error_message("Error: %s, Failed to send the request", ec.message().c_str());
-	return ec;
+		response.content.clear();
+		response.headers.clear();
+		response.status = 0;
+		boost::asio::detail::throw_error(ec, "http_client::request");
+	}
 }
 
 boost::system::error_code http_client::send_request(
