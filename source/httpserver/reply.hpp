@@ -45,7 +45,7 @@ struct reply
 	} status;
 
 	/// The headers to be included in the reply.
-	http::server::headers headers;
+	http::headers headers;
 
 	/// The content to be sent in the reply.
 	std::string content;

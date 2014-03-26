@@ -66,7 +66,10 @@ OBJS= \
     obj/request.o \
     obj/request_handler.o \
     obj/request_parser.o \
-    obj/service.o \
+    obj/http_server.o \
+    obj/http_client.o \
+    obj/response_parser.o \
+
 
 
 all: obj libhttpserver.a

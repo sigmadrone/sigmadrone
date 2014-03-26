@@ -25,7 +25,7 @@ namespace http {
 namespace server {
 
 class connection_manager;
-class service;
+class http_server;
 
 /// Represents a single connection from a client.
 class connection: public boost::enable_shared_from_this<connection>, private boost::noncopyable
@@ -34,7 +34,7 @@ public:
 	typedef boost::array<char, 8192> buffer_type;
 
 	/// Construct a connection with the given io_service.
-	explicit connection(service& service, connection_manager& manager, request_handler& handler);
+	explicit connection(http_server& server, connection_manager& manager, request_handler& handler);
 
 	/// Get the socket associated with the connection.
 	boost::asio::ip::tcp::socket& socket();
@@ -72,7 +72,7 @@ private:
 	void reply_with_error(reply::status_type status);
 
 	/// HTTP Server
-	service& service_;
+	http_server& server_;
 
 	/// Socket for the connection.
 	boost::asio::ip::tcp::socket socket_;

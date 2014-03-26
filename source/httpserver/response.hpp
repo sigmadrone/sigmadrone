@@ -1,6 +1,6 @@
 //
-// request.hpp
-// ~~~~~~~~~~~
+// reply.hpp
+// ~~~~~~~~~
 //
 // Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
@@ -8,34 +8,36 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef HTTP_REQUEST_HPP
-#define HTTP_REQUEST_HPP
+#ifndef HTTP_RESPONSE_HPP
+#define HTTP_RESPONSE_HPP
 
 #include <string>
 #include <vector>
+#include <map>
+#include <boost/asio.hpp>
 #include "headers.hpp"
 
 namespace http {
-namespace server {
+namespace client {
 
-/// A request received from a client.
-struct request
+/// A reply to be sent to a client.
+struct response
 {
-	std::string method;
-	std::string uri;
+	/// The status of the reply.
 	int http_version_major;
 	int http_version_minor;
-	http::headers headers;
-	std::string content;
-	int headers_size;
+	int status;
+	std::string status_text;
 
-	std::string request_line() const;
-	void reset();
+	/// The headers, included in the response.
+	http::headers headers;
+
+	/// The content to be sent in the reply.
+	std::string content;
 };
 
-std::ostream& operator<<(std::ostream& os, const request& req);
 
 } // namespace server
 } // namespace http
 
-#endif // HTTP_REQUEST_HPP
+#endif // HTTP_RESPONSE_HPP

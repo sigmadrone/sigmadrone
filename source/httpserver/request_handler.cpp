@@ -17,13 +17,13 @@
 #include "mime_types.hpp"
 #include "reply.hpp"
 #include "request.hpp"
-#include "service.hpp"
+#include "http_server.hpp"
 
 namespace http {
 namespace server {
 
-request_handler::request_handler(service& server)
-	: service_(server)
+request_handler::request_handler(http_server& server)
+	: server_(server)
 {
 }
 
@@ -36,7 +36,7 @@ void request_handler::handle_request(const request& req, reply& rep, size_t seri
 	oss << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << std::endl;
 	oss << rep << std::endl;
 	oss << "==================================" << std::endl << std::endl << std::endl;
-	service_.log_debug_message("%s", oss.str().c_str());
+	server_.log_debug_message("%s", oss.str().c_str());
 }
 
 void request_handler::handle_request_internal(const request& req, reply& rep)

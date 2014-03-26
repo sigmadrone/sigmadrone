@@ -41,7 +41,7 @@ void application::headers_request_handler(const http::server::request& req, http
 	rep.headers.header("Content-Type", "text/plain");
 
 	rep.content.append(req.request_line());
-	for (http::server::headers::const_iterator it = req.headers.begin(); it != req.headers.end(); it++) {
+	for (http::headers::const_iterator it = req.headers.begin(); it != req.headers.end(); it++) {
 		rep.content.append(it->first + ": " + it->second + "\n");
 	}
 	rep.status = http::server::reply::ok;
@@ -71,7 +71,7 @@ void application::jsonrpc_request_handler(const http::server::request& req, http
 
 int application::run()
 {
-	rpc_server_.reset(new http::server::service(io_service_rpc_, "0.0.0.0", "8080"));
+	rpc_server_.reset(new http::server::http_server(io_service_rpc_, "0.0.0.0", "8080"));
 
 	/*
 	 * Register member function (request handler)

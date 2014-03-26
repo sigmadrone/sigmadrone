@@ -11,13 +11,13 @@
 #include "connection_manager.hpp"
 #include <algorithm>
 #include <boost/bind.hpp>
-#include "service.hpp"
+#include "http_server.hpp"
 
 namespace http {
 namespace server {
 
-connection_manager::connection_manager(service& service)
-	: service_(service)
+connection_manager::connection_manager(http_server& server)
+	: server_(server)
 {
 
 }
