@@ -1,4 +1,4 @@
-SUBDIRS += httpserver
+SUBDIRS += http
 SUBDIRS += tools
 SUBDIRS += tests
 SUBDIRS += plugins

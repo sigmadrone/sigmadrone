@@ -25,7 +25,12 @@ public:
 	explicit http_client();
 	~http_client();
 	boost::system::error_code connect(const std::string& server, const std::string& port);
-	boost::system::error_code request(http::client::response& response, const std::string& method, const std::string& url, const std::string& content, http::headers headers = http::headers());
+	boost::system::error_code request(
+			http::client::response& response,
+			const std::string& method,
+			const std::string& url,
+			const std::string& content = std::string(),
+			http::headers headers = http::headers());
 	void set_logger(http::logger_ptr ptr);
 
 private:

@@ -6,10 +6,9 @@ INCLUDES	= -I../.. -I$(SDRONE_SRCDIR) -I$(HTTPSERVER_SRCDIR)
 LIBS		= -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread -lm -lrt -lpthread -ldl
 #use -Wno-psabi to turn off warnings about ABI changes for va-list in GCC 4.4
 CFLAGS		= -g -O0 -Wall -Wno-psabi
-TARGET		= test_httpserver
+TARGET		= test_httpclient
 OBJECTS		= \
-		test_httpserver.o \
-		application.o \
+		test_httpclient.o \
 		$(HTTPSERVER_SRCDIR)/libhttp.a
 
 

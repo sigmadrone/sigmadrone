@@ -72,7 +72,7 @@ OBJS= \
 
 
 
-all: obj libhttpserver.a
+all: obj libhttp.a
 
 # auto-generated dependencies:
 -include obj/*.P
@@ -95,12 +95,12 @@ obj/%.o: %.c
 obj:
 	mkdir obj
 
-libhttpserver.a: $(OBJS:obj/%=obj/%)
+libhttp.a: $(OBJS:obj/%=obj/%)
 	$(AR) -crs $@ $^
 
 
 clean:
-	-rm -f libhttpserver.a
+	-rm -f libhttp.a
 	-rm -f obj/*.o
 	-rm -rf obj 
 
