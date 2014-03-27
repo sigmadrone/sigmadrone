@@ -69,6 +69,7 @@ OBJS= \
     obj/http_server.o \
     obj/http_client.o \
     obj/response_parser.o \
+    obj/base64.o \
 
 
 

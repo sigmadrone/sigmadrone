@@ -2,6 +2,7 @@ SUBDIRS += cmdargs
 SUBDIRS += jsonrpc
 SUBDIRS += httpserver
 SUBDIRS += httpclient
+SUBDIRS += base64
 
 all:
 	@for dir in $(SUBDIRS); do \
