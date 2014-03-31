@@ -22,6 +22,10 @@
 #define OUT
 #endif
 
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(x) (sizeof(x)/sizeof(x[0]))
+#endif
+
 #define SD_DEFAULT_PORT 2222
 
 #define SD_LOG_LEVEL_NONE 0
@@ -43,9 +47,17 @@ __inline uint32_t SdStringToLogLevel(const char* str) {
 	return SD_LOG_LEVEL_VERBOSE;
 }
 
+__inline const char* SdLogLevelToString(uint32_t level) {
+	const char* asStr[] = { "SD_LOG_LEVEL_NONE","SD_LOG_LEVEL_ERROR",
+			"SD_LOG_LEVEL_WARNING","SD_LOG_LEVEL_INFO","SD_LOG_LEVEL_VERBOSE",
+			"SD_LOG_LEVEL_DEBUG"
+	};
+	return (level < ARRAYSIZE(asStr)) ? asStr[level] : "SD_LOG_LEVEL_NONE";
+}
+
 typedef enum _SdCommandCode {
 	SD_COMMAND_NONE = 0,
-	SD_COMMAND_RUN,
+	SD_COMMAND_FLY,
 	SD_COMMAND_RESET,
 	SD_COMMAND_EXIT,
 	SD_COMMAND_LOAD_PLUGIN,
@@ -57,7 +69,7 @@ typedef enum _SdCommandCode {
 
 __inline SdCommandCode SdStringToCommandCode(const char* str) {
 	if (str) {
-		if (0 == strcmp("SD_COMMAND_RUN",str)) { return SD_COMMAND_RUN; }
+		if (0 == strcmp("SD_COMMAND_FLY",str)) { return SD_COMMAND_FLY; }
 		if (0 == strcmp("SD_COMMAND_RESET",str)) { return SD_COMMAND_RESET; }
 		if (0 == strcmp("SD_COMMAND_EXIT",str)) { return SD_COMMAND_EXIT; }
 		if (0 == strcmp("SD_COMMAND_LOAD_PLUGIN",str)) { return SD_COMMAND_LOAD_PLUGIN; }
@@ -67,6 +79,13 @@ __inline SdCommandCode SdStringToCommandCode(const char* str) {
 		if (0 == strcmp("SD_COMMAND_GET_STATE",str)) { return SD_COMMAND_GET_STATE; }
 	}
 	return SD_COMMAND_NONE;
+}
+
+__inline const char* SdCommandCodeToString(SdCommandCode cmd) {
+	const char* cmdAsStr[] = {"SD_COMMAND_NONE","SD_COMMAND_FLY","SD_COMMAND_RESET",
+		"SD_COMMAND_EXIT","SD_COMMAND_LOAD_PLUGIN","SD_COMMAND_UNLOAD_PLUGIN",
+		"SD_COMMAND_PING","SD_COMMAND_CONFIG","SD_COMMAND_GET_STATE"};
+	return (cmd < ARRAYSIZE(cmdAsStr)) ? cmdAsStr[cmd] : "SD_COMMAND_NONE";
 }
 
 typedef enum _SdDroneType
@@ -375,7 +394,7 @@ struct SdIoData
 	SdIoData(const QuaternionD* qt) { dataType = TYPE_QUATERNION; asQuaternion = qt; }
 	SdIoData(const SdImuData* imu) { dataType = TYPE_IMU; asImuData = imu; }
 	SdIoData(const SdServoIoData* siod) { dataType = TYPE_SERVO; asServoData = siod; }
-	SdIoData(CommandArgs* args) {
+	SdIoData(const CommandArgs* args) {
 		dataType = TYPE_COMMAND_ARGS; asCommandArgs = args;
 	}
 	SdIoData(const void* p, uint32_t size) {
@@ -399,7 +418,7 @@ struct SdIoData
 		const Vector4d* asVector4d;
 		const Vector3d* asVector3d;
 		const SdImuData* asImuData;
-		CommandArgs* asCommandArgs;
+		const CommandArgs* asCommandArgs;
 		const SdServoIoData* asServoData;
 	};
 };
@@ -642,7 +661,7 @@ struct IPlugin
 	 * to process IOs, provided the plugin has called SetIoFilters.
 	 */
 	virtual int Start(
-			CommandArgs*
+			const CommandArgs*
 			)  = 0;
 	/*
 	 * IO processing has stopped on the chain and the drone hardware is being
@@ -724,6 +743,15 @@ struct IPlugin
 protected:
 	virtual ~IPlugin() {}
 };
+
+static const int SD_JSONRPC_ERROR_SUCCESS 	= 0;
+static const int SD_JSONRPC_ERROR_PARSE = -32700;
+static const int SD_JSONRPC_ERROR_INVALID_XMLRPC = -32600;
+static const int SD_JSONRPC_ERROR_UNSUPPORTED_METHOD = -32601;
+static const int SD_JSONRPC_ERROR_INVALID_METHOD_PARAMS = -32602;
+static const int SD_JSONRPC_ERROR_APP 		= -32500;
+static const int SD_JSONRPC_ERROR_SYSTEM 	= -32400;
+static const int SD_JSONRPC_ERROR_TRANSPORT = -32300;
 
 enum SdJsonValueType
 {
@@ -846,32 +874,12 @@ protected:
 
 struct CommandArgs
 {
-	virtual SdCommandCode GetCommand() = 0;
-	virtual const char* GetArgAsString(
-			int index
-			) = 0;
-	virtual int GetArgAsInt(
-			int index
-			) = 0;
-	virtual int64_t GetArgAsInt64(
-			int index
-			) = 0;
-	virtual double GetArgAsDouble(
-			int index
-			) = 0;
-	virtual int /*-1 or index*/ IsArgPresent(
-			const char* argName
-			) = 0;
-	virtual const char** GetArgv(
-			) = 0;
-	virtual int GetArgc(
-			) = 0;
-
-	virtual double GetMinThrust() = 0;
-	virtual double GetMaxThrust() = 0;
-	virtual double GetDesiredThrust() = 0;
-	virtual const QuaternionD* GetTargetAttitude() = 0;
-	virtual const SdDroneConfig* GetDroneConfig() = 0;
+	virtual SdCommandCode GetCommand() const = 0;
+	virtual double GetMinThrust() const = 0;
+	virtual double GetMaxThrust() const = 0;
+	virtual double GetDesiredThrust() const = 0;
+	virtual const QuaternionD* GetTargetAttitude() const = 0;
+	virtual const SdDroneConfig* GetDroneConfig() const = 0;
 protected:
 	virtual ~CommandArgs() {}
 };

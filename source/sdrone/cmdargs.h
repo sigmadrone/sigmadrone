@@ -35,7 +35,7 @@ public:
 	void Parse(int argc, char *argv[]) throw (std::exception);
 	const std::string& GetValue(const std::string &name);
 	std::vector<std::string> GetValues(const std::string &name);
-	std::string HelpMessage();
+	std::string HelpMessage() const;
 
 	bool /*value present*/ GetValueAsDouble(const std::string &name, double* value);
 	bool /*value present*/ GetValueAsInt(const std::string &name, int32_t* value);

@@ -14,7 +14,8 @@ OBJECTS		= \
 		jsonrpcparser.o\
 		jsonreadwrite.o\
 		jsonrpcbuilder.o\
-		cmdargs.o
+		cmdargs.o\
+		commandargs.o
 
 
 all : $(TARGET)

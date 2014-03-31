@@ -35,7 +35,7 @@ int ImuRemap::AttachToChain(
 }
 
 int ImuRemap::Start(
-	CommandArgs* cmdArgs)
+	const CommandArgs* cmdArgs)
 {
 	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
 	m_AccelMap = droneConfig->Accel.CoordinateMap;

@@ -13,35 +13,54 @@
 #include "dronedefs.h"
 #include "pluginchain.h"
 #include "commandargs.h"
+#include "filelock.h"
+
+class SdJsonRpcDispatcher;
+struct SdJsonRpcReply;
+struct SdJsonRpcRequest;
 
 /*
  * Aggregate class representing an instance of a drone.
  * Main responsibilities:
- * 	- factory for the rest of the objects
- * 	- Run/Reset/Diagnose
+ * 	- Serves the RPC commands
+ * 	- Indirectly manages plugins by invoking PluginChain methods
  */
 class Drone
 {
 public:
 	static Drone* Create();
-	~Drone();
-	int ExecuteCommand(_CommandArgs*);
-	int Reset(const SdDroneConfig*,bool detachPlugins);
-	int Run(_CommandArgs*);
-	bool IsRunning(void);
-	void PrintState(FILE* out);
-	static void PrintConfig(const SdDroneConfig* config);
+	static void Destroy();
 	static Drone* Only() { return s_Only; }
 
-	inline const SdDroneConfig& GetCurrentConfig() { return m_config; }
-	inline void SetConfig(const SdDroneConfig* cfg) { m_config = *cfg; }
+	int Run(const _CommandArgs& args);
 
-	//static const double s_DefaultMinThrust = 0.3;
-	//static const double s_DefaultMaxThrust = 0.99;
+	inline bool IsRunning(void) { return m_isRunning; }
+
 private:
 	Drone();
-	void Cleanup();
+	~Drone();
 	void InitInternalPlugins();
+	int OnExit();
+	int OnFly();
+	int OnReset();
+
+//	inline void SetConfig(const SdDroneConfig* cfg) { m_config = *cfg; }
+
+	static void OnRpcCommandFly(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandExit(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandReset(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void PrintConfig(const SdDroneConfig* config);
+
+	static void fatal_error_signal(int sig);
 
 	static int PluginAttach(
 		IN void* droneContext,
@@ -53,10 +72,11 @@ private:
 		);
 
 private:
-	SdDroneConfig m_config;
+	_CommandArgs m_commandArgs;
+	SdJsonRpcDispatcher* m_rpcDispatch;
 	PluginChain m_pluginChain;
+	FileLock m_globalLock;
 	bool m_isRunning;
-	bool m_pluginsStarted;
 	static Drone* s_Only;
 };
 

@@ -11,6 +11,8 @@
 #include "commoninc.h"
 #include <pthread.h>
 #include <string>
+#include "jsonrpcdispatch.h"
+
 using namespace std;
 
 typedef int (*ExecuteCommandCallbackT)(
@@ -36,6 +38,7 @@ public:
 			const string& command
 			);
 	bool IsServerThreadRunning();
+
 	static void SerializeCommand(
 			string* cmdLine,
 			int argc,

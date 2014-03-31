@@ -33,7 +33,7 @@ int ImuFilterPlugin::AttachToChain(
 	return err;
 }
 
-int ImuFilterPlugin::Start(CommandArgs* cmdArgs)
+int ImuFilterPlugin::Start(const CommandArgs* cmdArgs)
 {
 	m_ImuFilter.Reset();
 	m_SetEarthG = true;

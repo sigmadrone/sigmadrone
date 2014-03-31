@@ -29,7 +29,8 @@ PluginContext::PluginContext(
 		m_deviceFilter(0),
 		m_ioFilter(0),
 		m_dispatchThread(0),
-		m_doDispatchIo(false)
+		m_doDispatchIo(false),
+		m_logLevel(SD_LOG_LEVEL_INFO)
 {
 	m_refCnt = 1;
 	if (0 == strcmp(m_plugin->GetDlFileName(),g_Argv[0])) {
@@ -185,7 +186,7 @@ void PluginContext::Logv(
 	const char* format,
 	va_list args)
 {
-	if (logLevel > g_CmdArgs.GetDroneConfig()->LogLevel) {
+	if (logLevel > m_logLevel) {
 		return;
 	}
 	vfprintf(stdout,format,args);

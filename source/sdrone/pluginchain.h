@@ -34,9 +34,10 @@ public:
 			uint32_t dispatchFlags
 			);
 
-	int StartPlugins(_CommandArgs*);
+	int StartPlugins(const _CommandArgs*);
 	int StopPlugins(bool detachPlugins);
-	int ExecuteCommand(_CommandArgs*);
+	int ExecuteCommand(const _CommandArgs*);
+	bool ArePluginsStarted() { return m_pluginsStarted; }
 
 private:
 	typedef std::map<SdPluginAltitude,PluginContext*> PluginMap;
@@ -86,6 +87,7 @@ private:
 private:
 	PluginMap m_chain;
 	pthread_rwlock_t m_lock;
+	bool m_pluginsStarted;
 };
 
 #endif /* PLUGINCHAIN_H_ */

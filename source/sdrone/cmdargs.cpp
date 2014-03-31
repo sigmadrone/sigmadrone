@@ -59,7 +59,7 @@ void CmdArgs::AddSpecs(CmdArgSpec *specs, unsigned int count)
 }
 
 
-std::string CmdArgs::HelpMessage()
+std::string CmdArgs::HelpMessage() const
 {
 	std::stringstream oss;
 	std::vector<CmdArgSpec>::const_iterator it;

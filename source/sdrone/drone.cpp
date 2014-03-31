@@ -6,6 +6,8 @@
  */
 
 #include "commoninc.h"
+#include <sys/stat.h>
+#include <sys/signal.h>
 #include "drone.h"
 #include "quadrotorpilot.h"
 #include "servodevice.h"
@@ -18,6 +20,7 @@
 #include "tracelogplugin.h"
 #include "imulowpassfilter.h"
 #include "kalmanattitudefilter.h"
+#include "jsonrpcdispatch.h"
 
 Drone* Drone::s_Only = 0;
 
@@ -27,97 +30,171 @@ extern "C" int SdPluginInitialize(
 	IN const char* pluginName
 	);
 
-Drone* Drone::Create()
-{
+Drone* Drone::Create() {
 	Drone* drone = new Drone();
-	if (drone != s_Only) {
-		delete drone;
-		return 0;
+	if (!!drone) {
+		if (!drone->m_globalLock.IsLocked()) {
+			delete drone;
+			drone = 0;
+		} else {
+			s_Only = drone;
+		}
 	}
 	return s_Only;
 }
 
-Drone::Drone()
-{
-	if (!__sync_bool_compare_and_swap (&s_Only, 0, this)) {
-		return;
+void Drone::Destroy() {
+	if (s_Only) {
+		delete s_Only;
+		s_Only = 0;
 	}
+}
 
-	m_config.Accel.DeviceName = "/dev/accel0";
-	m_config.Accel.SamplingRate = 200;
-	m_config.Accel.Scale = 4;
-	m_config.Accel.MaxReading = 32768;
-	m_config.Gyro.DeviceName = "/dev/gyro0";
-	m_config.Gyro.SamplingRate = 200;
-	m_config.Gyro.Scale = 2000;
-	m_config.Gyro.MaxReading = 32768;
-	m_config.Mag.DeviceName = "/dev/mag0";
-	m_config.Servo.DeviceName = "/dev/pwm0";
-	m_config.Servo.ChannelMask = 0xff;
-	m_config.Servo.Rate = 100;
-	m_config.Quad.Motor[0] = 0;
-	m_config.Quad.Motor[1] = 2;
-	m_config.Quad.Motor[2] = 3;
-	m_config.Quad.Motor[3] = 4;
-	m_config.Quad.ImuAngleAxisZ = 45;
-	m_config.Quad.Kp = 0.6;
-	m_config.Quad.Ki = 0.00000005;
-	m_config.Quad.Kd = 0.0015;
+void Drone::fatal_error_signal (int sig)
+{
+	static int fatal_error_in_progress = 0;
+	/* Since this handler is established for more than one kind of signal,
+          it might still get invoked recursively by delivery of some other kind
+          of signal.  Use a static variable to keep track of that. */
+	if (fatal_error_in_progress) {
+		raise (sig);
+	}
+	fatal_error_in_progress = 1;
 
-	m_isRunning = true;
-	m_pluginsStarted = false;
+	/*
+	 * Now do the clean up actions:
+	 * 		- reset terminal modes
+	 * 		- kill child processes
+	 * 		- remove lock files
+     */
+
+	printf("FATAL: error signal %d raised, shutting down the drone!\n",
+			sig);
+	Drone::Only()->OnExit();
+
+	/*
+	 * Now reraise the signal.  We reactivate the signal's
+	 * default handling, which is to terminate the process.
+	 * We could just call exit or abort,
+	 * but reraising the signal sets the return status
+	 * from the process correctly.
+	 */
+	signal (sig, SIG_DFL);
+	raise (sig);
+}
+
+Drone::Drone() :
+		m_rpcDispatch(0),
+		m_globalLock("sigmadrone",true),
+		m_isRunning(false)
+{
+	/*
+	 * Register error signal handlers
+	 */
+	signal(SIGFPE,fatal_error_signal);
+	signal(SIGILL,fatal_error_signal);
+	signal(SIGSEGV,fatal_error_signal);
+	signal(SIGBUS,fatal_error_signal);
+	signal(SIGABRT,fatal_error_signal);
+
+	if (!m_globalLock.IsLocked()) {
+		printf("Failed to obtain global lock: %s\n",strerror(errno));
+	}
 }
 
 Drone::~Drone()
 {
-	__sync_bool_compare_and_swap (&s_Only, this, 0);
+	if (m_rpcDispatch) {
+		delete m_rpcDispatch;
+	}
 }
 
-int Drone::Reset(
-		const SdDroneConfig* config,
-		bool detachPlugins)
+int Drone::Run(const _CommandArgs& args)
 {
-	int err = ENOMEM;
+	m_commandArgs = args;
 
-	if (config) {
-		m_config = *config;
+	InitInternalPlugins();
+
+	if (0 != m_rpcDispatch) {
+		delete m_rpcDispatch;
+	}
+	m_rpcDispatch = new SdJsonRpcDispatcher(IRpcTransport::TRANSPORT_HTTP);
+	if (0 == m_rpcDispatch) {
+		return ENOMEM;
+	}
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_FLY),
+			OnRpcCommandFly,
+			this);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_RESET),
+			OnRpcCommandReset,
+			this);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_EXIT),
+			OnRpcCommandExit,
+			this);
+
+	//
+	// Execute the command that came with the command line
+	//
+	switch(args.GetCommand()) {
+	case SD_COMMAND_FLY:
+		OnFly();
+		break;
+	case SD_COMMAND_RESET:
+	case SD_COMMAND_NONE:
+		OnReset();
+		break;
+	default:
+	case SD_COMMAND_EXIT:
+		// OK, we will just return
+		return 0;
 	}
 
-	err = m_pluginChain.StopPlugins(detachPlugins);
+	//
+	// Start serving requests. Note this call will block the thread and return
+	// only after an exit command was received
+	//
+	return m_rpcDispatch->StartServingRequests(std::string("localhost"),
+			args.GetServerPort());
+}
 
+int Drone::OnReset()
+{
+	int err = m_pluginChain.StopPlugins(false);
 	if (err < 0) {
 		fprintf(stdout,"Failed to reset the drone, err=%d\n",err);
 	} else {
 		printf("Drone was successfully reset!\n");
 	}
 
-	m_pluginsStarted = false;
+	return err;
+}
+
+int Drone::OnExit()
+{
+	int err = m_pluginChain.StopPlugins(true);
+	if (err < 0) {
+		fprintf(stdout,"Failed to reset the drone, err=%d\n",err);
+	} else {
+		printf("Drone was successfully reset!\n");
+	}
+
+	assert (m_rpcDispatch);
+	m_rpcDispatch->StopServingRequests();
 
 	return err;
 }
 
-int Drone::ExecuteCommand(
-	_CommandArgs* cmdArgs)
+int Drone::OnFly()
 {
-	int err = EINVAL;
-	switch (cmdArgs->GetCommand()) {
-	case SD_COMMAND_RESET:
-		err = Reset(cmdArgs->GetDroneConfig(),false);
-		break;
-	case SD_COMMAND_EXIT:
-		err = Reset(0,true);
-		m_isRunning = false;
-		break;
-	case SD_COMMAND_RUN:
-		SetConfig(cmdArgs->GetDroneConfig());
-		//SetThrust(cmdArgs->GetDesiredThrust());
-		//SetThrustRange(cmdArgs->GetMinThrust(),cmdArgs->GetMaxThrust());
-		err = Run(cmdArgs);
-		break;
-	case SD_COMMAND_NONE:
-	default:
-		SetConfig(cmdArgs->GetDroneConfig());
-		break;
+	int err = 0;
+	if (!m_pluginChain.ArePluginsStarted()) {
+		PrintConfig(m_commandArgs.GetDroneConfig());
+		err = m_pluginChain.StartPlugins(&m_commandArgs);
+	} else {
+		err = m_pluginChain.ExecuteCommand(&m_commandArgs);
 	}
 	return err;
 }
@@ -143,30 +220,8 @@ void Drone::PrintConfig(const SdDroneConfig* config)
 	printf("Kd:             %1.8f\n", config->Quad.Kd);
 }
 
-int Drone::Run(_CommandArgs* cmdArgs)
-{
-	int err = 0;
-	if (m_isRunning) {
-		// TEMP
-		InitInternalPlugins();
-		if (!m_pluginsStarted) {
-			PrintConfig(cmdArgs->GetDroneConfig());
-			if (0 == (err = m_pluginChain.StartPlugins(cmdArgs))) {
-				m_pluginsStarted = true;
-			}
-		} else {
-			err = m_pluginChain.ExecuteCommand(cmdArgs);
-		}
-	}
-	return err;
-}
-
 void Drone::InitInternalPlugins()
 {
-	static int initialized = 0;
-	if (!__sync_bool_compare_and_swap (&initialized, 0, 1)) {
-		return;
-	}
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_DEVICE);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_REMAP);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_BIAS);
@@ -179,9 +234,45 @@ void Drone::InitInternalPlugins()
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_TRACELOG);
 }
 
-bool Drone::IsRunning(void)
+void Drone::OnRpcCommandFly(
+		void* context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
 {
-	return m_isRunning;
+	assert(context == Only());
+	rep->Error = SD_JSONRPC_ERROR_SUCCESS;
+	Only()->m_commandArgs.ParseJsonRpcArgs(req->Params);
+	if (0 != Only()->OnFly()) {
+		rep->Error = SD_JSONRPC_ERROR_APP;
+	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandExit(
+		void* context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	assert(context == Only());
+	rep->Error = SD_JSONRPC_ERROR_SUCCESS;
+	if (0 != Only()->OnExit()) {
+		rep->Error = SD_JSONRPC_ERROR_APP;
+	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandReset(
+		void* context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	assert(context == Only());
+	rep->Error = SD_JSONRPC_ERROR_SUCCESS;
+	Only()->m_commandArgs.ParseJsonRpcArgs(req->Params);
+	if (0 != Only()->OnReset()) {
+		rep->Error = SD_JSONRPC_ERROR_APP;
+	}
+	rep->Id = req->Id;
 }
 
 int Drone::PluginAttach(

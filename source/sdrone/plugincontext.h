@@ -66,6 +66,10 @@ public:
 	SdDeviceId GetPluginDeviceFilter();
 	uint32_t GetPluginIoCodeFilter();
 
+	void ConfigUpdated(const CommandArgs* args) {
+		m_logLevel = args->GetDroneConfig()->LogLevel;
+	}
+
 private:
 	virtual ~PluginContext();
 	static void* DispatchThread(void* arg);
@@ -83,6 +87,7 @@ private:
 	pthread_t m_dispatchThread;
 	int m_refCnt;
 	bool m_doDispatchIo;
+	int m_logLevel;
 };
 
 #endif /* PLUGINCONTEXT_H_ */

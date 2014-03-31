@@ -43,7 +43,7 @@ void ServoDevice::Close()
 	}
 }
 
-int ServoDevice::Start(CommandArgs* cmdArgs)
+int ServoDevice::Start(const CommandArgs* cmdArgs)
 {
 	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
 	const SdServoConfig* config = &droneConfig->Servo;

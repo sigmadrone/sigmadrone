@@ -3,6 +3,7 @@
 #include "cmdargs.h"
 #include "jsonrpcparser.h"
 #include "jsonrpcbuilder.h"
+#include "commandargs.h"
 
 struct TestControl
 {
@@ -73,7 +74,7 @@ void TestParseJsonRpcFile(const std::string& fileName)
 
 
 	SdDroneConfig config;
-	if (!SdJsonParseDroneConfig(parser.GetRpcParams(),&config)) {
+	if (!_CommandArgs::ParseJsonDroneConfig(parser.GetRpcParams(),&config)) {
 		TEST_FAILED();
 		return;
 	}
@@ -140,7 +141,8 @@ void TestParseJsonRpcFromBuffer()
 	}
 
 	double thrust=0, minThrust=0, maxThrust=0;
-	SdJsonParseParseThrust(parser.GetRpcParams(), &thrust, &minThrust, &maxThrust);
+	_CommandArgs::ParseJsonThrust(parser.GetRpcParams(), &thrust, &minThrust,
+			&maxThrust);
 	if (thrust != 0.5 || minThrust != 0.3 || maxThrust != 0.7) {
 		TEST_FAILED();
 		return;
@@ -155,7 +157,8 @@ void TestParseJsonRpcFromBuffer()
 		return;
 	}
 
-	SdJsonParseParseThrust(parser.GetRpcParams(), &thrust, &minThrust, &maxThrust);
+	_CommandArgs::ParseJsonThrust(parser.GetRpcParams(), &thrust, &minThrust,
+			&maxThrust);
 	if (thrust != 0.5 || minThrust != 0.3 || maxThrust != 0.7) {
 		TEST_FAILED();
 		return;
@@ -169,7 +172,8 @@ void TestParseJsonRpcFromBuffer()
 		return;
 	}
 
-	SdJsonParseParseThrust(parser.GetRpcParams(), &thrust, &minThrust, &maxThrust);
+	_CommandArgs::ParseJsonThrust(parser.GetRpcParams(), &thrust, &minThrust,
+			&maxThrust);
 	if (thrust != 0.6 || minThrust != 0.4 || maxThrust != 0.8) {
 		TEST_FAILED();
 		return;

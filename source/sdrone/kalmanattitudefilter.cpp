@@ -34,7 +34,7 @@ int KalmanAttitudeFilter::AttachToChain(
 	return err;
 }
 
-int KalmanAttitudeFilter::Start(CommandArgs* cmdArgs)
+int KalmanAttitudeFilter::Start(const CommandArgs* cmdArgs)
 {
 	m_Runtime->SetIoFilters(
 			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),

@@ -137,6 +137,7 @@ public:
 	bool AddElement(
 			const IJsonValue*
 			);
+	bool AddElement(const SdJsonValue& val) { return AddElement(&val); }
 	IJsonArray* Clone() const;
 	void Reset();
 	const SdJsonArray& operator=(const SdJsonArray&);

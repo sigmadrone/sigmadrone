@@ -37,7 +37,7 @@ int ImuBias::AttachToChain(
 }
 
 int ImuBias::Start(
-	CommandArgs* cmdArgs)
+	const CommandArgs* cmdArgs)
 {
 	int biasSamples = cmdArgs->GetDroneConfig()->Gyro.NumBiasSamples;
 	m_CurrentBiasSamples = 0;

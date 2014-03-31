@@ -35,7 +35,7 @@ int Navigator::AttachToChain(
 	return err;
 }
 
-int Navigator::Start(CommandArgs* cmdArgs)
+int Navigator::Start(const CommandArgs* cmdArgs)
 {
 	assert(!!m_Runtime);
 	m_Runtime->SetIoFilters(

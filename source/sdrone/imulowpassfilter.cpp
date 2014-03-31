@@ -43,7 +43,7 @@ int ImuLowPassFilter::AttachToChain(
 }
 
 int ImuLowPassFilter::Start(
-	CommandArgs* cmdArgs)
+	const CommandArgs* cmdArgs)
 {
 	m_Runtime->SetIoFilters(
 		SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),

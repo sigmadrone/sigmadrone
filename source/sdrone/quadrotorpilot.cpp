@@ -44,7 +44,7 @@ int QuadRotorPilot::AttachToChain(
 }
 
 int QuadRotorPilot::Start(
-		CommandArgs* cmdArgs)
+		const CommandArgs* cmdArgs)
 {
 	const SdDroneConfig* config = cmdArgs->GetDroneConfig();
 	assert(config);
@@ -153,7 +153,7 @@ int QuadRotorPilot::IoCallback(
 
 	} else if (SD_IOCODE_COMMAND == ioPacket->IoCode()) {
 		if (ioPacket->GetIoData(true).dataType == SdIoData::TYPE_COMMAND_ARGS) {
-			CommandArgs* args = ioPacket->GetIoData(true).asCommandArgs;
+			const CommandArgs* args = ioPacket->GetIoData(true).asCommandArgs;
 			SetMinRev(args->GetMinThrust());
 			SetMaxRev(args->GetMaxThrust());
 			m_DesiredRev = fmin(args->GetMaxThrust(),args->GetDesiredThrust());

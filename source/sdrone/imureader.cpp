@@ -55,7 +55,7 @@ void ImuReader::Close()
 }
 
 int ImuReader::Start(
-	CommandArgs* cmdArgs)
+	const CommandArgs* cmdArgs)
 {
 	int err = EINVAL;
 	Close();

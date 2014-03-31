@@ -23,46 +23,31 @@ public:
 		uint32_t* usedLen
 		);
 	bool ParseFile(const char* fileName);
-	const IJsonObject* RootObj() { return m_rootNode.AsObject(); }
+	const IJsonObject* RootObj() const { return m_rootNode.AsObject(); }
 
-	void PrintJsonObject(const IJsonObject*);
-	void PrintJsonArray(const IJsonArray*);
-	void PrintJsonNode(const IJsonValue*);
+	static void PrintJsonObject(const IJsonObject*);
+	static void PrintJsonArray(const IJsonArray*);
+	static void PrintJsonNode(const IJsonValue*);
 
 private:
 	SdJsonValue m_rootNode;
 };
-
-bool SdJsonParseDroneConfig(
-		const IJsonObject* jsonRpcParams,
-		SdDroneConfig*);
-bool SdJsonParseImuConfig(
-		const IJsonObject* jsonImuObj,
-		SdImuDeviceConfig*);
-bool SdJsonParseParseThrust(
-		const IJsonObject* jsonRpcParams,
-		double* thrust,
-		double* minThrust,
-		double* maxThrust);
 
 class SdJsonRpcParser: public SdJsonParser
 {
 public:
 	SdJsonRpcParser() {}
 	virtual ~SdJsonRpcParser() {}
-	uint64_t GetRpcCallId();
-	bool IsValidRpcSchema();
-	std::string GetRpcMethod();
-	const IJsonObject* GetRpcParams();
+	uint64_t GetRpcCallId() const;
+	bool IsValidRpcSchema() const;
+	bool IsRequest() const;
+	bool IsReply() const;
+	bool IsErrorReply() const;
+	std::string GetRpcMethod() const;
+	const IJsonObject* GetRpcParams() const;
+	const IJsonValue* GetResult() const;
+	const IJsonObject* GetError() const;
+	int GetErrorCode() const;
+	std::string GetErrorMessage() const;
 };
-
-struct SdJsonRpcCallback
-{
-	virtual bool ExecuteRpc(uint64_t callId, IJsonObject* params) = 0;
-};
-
-class SdJsonRpcDispatcher
-{
-};
-
 #endif /* JSONRPCPARSER_H_ */

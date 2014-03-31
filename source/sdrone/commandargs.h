@@ -10,63 +10,66 @@
 
 #include "commoninc.h"
 #include "cmdargs.h"
-
-struct ParsedArgs
-{
-	SdCommandCode Command;
-	SdDroneConfig DroneCfg;
-	double Thrust;
-	double MinThrust;
-	double MaxThrust;
-	const char* HostAddress;
-	const char* LogFile;
-	int ServerPort;
-	int TimeToSleep;
-	bool IsServer;
-	bool IsClient;
-};
+#include "jsonreadwrite.h"
 
 class _CommandArgs: public CommandArgs
 {
 public:
 	_CommandArgs();
 	virtual ~_CommandArgs();
-	void PrintUsage();
+	void PrintUsage(int argc, char* argv[]) const;
 	bool ParseArgs(int argc, char* argv[]);
-	SdCommandCode GetCommand();
-	const char* GetArgAsString(
-			int index
-			);
-	int GetArgAsInt(
-			int index
-			);
-	int64_t GetArgAsInt64(
-			int index
-			);
-	double GetArgAsDouble(
-			int index
-			);
-	int /*-1 or index*/ IsArgPresent(
-			const char* argName);
-	const char** GetArgv();
-	int GetArgc();
+	bool ParseJsonRpcArgs(const IJsonObject* args);
+	SdCommandCode GetCommand() const;
+	double GetMinThrust() const;
+	double GetMaxThrust() const;
+	double GetDesiredThrust() const;
+	const QuaternionD* GetTargetAttitude() const;
 
-	double GetMinThrust();
-	double GetMaxThrust();
-	double GetDesiredThrust();
-	const QuaternionD* GetTargetAttitude();
+	bool IsRoleServer() const;
+	bool IsRoleClient() const;
+	int GetServerPort() const { return m_ServerPort; }
+	const char* GetHostAddress() const { return m_HostAddress; }
+	const SdDroneConfig* GetDroneConfig() const { return &m_DroneCfg; }
+	const IJsonObject* GetDroneConfigAsJobj();
+	const IJsonObject* GetCommandArgsAsJobj();
 
-	bool IsRoleServer();
-	bool IsRoleClient();
-	int GetServerPort() { return m_parsedArgs.ServerPort; }
-	const char* GetHostAddress() { return m_parsedArgs.HostAddress; }
-	const SdDroneConfig* GetDroneConfig() { return &m_parsedArgs.DroneCfg; }
+	static bool ParseJsonDroneConfig(
+			const IJsonObject* jsonRpcParams,
+			SdDroneConfig*);
+	static bool ParseJsonImuConfig(
+			const IJsonObject* jsonImuObj,
+			SdImuDeviceConfig*);
+	static bool ParseJsonThrust(
+			const IJsonObject* jsonRpcParams,
+			double* thrust,
+			double* minThrust,
+			double* maxThrust);
+	static bool BuilJsonDroneConfig(
+			SdJsonObject* jsonDroneConfig,
+			const SdDroneConfig&);
+	static bool BuildJsonImuConfig(
+			SdJsonObject* jsonImuConfig,
+			const SdImuDeviceConfig&);
+	static bool BuildJsonFlightParams(
+			SdJsonObject* jsonFlightParams,
+			double thrust,
+			double minThrust,
+			double maxThrust);
 private:
-	int m_argc;
-	char** m_argv;
-	ParsedArgs m_parsedArgs;
+	SdCommandCode m_Command;
+	SdDroneConfig m_DroneCfg;
+	double m_Thrust;
+	double m_MinThrust;
+	double m_MaxThrust;
+	const char* m_HostAddress;
+	const char* m_LogFile;
+	int m_ServerPort;
+	bool m_IsServer;
+	bool m_IsClient;
 	QuaternionD m_targetAttitude;
 	CmdArgs m_cmdArgs;
+	SdJsonObject m_jsonArgs;
 };
 
 #endif /* COMMANDARGS_H_ */

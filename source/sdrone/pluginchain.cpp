@@ -8,7 +8,7 @@
 #include "pluginchain.h"
 #include "iopacket.h"
 
-PluginChain::PluginChain()
+PluginChain::PluginChain() : m_pluginsStarted(false)
 {
 	pthread_rwlock_init(&m_lock,0);
 }
@@ -290,13 +290,18 @@ int PluginChain::DispatchIo(
 }
 
 int PluginChain::StartPlugins(
-		_CommandArgs* cmdArgs)
+		const _CommandArgs* cmdArgs)
 {
 	int err = SD_ESUCCESS;
 	LockWrite();
+	if (ArePluginsStarted()) {
+		Unlock();
+		return err;
+	}
 	for (PluginMapIt it = m_chain.begin(); it != m_chain.end(); it++) {
 		printf("Starting plugin %s @%f \n",
 			it->second->m_plugin->GetName(), it->second->GetMyAltitude());
+		it->second->ConfigUpdated(cmdArgs);
 		err = it->second->m_plugin->Start(cmdArgs);
 		if (SD_ESUCCESS != err) {
 			printf("Plugin %s failed to start, err=%d %s\n",
@@ -309,6 +314,7 @@ int PluginChain::StartPlugins(
 			it->second->m_plugin->Stop(0);
 		}
 	}
+	m_pluginsStarted = true;
 	Unlock();
 	return err;
 }
@@ -325,10 +331,11 @@ int PluginChain::StopPlugins(bool detachPlugins)
 				it.Get()->GetMyAltitude());
 		it.Get()->m_plugin->Stop(stopFlag);
 	}
+	m_pluginsStarted = false;
 	return 0;
 }
 
-int PluginChain::ExecuteCommand(_CommandArgs* cmdArgs)
+int PluginChain::ExecuteCommand(const _CommandArgs* cmdArgs)
 {
 	int err = 0;
 	RefedPluginListIterator it;

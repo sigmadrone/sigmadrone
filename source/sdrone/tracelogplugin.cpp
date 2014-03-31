@@ -39,7 +39,7 @@ int TraceLogPlugin::AttachToChain(
 }
 
 int TraceLogPlugin::Start(
-	CommandArgs* cmdArgs)
+	const CommandArgs* cmdArgs)
 {
 	m_iteration = 0;
 	m_logLevel = cmdArgs->GetDroneConfig()->LogLevel;
