@@ -37,12 +37,6 @@ public:
 			return std::strtoul(content_length.c_str(), NULL, 10);
 		return 0UL;
 	}
-
-	std::string operator[](const std::string& name) const
-	{
-		return header(name);
-	}
-
 };
 
 } // namespace http

@@ -1,9 +1,6 @@
 #include "base64.hpp"
+#include <boost/system/system_error.hpp>
 #include <sstream>
-#include <boost/archive/iterators/base64_from_binary.hpp>
-#include <boost/archive/iterators/binary_from_base64.hpp>
-#include <boost/archive/iterators/transform_width.hpp>
-#include <boost/archive/iterators/ostream_iterator.hpp>
 
 namespace http {
 namespace base64 {
@@ -39,8 +36,17 @@ std::string encode(const std::string& s)
 	return ret;
 }
 
+std::string decode(const std::string& s, boost::system::error_code& ec)
+{
+	try {
+		return decode(s);
+	} catch (boost::system::system_error& e) {
+		ec = e.code();
+	}
+	return std::string("");
+}
 
-std::string decode(const std::string& s)
+std::string decode(const std::string& s) throw (std::exception)
 {
 	char c;
 	unsigned int i = 0;
@@ -60,8 +66,9 @@ std::string decode(const std::string& s)
 	for (std::string::const_iterator in = s.begin(); in < s.end(); in++) {
 		if ((i > 1 && *in == '=') || *in == '\n' || *in == '\r')
 			continue;
-		if ((c = index64[static_cast<int>(*in)]) == -1)
-			return std::string("invalid");
+		if ((c = index64[static_cast<int>(*in)]) == -1) {
+			throw boost::system::error_code(boost::system::errc::illegal_byte_sequence, boost::system::generic_category());
+		}
 		switch (i) {
 		case 0:
 			*out = c << 2;
@@ -86,8 +93,6 @@ std::string decode(const std::string& s)
 	ret.resize(out - ret.begin());
 	return ret;
 }
-
-
 
 
 } // namespace base64

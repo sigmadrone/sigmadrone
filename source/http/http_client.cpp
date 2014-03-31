@@ -93,10 +93,12 @@ std::vector<boost::asio::const_buffer> http_client::prepare_request_buffers(
 	buffers.push_back(boost::asio::buffer(misc_strings::http_1_0));
 	buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 	for (headers::const_iterator it = headers.begin(); it != headers.end(); it++) {
-		buffers.push_back(boost::asio::buffer(it->first));
-		buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
-		buffers.push_back(boost::asio::buffer(it->second));
-		buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+		if (!it->second.empty()) {
+			buffers.push_back(boost::asio::buffer(it->first));
+			buffers.push_back(boost::asio::buffer(misc_strings::name_value_separator));
+			buffers.push_back(boost::asio::buffer(it->second));
+			buffers.push_back(boost::asio::buffer(misc_strings::crlf));
+		}
 	}
 	buffers.push_back(boost::asio::buffer(misc_strings::crlf));
 	if (content.size())

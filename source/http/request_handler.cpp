@@ -59,7 +59,7 @@ void request_handler::handle_request_internal(const request& req, reply& rep)
 	}
 	uri_handler_iterator->second->handler_callback(req, rep);
 	if (rep.headers["Connection"].empty()) {
-		if (req.headers["Connection"] == "keep-alive")
+		if (req.headers.header("Connection") == "keep-alive")
 			rep.headers.header("Connection", "keep-alive");
 		else
 			rep.headers.header("Connection", "close");
