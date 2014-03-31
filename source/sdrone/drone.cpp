@@ -240,10 +240,10 @@ void Drone::OnRpcCommandFly(
 		SdJsonRpcReply* rep)
 {
 	assert(context == Only());
-	rep->Error = SD_JSONRPC_ERROR_SUCCESS;
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 	Only()->m_commandArgs.ParseJsonRpcArgs(req->Params);
 	if (0 != Only()->OnFly()) {
-		rep->Error = SD_JSONRPC_ERROR_APP;
+		rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	}
 	rep->Id = req->Id;
 }
@@ -254,9 +254,9 @@ void Drone::OnRpcCommandExit(
 		SdJsonRpcReply* rep)
 {
 	assert(context == Only());
-	rep->Error = SD_JSONRPC_ERROR_SUCCESS;
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 	if (0 != Only()->OnExit()) {
-		rep->Error = SD_JSONRPC_ERROR_APP;
+		rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	}
 	rep->Id = req->Id;
 }
@@ -267,10 +267,10 @@ void Drone::OnRpcCommandReset(
 		SdJsonRpcReply* rep)
 {
 	assert(context == Only());
-	rep->Error = SD_JSONRPC_ERROR_SUCCESS;
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 	Only()->m_commandArgs.ParseJsonRpcArgs(req->Params);
 	if (0 != Only()->OnReset()) {
-		rep->Error = SD_JSONRPC_ERROR_APP;
+		rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	}
 	rep->Id = req->Id;
 }

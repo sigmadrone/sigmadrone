@@ -5,6 +5,8 @@
  *      Author: svassilev
  */
 #include "jsonrpcdispatch.h"
+#include "jsonrpcbuilder.h"
+#include "jsonrpcparser.h"
 
 SdJsonRpcDispatcher::SdJsonRpcDispatcher(
 		IRpcTransport::TransportType transportType)
@@ -61,7 +63,7 @@ bool SdJsonRpcDispatcher::SendJsonRequest(
 		SdJsonRpcBuilder bldr;
 		std::string serializedRequest;
 		std::string serializedReply;
-		bldr.BuildRequest(request.MethodName,request.Params,request.Id);
+		bldr.BuildRequest(request.MethodName.c_str(),request.Params,request.Id);
 		serializedRequest.assign(bldr.GetJsonStream(),bldr.GetJsonStreamSize());
 		if (m_transport->SendData(remoteHost,remotePort,serializedRequest,
 				serializedReply)) {
@@ -85,7 +87,30 @@ bool SdJsonRpcDispatcher::SendJsonRequest(
 }
 
 int SdJsonRpcDispatcher::ReceiveData(
-		const std::string& data,
-		size_t* sizeUsed)
+		const std::string& dataIn,
+		std::string& dataOut)
 {
+	SdJsonRpcRequest rpcRequest;
+	SdJsonRpcReply rpcReply;
+	SdJsonRpcParser parser;
+	CallbackMapIt it;
+	int err = -1;
+	dataOut.erase();
+	if (!parser.ParseBuffer(dataIn.c_str(),dataIn.length(),0)) {
+		return err; // todo return proper http error code
+	}
+	if (!parser.IsValidRpcSchema() || !parser.IsRequest()) {
+		return err;
+	}
+	it = m_callbacks.find(parser.GetRpcMethod());
+	if (it == m_callbacks.end()) {
+		return err;
+	}
+	rpcRequest.MethodName = parser.GetRpcMethod();
+	rpcRequest.Params = parser.GetRpcParams();
+	rpcRequest.Id = parser.GetRpcCallId();
+	rpcReply.ErrorCode = 0;
+	rpcReply.Id = parser.GetRpcCallId();
+	it->second.Callback(it->second.Context,&rpcRequest,&rpcReply);
+	return 0;
 }

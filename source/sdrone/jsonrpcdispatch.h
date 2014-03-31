@@ -9,6 +9,7 @@
 #define JSONRPCDISPATCH_H_
 
 #include "jsonrpctransport.h"
+#include "jsonreadwrite.h"
 
 struct SdJsonRpcRequest
 {

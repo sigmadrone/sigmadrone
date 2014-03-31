@@ -184,26 +184,32 @@ void SdJsonParser::PrintJsonArray(const IJsonArray* jarr)
 
 bool SdJsonRpcParser::IsValidRpcSchema() const
 {
-	if (RootObj() && RootObj()->GetMember("jsonrpc")) {
-		return RootObj()->GetMember("jsonrpc")->AsString() == "2.0";
+	if (RootObj() && RootObj()->IsMemberPreset("jsonrpc")) {
+		return RootObj()->GetMember("jsonrpc")->AsString() == "2.0" &&
+				(IsRequest() || IsReply());
 	}
 	return false;
 }
 
 std::string SdJsonRpcParser::GetRpcMethod() const
 {
-	if (RootObj() && RootObj()->GetMember("method")) {
+	if (RootObj() && RootObj()->IsMemberPreset("method")) {
 		return RootObj()->GetMember("method")->AsString();
 	}
 	return "";
 }
 
 bool SdJsonRpcParser::IsRequest() const {
-	return false;
+	return RootObj() && RootObj()->IsMemberPreset("method");
 }
 
 bool SdJsonRpcParser::IsReply() const {
-	return false;
+	return RootObj() && (RootObj()->IsMemberPreset("error") ||
+			RootObj()->IsMemberPreset("result"));
+}
+
+bool SdJsonRpcParser::IsErrorReply() const {
+	return RootObj() && RootObj()->IsMemberPreset("error");
 }
 
 const IJsonObject* SdJsonRpcParser::GetRpcParams() const
@@ -221,13 +227,29 @@ uint64_t SdJsonRpcParser::GetRpcCallId() const
 }
 
 const IJsonValue* SdJsonRpcParser::GetResult() const {
+	if (RootObj() && IsReply() && !IsErrorReply()) {
+		return RootObj()->GetMember("result");
+	}
+	return 0;
 }
 
 const IJsonObject* SdJsonRpcParser::GetError() const {
+	if (RootObj() && IsErrorReply()) {
+		return RootObj()->GetMember("result")->AsObject();
+	}
+	return 0;
 }
 
 int SdJsonRpcParser::GetErrorCode() const {
+	if (RootObj() && IsErrorReply()) {
+		return (int)GetError()->GetMember("code")->AsInt();
+	}
+	return 0;
 }
 
 std::string SdJsonRpcParser::GetErrorMessage() const {
+	if (RootObj() && IsErrorReply()) {
+		return GetError()->GetMember("message")->AsString();
+	}
+	return "";
 }

@@ -78,14 +78,6 @@ bool SdJsonRpcBuilder::BuildRequest(
 	return BuildRequest(method,&jval,rpcId);
 }
 
-bool SdJsonRpcBuilder::BuildReply(
-		const IJsonValue* result,
-		uint32_t id,
-		bool error)
-{
-	return false;
-}
-
 void SdJsonRpcBuilder::Reset() {
 	if (m_jsonGenerator) {
 		g_object_unref(m_jsonGenerator);
@@ -96,6 +88,39 @@ void SdJsonRpcBuilder::Reset() {
 		m_jsonStream = 0;
 	}
 	m_jsonStreamSize = 0;
+}
+
+bool SdJsonRpcBuilder::BuildReply(
+		const IJsonValue* result,
+		uint32_t rpcId,
+		int error,
+		const std::string& errorMessage)
+{
+	SdJsonValue root;
+	SdJsonObject rootObj;
+
+	Reset();
+
+	if (0 == (m_jsonGenerator = json_generator_new())) {
+		return false;
+	}
+
+	rootObj.AddMember("jsonrpc",SdJsonValue("2.0"));
+	if (error >= 0) {
+		if (result)
+		rootObj.AddMember("result",result);
+	} else {
+		SdJsonObject errObj;
+		errObj.AddMember("code",error);
+		errObj.AddMember("message",errorMessage);
+		rootObj.AddMember("error",SdJsonValue(rootObj));
+	}
+	rootObj.AddMember("id",SdJsonValue(rpcId));
+	root.SetValueAsObject(&rootObj);
+
+	json_generator_set_root(m_jsonGenerator,root.PeekGlibNode());
+
+	return true;
 }
 
 const char* SdJsonRpcBuilder::GetJsonStream()

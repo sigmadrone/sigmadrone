@@ -34,7 +34,8 @@ public:
 	bool BuildReply(
 			const IJsonValue* result,
 			uint32_t id,
-			bool error);
+			int error,
+			const std::string& errorMessage);
 	void Reset();
 	const char* GetJsonStream();
 	uint32_t GetJsonStreamSize();
