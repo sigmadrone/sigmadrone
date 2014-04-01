@@ -41,7 +41,6 @@ struct IRpcTransport
 			const std::string& dataIn,
 			std::string& dataOut
 			) = 0;
-	virtual bool IsServerRunning() = 0;
 
 	virtual ~IRpcTransport() {}
 

@@ -13,6 +13,10 @@
 
 struct SdJsonRpcRequest
 {
+	SdJsonRpcRequest() {
+		Id = SD_JSONRPC_INVALID_ID;
+		Params = 0;
+	}
 	std::string MethodName;
 	const IJsonObject* Params;
 	uint64_t Id; // may not be initialized
@@ -20,6 +24,10 @@ struct SdJsonRpcRequest
 
 struct SdJsonRpcReply
 {
+	SdJsonRpcReply() {
+		Id = SD_JSONRPC_INVALID_ID;
+		ErrorCode = 0;
+	}
 	SdJsonValue Results;
 	uint64_t Id;
 	int ErrorCode;

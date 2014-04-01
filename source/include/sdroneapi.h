@@ -744,6 +744,8 @@ protected:
 	virtual ~IPlugin() {}
 };
 
+static const uint32_t SD_JSONRPC_INVALID_ID = 0;
+
 static const int SD_JSONRPC_ERROR_SUCCESS 	= 0;
 static const int SD_JSONRPC_ERROR_PARSE = -32700;
 static const int SD_JSONRPC_ERROR_INVALID_XMLRPC = -32600;

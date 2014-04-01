@@ -11,8 +11,6 @@
 #include "commoninc.h"
 #include "jsonreadwrite.h"
 
-static const uint32_t SD_INVALID_RPC_ID = 0;
-
 struct _JsonGenerator;
 
 class SdJsonRpcBuilder {
