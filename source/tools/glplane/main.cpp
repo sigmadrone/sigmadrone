@@ -8,7 +8,7 @@ using namespace std;
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/select.h>
-
+#include <pthread.h>
 #include <string.h>
 #include "GL/glew.h"
 #include "GL/freeglut.h"
@@ -61,11 +61,12 @@ int main(int argc, char *argv[])
 
 	GlutProgram prog(GLUT_MULTISAMPLE | GLUT_ALPHA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA, 800, 900, 160 * WINDOW_SIZE_FACTOR, 160 * WINDOW_SIZE_FACTOR);
 	GlShaders shaders;
-
+	int junk = pthread_getconcurrency();
 	for (int i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--debug") == 0) {
 			gDebug = 1;
 		}
+		junk++;
 	}
 	prog.Init(argc, argv);
 	shaders.AddFile(GL_VERTEX_SHADER, "shapes.vert");
