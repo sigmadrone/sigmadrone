@@ -1,10 +1,12 @@
 #CROSS_COMPILE=arm-linux-gnueabi-
 CXX	    ?= $(CROSS_COMPILE)g++
 CC          ?= $(CROSS_COMPILE)gcc
-INCLUDES    = -I../include
+HTTPSERVER_SRCDIR = ../http
+INCLUDES    = -I../include -I../
 INCLUDES   += $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
-LIBS		= -lm -lrt -lpthread -ldl -lboost_system -lboost_filesystem -lboost_thread
+LIBS		= -lm -lrt -lpthread -ldl
 LIBS        += $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs json-glib-1.0)
+LIBS		+= -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
 #use -Wno-psabi to turn off warnings about ABI changes for va-list in GCC 4.4
 CFLAGS		= -g -O0 -Wall -Wno-psabi
 TARGET		= sdroned
@@ -30,9 +32,12 @@ OBJECTS		= \
 	jsonrpcparser.o\
 	jsonreadwrite.o\
 	jsonrpcbuilder.o\
-	cmdargs.o \
-	logger.o
-
+	jsonrpctransport.o\
+	jsonrpcdispatch.o\
+	cmdargs.o\
+	$(HTTPSERVER_SRCDIR)/libhttp.a
+	
+	
 all : $(TARGET)
 
 .SUFFIXES:	.c .cxx .cpp

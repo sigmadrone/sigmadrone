@@ -6,12 +6,14 @@
  */
 
 #include "jsonrpctransport.h"
+#include "jsonrpcparser.h"
 #include <stdlib.h>
+#include <boost/bind.hpp>
 #include <boost/asio.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
-#include "http_server.hpp"
+#include "http/http_server.hpp"
 
 class SdJsonRpcTransport : public IRpcTransport{
 public:
@@ -27,11 +29,9 @@ public:
 			int port,
 			const std::string& dataIn,
 			std::string& dataOut);
-
 	void JsonRequestHandler(
 			const http::server::request& req,
 			http::server::reply& rep);
-
 private:
 	IRpcReceiveDataSink* m_dataSink;
 	boost::asio::io_service m_io_service_rpc;
@@ -67,13 +67,14 @@ bool SdJsonRpcTransport::StartServer(
 	assert(dataSink);
 	StopServer();
 	m_dataSink = dataSink;
-	itoa(portAsStr,(uint16_t)port,10);
+	snprintf((char*)portAsStr,ARRAYSIZE(portAsStr),"%d",port);
 	m_rpc_server.reset(new http::server::http_server(m_io_service_rpc,
 			localAddress, portAsStr));
 	m_rpc_server->add_uri_handler("/jsonrpc",
 			boost::bind(&SdJsonRpcTransport::JsonRequestHandler, this, _1, _2));
 
 	m_io_service_rpc.run();
+	return true;
 }
 
 void SdJsonRpcTransport::StopServer() {
@@ -91,8 +92,10 @@ bool SdJsonRpcTransport::SendData(
 	return false;
 }
 
-void JsonRequestHandler(
+void SdJsonRpcTransport::JsonRequestHandler(
 	const http::server::request& req,
 	http::server::reply& rep)
 {
+	SdJsonRpcParser rpcParser;
+	rpcParser.ParseBuffer(req.content.c_str(),req.content.length(),0);
 }

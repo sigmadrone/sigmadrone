@@ -10,11 +10,6 @@
 #include <json-glib/json-glib.h>
 #include <json-glib/json-gobject.h>
 
-struct GLibInit {
-	GLibInit() { g_type_init(); }
-} glibInit;
-
-
 SdJsonParser::SdJsonParser() {}
 
 SdJsonParser::~SdJsonParser() {}
