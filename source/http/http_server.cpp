@@ -21,6 +21,7 @@ http_server::http_server(boost::asio::io_service& io_service, const std::string&
 	, port_(port)
 	, io_service_(io_service)
 	, acceptor_(io_service_)
+	, timer_(io_service_)
 	, connection_manager_(*this)
 	, request_handler_(*this)
 	, new_connection_()
@@ -66,13 +67,27 @@ void http_server::handle_accept(const boost::system::error_code& e)
 	start_accept();
 }
 
-void http_server::stop()
+void http_server::handle_stop(const boost::system::error_code& e)
 {
-	// The server is stopped by cancelling all outstanding asynchronous
-	// operations. Once all operations have finished the io_service::run() call
-	// will exit.
-	acceptor_.close();
-	connection_manager_.stop_all();
+	if ( e != boost::asio::error::operation_aborted) {
+		// The server is stopped by cancelling all outstanding asynchronous
+		// operations. Once all operations have finished the io_service::run() call
+		// will exit.
+		acceptor_.close();
+		connection_manager_.stop_all();
+	}
+}
+
+/*
+ * The actual stopping of the server will not be done
+ * from the calling thread, this call will rather schedule
+ * the stop operation, which would occur in the context of
+ * the io_service thread.
+ */
+void http_server::stop(unsigned int milliseconds)
+{
+	timer_.expires_from_now(boost::posix_time::milliseconds(milliseconds));
+	timer_.async_wait(boost::bind(&http_server::handle_stop, this, boost::asio::placeholders::error));
 }
 
 bool http_server::log_debug_message(const char *fmt, ...)

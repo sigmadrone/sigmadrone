@@ -16,6 +16,8 @@
 #include <stdexcept>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/locks.hpp>
 
 namespace http {
 namespace server {
@@ -67,8 +69,8 @@ public:
 	template<typename handler_type>
 	void add_uri_handler(const std::string& uri, handler_type handler_callback)
 	{
-		boost::shared_ptr<uri_handler_base> stored_ptr(new uri_handler_storage<handler_type>(handler_callback));
-		if (uri_handlers_.insert(std::pair<std::string, boost::shared_ptr<uri_handler_base> >(uri, stored_ptr)).second == false) {
+		boost::shared_ptr<uri_handler_base> handler(new uri_handler_storage<handler_type>(handler_callback));
+		if (uri_handlers_.insert(std::pair<std::string, boost::shared_ptr<uri_handler_base> >(uri, handler)).second == false) {
 			throw(std::runtime_error("URI: \"" + uri + "\" is already registered"));
 		}
 	}
