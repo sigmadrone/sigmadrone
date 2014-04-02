@@ -20,15 +20,15 @@ public:
 	bool BuildRequest(
 			const char* method,
 			const IJsonValue* params = 0,
-			uint32_t rpcId = SD_INVALID_RPC_ID);
+			uint32_t rpcId = SD_JSONRPC_INVALID_ID);
 	bool BuildRequest(
 			const char* method,
 			const IJsonObject* params = 0,
-			uint32_t rpcId = SD_INVALID_RPC_ID);
+			uint32_t rpcId = SD_JSONRPC_INVALID_ID);
 	bool BuildRequest(
 			const char* method,
 			const IJsonArray* params = 0,
-			uint32_t rpcId = SD_INVALID_RPC_ID);
+			uint32_t rpcId = SD_JSONRPC_INVALID_ID);
 	bool BuildReply(
 			const IJsonValue* result,
 			uint32_t id,

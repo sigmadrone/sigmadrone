@@ -6,11 +6,12 @@
  */
 
 #include "jsonrpctransport.h"
+#include <stdlib.h>
 #include <boost/asio.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
-#include "http/http_server.hpp"
+#include "http_server.hpp"
 
 class SdJsonRpcTransport : public IRpcTransport{
 public:
@@ -62,11 +63,13 @@ bool SdJsonRpcTransport::StartServer(
 		const std::string& localAddress,
 		int port)
 {
+	char portAsStr[6]={0};
 	assert(dataSink);
 	StopServer();
 	m_dataSink = dataSink;
+	itoa(portAsStr,(uint16_t)port,10);
 	m_rpc_server.reset(new http::server::http_server(m_io_service_rpc,
-			localAddress, port));
+			localAddress, portAsStr));
 	m_rpc_server->add_uri_handler("/jsonrpc",
 			boost::bind(&SdJsonRpcTransport::JsonRequestHandler, this, _1, _2));
 

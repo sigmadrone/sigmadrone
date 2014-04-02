@@ -37,7 +37,7 @@ bool SdJsonRpcBuilder::BuildRequest(
 	if (0 == (m_jsonGenerator = json_generator_new())) {
 		return false;
 	}
-	if (SD_INVALID_RPC_ID == rpcId) {
+	if (SD_JSONRPC_INVALID_ID == rpcId) {
 		rpcId = GenerateRpcId();
 	}
 
@@ -144,6 +144,6 @@ uint32_t SdJsonRpcBuilder::GenerateRpcId()
 	do {
 		id = __sync_fetch_and_add((uint32_t*)&s_rpcId,1);
 	}
-	while(SD_INVALID_RPC_ID == id);
+	while(SD_JSONRPC_INVALID_ID == id);
 	return id;
 }
