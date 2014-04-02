@@ -33,7 +33,7 @@ public:
 	explicit http_server(boost::asio::io_service& io_service, const std::string& address, const std::string& port);
 
 	/// Handle a request to stop the server.
-	void stop();
+	void stop(unsigned int milliseconds = 0);
 
 	/// io_service_ accessor
 	boost::asio::io_service& io_service();
@@ -56,6 +56,8 @@ private:
 	/// Initiate an asynchronous accept operation.
 	void start_accept();
 
+	void handle_stop(const boost::system::error_code& e);
+
 	/// Handle completion of an asynchronous accept operation.
 	void handle_accept(const boost::system::error_code& e);
 
@@ -68,6 +70,9 @@ private:
 
 	/// Acceptor used to listen for incoming connections.
 	boost::asio::ip::tcp::acceptor acceptor_;
+
+	/// Used to stop the server
+	boost::asio::deadline_timer timer_;
 
 	/// The connection manager which owns all live connections.
 	connection_manager connection_manager_;

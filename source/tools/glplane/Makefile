@@ -1,7 +1,7 @@
 CXX	    	?= g++
 CC          	?= gcc
 INCLUDES    	= -I../../include -I../mmath
-LIBS		= -lglut -lGL -lGLEW -lX11 -lm -lrt
+LIBS		= -lglut -lGL -lGLEW -lX11 -lm -lrt -lpthread
 CFLAGS		= -g -O0 -Wall
 TARGET		= glplane
 OBJECTS		= main.o glshaders.o glutprogram.o glshape.o plane.o

@@ -66,7 +66,7 @@ std::string decode(const std::string& s) throw (std::exception)
 	for (std::string::const_iterator in = s.begin(); in < s.end(); in++) {
 		if ((i > 1 && *in == '=') || *in == '\n' || *in == '\r')
 			continue;
-		if ((c = (char)index64[static_cast<int>(*in)]) == (char)-1) {
+		if ((c = index64[static_cast<int>(*in)]) == (char)-1) {
 			throw boost::system::error_code(boost::system::errc::illegal_byte_sequence, boost::system::generic_category());
 		}
 		switch (i) {

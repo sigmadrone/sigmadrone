@@ -241,15 +241,30 @@ boost::system::error_code http_client::read_content(http::client::response& resp
 	size_t bytes_transferred = 0;
 	boost::system::error_code ec;
 
-	while (response.content.size() < response.headers.content_length() && (bytes_transferred = socket_.read_some(boost::asio::buffer(buffer_), ec)) > 0) {
-		if (ec)
-			break;
-		// Keep reading to the end of the content
-		response.content.append(buffer_.data(), buffer_.data() + bytes_transferred);
+	if (response.headers.header("Content-Length").empty()) {
+		/*
+		 * There is no Content-Length header, so we will read until we get EOF (read 0 bytes)
+		 */
+		while ((bytes_transferred = socket_.read_some(boost::asio::buffer(buffer_), ec)) > 0) {
+			if (ec)
+				break;
+			// Keep reading to the end of the content
+			response.content.append(buffer_.data(), buffer_.data() + bytes_transferred);
+		}
+		if (ec == boost::asio::error::eof) {
+			ec = boost::system::error_code();
+		}
+	} else {
+		while ((response.content.size() < response.headers.content_length())
+				&& (bytes_transferred = socket_.read_some(boost::asio::buffer(buffer_), ec)) > 0) {
+			if (ec)
+				break;
+			// Keep reading to the end of the content
+			response.content.append(buffer_.data(), buffer_.data() + bytes_transferred);
+		}
 	}
 	return ec;
 }
-
 
 void http_client::async_request(const std::string& method, const std::string& url, const std::string& content)
 {

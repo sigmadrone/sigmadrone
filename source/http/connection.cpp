@@ -175,16 +175,16 @@ void connection::handle_reply_write(const boost::system::error_code& e)
 			reply_.reset();
 			schedule_headers_read();
 		} else {
-			server_.log_debug_message("Closing connection to remote %s:%d, Connection header is set to: %s",
-					socket_.remote_endpoint().address().to_string().c_str(),
-					(int)socket_.remote_endpoint().port(),
-					reply_.headers["Connection"].c_str());
+//			server_.log_debug_message("Closing connection to remote %s:%d, Connection header is set to: %s",
+//					socket_.remote_endpoint().address().to_string().c_str(),
+//					(int)socket_.remote_endpoint().port(),
+//					reply_.headers["Connection"].c_str());
 			connection_manager_.stop(shared_from_this());
 		}
 	} else if (e != boost::asio::error::operation_aborted) {
-		server_.log_debug_message("Closing connection to remote %s:%d",
-				socket_.remote_endpoint().address().to_string().c_str(),
-				(int)socket_.remote_endpoint().port());
+//		server_.log_debug_message("Closing connection to remote %s:%d",
+//				socket_.remote_endpoint().address().to_string().c_str(),
+//				(int)socket_.remote_endpoint().port());
 		connection_manager_.stop(shared_from_this());
 	}
 }
