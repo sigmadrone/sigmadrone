@@ -64,7 +64,13 @@ bool SdJsonParser::ParseBuffer(
 	}
 
 	if (!json_parser_load_from_data(jsonParser, buffer, len, &gerr)) {
+		assert(gerr && gerr->message);
 		printf("JsonRpcParser error: %s\n", gerr->message);
+		goto __return;
+	}
+
+	if (!json_parser_get_root(jsonParser)) {
+		printf("JsonRpcParser error - no root element!\n");
 		goto __return;
 	}
 

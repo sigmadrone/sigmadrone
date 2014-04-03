@@ -45,7 +45,7 @@ public:
 			double* thrust,
 			double* minThrust,
 			double* maxThrust);
-	static bool BuilJsonDroneConfig(
+	static bool BuildJsonDroneConfig(
 			SdJsonObject* jsonDroneConfig,
 			const SdDroneConfig&);
 	static bool BuildJsonImuConfig(

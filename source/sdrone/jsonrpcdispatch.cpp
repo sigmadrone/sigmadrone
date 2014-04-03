@@ -93,24 +93,33 @@ int SdJsonRpcDispatcher::ReceiveData(
 	SdJsonRpcRequest rpcRequest;
 	SdJsonRpcReply rpcReply;
 	SdJsonRpcParser parser;
+	SdJsonRpcBuilder rpcBuilder;
 	CallbackMapIt it;
-	int err = -1;
 	dataOut.erase();
 	if (!parser.ParseBuffer(dataIn.c_str(),dataIn.length(),0)) {
-		return err; // todo return proper http error code
+		return EINVAL;
 	}
 	if (!parser.IsValidRpcSchema() || !parser.IsRequest()) {
-		return err;
+		return EINVAL;
 	}
+
 	it = m_callbacks.find(parser.GetRpcMethod());
 	if (it == m_callbacks.end()) {
-		return err;
+		return EINVAL; // no callback, consider it
 	}
 	rpcRequest.MethodName = parser.GetRpcMethod();
 	rpcRequest.Params = parser.GetRpcParams();
 	rpcRequest.Id = parser.GetRpcCallId();
 	rpcReply.ErrorCode = 0;
+
 	rpcReply.Id = parser.GetRpcCallId();
 	it->second.Callback(it->second.Context,&rpcRequest,&rpcReply);
+
+	if (!rpcBuilder.BuildReply(&rpcReply.Results,rpcReply.Id,
+			rpcReply.ErrorCode,rpcReply.ErrorMessage)) {
+		return ENOMEM;
+	}
+	dataOut.assign(rpcBuilder.GetJsonStream(),
+			rpcBuilder.GetJsonStreamSize());
 	return 0;
 }

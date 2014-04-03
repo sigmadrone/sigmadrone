@@ -14,6 +14,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include "http/http_server.hpp"
+#include "http/http_client.hpp"
 
 class SdJsonRpcTransport : public IRpcTransport{
 public:
@@ -67,7 +68,7 @@ bool SdJsonRpcTransport::StartServer(
 	assert(dataSink);
 	StopServer();
 	m_dataSink = dataSink;
-	snprintf((char*)portAsStr,ARRAYSIZE(portAsStr),"%d",port);
+	snprintf(portAsStr,ARRAYSIZE(portAsStr),"%d",port);
 	m_rpc_server.reset(new http::server::http_server(m_io_service_rpc,
 			localAddress, portAsStr));
 	m_rpc_server->add_uri_handler("/jsonrpc",
@@ -84,18 +85,58 @@ void SdJsonRpcTransport::StopServer() {
 }
 
 bool SdJsonRpcTransport::SendData(
-		const std::string& remoteHost,
+		const std::string& server,
 		int port,
-		const std::string& dataIn,
-		std::string& dataOut)
+		const std::string& data,
+		std::string& receivedData)
 {
-	return false;
+	http::client::http_client httpcl;
+	char portAsStr[6]={0};
+	boost::system::error_code ec;
+
+	snprintf(portAsStr,ARRAYSIZE(portAsStr),"%d",port);
+	httpcl.connect(server, portAsStr, ec);
+	if (0 == ec.value()) {
+		http::client::response rep;
+		http::headers headers;
+		headers.header("Content-Type","application/json-rpc");
+		httpcl.request(rep,"POST","/jsonrpc",data,headers,ec);
+		if (0 == ec.value()) {
+			receivedData = rep.content;
+		} else {
+			printf("Failed to send request, err %d %s\n",
+					ec.value(),ec.message().c_str());
+		}
+	} else {
+		printf("Failed to connect to %s:%d, err %d %s\n",
+				server.c_str(),port,
+				ec.value(),ec.message().c_str());
+	}
+	return !ec.value();
 }
 
 void SdJsonRpcTransport::JsonRequestHandler(
 	const http::server::request& req,
 	http::server::reply& rep)
 {
-	SdJsonRpcParser rpcParser;
-	rpcParser.ParseBuffer(req.content.c_str(),req.content.length(),0);
+	rep.reset();
+	if (req.headers.header("Content-Type") == "application/json-rpc" &&
+		(req.method == "POST" || req.method == "GET")) {
+		int err = m_dataSink->ReceiveData(req.content,rep.content);
+		switch (err) {
+		case 0:
+			rep.status = http::server::reply::ok;
+			break;
+		case EINVAL:
+			rep.status = http::server::reply::bad_request;
+			break;
+		case ENOMEM:
+		default:
+			rep.status = http::server::reply::internal_server_error;
+			break;
+		}
+	} else {
+		rep.status = http::server::reply::not_implemented;
+	}
+	rep.headers.header("Content-Type", "application/json-rpc");
 }

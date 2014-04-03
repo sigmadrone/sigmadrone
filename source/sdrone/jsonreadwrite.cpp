@@ -396,6 +396,7 @@ SdJsonObject::SdJsonObject() : m_jobj(0) {
 }
 
 SdJsonObject::SdJsonObject(JsonObject* obj) : m_jobj(obj) {
+	assert(m_jobj);
 	json_object_ref(m_jobj);
 }
 
@@ -453,7 +454,7 @@ const IJsonValue* SdJsonObject::GetMember(
 	const char* memberName) const
 {
 	ConstMemberMapIt it = m_members.find(memberName);
-	if (it == m_members.end()) {
+	if (it == m_members.end() && m_jobj) {
 		JsonNode* jnode = json_object_get_member(m_jobj, memberName);
 		if (jnode) {
 			SdJsonValue* sdNode = new SdJsonValue(jnode);
@@ -501,13 +502,16 @@ const SdJsonObject& SdJsonObject::operator=(const SdJsonObject& rhs)
 {
 	Reset();
 	m_jobj = rhs.m_jobj;
-	json_object_ref(m_jobj);
+	if (m_jobj) {
+		json_object_ref(m_jobj);
+	}
 	return *this;
 }
 
 SdJsonArray::SdJsonArray() : m_jarr(0) {}
 
 SdJsonArray::SdJsonArray(JsonArray* jarr) : m_jarr(jarr) {
+	assert(m_jarr);
 	json_array_ref(m_jarr);
 }
 
@@ -520,7 +524,7 @@ SdJsonArray::~SdJsonArray() {
 }
 
 uint32_t SdJsonArray::ElementCount() const {
-	return json_array_get_length(m_jarr);
+	return !!m_jarr ? json_array_get_length(m_jarr) : 0;
 }
 
 const IJsonValue* SdJsonArray::GetElement(uint32_t index) const
@@ -575,6 +579,8 @@ const SdJsonArray& SdJsonArray::operator=(const SdJsonArray& rhs)
 {
 	Reset();
 	m_jarr = rhs.m_jarr;
-	json_array_ref(m_jarr);
+	if (m_jarr) {
+		json_array_ref(m_jarr);
+	}
 	return *this;
 }

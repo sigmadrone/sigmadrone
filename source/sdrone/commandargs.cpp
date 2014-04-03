@@ -133,7 +133,8 @@ _CommandArgs::ParseArgs(
 		return false;
 	}
 
-	if (m_cmdArgs.GetValue("command").c_str() == std::string("run")) {
+	if (m_cmdArgs.GetValue("command").c_str() == std::string("run") ||
+		m_cmdArgs.GetValue("command").c_str() == std::string("fly")) {
 		m_Command = SD_COMMAND_FLY;
 	} else if (m_cmdArgs.GetValue("command").c_str() == std::string("reset")) {
 		m_Command = SD_COMMAND_RESET;
@@ -210,8 +211,16 @@ const IJsonObject* _CommandArgs::GetDroneConfigAsJobj() {
 }
 
 const IJsonObject* _CommandArgs::GetCommandArgsAsJobj() {
-	if (m_jsonArgs.IsMemberPreset("GlobalConfig")) {
-		return &m_jsonArgs;
+	if (m_jsonArgs.GetMemberCount() == 0) {
+		SdJsonObject tmpObj;
+		m_jsonArgs.Reset();
+		m_jsonArgs.AddMember("Title", SdJsonValue("SigmaDrone"));
+		m_jsonArgs.AddMember("Version", SdJsonValue("0.1"));
+		m_jsonArgs.AddMember("DroneType",SdJsonValue("QuadRotor"));
+		BuildJsonDroneConfig(&tmpObj,m_DroneCfg);
+		m_jsonArgs.AddMember("GlobalConfig",SdJsonValue(tmpObj));
+		BuildJsonFlightParams(&tmpObj,m_Thrust,m_MinThrust,m_MaxThrust);
+		m_jsonArgs.AddMember("Flight",SdJsonValue(tmpObj));
 	}
 	return &m_jsonArgs;
 }
@@ -317,7 +326,7 @@ bool _CommandArgs::ParseJsonRpcArgs(const IJsonObject* args)
 		m_targetAttitude.z = jarr->GetElement(3)->AsDouble();
 	}
 
-	return false;
+	return ret;
 }
 
 bool _CommandArgs::ParseJsonThrust(
@@ -341,7 +350,7 @@ bool _CommandArgs::ParseJsonThrust(
 	return !!flight;
 }
 
-bool _CommandArgs::BuilJsonDroneConfig(
+bool _CommandArgs::BuildJsonDroneConfig(
 		SdJsonObject* jsonDroneConfig,
 		const SdDroneConfig& droneCfg)
 {

@@ -244,6 +244,8 @@ void Drone::OnRpcCommandFly(
 	Only()->m_commandArgs.ParseJsonRpcArgs(req->Params);
 	if (0 != Only()->OnFly()) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+	} else {
+		rep->Results.SetValueAsInt(0);
 	}
 	rep->Id = req->Id;
 }
@@ -257,6 +259,8 @@ void Drone::OnRpcCommandExit(
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 	if (0 != Only()->OnExit()) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+	} else {
+		rep->Results.SetValueAsInt(0);
 	}
 	rep->Id = req->Id;
 }
@@ -271,6 +275,8 @@ void Drone::OnRpcCommandReset(
 	Only()->m_commandArgs.ParseJsonRpcArgs(req->Params);
 	if (0 != Only()->OnReset()) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+	} else {
+		rep->Results.SetValueAsInt(0);
 	}
 	rep->Id = req->Id;
 }

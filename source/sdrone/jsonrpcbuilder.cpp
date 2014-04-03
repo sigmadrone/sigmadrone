@@ -107,8 +107,12 @@ bool SdJsonRpcBuilder::BuildReply(
 
 	rootObj.AddMember("jsonrpc",SdJsonValue("2.0"));
 	if (error >= 0) {
-		if (result)
-		rootObj.AddMember("result",result);
+		if (result && result->GetType() != SD_JSONVALUE_NULL) {
+			rootObj.AddMember("result",result);
+		} else {
+			rootObj.AddMember("result",SdJsonValue(0));
+		}
+
 	} else {
 		SdJsonObject errObj;
 		errObj.AddMember("code",error);
