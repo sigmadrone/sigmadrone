@@ -1,9 +1,7 @@
 {
  "jsonrpc": "2.0", "method": "SD_COMMAND_RESET", "params": {
-	"SchemaSize": 1024,
-	"Title": "SigmaDrone Platform File",
-	"Version": 0.1,
-	"Protocol": "SigmaDrone",
+	"Title": "SigmaDrone",
+	"Version": "0.1",
 	"DroneType": "QuadRotor",
 	"DroneHardware": {
 		"HardwareId": "68:05:ca:0f:da:10",
