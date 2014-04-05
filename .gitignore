@@ -1,0 +1,51 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# dat files
+*.dat
+
+# temp files
+*~
+
+# ignore thyself
+.gitignore
+
+# log files
+*.log
+
+# project files
+.cproject
+.metadata
+.project
+.settings
+
+# bin files
+test/matrix/testmatrix
+test/mergevec/mergevec
+test/quaternion/testquat
+source/sdrone/quadrotor
+source/sdrone/sdroned
+source/tools/alldata/alldata
+source/tools/attitudefilter/attifilt
+source/tools/axesdata/axesdata
+source/tools/servo/servo
+source/tools/glplane/glplane
+source/tests/cmdargs/test_cmdargs
+source/tests/jsonrpc/test_jsonrpc
+source/http/obj/
+source/jsonrpc/obj/
+source/tests/base64/base64
+source/tests/httpclient/test_httpclient
+source/tests/httpserver/test_httpserver
+
