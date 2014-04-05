@@ -85,6 +85,7 @@ void Drone::fatal_error_signal (int sig)
 
 Drone::Drone() :
 		m_rpcDispatch(0),
+		m_rpcTransport(0),
 		m_globalLock("sigmadrone",true),
 		m_isRunning(false)
 {
@@ -107,6 +108,9 @@ Drone::~Drone()
 	if (m_rpcDispatch) {
 		delete m_rpcDispatch;
 	}
+	if (m_rpcTransport) {
+		delete m_rpcTransport;
+	}
 }
 
 int Drone::Run(const _CommandArgs& args)
@@ -117,8 +121,19 @@ int Drone::Run(const _CommandArgs& args)
 
 	if (0 != m_rpcDispatch) {
 		delete m_rpcDispatch;
+		m_rpcDispatch = 0;
 	}
-	m_rpcDispatch = new SdJsonRpcDispatcher(IRpcTransport::TRANSPORT_HTTP);
+	if (0 != m_rpcTransport) {
+		delete m_rpcTransport;
+		m_rpcTransport = 0;
+	}
+
+	m_rpcTransport = IRpcTransport::Create(IRpcTransport::TRANSPORT_HTTP);
+	if (0 == m_rpcTransport) {
+		return ENOMEM;
+	}
+
+	m_rpcDispatch = new SdJsonRpcDispatcher(m_rpcTransport);
 	if (0 == m_rpcDispatch) {
 		return ENOMEM;
 	}

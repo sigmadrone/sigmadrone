@@ -15,12 +15,6 @@
 #include <errno.h>
 #include <string>
 
-struct SdRpcEndpoint
-{
-	std::string Host;
-	int port;
-};
-
 struct IRpcReceiveDataSink
 {
 	virtual int ReceiveData(

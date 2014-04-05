@@ -7,7 +7,6 @@
 #include <sys/file.h>
 
 #include "drone.h"
-#include "jsonrpcdispatch.h"
 #include "commandargs.h"
 #include "jsonrpcdispatch.h"
 
@@ -52,18 +51,23 @@ int main(int argc, char *argv[])
 		/*
 		 * Execute the client logic - send command to the server
 		 */
-		SdJsonRpcDispatcher rpcDispatch(IRpcTransport::TRANSPORT_HTTP);
-		SdJsonRpcRequest req;
-		req.MethodName = SdCommandCodeToString(cmdArgs.GetCommand());
-		req.Params = cmdArgs.GetCommandArgsAsJobj();
-		if (!rpcDispatch.SendJsonRequest(req,
-				cmdArgs.GetHostAddress(),
-				cmdArgs.GetServerPort(),0))
+		IRpcTransport* rpcTransport=IRpcTransport::Create(
+				IRpcTransport::TRANSPORT_HTTP);
+		if (rpcTransport)
 		{
-			printf("Failed to send command %s to %s, error \"%s\"",
-					req.MethodName.c_str(),cmdArgs.GetHostAddress(),
-					strerror(err));
-			goto __return;
+			SdJsonRpcDispatcher rpcDispatch(rpcTransport);
+			SdJsonRpcRequest req;
+			req.MethodName = SdCommandCodeToString(cmdArgs.GetCommand());
+			req.Params = cmdArgs.GetCommandArgsAsJobj();
+			if (!rpcDispatch.SendJsonRequest(req,
+					cmdArgs.GetHostAddress(),
+					cmdArgs.GetServerPort(),0))
+			{
+				printf("Failed to send command %s to %s, error \"%s\"",
+						req.MethodName.c_str(),cmdArgs.GetHostAddress(),
+						strerror(err));
+			}
+			delete rpcTransport;
 		}
 	} else {
 		printf("\nERROR: Server or client mode must be enabled!\n\n\n");

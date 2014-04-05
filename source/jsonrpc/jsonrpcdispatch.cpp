@@ -11,6 +11,7 @@
 SdJsonRpcDispatcher::SdJsonRpcDispatcher(
 		IRpcTransport* transport) : m_transport(transport)
 {
+	assert(m_transport);
 }
 
 SdJsonRpcDispatcher::~SdJsonRpcDispatcher()

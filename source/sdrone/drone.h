@@ -18,6 +18,7 @@
 class SdJsonRpcDispatcher;
 struct SdJsonRpcReply;
 struct SdJsonRpcRequest;
+struct IRpcTransport;
 
 /*
  * Aggregate class representing an instance of a drone.
@@ -74,6 +75,7 @@ private:
 private:
 	_CommandArgs m_commandArgs;
 	SdJsonRpcDispatcher* m_rpcDispatch;
+	IRpcTransport* m_rpcTransport;
 	PluginChain m_pluginChain;
 	FileLock m_globalLock;
 	bool m_isRunning;

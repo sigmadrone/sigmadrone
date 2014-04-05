@@ -2,7 +2,8 @@
 CXX	    ?= $(CROSS_COMPILE)g++
 CC          ?= $(CROSS_COMPILE)gcc
 HTTPSERVER_SRCDIR = ../http
-INCLUDES    = -I../include -I../
+JSONRPC_SRCDIR = ../jsonrpc
+INCLUDES    = -I../include -I../ -I$(JSONRPC_SRCDIR)/
 INCLUDES   += $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
 LIBS		= -lm -lrt -lpthread -ldl
 LIBS        += $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs json-glib-1.0)
@@ -19,7 +20,6 @@ OBJECTS		= \
 	imudevice.o\
 	servodevice.o\
 	quadrotorpilot.o\
-	clientserver.o\
 	imureader.o\
 	navigator.o\
 	imufilterplugin.o\
@@ -29,12 +29,8 @@ OBJECTS		= \
 	imulowpassfilter.o\
 	iopacket.o\
 	kalmanattitudefilter.o\
-	jsonrpcparser.o\
-	jsonreadwrite.o\
-	jsonrpcbuilder.o\
-	jsonrpctransport.o\
-	jsonrpcdispatch.o\
 	cmdargs.o\
+	$(JSONRPC_SRCDIR)/libjsonrpc.a\
 	$(HTTPSERVER_SRCDIR)/libhttp.a
 	
 	

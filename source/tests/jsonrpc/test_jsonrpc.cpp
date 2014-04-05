@@ -1,8 +1,8 @@
 #include <iostream>
 #include <string>
 #include "cmdargs.h"
-#include "jsonrpcparser.h"
-#include "jsonrpcbuilder.h"
+#include "../../jsonrpc/jsonrpcparser.h"
+#include "../../jsonrpc/jsonrpcbuilder.h"
 #include "commandargs.h"
 
 struct TestControl
