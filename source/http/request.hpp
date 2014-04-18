@@ -29,6 +29,7 @@ struct request
 	std::string content;
 	size_t headers_size;
 
+	request();
 	std::string request_line() const;
 	void reset();
 };

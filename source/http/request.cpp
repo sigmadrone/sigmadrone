@@ -5,6 +5,11 @@
 namespace http {
 namespace server {
 
+request::request()
+{
+	reset();
+}
+
 void request::reset()
 {
 	method.clear();
@@ -12,7 +17,7 @@ void request::reset()
 	http_version_major = http_version_minor = 0;
 	headers.clear();
 	content.clear();
-	headers_size = 0;
+	headers_size = 0UL;
 }
 
 std::string request::request_line() const
