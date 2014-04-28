@@ -312,7 +312,7 @@ boost::system::error_code http_client::async_write_request_buffers(const std::ve
 						boost::asio::placeholders::error,
 						boost::asio::placeholders::bytes_transferred));
 	if (io_timeout_) {
-		timer_.expires_from_now(boost::posix_time::milliseconds(io_timeout_ * 2));
+		timer_.expires_from_now(boost::posix_time::milliseconds(io_timeout_));
 		timer_.async_wait(boost::bind(&http_client::handle_async_bytestransferred_timeout, this, boost::asio::placeholders::error));
 		io_service_.run_one();
 	}
