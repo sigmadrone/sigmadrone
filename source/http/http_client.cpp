@@ -1,4 +1,3 @@
-
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 #include "http_client.hpp"
@@ -7,9 +6,11 @@ namespace http {
 namespace client {
 
 
-http_client::http_client()
-	: server_()
-	, port_()
+http_client::http_client(const std::string& server, const std::string& port, size_t timeout)
+	: io_timeout_(timeout)
+	, bytes_transferred_(0)
+	, server_(server)
+	, port_(port)
 	, log_prefix_(std::string("HTTP::CLIENT") + "; ")
 	, logger_()
 	, io_service_()
@@ -17,7 +18,10 @@ http_client::http_client()
 	, socket_(io_service_)
 	, buffer_()
 	, endpoint_()
+	, timer_(io_service_)
 {
+	log_prefix_ = std::string("HTTP::CLIENT") + "@" + server_ + ":" + port_ + "; ";
+
 }
 
 http_client::~http_client()
@@ -25,42 +29,110 @@ http_client::~http_client()
 	disconnect();
 }
 
-void http_client::connect(const std::string& server, const std::string& port) throw(std::exception)
+void http_client::handle_async_resolve_timeout(const boost::system::error_code& ec)
 {
-	disconnect();
-	server_ = server;
-	port_ = port;
+	if ( ec == boost::asio::error::operation_aborted) {
+		/*
+		 * The timeout timer was cancelled. Do nothing
+		 */
+		return;
+	}
+	log_debug_message("  --->http_client::handle_async_resolve_timeout (timer fired), error:  %s, code: %d", ec.message().c_str(), ec.value());
+	resolver_.cancel();
+
+}
+
+void http_client::handle_async_resolve(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
+{
+	log_debug_message("  --->http_client::handle_async_resolve, error:  %s, code: %d", ec.message().c_str(), ec.value());
+	boost::system::error_code ignored;
+	timer_.cancel(ignored);
+	endpoint_ = (!ec) ? endpoint_iterator : boost::asio::ip::tcp::resolver::iterator();
+	ec_ = ec;
+}
+
+void http_client::async_resolve()
+{
+	boost::system::error_code ec;
 	boost::asio::ip::tcp::resolver::query query(server_, port_);
-	log_prefix_ = std::string("HTTP::CLIENT") + "@" + server_ + ":" + port_ + "; ";
-	endpoint_ = resolver_.resolve(query);
-	connect_endpoint();
+	log_debug_message("http_client::async_resolve, resolving:  %s, code: %s", server_.c_str(), port_.c_str());
+
+	resolver_.async_resolve(
+			query,
+			boost::bind(&http_client::handle_async_resolve,
+						this,
+						boost::asio::placeholders::error,
+						boost::asio::placeholders::iterator));
+	if (io_timeout_) {
+		timer_.expires_from_now(boost::posix_time::milliseconds(io_timeout_));
+		timer_.async_wait(boost::bind(&http_client::handle_async_resolve_timeout, this, boost::asio::placeholders::error));
+		io_service_.run_one();
+	}
+	io_service_.run_one();
+	io_service_.reset();
+	if (ec_) {
+		log_debug_message("Failed to resolve: %s:%s", server_.c_str(), port_.c_str());
+	}
+	ec = ec_;
+	ec_.clear();
+	boost::asio::detail::throw_error(ec, "http_client::async_resolve");
 }
 
 
-void http_client::connect(const std::string& server, const std::string& port, boost::system::error_code& ec)
+void http_client::handle_async_connect_timeout(const boost::system::error_code& ec)
 {
-	try {
-		connect(server, port);
-	} catch (boost::system::system_error& e) {
-		ec = e.code();
+	if ( ec == boost::asio::error::operation_aborted) {
+		/*
+		 * The timeout timer was cancelled. Do nothing
+		 */
+		return;
 	}
+	log_debug_message("  --->http_client::handle_async_bytestransferred_timeout (timer fired), error:  %s, code: %d", ec.message().c_str(), ec.value());
+	disconnect();
 }
 
 
-void http_client::connect_endpoint()
+void http_client::handle_async_connect(const boost::system::error_code& ec)
 {
-	if (boost::asio::connect(socket_, endpoint_) == boost::asio::ip::tcp::resolver::iterator()) {
-		log_error_message("Failed to connect to %s:%s", server_.c_str(), port_.c_str());
-	}
+	log_debug_message("  --->http_client::handle_async_connect, error:  %s, code: %d", ec.message().c_str(), ec.value());
+	boost::system::error_code ignored;
+	timer_.cancel(ignored);
+	ec_ = ec;
 }
 
-void http_client::connect_endpoint(boost::system::error_code& ec)
+void http_client::async_connect_endpoint()
 {
-	try {
-		connect_endpoint();
-	} catch (boost::system::system_error& e) {
-		ec = e.code();
+	boost::asio::ip::tcp::resolver::iterator end;
+	if (endpoint_ == end) {
+		async_resolve();
 	}
+	boost::asio::ip::tcp::resolver::iterator it = endpoint_;
+	boost::system::error_code ec;
+
+	while (it != end) {
+		log_debug_message("http_client::async_connect_endpoint, connecting:  %s, code: %d", it->endpoint().address().to_string().c_str(), it->endpoint().port());
+		boost::asio::async_connect(socket_, it, connect_condition(*this),
+				boost::bind(&http_client::handle_async_connect,
+							this,
+							boost::asio::placeholders::error));
+		if (io_timeout_) {
+			timer_.expires_from_now(boost::posix_time::milliseconds(io_timeout_));
+			timer_.async_wait(boost::bind(&http_client::handle_async_connect_timeout, this, boost::asio::placeholders::error));
+			io_service_.run_one();
+		}
+		io_service_.run_one();
+		io_service_.reset();
+		if (!ec_) {
+			log_debug_message("Connected to: %s:%d", it->endpoint().address().to_string().c_str(), it->endpoint().port());
+			break;
+		}
+		log_error_message("Failed to connect: %s:%d", it->endpoint().address().to_string().c_str(), it->endpoint().port());
+		disconnect();
+		ec = ec_;
+		ec_.clear();
+		++it;
+	}
+	boost::asio::detail::throw_error(ec, "http_client::async_connect_endpoint");
 }
 
 void http_client::disconnect()
@@ -155,7 +227,6 @@ void http_client::request(http::client::response& response,
 	}
 }
 
-
 void http_client::request(http::client::response& response,
 		const std::string& method,
 		const std::string& url,
@@ -167,10 +238,14 @@ void http_client::request(http::client::response& response,
 	add_default_headers(headers, content.size());
 	std::vector<boost::asio::const_buffer> request_buffers = prepare_request_buffers(method, url, content, headers);
 
-	ec = send_request(response, request_buffers);
-	if (ec == boost::asio::error::eof || ec == boost::asio::error::bad_descriptor) {
+	if (!socket_.is_open()) {
 		disconnect();
-		connect_endpoint();
+		async_connect_endpoint();
+	}
+	ec = send_request(response, request_buffers);
+	if (ec == boost::asio::error::eof || ec == boost::asio::error::bad_descriptor || ec == boost::asio::error::broken_pipe) {
+		disconnect();
+		async_connect_endpoint();
 		ec = send_request(response, request_buffers);
 	}
 	if (ec) {
@@ -193,7 +268,7 @@ boost::system::error_code http_client::send_request(
 	response.content.clear();
 	response.status = 0;
 
-	if ((ec = write_request_buffers(request_buffers)))
+	if ((ec = async_write_request_buffers(request_buffers)))
 		goto error;
 	if ((ec = read_headers(response)))
 		goto error;
@@ -201,16 +276,70 @@ boost::system::error_code http_client::send_request(
 		goto error;
 	if (response.headers.header("Connection") != "keep-alive")
 		disconnect();
+	return ec;
+
 error:
+	disconnect();
 	return ec;
 }
 
-boost::system::error_code http_client::write_request_buffers(const std::vector<boost::asio::const_buffer>& request_buffers)
+void http_client::handle_async_bytestransferred_timeout(const boost::system::error_code& ec)
+{
+	if ( ec == boost::asio::error::operation_aborted) {
+		/*
+		 * The timeout timer was cancelled. Do nothing
+		 */
+		return;
+	}
+	ec_ = boost::asio::error::timed_out;
+
+}
+
+void http_client::handle_async_bytestransferred(const boost::system::error_code& ec, std::size_t bytes_transferred)
+{
+	boost::system::error_code ignored;
+	timer_.cancel(ignored);
+	ec_ = ec;
+	bytes_transferred_ = (!ec) ? bytes_transferred : 0UL;
+}
+
+boost::system::error_code http_client::async_write_request_buffers(const std::vector<boost::asio::const_buffer>& request_buffers)
 {
 	boost::system::error_code ec;
-
-	boost::asio::write(socket_, request_buffers, ec);
+	boost::asio::async_write(socket_, request_buffers,
+			boost::bind(&http_client::handle_async_bytestransferred,
+						this,
+						boost::asio::placeholders::error,
+						boost::asio::placeholders::bytes_transferred));
+	if (io_timeout_) {
+		timer_.expires_from_now(boost::posix_time::milliseconds(io_timeout_ * 2));
+		timer_.async_wait(boost::bind(&http_client::handle_async_bytestransferred_timeout, this, boost::asio::placeholders::error));
+		io_service_.run_one();
+	}
+	io_service_.run_one();
+	io_service_.reset();
+	ec = ec_;
+	ec_.clear();
 	return ec;
+}
+
+size_t http_client::async_read_data(boost::system::error_code& ec)
+{
+	boost::asio::async_read(socket_, boost::asio::buffer(buffer_), boost::asio::transfer_at_least(1),
+			boost::bind(&http_client::handle_async_bytestransferred,
+									this,
+									boost::asio::placeholders::error,
+									boost::asio::placeholders::bytes_transferred));
+	if (io_timeout_) {
+		timer_.expires_from_now(boost::posix_time::milliseconds(io_timeout_));
+		timer_.async_wait(boost::bind(&http_client::handle_async_bytestransferred_timeout, this, boost::asio::placeholders::error));
+		io_service_.run_one();
+	}
+	io_service_.run_one();
+	io_service_.reset();
+	ec = ec_;
+	ec_.clear();
+	return bytes_transferred_;
 }
 
 boost::system::error_code http_client::read_headers(http::client::response& response)
@@ -221,7 +350,7 @@ boost::system::error_code http_client::read_headers(http::client::response& resp
 	size_t headers_size = 0;
 	boost::system::error_code ec;
 
-	while ((bytes_transferred = socket_.read_some(boost::asio::buffer(buffer_), ec)) > 0) {
+	while ((bytes_transferred = async_read_data(ec)) > 0) {
 		boost::tie(result, parsed_size) = response_parser_.parse_headers(response, buffer_.data(), buffer_.data() + bytes_transferred);
 		headers_size += parsed_size;
 		if (result) {
@@ -245,7 +374,7 @@ boost::system::error_code http_client::read_content(http::client::response& resp
 		/*
 		 * There is no Content-Length header, so we will read until we get EOF (read 0 bytes)
 		 */
-		while ((bytes_transferred = socket_.read_some(boost::asio::buffer(buffer_), ec)) > 0) {
+		while ((bytes_transferred = async_read_data(ec)) > 0) {
 			if (ec)
 				break;
 			// Keep reading to the end of the content
@@ -256,7 +385,7 @@ boost::system::error_code http_client::read_content(http::client::response& resp
 		}
 	} else {
 		while ((response.content.size() < response.headers.content_length())
-				&& (bytes_transferred = socket_.read_some(boost::asio::buffer(buffer_), ec)) > 0) {
+				&& (bytes_transferred = async_read_data(ec)) > 0) {
 			if (ec)
 				break;
 			// Keep reading to the end of the content
@@ -265,76 +394,6 @@ boost::system::error_code http_client::read_content(http::client::response& resp
 	}
 	return ec;
 }
-
-void http_client::async_request(const std::string& method, const std::string& url, const std::string& content)
-{
-//	schedule_connect();
-}
-
-void http_client::schedule_connect()
-{
-	boost::asio::ip::tcp::resolver::query query(server_, port_);
-	resolver_.async_resolve(query, boost::bind(&http::client::http_client::handle_resolve, this, boost::asio::placeholders::error, boost::asio::placeholders::iterator));
-}
-
-
-void http_client::handle_resolve(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
-{
-	if (!err) {
-		// Attempt a connection to each endpoint in the list until we
-		// successfully establish a connection.
-		boost::asio::async_connect(socket_, endpoint_iterator, boost::bind(&http_client::handle_connect, this, boost::asio::placeholders::error));
-		while (endpoint_iterator != boost::asio::ip::tcp::resolver::iterator()) {
-			std::stringstream oss;
-			oss << endpoint_iterator->endpoint();
-			log_debug_message("Resolved: %s", oss.str().c_str());
-			std::cout << "Resolved: " << endpoint_iterator->endpoint() << std::endl;
-			endpoint_iterator++;
-		}
-	} else {
-		std::cout << "Error: " << err.message() << "\n";
-	}
-
-}
-
-void http_client::handle_connect(const boost::system::error_code& err)
-{
-	if (!err) {
-		// The connection was successful. Send the request.
-//		boost::asio::async_write(socket_, request_, boost::bind(&http_client::handle_write_request, this, boost::asio::placeholders::error));
-		std::cout << "socket Connected" << std::endl;
-	} else {
-		std::cout << "Error: " << err.message() << "\n";
-	}
-}
-
-void http_client::handle_write_request(const boost::system::error_code& err)
-{
-	if (!err) {
-		// Read the response status line. The response_ streambuf will
-		// automatically grow to accommodate the entire line. The growth may be
-		// limited by passing a maximum size to the streambuf constructor.
-//		boost::asio::async_read_until(socket_, response_, "\r\n", boost::bind(&http_client::handle_read_status_line, this, boost::asio::placeholders::error));
-	} else {
-		std::cout << "Error: " << err.message() << "\n";
-	}
-}
-
-void http_client::handle_content_read(const boost::system::error_code& e, std::size_t bytes_transferred)
-{
-	std::cout << std::string(buffer_.data(), buffer_.data() + bytes_transferred);
-	schedule_content_read();
-}
-
-void http_client::schedule_content_read()
-{
-	socket_.async_read_some(boost::asio::buffer(buffer_),
-		boost::bind(&http_client::handle_content_read,
-					shared_from_this(),
-					boost::asio::placeholders::error,
-					boost::asio::placeholders::bytes_transferred));
-}
-
 
 bool http_client::log_debug_message(const char *fmt, ...)
 {
@@ -382,6 +441,17 @@ void http_client::set_logger(http::logger_ptr ptr)
 {
 	logger_ = ptr;
 }
+
+void http_client::timeout(size_t millisec)
+{
+	io_timeout_ = millisec;
+}
+
+size_t http_client::timeout()
+{
+	return io_timeout_;
+}
+
 
 } // namespace server
 } // namespace http

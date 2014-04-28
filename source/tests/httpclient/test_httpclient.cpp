@@ -12,7 +12,6 @@ int main(int argc, char *argv[])
 	size_t col;
 	boost::system::error_code ec;
 	std::string server, url, address, port = "80";
-	http::client::http_client client;
 
 	if (argc <= 2) {
 		std::cout << "Usage: " << std::endl;
@@ -25,7 +24,7 @@ int main(int argc, char *argv[])
 		port = server.substr(col + 1);
 	}
 
-	client.connect(address, port, ec);
+	http::client::http_client client(address, port, 5000);
 	if (ec) {
 		std::cout << "Error Code: " << ec.value() << ", " << ec.message() << std::endl;
 		return 1;

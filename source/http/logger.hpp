@@ -14,6 +14,7 @@ class logger
 public:
 	virtual ~logger() { }
 	virtual bool log_debug_message(const char *fmt, va_list args) { return false; }
+	virtual bool log_info_message(const char *fmt, va_list args) { return false; }
 	virtual bool log_warning_message(const char *fmt, va_list args){ return false; }
 	virtual bool log_error_message(const char *fmt, va_list args){ return false; }
 };

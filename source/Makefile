@@ -1,10 +1,9 @@
 SUBDIRS += http
 SUBDIRS += tools
-SUBDIRS += tests
 SUBDIRS += jsonrpc
 SUBDIRS += plugins
 SUBDIRS += sdrone
-
+SUBDIRS += tests
 
 all:
 	@for dir in $(SUBDIRS); do \

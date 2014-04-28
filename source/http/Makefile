@@ -1,10 +1,3 @@
-# Copyright (c) 2009-2010 Satoshi Nakamoto
-# Copyright (c) 2014-2015 Levcoin developers
-# Distributed under the MIT/X11 software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
-
-
 CXX ?= $(CROSS_COMPILE)ar
 
 DEFS=-DBOOST_SPIRIT_THREADSAFE -D_FILE_OFFSET_BITS=64

@@ -1,13 +1,3 @@
-//
-// connection.cpp
-// ~~~~~~~~~~~~~~
-//
-// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-
 #include <vector>
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
@@ -54,7 +44,7 @@ void connection::stop()
 	socket_.close();
 }
 
-void connection::scheduel_timeout()
+void connection::schedule_timeout()
 {
 	timer_.cancel();
 	timer_.expires_from_now(boost::posix_time::seconds(http::server::max_inactive_timeout));
@@ -63,7 +53,7 @@ void connection::scheduel_timeout()
 
 void connection::schedule_headers_read()
 {
-	scheduel_timeout();
+	schedule_timeout();
 	socket_.async_read_some(boost::asio::buffer(buffer_),
 		boost::bind(&connection::handle_headers_read,
 					shared_from_this(),
@@ -73,7 +63,7 @@ void connection::schedule_headers_read()
 
 void connection::schedule_content_read()
 {
-	scheduel_timeout();
+	schedule_timeout();
 	socket_.async_read_some(boost::asio::buffer(buffer_),
 		boost::bind(&connection::handle_content_read,
 					shared_from_this(),
@@ -83,7 +73,7 @@ void connection::schedule_content_read()
 
 void connection::schedule_reply_write()
 {
-	scheduel_timeout();
+	schedule_timeout();
 	boost::asio::async_write(
 		socket_,
 		reply_.to_buffers(),
@@ -116,6 +106,7 @@ void connection::handle_content_read(const boost::system::error_code& e, std::si
 		if (request_.content.size() < request_.headers.content_length()) {
 			schedule_content_read();
 		} else {
+			request_.headers.header("From-Address", socket_.remote_endpoint().address().to_string());
 			request_handler_.handle_request(request_, reply_, serial_);
 			schedule_reply_write();
 		}
@@ -134,11 +125,11 @@ void connection::handle_headers_read(const boost::system::error_code& e, std::si
 		boost::tie(result, parsed_size) = request_parser_.parse_headers(request_, buffer_.data(), buffer_.data() + bytes_transferred);
 		request_.headers_size += parsed_size;
 		if (request_.headers_size > max_headers_size || request_.headers.content_length() > max_content_size) {
-			server_.log_error_message("Bad Request from remote %s:%d, headers size: %d, content size: %d",
+			server_.log_error_message("Bad Request from remote %s:%lu, headers size: %lu, content size: %lu",
 					socket_.remote_endpoint().address().to_string().c_str(),
-					(int)socket_.remote_endpoint().port(),
-					(int)request_.headers_size,
-					(int)request_.content.size());
+					(unsigned long)socket_.remote_endpoint().port(),
+					(unsigned long)request_.headers_size,
+					(unsigned long)request_.content.size());
 			reply_with_error(reply::bad_request);
 			return;
 		}
@@ -148,6 +139,7 @@ void connection::handle_headers_read(const boost::system::error_code& e, std::si
 			if (request_.content.size() < request_.headers.content_length()) {
 				schedule_content_read();
 			} else {
+				request_.headers.header("From-Address", socket_.remote_endpoint().address().to_string());
 				request_handler_.handle_request(request_, reply_, serial_);
 				schedule_reply_write();
 			}
