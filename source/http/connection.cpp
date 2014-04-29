@@ -29,10 +29,9 @@ boost::asio::ip::tcp::socket& connection::socket()
 
 void connection::start()
 {
+	remote_ = socket_.remote_endpoint().address().to_string() + ":" + boost::lexical_cast<std::string>(socket_.remote_endpoint().port());
 	schedule_headers_read();
-	server_.log_debug_message("Starting new connection to remote %s:%d",
-			socket_.remote_endpoint().address().to_string().c_str(),
-			(int)socket_.remote_endpoint().port());
+	server_.log_debug_message("Starting new connection to remote: %s", remote_.c_str());
 
 }
 
@@ -106,7 +105,7 @@ void connection::handle_content_read(const boost::system::error_code& e, std::si
 		if (request_.content.size() < request_.headers.content_length()) {
 			schedule_content_read();
 		} else {
-			request_.headers.header("From-Address", socket_.remote_endpoint().address().to_string());
+//			request_.headers.header("From-Address", socket_.remote_endpoint().address().to_string());
 			request_handler_.handle_request(request_, reply_, serial_);
 			schedule_reply_write();
 		}
@@ -125,9 +124,8 @@ void connection::handle_headers_read(const boost::system::error_code& e, std::si
 		boost::tie(result, parsed_size) = request_parser_.parse_headers(request_, buffer_.data(), buffer_.data() + bytes_transferred);
 		request_.headers_size += parsed_size;
 		if (request_.headers_size > max_headers_size || request_.headers.content_length() > max_content_size) {
-			server_.log_error_message("Bad Request from remote %s:%lu, headers size: %lu, content size: %lu",
-					socket_.remote_endpoint().address().to_string().c_str(),
-					(unsigned long)socket_.remote_endpoint().port(),
+			server_.log_error_message("Bad Request from remote %s, headers size: %lu, content size: %lu",
+					remote_.c_str(),
 					(unsigned long)request_.headers_size,
 					(unsigned long)request_.content.size());
 			reply_with_error(reply::bad_request);
@@ -150,9 +148,7 @@ void connection::handle_headers_read(const boost::system::error_code& e, std::si
 			schedule_headers_read();
 		}
 	} else if (e != boost::asio::error::operation_aborted) {
-		server_.log_debug_message("Closing connection to remote %s:%d",
-				socket_.remote_endpoint().address().to_string().c_str(),
-				(int)socket_.remote_endpoint().port());
+		server_.log_debug_message("Closing connection to remote %s", remote_.c_str());
 		connection_manager_.stop(shared_from_this());
 	}
 }
@@ -167,16 +163,13 @@ void connection::handle_reply_write(const boost::system::error_code& e)
 			reply_.reset();
 			schedule_headers_read();
 		} else {
-//			server_.log_debug_message("Closing connection to remote %s:%d, Connection header is set to: %s",
-//					socket_.remote_endpoint().address().to_string().c_str(),
-//					(int)socket_.remote_endpoint().port(),
-//					reply_.headers["Connection"].c_str());
+			server_.log_debug_message("Closing connection to remote %s, Connection header is set to: %s",
+					remote_.c_str(),
+					reply_.headers["Connection"].c_str());
 			connection_manager_.stop(shared_from_this());
 		}
 	} else if (e != boost::asio::error::operation_aborted) {
-//		server_.log_debug_message("Closing connection to remote %s:%d",
-//				socket_.remote_endpoint().address().to_string().c_str(),
-//				(int)socket_.remote_endpoint().port());
+		server_.log_debug_message("Closing connection to remote %s", remote_.c_str());
 		connection_manager_.stop(shared_from_this());
 	}
 }

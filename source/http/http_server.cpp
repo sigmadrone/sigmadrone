@@ -136,6 +136,20 @@ bool http_server::log_error_message(const char *fmt, ...)
 	return result;
 }
 
+bool http_server::log_critical_message(const char *fmt, ...)
+{
+	bool result = false;
+	va_list args;
+
+	if (!logger_)
+		return result;
+	va_start(args, fmt);
+	std::string format(log_prefix_ + fmt);
+	result = logger_->log_critical_message(format.c_str(), args);
+	va_end(args);
+	return result;
+}
+
 void http_server::set_logger(http::logger_ptr ptr)
 {
 		logger_ = ptr;

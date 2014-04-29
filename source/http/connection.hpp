@@ -89,6 +89,8 @@ private:
 	reply reply_;
 
 	size_t serial_;
+
+	std::string remote_;
 };
 
 typedef boost::shared_ptr<connection> connection_ptr;

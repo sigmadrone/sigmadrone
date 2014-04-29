@@ -17,6 +17,12 @@ public:
 	virtual bool log_info_message(const char *fmt, va_list args) { return false; }
 	virtual bool log_warning_message(const char *fmt, va_list args){ return false; }
 	virtual bool log_error_message(const char *fmt, va_list args){ return false; }
+	virtual bool log_critical_message(const char *fmt, va_list args){ return false; }
+	virtual bool log_debug_message(const char *fmt, ...){ return false; }
+	virtual bool log_info_message(const char *fmt, ...){ return false; }
+	virtual bool log_warning_message(const char *fmt, ...){ return false; }
+	virtual bool log_error_message(const char *fmt, ...){ return false; }
+	virtual bool log_critical_message(const char *fmt, ...){ return false; }
 };
 
 typedef boost::shared_ptr<http::logger> logger_ptr;

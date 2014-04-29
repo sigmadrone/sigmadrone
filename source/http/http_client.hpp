@@ -41,6 +41,7 @@ public:
 	~http_client();
 	void timeout(size_t millisec);
 	size_t timeout();
+	void stop();
 	void request(http::client::response& response,
 			const std::string& method,
 			const std::string& url,
@@ -64,22 +65,20 @@ public:
 	void set_logger(http::logger_ptr ptr);
 
 private:
-	void handle_async_bytestransferred(const boost::system::error_code& e, std::size_t bytes_transferred);
-	size_t async_read_data(boost::system::error_code& ec);
+	void ioservice_run_one();
 	void handle_async_bytestransferred_timeout(const boost::system::error_code& e);
-
+	void handle_async_bytestransferred(const boost::system::error_code& e, std::size_t bytes_transferred);
+	size_t async_read_data();
 	void async_connect_endpoint();
 	void handle_async_connect_timeout(const boost::system::error_code& e);
 	void handle_async_connect(const boost::system::error_code& e);
-
 	void handle_async_resolve_timeout(const boost::system::error_code& e);
 	void handle_async_resolve(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
 	void async_resolve();
-
-	boost::system::error_code read_headers(http::client::response& response);
-	boost::system::error_code read_content(http::client::response& response);
-	boost::system::error_code send_request(http::client::response& response, const std::vector<boost::asio::const_buffer>& request_buffers);
-	boost::system::error_code async_write_request_buffers(const std::vector<boost::asio::const_buffer>& request_buffers);
+	void read_headers(http::client::response& response);
+	void read_content(http::client::response& response);
+	void send_request(http::client::response& response, const std::vector<boost::asio::const_buffer>& request_buffers);
+	void async_write_request_buffers(const std::vector<boost::asio::const_buffer>& request_buffers);
 	void add_default_headers(http::headers& headers, size_t content_size);
 	std::vector<boost::asio::const_buffer> prepare_request_buffers(
 			const std::string& method,
@@ -93,7 +92,8 @@ protected:
 	bool log_warning_message(const char *fmt, ...);
 	bool log_error_message(const char *fmt, ...);
 
-private:
+protected:
+	bool exit_;
 	size_t io_timeout_;
 	size_t bytes_transferred_;
 	std::string server_;

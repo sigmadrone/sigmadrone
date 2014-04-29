@@ -36,6 +36,8 @@ public:
 
 	bool log_error_message(const char *fmt, ...);
 
+	bool log_critical_message(const char *fmt, ...);
+
 	void set_logger(http::logger_ptr ptr);
 
 	template<typename handler_type>
