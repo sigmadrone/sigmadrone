@@ -4,6 +4,7 @@
 #include <string>
 #include <boost/lexical_cast.hpp>
 #include <boost/archive/iterators/binary_from_base64.hpp>
+#include <boost/algorithm/string.hpp>
 #include "reply.hpp"
 #include "request.hpp"
 #include "http_server.hpp"
@@ -48,15 +49,15 @@ void request_handler::handle_request_internal(const request& req, reply& rep)
 	}
 	uri_handler_iterator->second->handler_callback(req, rep);
 	if (rep.headers["Connection"].empty()) {
-		if (req.headers.header("Connection") == "keep-alive")
+		if (boost::iequals(req.headers.header("Connection"), "keep-alive"))
 			rep.headers.header("Connection", "keep-alive");
 		else
 			rep.headers.header("Connection", "close");
 	}
-	if (rep.headers["Content-Length"].empty())
+	if (rep.headers.header("Content-Length").empty())
 		rep.headers.header("Content-Length", boost::lexical_cast<std::string>(rep.content.size()));
-	if (rep.headers["Content-Type"].empty())
-		rep.headers.header("Content-Type", "application/json");
+	if (rep.headers.header("Content-Type").empty())
+		rep.headers.header("Content-Type", "text/plain");
 
 }
 

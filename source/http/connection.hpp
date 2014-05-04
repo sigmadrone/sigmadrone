@@ -21,7 +21,7 @@ class http_server;
 class connection: public boost::enable_shared_from_this<connection>, private boost::noncopyable
 {
 public:
-	typedef boost::array<char, 8192> buffer_type;
+	typedef boost::array<char, 96> buffer_type;
 
 	/// Construct a connection with the given io_service.
 	explicit connection(http_server& server, connection_manager& manager, request_handler& handler);
@@ -43,7 +43,7 @@ private:
 	void handle_content_read(const boost::system::error_code& e, std::size_t bytes_transferred);
 
 	/// Handle completion of a write operation.
-	void handle_reply_write(const boost::system::error_code& e);
+	void handle_reply_write(const boost::system::error_code& e, std::size_t bytes_transferred);
 
 	/// Handle completion of a write operation.
 	void handle_connection_timeout(const boost::system::error_code& e);

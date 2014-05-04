@@ -19,7 +19,7 @@ namespace client {
 class http_client: public boost::enable_shared_from_this<http_client>, private boost::noncopyable
 {
 public:
-	typedef boost::array<char, 8192> buffer_type;
+	typedef boost::array<char, 128> buffer_type;
 
 	struct connect_condition
 	{
@@ -63,16 +63,19 @@ public:
 			const std::string& url,
 			boost::system::error_code& ec);
 	void set_logger(http::logger_ptr ptr);
+	std::string get_remote_address();
+	std::string get_remote_port();
 
 private:
-	void ioservice_run_one();
+	void ioservice_run();
 	void handle_async_bytestransferred_timeout(const boost::system::error_code& e);
-	void handle_async_bytestransferred(const boost::system::error_code& e, std::size_t bytes_transferred);
+	void handle_async_read_bytestransferred(const boost::system::error_code& e, std::size_t bytes_transferred);
+	void handle_async_write_bytestransferred(const boost::system::error_code& e, std::size_t bytes_transferred);
 	size_t async_read_data();
 	void async_connect_endpoint();
 	void handle_async_connect_timeout(const boost::system::error_code& e);
 	void handle_async_connect(const boost::system::error_code& e);
-	void handle_async_resolve_timeout(const boost::system::error_code& e);
+	void handle_async_resolve_timeout(boost::asio::ip::tcp::resolver* resolver, const boost::system::error_code& e);
 	void handle_async_resolve(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
 	void async_resolve();
 	void read_headers(http::client::response& response);
@@ -85,15 +88,15 @@ private:
 			const std::string& url,
 			const std::string& content,
 			const http::headers& headers);
-	void disconnect();
 
 protected:
 	bool log_debug_message(const char *fmt, ...);
+	bool log_info_message(const char *fmt, ...);
 	bool log_warning_message(const char *fmt, ...);
 	bool log_error_message(const char *fmt, ...);
+	bool log_critical_message(const char *fmt, ...);
 
 protected:
-	bool exit_;
 	size_t io_timeout_;
 	size_t bytes_transferred_;
 	std::string server_;
@@ -101,13 +104,13 @@ protected:
 	std::string log_prefix_;
 	logger_ptr logger_;
 	boost::asio::io_service io_service_;
-	boost::asio::ip::tcp::resolver resolver_;
-	boost::asio::ip::tcp::socket socket_;
 	buffer_type buffer_;
 	http::client::response_parser response_parser_;
 	boost::asio::ip::tcp::resolver::iterator endpoint_;
 	boost::asio::deadline_timer timer_;
+	boost::asio::ip::tcp::socket socket_;
 	boost::system::error_code ec_;
+	std::string debug_headers_;
 };
 
 } // namespace server

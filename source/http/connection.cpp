@@ -1,6 +1,7 @@
 #include <vector>
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/algorithm/string.hpp>
 #include "connection_manager.hpp"
 #include "request_handler.hpp"
 #include "connection.hpp"
@@ -31,7 +32,7 @@ void connection::start()
 {
 	remote_ = socket_.remote_endpoint().address().to_string() + ":" + boost::lexical_cast<std::string>(socket_.remote_endpoint().port());
 	schedule_headers_read();
-	server_.log_debug_message("Starting new connection to remote: %s", remote_.c_str());
+	server_.log_info_message("Starting new connection to remote: %s", remote_.c_str());
 
 }
 
@@ -63,11 +64,13 @@ void connection::schedule_headers_read()
 void connection::schedule_content_read()
 {
 	schedule_timeout();
-	socket_.async_read_some(boost::asio::buffer(buffer_),
-		boost::bind(&connection::handle_content_read,
-					shared_from_this(),
-					boost::asio::placeholders::error,
-					boost::asio::placeholders::bytes_transferred));
+	boost::asio::async_read(socket_, boost::asio::buffer(buffer_),
+							boost::asio::transfer_at_least(1),
+							boost::bind(&connection::handle_content_read,
+									this,
+									boost::asio::placeholders::error,
+									boost::asio::placeholders::bytes_transferred));
+
 }
 
 void connection::schedule_reply_write()
@@ -76,7 +79,9 @@ void connection::schedule_reply_write()
 	boost::asio::async_write(
 		socket_,
 		reply_.to_buffers(),
-		boost::bind(&connection::handle_reply_write, shared_from_this(), boost::asio::placeholders::error));
+		boost::bind(&connection::handle_reply_write, shared_from_this(),
+				boost::asio::placeholders::error,
+				boost::asio::placeholders::bytes_transferred));
 }
 
 void connection::reply_with_error(reply::status_type status)
@@ -95,6 +100,7 @@ void connection::handle_connection_timeout(const boost::system::error_code& e)
 
 void connection::handle_content_read(const boost::system::error_code& e, std::size_t bytes_transferred)
 {
+	server_.log_debug_message("  --->connection::handle_content_read, error:  %s, bytes_transferred: %lu", e.message().c_str(), bytes_transferred);
 	++serial_;
 	if (!e) {
 		request_.content.append(buffer_.data(), buffer_.data() + bytes_transferred);
@@ -105,7 +111,6 @@ void connection::handle_content_read(const boost::system::error_code& e, std::si
 		if (request_.content.size() < request_.headers.content_length()) {
 			schedule_content_read();
 		} else {
-//			request_.headers.header("From-Address", socket_.remote_endpoint().address().to_string());
 			request_handler_.handle_request(request_, reply_, serial_);
 			schedule_reply_write();
 		}
@@ -117,6 +122,7 @@ void connection::handle_content_read(const boost::system::error_code& e, std::si
 void connection::handle_headers_read(const boost::system::error_code& e, std::size_t bytes_transferred)
 {
 	++serial_;
+	server_.log_debug_message("  --->connection::handle_headers_read, error:  %s, bytes_transferred: %lu", e.message().c_str(), bytes_transferred);
 
 	if (!e) {
 		boost::tribool result;
@@ -137,7 +143,6 @@ void connection::handle_headers_read(const boost::system::error_code& e, std::si
 			if (request_.content.size() < request_.headers.content_length()) {
 				schedule_content_read();
 			} else {
-				request_.headers.header("From-Address", socket_.remote_endpoint().address().to_string());
 				request_handler_.handle_request(request_, reply_, serial_);
 				schedule_reply_write();
 			}
@@ -153,11 +158,13 @@ void connection::handle_headers_read(const boost::system::error_code& e, std::si
 	}
 }
 
-void connection::handle_reply_write(const boost::system::error_code& e)
+void connection::handle_reply_write(const boost::system::error_code& e, std::size_t bytes_transferred)
 {
 	++serial_;
+	server_.log_debug_message("  --->connection::handle_reply_write, error:  %s, bytes_transferred: %lu", e.message().c_str(), bytes_transferred);
+
 	if (!e) {
-		if (reply_.headers["Connection"] == "keep-alive") {
+		if (boost::iequals(reply_.headers.header("Connection"), "keep-alive")) {
 			request_parser_.reset();
 			request_.reset();
 			reply_.reset();
@@ -165,7 +172,7 @@ void connection::handle_reply_write(const boost::system::error_code& e)
 		} else {
 			server_.log_debug_message("Closing connection to remote %s, Connection header is set to: %s",
 					remote_.c_str(),
-					reply_.headers["Connection"].c_str());
+					reply_.headers.header("Connection").c_str());
 			connection_manager_.stop(shared_from_this());
 		}
 	} else if (e != boost::asio::error::operation_aborted) {
