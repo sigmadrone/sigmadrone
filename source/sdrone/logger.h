@@ -5,13 +5,14 @@
 #include <string>
 #include <boost/filesystem.hpp>
 #include "sync.h"
+#include "http/logger.hpp"
 
 typedef sdrone::lock logger_lock;
 typedef sdrone::mutex logger_mutex;
 
 
 
-class logger
+class logger: public http::logger
 {
 public:
 	typedef enum {none = 0, critical, error, warning, info, debug, unknown} message_type;
@@ -33,6 +34,16 @@ private:
 	void rotate();
 	std::string get_time();
 	void init();
+
+	bool log_debug_message(const char *fmt, va_list args) {
+		return add_log_v(debug,fmt,args);
+	}
+	bool log_warning_message(const char *fmt, va_list args) {
+		return add_log_v(warning,fmt,args);
+	}
+	bool log_error_message(const char *fmt, va_list args) {
+		return add_log_v(error,fmt,args);
+	}
 
 private:
 	std::string logfile_;

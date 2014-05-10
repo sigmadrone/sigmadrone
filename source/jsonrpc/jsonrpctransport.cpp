@@ -61,14 +61,19 @@ IRpcTransport* IRpcTransport::Create(IRpcTransport::TransportType tr)
 
 bool SdJsonRpcTransport::StartServer(
 		IRpcReceiveDataSink* dataSink,
-		const std::string& localAddress,
+		const std::string& _localAddress,
 		int port)
 {
 	char portAsStr[6]={0};
+	std::string localAddress=_localAddress;
 	assert(dataSink);
 	StopServer();
 	m_dataSink = dataSink;
 	snprintf(portAsStr,ARRAYSIZE(portAsStr),"%d",port);
+	if (_localAddress=="localhost"||_localAddress=="127.0.0.1") {
+		localAddress = "0.0.0.0";
+	}
+	printf("Starting RPC server on %s:%s\n",localAddress.c_str(),portAsStr);
 	m_rpc_server.reset(new http::server::http_server(m_io_service_rpc,
 			localAddress, portAsStr));
 	m_rpc_server->add_uri_handler("/jsonrpc",

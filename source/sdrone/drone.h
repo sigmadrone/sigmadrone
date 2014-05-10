@@ -59,6 +59,10 @@ private:
 			void* Context,
 			const SdJsonRpcRequest*,
 			SdJsonRpcReply*);
+	static void OnRpcCommandGetState(
+				void* Context,
+				const SdJsonRpcRequest*,
+				SdJsonRpcReply*);
 	static void PrintConfig(const SdDroneConfig* config);
 
 	static void fatal_error_signal(int sig);

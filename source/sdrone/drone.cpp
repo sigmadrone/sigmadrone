@@ -149,6 +149,10 @@ int Drone::Run(const _CommandArgs& args)
 			SdCommandCodeToString(SD_COMMAND_EXIT),
 			OnRpcCommandExit,
 			this);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_STATE),
+			OnRpcCommandGetState,
+			this);
 
 	//
 	// Execute the command that came with the command line
@@ -171,7 +175,7 @@ int Drone::Run(const _CommandArgs& args)
 	// Start serving requests. Note this call will block the thread and return
 	// only after an exit command was received
 	//
-	return m_rpcDispatch->StartServingRequests(std::string("localhost"),
+	return m_rpcDispatch->StartServingRequests(std::string("0.0.0.0"),
 			args.GetServerPort());
 }
 
@@ -292,6 +296,22 @@ void Drone::OnRpcCommandReset(
 		rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	} else {
 		rep->Results.SetValueAsInt(0);
+	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandGetState(
+		void* context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	assert(context == Only());
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	if (!Only()->m_commandArgs.GetCommandArgsAsJobj()) {
+		rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+	} else {
+		rep->Results.SetValueAsObject(
+			Only()->m_commandArgs.GetCommandArgsAsJobj());
 	}
 	rep->Id = req->Id;
 }
