@@ -9,6 +9,10 @@
 #include <json-glib/json-glib.h>
 #include <json-glib/json-gobject.h>
 
+struct GTypeInit
+{
+	GTypeInit() { g_type_init(); }
+} gTypeInitOnly;
 
 static const SdJsonValue s_nullJsonValue;
 static const SdJsonObject s_nullJsonObject;
