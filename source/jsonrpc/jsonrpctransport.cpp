@@ -95,12 +95,11 @@ bool SdJsonRpcTransport::SendData(
 		const std::string& data,
 		std::string& receivedData)
 {
-	http::client::http_client httpcl;
 	char portAsStr[6]={0};
 	boost::system::error_code ec;
 
 	snprintf(portAsStr,ARRAYSIZE(portAsStr),"%d",port);
-	httpcl.connect(server, portAsStr, ec);
+	http::client::http_client httpcl(server, portAsStr, 5000);
 	if (0 == ec.value()) {
 		http::client::response rep;
 		http::headers headers;

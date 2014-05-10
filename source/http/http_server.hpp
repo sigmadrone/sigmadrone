@@ -1,13 +1,3 @@
-//
-// server.hpp
-// ~~~~~~~~~~
-//
-// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-
 #ifndef HTTP_SERVER_HPP
 #define HTTP_SERVER_HPP
 
@@ -40,9 +30,13 @@ public:
 
 	bool log_debug_message(const char *fmt, ...);
 
+	bool log_info_message(const char *fmt, ...);
+
 	bool log_warning_message(const char *fmt, ...);
 
 	bool log_error_message(const char *fmt, ...);
+
+	bool log_critical_message(const char *fmt, ...);
 
 	void set_logger(http::logger_ptr ptr);
 

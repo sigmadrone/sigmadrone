@@ -1,13 +1,3 @@
-//
-// server.cpp
-// ~~~~~~~~~~
-//
-// Copyright (c) 2003-2013 Christopher M. Kohlhoff (chris at kohlhoff dot com)
-//
-// Distributed under the Boost Software License, Version 1.0. (See accompanying
-// file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-//
-
 #include "http_server.hpp"
 #include <boost/bind.hpp>
 #include <signal.h>
@@ -104,6 +94,20 @@ bool http_server::log_debug_message(const char *fmt, ...)
 	return result;
 }
 
+bool http_server::log_info_message(const char *fmt, ...)
+{
+	bool result = false;
+	va_list args;
+
+	if (!logger_)
+		return result;
+	va_start(args, fmt);
+	std::string format(log_prefix_ + fmt);
+	result = logger_->log_info_message(format.c_str(), args);
+	va_end(args);
+	return result;
+}
+
 bool http_server::log_warning_message(const char *fmt, ...)
 {
 	bool result = false;
@@ -128,6 +132,20 @@ bool http_server::log_error_message(const char *fmt, ...)
 	va_start(args, fmt);
 	std::string format(log_prefix_ + fmt);
 	result = logger_->log_error_message(format.c_str(), args);
+	va_end(args);
+	return result;
+}
+
+bool http_server::log_critical_message(const char *fmt, ...)
+{
+	bool result = false;
+	va_list args;
+
+	if (!logger_)
+		return result;
+	va_start(args, fmt);
+	std::string format(log_prefix_ + fmt);
+	result = logger_->log_critical_message(format.c_str(), args);
 	va_end(args);
 	return result;
 }

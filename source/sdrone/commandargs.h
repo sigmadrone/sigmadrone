@@ -28,6 +28,7 @@ public:
 
 	bool IsRoleServer() const;
 	bool IsRoleClient() const;
+	bool IsDaemon() const { return m_IsDaemon; }
 	int GetServerPort() const { return m_ServerPort; }
 	const char* GetHostAddress() const { return m_HostAddress; }
 	const SdDroneConfig* GetDroneConfig() const { return &m_DroneCfg; }
@@ -67,6 +68,7 @@ private:
 	int m_ServerPort;
 	bool m_IsServer;
 	bool m_IsClient;
+	bool m_IsDaemon;
 	QuaternionD m_targetAttitude;
 	CmdArgs m_cmdArgs;
 	SdJsonObject m_jsonArgs;

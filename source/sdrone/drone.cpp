@@ -21,6 +21,7 @@
 #include "imulowpassfilter.h"
 #include "kalmanattitudefilter.h"
 #include "jsonrpcdispatch.h"
+#include "daemon.h"
 
 Drone* Drone::s_Only = 0;
 
@@ -115,6 +116,10 @@ Drone::~Drone()
 
 int Drone::Run(const _CommandArgs& args)
 {
+	if (args.IsDaemon()) {
+		daemon_init();
+	}
+
 	m_commandArgs = args;
 
 	InitInternalPlugins();
