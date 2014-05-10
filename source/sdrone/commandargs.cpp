@@ -71,6 +71,10 @@ _CommandArgs::_CommandArgs()
 	m_targetAttitude = QuaternionD(1,0,0,0);
 
 	m_cmdArgs.AddSpecs(s_argSpec,sizeof(s_argSpec)/sizeof(s_argSpec[0]));
+
+	m_HostAddress = "";
+
+	m_IsClient = m_IsServer = m_IsDaemon = false;
 }
 
 _CommandArgs::~_CommandArgs() {}
@@ -172,6 +176,9 @@ _CommandArgs::ParseArgs(
 	m_cmdArgs.GetValueAsDouble("Kp", &droneCfg->Quad.Kp);
 	m_cmdArgs.GetValueAsDouble("Ki", &droneCfg->Quad.Ki);
 	m_cmdArgs.GetValueAsDouble("Kd", &droneCfg->Quad.Kd);
+	if (m_cmdArgs.GetValue("daemon") == "1") {
+		m_IsDaemon = true;
+	}
 	return true;
 }
 

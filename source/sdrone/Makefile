@@ -30,6 +30,7 @@ OBJECTS		= \
 	iopacket.o\
 	kalmanattitudefilter.o\
 	cmdargs.o\
+	daemon.c\
 	$(JSONRPC_SRCDIR)/libjsonrpc.a\
 	$(HTTPSERVER_SRCDIR)/libhttp.a
 	
