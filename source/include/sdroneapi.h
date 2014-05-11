@@ -89,6 +89,8 @@ __inline const char* SdCommandCodeToString(SdCommandCode cmd) {
 	return (cmd < ARRAYSIZE(cmdAsStr)) ? cmdAsStr[cmd] : "SD_COMMAND_NONE";
 }
 
+#define SD_PING_REPLY_DATA "SigmaDrone OK"
+
 typedef enum _SdDroneType
 {
 	SD_DRONE_TYPE_INVALID,

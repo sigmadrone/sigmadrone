@@ -29,6 +29,7 @@ public:
 	SdJsonValue();
 	SdJsonValue(_JsonNode* jnode);
 	SdJsonValue(const SdJsonValue&);
+	SdJsonValue(const IJsonValue*);
 	SdJsonValue(const SdJsonArray& arr);
 	SdJsonValue(const SdJsonObject& obj);
 	SdJsonValue(int64_t i);

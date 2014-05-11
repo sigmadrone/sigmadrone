@@ -158,6 +158,10 @@ int Drone::Run(const _CommandArgs& args)
 			SdCommandCodeToString(SD_COMMAND_GET_STATE),
 			OnRpcCommandGetState,
 			this);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_PING),
+			OnRpcCommandPing,
+			this);
 
 	//
 	// Execute the command that came with the command line
@@ -318,6 +322,18 @@ void Drone::OnRpcCommandGetState(
 		rep->Results.SetValueAsObject(
 			Only()->m_commandArgs.GetCommandArgsAsJobj());
 	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandPing(
+		void* context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	assert(context == Only());
+	printf("Sending ping reply %s\n",SD_PING_REPLY_DATA);
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	rep->Results.SetValueAsString(SD_PING_REPLY_DATA);
 	rep->Id = req->Id;
 }
 

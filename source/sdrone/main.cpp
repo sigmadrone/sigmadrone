@@ -56,11 +56,37 @@ int main(int argc, char *argv[])
 		{
 			SdJsonRpcDispatcher rpcDispatch(rpcTransport);
 			SdJsonRpcRequest req;
+			SdJsonRpcReply rep;
 			req.MethodName = SdCommandCodeToString(cmdArgs.GetCommand());
-			req.Params = cmdArgs.GetCommandArgsAsJobj();
-			if (!rpcDispatch.SendJsonRequest(req,
+
+			switch (cmdArgs.GetCommand()) {
+			case SD_COMMAND_FLY:
+			case SD_COMMAND_RESET:
+				req.Params = cmdArgs.GetCommandArgsAsJobj();
+				break;
+			default:break;
+			}
+
+			if (rpcDispatch.SendJsonRequest(req,
 					cmdArgs.GetHostAddress(),
-					cmdArgs.GetServerPort(),0))
+					cmdArgs.GetServerPort(),&rep))
+			{
+				printf("Successfully sent command %s, ret value %d\n",
+						req.MethodName.c_str(), rep.ErrorCode);
+
+				switch (cmdArgs.GetCommand()) {
+				case SD_COMMAND_PING:
+					if (rep.Results().GetType()==SD_JSONVALUE_STRING) {
+						printf("Ping reply: %s\n", rep.Results.AsString().c_str());
+					} else {
+						printf("WARNING: Ping reply carries wrong type: %s\n",
+								rep.Results.GetTypeAsString());
+					}
+					break;
+				default:break;
+				}
+			}
+			else
 			{
 				printf("Failed to send command %s to %s, error \"%s\"",
 						req.MethodName.c_str(),cmdArgs.GetHostAddress(),

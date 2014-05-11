@@ -42,6 +42,14 @@ SdJsonValue::SdJsonValue(const SdJsonValue& val) :
 	*this = val;
 }
 
+SdJsonValue::SdJsonValue(const IJsonValue* val) :
+	m_jnode(0), m_type(SD_JSONVALUE_NULL),
+	m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
+{
+	assert(val);
+	*this = *(SdJsonValue*)val;
+}
+
 SdJsonValue::SdJsonValue(const SdJsonArray& arr) :
 	m_jnode(0), m_type(SD_JSONVALUE_NULL),
 	m_typeAsStr("SD_JSONVALUE_NONE"), m_asObj(0)
