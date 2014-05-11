@@ -41,9 +41,9 @@
 		"QuadPilot": {
 			"MotorToServoMap": [0, 1, 2, 3],
 			"ImuCoordinateAngles": [0, 0, 45],
-			"Kp": 0.8,
-			"Ki": 0.00000005,
-			"Kd": 0.0015
+			"Kp": 1.0,
+			"Ki": 1.2,
+			"Kd": 0.35
 		},
 		"ControlChannel": {
 			"ServerAddress": "127.0.0.1",
@@ -119,9 +119,9 @@
 			"DlFileName": "sdplugs.so",
 			"Config": {
 				"PID": {
-					"Kp": 0.8,
-					"Ki": 0.00000005,
-					"Kd": 0.0015
+					"Kp": 1.0,
+					"Ki": 1.2,
+					"Kd": 0.35
 				}
 			}
 		}

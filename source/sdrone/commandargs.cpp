@@ -7,6 +7,7 @@
 
 #include "commandargs.h"
 #include <stdexcept>
+#include "jsonrpcparser.h"
 
 static CmdArgSpec s_argSpec[] = {
 		{"help",		"h", "Display this help", CMD_ARG_BOOL},
@@ -87,13 +88,13 @@ void _CommandArgs::PrintUsage(int argc, char* argv[]) const
 	printf("%s\n",m_cmdArgs.HelpMessage().c_str());
 
 	printf( "Additional notes:\n"
-			"When command is not specified changes in the configuration are accumulated \n"
-			"until following reset/run. Multiple run commands can be issued in order to \n"
-			"control the flight; currently only --thrust is supported. Server process can \n"
-			"be started just by specifying --server; if command is specified in conjunction \n"
-			"with --server then the daemon will carry out the command and will wait for \n"
-			"further instructions. If neither --server nor --host are specified then the \n"
-			"process will assume both client and server roles and will execute as console app.\n");
+			"Server process can be started just by specifying --server; if command is \n"
+			"specified in conjunction with --server then the process will carry out the\n"
+			"command and will wait for further instructions. --server or --host must be\n"
+			"specified. If specified, --configfile must contain a valid RPC call. If config\n"
+			"file is passed on the daemon command line, then the config file will be parsed,\n"
+			"together with any additional command line arguments; the command line arguments\n"
+			"will take precedence over the values in the config file.\n\n");
 }
 
 bool
@@ -134,7 +135,18 @@ _CommandArgs::ParseArgs(
 	}
 
 	if (m_cmdArgs.GetBoolValue("help")) {
+		PrintUsage(argc, argv);
 		return false;
+	}
+
+	if (m_cmdArgs.GetValue("configfile").length() > 0) {
+		SdJsonRpcParser jsonParser;
+		const std::string& configFile = m_cmdArgs.GetValue("configfile");
+		if (!jsonParser.ParseFile(configFile.c_str())) {
+			printf("Failed to parse config file %s\n",configFile.c_str());
+			return false;
+		}
+		ParseJsonRpcArgs(jsonParser.GetRpcParams());
 	}
 
 	if (m_cmdArgs.GetValue("command").c_str() == std::string("run") ||

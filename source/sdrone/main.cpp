@@ -32,7 +32,6 @@ int main(int argc, char *argv[])
 
 	int err = -1;
 	if (!cmdArgs.ParseArgs(argc,argv)) {
-		cmdArgs.PrintUsage(argc,argv);
 		goto __return;
 	}
 
@@ -71,7 +70,6 @@ int main(int argc, char *argv[])
 		}
 	} else {
 		printf("\nERROR: Server or client mode must be enabled!\n\n\n");
-		cmdArgs.PrintUsage(argc,argv);
 		goto __return;
 	}
 
