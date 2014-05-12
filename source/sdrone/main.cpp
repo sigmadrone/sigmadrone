@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
 				switch (cmdArgs.GetCommand()) {
 				case SD_COMMAND_PING:
-					if (rep.Results().GetType()==SD_JSONVALUE_STRING) {
+					if (rep.Results.GetType()==SD_JSONVALUE_STRING) {
 						printf("Ping reply: %s\n", rep.Results.AsString().c_str());
 					} else {
 						printf("WARNING: Ping reply carries wrong type: %s\n",

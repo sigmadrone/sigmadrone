@@ -40,52 +40,13 @@ int ImuDevice::Open(
 	m_DeviceName = strdup(deviceName);
 	m_DeviceId = deviceId;
 
-	if (s_InvalidFileId == m_Fid) {
-		char servername[256];
-		struct sockaddr_in server_addr;
-		int serverport = 0;
-		struct hostent *host = NULL;
-		memset(&server_addr, 0, sizeof(server_addr));
-		if (strncmp(deviceName, DRONE_AXIS_NET_PROT, strlen(DRONE_AXIS_NET_PROT)) == 0) {
-			const char *name = deviceName + strlen(DRONE_AXIS_NET_PROT);
-			const char *col = strchr(name, ':');
-			memset(servername, 0, sizeof(servername));
-			if (!!col && (size_t)((col - name) + 1) < sizeof(servername)) {
-				strncpy(servername, name, (col - name));
-				serverport = atoi(col + 1);
-			} else {
-				strcpy(servername, name);
-			}
-			host = gethostbyname(servername);
-			if (!host) {
-				fprintf(stdout,"ImuDevice::Open gethost by name %s failed, err=%d\n",
-					servername,errno);
-				goto __return;
-			}
-			if ((m_Fid = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-				fprintf(stdout,"ImuDevice::Open socket failed, err=%d\n",errno);
-				goto __return;
-			}
-			server_addr.sin_family = AF_INET;
-			server_addr.sin_port = htons(serverport);
-			server_addr.sin_addr = *((struct in_addr *)host->h_addr);
-			if (connect(m_Fid, (struct sockaddr*)&server_addr, sizeof(struct sockaddr)) == -1) {
-				fprintf(stdout,"ImuDevice::Open, connect failed, err=%d\n",errno);
-				goto __return;
-			}
-		}
-	}
-
-	err = 0;
-
-	__return:
-
-	if (0 == err) {
-		fprintf(stdout,"ImuDevice %s opened\n",deviceName);
+	if (s_InvalidFileId != m_Fid) {
+		err = 0;
+		printf("ImuDevice %s opened\n",deviceName);
 	}
 	else {
 		err = errno;
-		fprintf(stdout,"ImuDevice::Open(%s) failed, err=%d\n",deviceName,errno);
+		printf("ImuDevice::Open(%s) failed, err=%d\n",deviceName,errno);
 	}
 
 	return err;

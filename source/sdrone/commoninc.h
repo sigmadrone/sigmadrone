@@ -19,7 +19,6 @@
 #include <sys/select.h>
 #include <errno.h>
 #include "axesdata.h"
-#include "dronedefs.h"
 #include "matrix.h"
 #include "sdroneapi.h"
 

@@ -10,7 +10,6 @@
 
 #include <pthread.h>
 #include "axesdata.h"
-#include "dronedefs.h"
 #include "pluginchain.h"
 #include "commandargs.h"
 #include "filelock.h"
