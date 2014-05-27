@@ -35,8 +35,7 @@ void application::init(int argc, char *argv[])
 
 }
 
-
-void application::headers_request_handler(const http::server::request& req, http::server::reply& rep)
+void application::headers_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
 {
 	rep.headers.header("Content-Type", "text/plain");
 
@@ -47,7 +46,7 @@ void application::headers_request_handler(const http::server::request& req, http
 	rep.status = http::server::reply::ok;
 }
 
-void application::echo_request_handler(const http::server::request& req, http::server::reply& rep)
+void application::echo_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
 {
 	rep.headers.header("Content-Type", "text/plain");
 
@@ -55,7 +54,7 @@ void application::echo_request_handler(const http::server::request& req, http::s
 	rep.status = http::server::reply::ok;
 }
 
-static void method_request_handler(const http::server::request& req, http::server::reply& rep)
+static void method_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
 {
 	rep.headers.header("Content-Type", "text/plain");
 	rep.content = req.method + "\n";
@@ -63,7 +62,7 @@ static void method_request_handler(const http::server::request& req, http::serve
 }
 
 
-void application::jsonrpc_request_handler(const http::server::request& req, http::server::reply& rep)
+void application::jsonrpc_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
 {
 	rep.content = "error: {\"code\":-32601,\"message\":\"Method not not found\"}\n";
 	rep.status = http::server::reply::ok;
@@ -76,9 +75,9 @@ int application::run()
 	/*
 	 * Register member function (request handler)
 	 */
-	rpc_server_->add_uri_handler("/jsonrpc", boost::bind(&application::jsonrpc_request_handler, this, _1, _2));
-	rpc_server_->add_uri_handler("/echo", boost::bind(&application::echo_request_handler, this, _1, _2));
-	rpc_server_->add_uri_handler("/headers", boost::bind(&application::headers_request_handler, this, _1, _2));
+	rpc_server_->add_uri_handler("/jsonrpc", boost::bind(&application::jsonrpc_request_handler, this, _1, _2, _3));
+	rpc_server_->add_uri_handler("/echo", boost::bind(&application::echo_request_handler, this, _1, _2, _3));
+	rpc_server_->add_uri_handler("/headers", boost::bind(&application::headers_request_handler, this, _1, _2, _3));
 
 	/*
 	 * Register global function (request handler)

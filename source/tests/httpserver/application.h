@@ -21,9 +21,9 @@ protected:
 	void signal_handler_terminate();
 	void usage();
 
-	void jsonrpc_request_handler(const http::server::request& req, http::server::reply& rep);
-	void echo_request_handler(const http::server::request& req, http::server::reply& rep);
-	void headers_request_handler(const http::server::request& req, http::server::reply& rep);
+	void jsonrpc_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);
+	void echo_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);
+	void headers_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);
 
 	boost::asio::io_service io_service_rpc_;
 	boost::asio::signal_set signals_;

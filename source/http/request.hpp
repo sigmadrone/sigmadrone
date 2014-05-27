@@ -3,10 +3,13 @@
 
 #include <string>
 #include <vector>
+#include <boost/shared_ptr.hpp>
 #include "headers.hpp"
 
 namespace http {
 namespace server {
+
+class connection;
 
 /// A request received from a client.
 struct request

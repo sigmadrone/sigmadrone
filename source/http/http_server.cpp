@@ -12,6 +12,7 @@ http_server::http_server(boost::asio::io_service& io_service, const std::string&
 	, io_service_(io_service)
 	, acceptor_(io_service_)
 	, timer_(io_service_)
+	, blocktimer_(io_service_)
 	, connection_manager_(*this)
 	, request_handler_(*this)
 	, new_connection_()
@@ -27,6 +28,7 @@ http_server::http_server(boost::asio::io_service& io_service, const std::string&
 	acceptor_.bind(endpoint);
 	acceptor_.listen();
 	start_accept();
+	schedule_blocked_requests(5000);
 }
 
 boost::asio::io_service& http_server::io_service()
@@ -64,9 +66,28 @@ void http_server::handle_stop(const boost::system::error_code& e)
 		// operations. Once all operations have finished the io_service::run() call
 		// will exit.
 		acceptor_.close();
+		blocktimer_.cancel();
 		connection_manager_.stop_all();
 	}
 }
+
+void http_server::schedule_blocked_requests(unsigned int millisec)
+{
+
+	if (acceptor_.is_open()) {
+		blocktimer_.expires_from_now(boost::posix_time::milliseconds(millisec));
+		blocktimer_.async_wait(boost::bind(&http_server::handle_blocked_requests, this, boost::asio::placeholders::error));
+	}
+}
+
+void http_server::handle_blocked_requests(const boost::system::error_code& ec)
+{
+	if (!ec) {
+		connection_manager_.handle_pending_requests();
+		schedule_blocked_requests(5000);
+	}
+}
+
 
 /*
  * The actual stopping of the server will not be done
@@ -153,6 +174,11 @@ bool http_server::log_critical_message(const char *fmt, ...)
 void http_server::set_logger(http::logger_ptr ptr)
 {
 		logger_ = ptr;
+}
+
+size_t http_server::get_remote_connections(std::vector<std::string>& connections)
+{
+	return connection_manager_.get_remote_connections(connections);
 }
 
 } // namespace server

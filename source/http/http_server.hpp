@@ -5,19 +5,19 @@
 #include <cstdarg>
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
-#include "connection.hpp"
-#include "connection_manager.hpp"
 #include "request_handler.hpp"
+#include "connection_manager.hpp"
 #include "logger.hpp"
 
 namespace http {
 namespace server {
 
-
 /// The top-level class of the HTTP server.
 class http_server: private boost::noncopyable
 {
 public:
+	typedef http::server::connection connection_ctx;
+
 	/// Construct the server to listen on the specified TCP address and port, and
 	/// serve up files from the given directory.
 	explicit http_server(boost::asio::io_service& io_service, const std::string& address, const std::string& port);
@@ -46,9 +46,15 @@ public:
 		request_handler_.add_uri_handler<handler_type>(uri, handler_callback);
 	}
 
-private:
+	size_t get_remote_connections(std::vector<std::string>& connections);
+
+	void schedule_blocked_requests(unsigned int millisec);
+
+protected:
 	/// Initiate an asynchronous accept operation.
 	void start_accept();
+
+	void handle_blocked_requests(const boost::system::error_code& e);
 
 	void handle_stop(const boost::system::error_code& e);
 
@@ -67,6 +73,9 @@ private:
 
 	/// Used to stop the server
 	boost::asio::deadline_timer timer_;
+
+	/// Used to process blocked requests
+	boost::asio::deadline_timer blocktimer_;
 
 	/// The connection manager which owns all live connections.
 	connection_manager connection_manager_;

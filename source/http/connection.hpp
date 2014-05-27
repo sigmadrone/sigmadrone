@@ -14,6 +14,7 @@
 namespace http {
 namespace server {
 
+class request_handler;
 class connection_manager;
 class http_server;
 
@@ -35,7 +36,26 @@ public:
 	/// Stop all asynchronous operations associated with the connection.
 	void stop();
 
-private:
+	void handle_pending_request();
+
+	std::string get_remote_address() const;
+
+	std::string get_remote_port() const;
+
+	void set_eagain();
+
+	void reset_eagain();
+
+	std::string get_local_address();
+
+	std::string get_local_port();
+
+	std::string get_remote_address();
+
+	std::string get_remote_port();
+
+
+protected:
 	/// Handle completion of a read operation.
 	void handle_headers_read(const boost::system::error_code& e, std::size_t bytes_transferred);
 
@@ -79,16 +99,22 @@ private:
 	/// Buffer for incoming data.
 	buffer_type buffer_;
 
-	/// The incoming request.
-	request request_;
-
 	/// The parser for the incoming request.
 	request_parser request_parser_;
+
+	/// The incoming request.
+	request request_;
 
 	/// The reply to be sent back to the client.
 	reply reply_;
 
 	size_t serial_;
+
+	bool eagain_;
+
+	std::string remote_address_;
+
+	std::string remote_port_;
 
 	std::string remote_;
 };

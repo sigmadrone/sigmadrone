@@ -8,6 +8,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
+#include "connection.hpp"
 
 namespace http {
 namespace server {
@@ -21,7 +22,7 @@ struct uri_handler_base
 	virtual ~uri_handler_base()
 	{
 	}
-	virtual void handler_callback(const request& req, reply& rep) = 0;
+	virtual void handler_callback(http::server::connection& connection, const request& req, reply& rep) = 0;
 };
 
 template<typename handler_callback_type>
@@ -34,9 +35,9 @@ public:
 	{
 	}
 
-	virtual void handler_callback(const request& req, reply& rep)
+	virtual void handler_callback(http::server::connection& connection, const request& req, reply& rep)
 	{
-		handler_callback_(req, rep);
+		handler_callback_(connection, req, rep);
 	}
 
 protected:
@@ -53,7 +54,7 @@ public:
 	request_handler(http_server& service);
 
 	// Handle a request and produce a reply.
-	void handle_request(const request& req, reply& rep, size_t serial);
+	void handle_request(http::server::connection& connection, const request& req, reply& rep, size_t serial);
 
 	// Add unique URI handler
 	template<typename handler_type>
@@ -69,7 +70,7 @@ protected:
 	// Perform URL-decoding on a string. Returns false if the encoding was invalid.
 	static bool url_decode(const std::string& in, std::string& out);
 
-	void handle_request_internal(const request& req, reply& rep);
+	void handle_request_internal(http::server::connection& connection, const request& req, reply& rep);
 
 protected:
 	http_server& server_;

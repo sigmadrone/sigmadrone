@@ -17,9 +17,9 @@ request_handler::request_handler(http_server& server)
 {
 }
 
-void request_handler::handle_request(const request& req, reply& rep, size_t serial)
+void request_handler::handle_request(http::server::connection& connection, const request& req, reply& rep, size_t serial)
 {
-	handle_request_internal(req, rep);
+	handle_request_internal(connection, req, rep);
 	std::stringstream oss;
 	oss << "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< serial: " << serial << std::endl;
 	oss << req << std::endl;
@@ -29,7 +29,7 @@ void request_handler::handle_request(const request& req, reply& rep, size_t seri
 	server_.log_debug_message("%s", oss.str().c_str());
 }
 
-void request_handler::handle_request_internal(const request& req, reply& rep)
+void request_handler::handle_request_internal(http::server::connection& connection, const request& req, reply& rep)
 {
 	// Decode url to path.
 	std::string request_path;
@@ -47,7 +47,7 @@ void request_handler::handle_request_internal(const request& req, reply& rep)
 		rep = reply::stock_reply(reply::not_found);
 		return;
 	}
-	uri_handler_iterator->second->handler_callback(req, rep);
+	uri_handler_iterator->second->handler_callback(connection, req, rep);
 	if (rep.headers["Connection"].empty()) {
 		if (boost::iequals(req.headers.header("Connection"), "keep-alive"))
 			rep.headers.header("Connection", "keep-alive");

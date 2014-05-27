@@ -31,6 +31,7 @@ public:
 			const std::string& dataIn,
 			std::string& dataOut);
 	void JsonRequestHandler(
+			http::server::connection& connection,
 			const http::server::request& req,
 			http::server::reply& rep);
 private:
@@ -77,7 +78,7 @@ bool SdJsonRpcTransport::StartServer(
 	m_rpc_server.reset(new http::server::http_server(m_io_service_rpc,
 			localAddress, portAsStr));
 	m_rpc_server->add_uri_handler("/jsonrpc",
-			boost::bind(&SdJsonRpcTransport::JsonRequestHandler, this, _1, _2));
+			boost::bind(&SdJsonRpcTransport::JsonRequestHandler, this, _1, _2, _3));
 
 	m_io_service_rpc.run();
 	return true;
@@ -120,6 +121,7 @@ bool SdJsonRpcTransport::SendData(
 }
 
 void SdJsonRpcTransport::JsonRequestHandler(
+	http::server::connection& connection,
 	const http::server::request& req,
 	http::server::reply& rep)
 {

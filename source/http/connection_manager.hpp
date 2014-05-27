@@ -10,6 +10,7 @@ namespace server {
 
 class http_server;
 
+
 /// Manages open connections so that they may be cleanly stopped when the server
 /// needs to shut down.
 class connection_manager: private boost::noncopyable
@@ -26,6 +27,9 @@ public:
 	/// Stop all connections.
 	void stop_all();
 
+	size_t get_remote_connections(std::vector<std::string>& connections);
+
+	void handle_pending_requests();
 private:
 	http_server& server_;
 

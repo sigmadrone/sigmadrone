@@ -63,8 +63,12 @@ public:
 			const std::string& url,
 			boost::system::error_code& ec);
 	void set_logger(http::logger_ptr ptr);
+	std::string get_local_address();
+	std::string get_local_port();
 	std::string get_remote_address();
 	std::string get_remote_port();
+	std::string address();
+	std::string port();
 
 private:
 	void ioservice_run();
@@ -75,7 +79,7 @@ private:
 	void async_connect_endpoint();
 	void handle_async_connect_timeout(const boost::system::error_code& e);
 	void handle_async_connect(const boost::system::error_code& e);
-	void handle_async_resolve_timeout(boost::asio::ip::tcp::resolver* resolver, const boost::system::error_code& e);
+	void handle_async_resolve_timeout(const boost::system::error_code& e);
 	void handle_async_resolve(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
 	void async_resolve();
 	void read_headers(http::client::response& response);
@@ -97,6 +101,7 @@ protected:
 	bool log_critical_message(const char *fmt, ...);
 
 protected:
+	bool stopped_;
 	size_t io_timeout_;
 	size_t bytes_transferred_;
 	std::string server_;
@@ -108,6 +113,7 @@ protected:
 	http::client::response_parser response_parser_;
 	boost::asio::ip::tcp::resolver::iterator endpoint_;
 	boost::asio::deadline_timer timer_;
+	boost::asio::ip::tcp::resolver resolver_;
 	boost::asio::ip::tcp::socket socket_;
 	boost::system::error_code ec_;
 	std::string debug_headers_;

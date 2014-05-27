@@ -7,6 +7,16 @@
 
 namespace http {
 
+/*
+ * This should probably go into separate header file
+ */
+//struct remote_connection_info
+//{
+//	std::string address_;
+//	std::string port_;
+//	remote_connection_info(const std::string& address, const std::string& port) : address_(address), port_(port) { }
+//};
+
 
 class headers : public std::map<std::string, std::string>
 {

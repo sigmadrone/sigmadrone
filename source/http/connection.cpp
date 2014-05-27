@@ -2,9 +2,8 @@
 #include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/algorithm/string.hpp>
-#include "connection_manager.hpp"
 #include "request_handler.hpp"
-#include "connection.hpp"
+#include "connection_manager.hpp"
 #include "http_server.hpp"
 #include "parameters.hpp"
 
@@ -19,6 +18,7 @@ connection::connection(http_server& server, connection_manager& manager, request
 	, connection_manager_(manager)
 	, request_handler_(handler)
 	, serial_(0)
+	, eagain_(false)
 {
 
 }
@@ -28,11 +28,34 @@ boost::asio::ip::tcp::socket& connection::socket()
 	return socket_;
 }
 
+std::string connection::get_remote_address() const
+{
+	return remote_address_;
+}
+
+std::string connection::get_remote_port() const
+{
+	return remote_port_;
+}
+
+void connection::set_eagain()
+{
+	eagain_ = true;
+}
+
+void connection::reset_eagain()
+{
+	eagain_ = false;
+}
+
+
 void connection::start()
 {
-	remote_ = socket_.remote_endpoint().address().to_string() + ":" + boost::lexical_cast<std::string>(socket_.remote_endpoint().port());
+	remote_address_ = socket_.remote_endpoint().address().to_string();
+	remote_port_ = boost::lexical_cast<std::string>(socket_.remote_endpoint().port());
+	remote_ = remote_address_ + ":" + remote_port_;
 	schedule_headers_read();
-	server_.log_info_message("Starting new connection to remote: %s", remote_.c_str());
+	server_.log_debug_message("Starting new connection to remote: %s", remote_.c_str());
 
 }
 
@@ -98,6 +121,18 @@ void connection::handle_connection_timeout(const boost::system::error_code& e)
 	}
 }
 
+
+void connection::handle_pending_request()
+{
+	if (eagain_) {
+		reset_eagain();
+		reply_.reset();
+		request_handler_.handle_request(*this, request_, reply_, serial_);
+		if (!eagain_)
+			schedule_reply_write();
+	}
+}
+
 void connection::handle_content_read(const boost::system::error_code& e, std::size_t bytes_transferred)
 {
 	server_.log_debug_message("  --->connection::handle_content_read, error:  %s, bytes_transferred: %lu", e.message().c_str(), bytes_transferred);
@@ -111,8 +146,10 @@ void connection::handle_content_read(const boost::system::error_code& e, std::si
 		if (request_.content.size() < request_.headers.content_length()) {
 			schedule_content_read();
 		} else {
-			request_handler_.handle_request(request_, reply_, serial_);
-			schedule_reply_write();
+			reset_eagain();
+			request_handler_.handle_request(*this, request_, reply_, serial_);
+			if (!eagain_)
+				schedule_reply_write();
 		}
 	} else if (e != boost::asio::error::operation_aborted) {
 		connection_manager_.stop(shared_from_this());
@@ -143,8 +180,10 @@ void connection::handle_headers_read(const boost::system::error_code& e, std::si
 			if (request_.content.size() < request_.headers.content_length()) {
 				schedule_content_read();
 			} else {
-				request_handler_.handle_request(request_, reply_, serial_);
-				schedule_reply_write();
+				reset_eagain();
+				request_handler_.handle_request(*this, request_, reply_, serial_);
+				if (!eagain_)
+					schedule_reply_write();
 			}
 		} else if (!result) {
 			reply_ = reply::stock_reply(reply::bad_request);
@@ -180,6 +219,54 @@ void connection::handle_reply_write(const boost::system::error_code& e, std::siz
 		connection_manager_.stop(shared_from_this());
 	}
 }
+
+std::string connection::get_local_address()
+{
+	std::string address;
+	try {
+		address = socket_.local_endpoint().address().to_string();
+	} catch (boost::system::system_error& e) {
+		address.clear();
+	}
+	return address;
+}
+
+std::string connection::get_local_port()
+{
+	std::string port;
+	try {
+		unsigned int local_port = socket_.local_endpoint().port();
+		port = boost::lexical_cast<std::string>(local_port);
+	} catch (boost::system::system_error& e) {
+		port.clear();
+	}
+	return port;
+}
+
+
+std::string connection::get_remote_address()
+{
+	std::string address;
+	try {
+		address = socket_.remote_endpoint().address().to_string();
+	} catch (boost::system::system_error& e) {
+		address.clear();
+	}
+	return address;
+}
+
+std::string connection::get_remote_port()
+{
+	std::string port;
+	try {
+		unsigned int remote_port = socket_.remote_endpoint().port();
+		port = boost::lexical_cast<std::string>(remote_port);
+	} catch (boost::system::system_error& e) {
+		port.clear();
+	}
+	return port;
+}
+
 
 } // namespace server
 } // namespace http

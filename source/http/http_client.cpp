@@ -8,7 +8,8 @@ namespace client {
 
 
 http_client::http_client(const std::string& server, const std::string& port, size_t timeout)
-	: io_timeout_(timeout)
+	: stopped_(false)
+	, io_timeout_(timeout)
 	, bytes_transferred_(0)
 	, server_(server)
 	, port_(port)
@@ -18,6 +19,7 @@ http_client::http_client(const std::string& server, const std::string& port, siz
 	, buffer_()
 	, endpoint_()
 	, timer_(io_service_)
+	, resolver_(io_service_)
 	, socket_(io_service_)
 {
 	log_prefix_ = std::string("HTTP::CLIENT") + "@" + server_ + ":" + port_ + "; ";
@@ -28,7 +30,123 @@ http_client::~http_client()
 {
 }
 
-void http_client::handle_async_resolve_timeout(boost::asio::ip::tcp::resolver* resolver, const boost::system::error_code& ec)
+void http_client::stop()
+{
+	stopped_ = true;
+	socket_.close();
+	resolver_.cancel();
+	io_service_.stop();
+}
+
+void http_client::ioservice_run()
+{
+	if (stopped_)
+		boost::asio::detail::throw_error(boost::asio::error::interrupted, "http_client::ioservice_run");
+	io_service_.run();
+	io_service_.reset();
+	if (stopped_)
+		boost::asio::detail::throw_error(boost::asio::error::interrupted, "http_client::ioservice_run");
+}
+
+void http_client::request(
+		http::client::response& response,
+		const std::string& method,
+		const std::string& url,
+		const std::string& content,
+		boost::system::error_code& ec)
+{
+	http::headers userheaders;
+	request(response, method, url, content, userheaders, ec);
+}
+
+void http_client::request(
+		http::client::response& response,
+		const std::string& method,
+		const std::string& url,
+		boost::system::error_code& ec)
+{
+	http::headers userheaders;
+	std::string content;
+	request(response, method, url, content, userheaders, ec);
+}
+
+void http_client::request(http::client::response& response,
+		const std::string& method,
+		const std::string& url,
+		const std::string& content,
+		const http::headers& userheaders,
+		boost::system::error_code& ec)
+{
+	try {
+		request(response, method, url, content, userheaders);
+	} catch (boost::system::system_error& e) {
+		ec = e.code();
+	}
+}
+
+void http_client::request(http::client::response& response,
+		const std::string& method,
+		const std::string& url,
+		const std::string& content,
+		const http::headers& userheaders) throw(std::exception)
+{
+	boost::system::error_code ec;
+	http::headers headers(userheaders);
+	add_default_headers(headers, content.size());
+	std::vector<boost::asio::const_buffer> request_buffers = prepare_request_buffers(method, url, content, headers);
+
+	stopped_ = false;
+	if (socket_.is_open()) {
+		try {
+			send_request(response, request_buffers);
+			if (!boost::iequals(response.headers.header("Connection"), "keep-alive"))
+				socket_.close();
+			return;
+		} catch (boost::system::system_error& e) {
+			boost::system::error_code ec = e.code();
+			if (ec != boost::asio::error::eof && ec != boost::asio::error::bad_descriptor && ec != boost::asio::error::broken_pipe) {
+				socket_.close();
+				response.content.clear();
+				response.headers.clear();
+				response.status = 0;
+				throw;
+			}
+		}
+	}
+	try {
+		socket_.close();
+		async_connect_endpoint();
+		send_request(response, request_buffers);
+		if (!boost::iequals(response.headers.header("Connection"), "keep-alive"))
+			socket_.close();
+	} catch (boost::system::system_error& e) {
+		boost::system::error_code ec = e.code();
+		if (ec) {
+			socket_.close();
+			response.content.clear();
+			response.headers.clear();
+			response.status = 0;
+			throw;
+		}
+	}
+}
+
+void http_client::send_request(
+		http::client::response& response,
+		const std::vector<boost::asio::const_buffer>& request_buffers)
+{
+	response_parser_.reset();
+	response.headers.clear();
+	response.content.clear();
+	response.status = 0;
+	async_write_request_buffers(request_buffers);
+	read_headers(response);
+	read_content(response);
+	log_debug_message("<===================\n%s", (debug_headers_ + response.content).c_str());
+}
+
+
+void http_client::handle_async_resolve_timeout(const boost::system::error_code& ec)
 {
 	log_debug_message("  --->http_client::handle_async_resolve_timeout, error:  %s, code: %d", ec.message().c_str(), ec.value());
 	if ( ec == boost::asio::error::operation_aborted) {
@@ -37,7 +155,7 @@ void http_client::handle_async_resolve_timeout(boost::asio::ip::tcp::resolver* r
 		 */
 		return;
 	}
-	resolver->cancel();
+	resolver_.cancel();
 }
 
 void http_client::handle_async_resolve(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
@@ -51,7 +169,6 @@ void http_client::handle_async_resolve(const boost::system::error_code& ec, boos
 
 void http_client::async_resolve()
 {
-	boost::asio::ip::tcp::resolver resolver(io_service_);
 	boost::asio::ip::tcp::resolver::query query(server_, port_);
 	log_debug_message("http_client::async_resolve, resolving:  %s, port: %s", server_.c_str(), port_.c_str());
 
@@ -60,10 +177,9 @@ void http_client::async_resolve()
 		timer_.expires_from_now(boost::posix_time::milliseconds(io_timeout_));
 		timer_.async_wait(boost::bind(&http_client::handle_async_resolve_timeout,
 				this,
-				&resolver,
 				boost::asio::placeholders::error));
 	}
-	resolver.async_resolve(
+	resolver_.async_resolve(
 			query,
 			boost::bind(&http_client::handle_async_resolve,
 						this,
@@ -74,17 +190,6 @@ void http_client::async_resolve()
 		log_debug_message("Failed to resolve: %s:%s", server_.c_str(), port_.c_str());
 	}
 	boost::asio::detail::throw_error(ec_, "http_client::async_resolve");
-}
-
-void http_client::stop()
-{
-	socket_.close();
-}
-
-void http_client::ioservice_run()
-{
-	io_service_.run();
-	io_service_.reset();
 }
 
 void http_client::handle_async_connect_timeout(const boost::system::error_code& ec)
@@ -98,7 +203,6 @@ void http_client::handle_async_connect_timeout(const boost::system::error_code& 
 	}
 	socket_.close();
 }
-
 
 void http_client::handle_async_connect(const boost::system::error_code& ec)
 {
@@ -128,7 +232,7 @@ void http_client::async_connect_endpoint()
 							boost::asio::placeholders::error));
 		ioservice_run();
 		if (!ec_) {
-			log_info_message("Connected to: %s:%d", it->endpoint().address().to_string().c_str(), it->endpoint().port());
+			log_debug_message("Connected to: %s:%s", get_remote_address().c_str(), get_remote_port().c_str());
 			break;
 		}
 		log_error_message("Failed to connect: %s:%d, error: %s", it->endpoint().address().to_string().c_str(), it->endpoint().port(), ec_.message().c_str());
@@ -181,103 +285,6 @@ void http_client::add_default_headers(http::headers& headers, size_t content_siz
 		headers.header("Content-Length", boost::lexical_cast<std::string>(content_size));
 	if (headers.header("Connection").empty())
 		headers.header("Connection", "close");
-}
-
-
-void http_client::request(
-		http::client::response& response,
-		const std::string& method,
-		const std::string& url,
-		const std::string& content,
-		boost::system::error_code& ec)
-{
-	http::headers userheaders;
-	request(response, method, url, content, userheaders, ec);
-}
-
-void http_client::request(
-		http::client::response& response,
-		const std::string& method,
-		const std::string& url,
-		boost::system::error_code& ec)
-{
-	http::headers userheaders;
-	std::string content;
-	request(response, method, url, content, userheaders, ec);
-}
-
-void http_client::request(http::client::response& response,
-		const std::string& method,
-		const std::string& url,
-		const std::string& content,
-		const http::headers& userheaders,
-		boost::system::error_code& ec)
-{
-	try {
-		request(response, method, url, content, userheaders);
-	} catch (boost::system::system_error& e) {
-		ec = e.code();
-	}
-}
-
-void http_client::request(http::client::response& response,
-		const std::string& method,
-		const std::string& url,
-		const std::string& content,
-		const http::headers& userheaders) throw(std::exception)
-{
-	boost::system::error_code ec;
-	http::headers headers(userheaders);
-	add_default_headers(headers, content.size());
-	std::vector<boost::asio::const_buffer> request_buffers = prepare_request_buffers(method, url, content, headers);
-
-	if (socket_.is_open()) {
-		try {
-			send_request(response, request_buffers);
-			if (!boost::iequals(response.headers.header("Connection"), "keep-alive"))
-				socket_.close();
-			return;
-		} catch (boost::system::system_error& e) {
-			boost::system::error_code ec = e.code();
-			if (ec != boost::asio::error::eof && ec != boost::asio::error::bad_descriptor && ec != boost::asio::error::broken_pipe) {
-				socket_.close();
-				response.content.clear();
-				response.headers.clear();
-				response.status = 0;
-				throw;
-			}
-		}
-	}
-	try {
-		socket_.close();
-		async_connect_endpoint();
-		send_request(response, request_buffers);
-		if (!boost::iequals(response.headers.header("Connection"), "keep-alive"))
-			socket_.close();
-	} catch (boost::system::system_error& e) {
-		boost::system::error_code ec = e.code();
-		if (ec) {
-			socket_.close();
-			response.content.clear();
-			response.headers.clear();
-			response.status = 0;
-			throw;
-		}
-	}
-}
-
-void http_client::send_request(
-		http::client::response& response,
-		const std::vector<boost::asio::const_buffer>& request_buffers)
-{
-	response_parser_.reset();
-	response.headers.clear();
-	response.content.clear();
-	response.status = 0;
-	async_write_request_buffers(request_buffers);
-	read_headers(response);
-	read_content(response);
-	log_debug_message("<===================\n%s", (debug_headers_ + response.content).c_str());
 }
 
 void http_client::handle_async_bytestransferred_timeout(const boost::system::error_code& ec)
@@ -476,14 +483,63 @@ size_t http_client::timeout()
 	return io_timeout_;
 }
 
+std::string http_client::get_local_address()
+{
+	std::string address;
+	try {
+		address = socket_.local_endpoint().address().to_string();
+	} catch (boost::system::system_error& e) {
+		address.clear();
+	}
+	return address;
+}
+
+std::string http_client::get_local_port()
+{
+	std::string port;
+	try {
+		unsigned int local_port = socket_.local_endpoint().port();
+		port = boost::lexical_cast<std::string>(local_port);
+	} catch (boost::system::system_error& e) {
+		port.clear();
+	}
+	return port;
+}
+
+
 std::string http_client::get_remote_address()
+{
+	std::string address;
+	try {
+		address = socket_.remote_endpoint().address().to_string();
+	} catch (boost::system::system_error& e) {
+		address.clear();
+	}
+	return address;
+}
+
+std::string http_client::get_remote_port()
+{
+	std::string port;
+	try {
+		unsigned int remote_port = socket_.remote_endpoint().port();
+		port = boost::lexical_cast<std::string>(remote_port);
+	} catch (boost::system::system_error& e) {
+		port.clear();
+	}
+	return port;
+}
+
+std::string http_client::address()
 {
 	return server_;
 }
-std::string http_client::get_remote_port()
+
+std::string http_client::port()
 {
 	return port_;
 }
+
 
 } // namespace server
 } // namespace http
