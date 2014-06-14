@@ -13,6 +13,31 @@
 #include <netdb.h>
 #include "pca9685.h"
 
+/*
+ *
+ * When controlling a servo, typically the on time of the pulse will
+ * be varied from around 1 millisecond to 2 milliseconds with the off time around 20 milliseconds.
+ *
+ *    +---+                +---+
+ *    |   |                |   |
+ *    |   |                |   |
+ *    |   |                |   |
+ * ---+   +----------------+   +------
+ * -->   <--1 ms
+ *    <-------- 20 ms ---->
+ *
+ *
+ *    +------+            +------+
+ *    |      |            |      |
+ *    |      |            |      |
+ *    |      |            |      |
+ * ---+      +------------+      +------
+ *  -->      <--2 ms
+ *    <------- 20 ms ----->
+ *
+ * The 20 ms period is not a hard requirement and depends on the specific servo motor.
+ *
+ */
 
 const char *g_devname = "/dev/pwm0";
 
@@ -28,6 +53,10 @@ static int usage(int argc, const char *argv[])
 	fprintf(stderr, "\t--get-rate                          Get sample rate.\n");
 	fprintf(stderr, "\t--set-pulse <chan> <on> <off>       Set pulse on channel: 1..15, on: 0..4095, off: 0..4095\n");
 	fprintf(stderr, "\t--get-pulse <chan>                  Set pulse on channel: 1..15, on: 0..4095, off: 0..4095\n");
+	fprintf(stderr, "\n\n");
+	fprintf(stderr, "Example: \n");
+	fprintf(stderr, "At rate 250Hz (4ms perion) the motor will barely start with pulse 1370 (1.3 ms)\n");
+	fprintf(stderr, "and will reach its maximum with pulse 2200 (2.2 ms)\n");
 
 	return 0;
 }
