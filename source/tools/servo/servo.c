@@ -55,7 +55,7 @@ static int usage(int argc, const char *argv[])
 	fprintf(stderr, "\t--get-pulse <chan>                  Set pulse on channel: 1..15, on: 0..4095, off: 0..4095\n");
 	fprintf(stderr, "\n\n");
 	fprintf(stderr, "Example: \n");
-	fprintf(stderr, "At rate 250Hz (4ms perion) the motor will barely start with pulse 1370 (1.3 ms)\n");
+	fprintf(stderr, "At rate 250Hz (4ms period), the motor will barely start with pulse 1370 (1.3 ms)\n");
 	fprintf(stderr, "and will reach its maximum with pulse 2200 (2.2 ms)\n");
 
 	return 0;
