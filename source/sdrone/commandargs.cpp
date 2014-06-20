@@ -9,7 +9,7 @@
 #include <stdexcept>
 #include "jsonrpcparser.h"
 
-static CmdArgSpec s_argSpec[] = {
+static cmd_arg_spec s_argSpec[] = {
 		{"help",		"h", "Display this help", CMD_ARG_BOOL},
 		{"command",		"c", "reset|exit|fly|ping|loadplugin|unloadplugin", CMD_ARG_STRING},
 		{"server",		"s", "Run as server and control drone hardware", CMD_ARG_BOOL},

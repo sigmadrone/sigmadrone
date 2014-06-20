@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
-#include "http/http_client.hpp"
-#include "http/base64.hpp"
+#include "libhttp/http_client.hpp"
+#include "libhttp/base64.hpp"
 
 /*
  * Example:

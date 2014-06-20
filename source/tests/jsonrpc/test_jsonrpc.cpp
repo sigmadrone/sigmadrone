@@ -265,7 +265,7 @@ CmdArgs g_args;
  * Cmd args spec:
  * "argument name" "argument alias" "Help message"
  */
-static CmdArgSpec g_argspec[] = {
+static cmd_arg_spec g_argspec[] = {
 		{"help",	"h",	"Display this help", CMD_ARG_BOOL},
 		{"jsonfile","",		"Path to json file to be parsed", CMD_ARG_STRING},
 

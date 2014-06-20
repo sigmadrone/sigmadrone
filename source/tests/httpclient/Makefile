@@ -1,7 +1,7 @@
 CXX		?= $(CROSS_COMPILE)g++
 CC		?= $(CROSS_COMPILE)gcc
 SDRONE_SRCDIR	= ../../sdrone
-HTTPSERVER_SRCDIR = ../../http
+HTTPSERVER_SRCDIR = ../../libhttp
 INCLUDES	= -I../.. -I$(SDRONE_SRCDIR) -I$(HTTPSERVER_SRCDIR)
 LIBS		= -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread -lm -lrt -lpthread -ldl
 #use -Wno-psabi to turn off warnings about ABI changes for va-list in GCC 4.4

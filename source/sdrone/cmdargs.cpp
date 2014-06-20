@@ -50,7 +50,7 @@ end:
 	return std::pair<std::string, std::string>(name, value);
 }
 
-void CmdArgs::AddSpecs(CmdArgSpec *specs, unsigned int count)
+void CmdArgs::AddSpecs(cmd_arg_spec *specs, unsigned int count)
 {
 	while (count--) {
 		m_specs.push_back(*specs);
@@ -62,7 +62,7 @@ void CmdArgs::AddSpecs(CmdArgSpec *specs, unsigned int count)
 std::string CmdArgs::HelpMessage() const
 {
 	std::stringstream oss;
-	std::vector<CmdArgSpec>::const_iterator it;
+	std::vector<cmd_arg_spec>::const_iterator it;
 
 	for (it = m_specs.begin(); it != m_specs.end(); it++) {
 		std::stringstream temp, alias;
@@ -99,7 +99,7 @@ std::string CmdArgs::HelpMessage() const
 void CmdArgs::Parse(int argc, char *argv[]) throw(std::exception)
 {
 	std::vector<std::string> empty;
-	std::vector<CmdArgSpec>::const_iterator itspec;
+	std::vector<cmd_arg_spec>::const_iterator itspec;
 
 	for (int i = 1; i < argc; i++) {
 		std::map<std::string, std::vector<std::string> >::iterator it;

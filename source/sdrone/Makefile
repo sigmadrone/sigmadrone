@@ -1,7 +1,7 @@
 #CROSS_COMPILE=arm-linux-gnueabi-
 CXX	    ?= $(CROSS_COMPILE)g++
 CC          ?= $(CROSS_COMPILE)gcc
-HTTPSERVER_SRCDIR = ../http
+HTTPSERVER_SRCDIR = ../libhttp
 JSONRPC_SRCDIR = ../jsonrpc
 INCLUDES    = -I../include -I../ -I$(JSONRPC_SRCDIR)/
 INCLUDES   += $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
@@ -33,8 +33,7 @@ OBJECTS		= \
 	daemon.c\
 	$(JSONRPC_SRCDIR)/libjsonrpc.a\
 	$(HTTPSERVER_SRCDIR)/libhttp.a
-	
-	
+
 all : $(TARGET)
 
 .SUFFIXES:	.c .cxx .cpp

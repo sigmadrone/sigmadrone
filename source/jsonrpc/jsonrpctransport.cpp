@@ -13,8 +13,8 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
-#include "http/http_server.hpp"
-#include "http/http_client.hpp"
+#include "libhttp/http_server.hpp"
+#include "libhttp/http_client.hpp"
 
 class SdJsonRpcTransport : public IRpcTransport{
 public:

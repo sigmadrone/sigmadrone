@@ -6,7 +6,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/noncopyable.hpp>
-#include "http/http_server.hpp"
+#include "libhttp/http_server.hpp"
 
 /// The top-level class of the HTTP server.
 class application : private boost::noncopyable

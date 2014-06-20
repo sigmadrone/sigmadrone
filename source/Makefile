@@ -1,8 +1,11 @@
-SUBDIRS += http
+SUBDIRS += libhttp
+SUBDIRS += libcmdargs
+SUBDIRS += liblogger
 SUBDIRS += tools
 SUBDIRS += jsonrpc
 SUBDIRS += plugins
 SUBDIRS += sdrone
+SUBDIRS += sigmad
 SUBDIRS += tests
 
 all:
