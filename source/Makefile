@@ -1,6 +1,7 @@
 SUBDIRS += libhttp
 SUBDIRS += libcmdargs
 SUBDIRS += liblogger
+SUBDIRS += libjsonspirit
 SUBDIRS += tools
 SUBDIRS += jsonrpc
 SUBDIRS += plugins

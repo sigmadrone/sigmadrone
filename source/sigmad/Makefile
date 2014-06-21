@@ -5,16 +5,20 @@ LD  		?= $(CROSS_COMPILE)ld
 LINK 		:= $(CXX)
 DEFS 		+= $(addprefix -I,$(CURDIR) $(CURDIR)/obj)
 DEBUGFLAGS 	= -g -O0
-INCLUDES	= -I../include -I../libcmdargs -I../liblogger
+INCLUDES	= -I../include -I../ -I../libhttp -I../libjsonspirit -I../libcmdargs -I../liblogger
 xCXXFLAGS 	= -O2 -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(DEBUGFLAGS) $(DEFS) $(CXXFLAGS)
 xLDFLAGS 	= $(LDFLAGS)
-LIBS		= -lcmdargs -llogger -lm -lrt -lpthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-LIBS		+= -L../libcmdargs -L../liblogger
+LIBS		= -lhttp -ljsonspirit -lcmdargs -llogger -lm -lrt -lpthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
+LIBS		+= -L../libcmdargs -L../liblogger -L../libhttp -L../libjsonspirit
 TARGET 		= sigmad
 OBJS		= \
 		obj/main.o \
 		obj/daemon.o \
 		obj/signals.o \
+		obj/clientapp.o \
+		obj/serverapp.o \
+		obj/userrpcserver.o \
+
 
 all: obj $(TARGET)
 
