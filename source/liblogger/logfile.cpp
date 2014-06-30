@@ -3,10 +3,10 @@
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/convenience.hpp"
-#include "logger.h"
+#include "logfile.h"
 
 
-logger::logger(const std::string& path, size_t rotsize, message_type level)
+logfile::logfile(const std::string& path, size_t rotsize, message_type level)
 	: logfile_(boost::filesystem::system_complete(boost::filesystem::path(path)).string()),
 	  rotext_(".0"),
 	  rotsize_(rotsize),
@@ -16,11 +16,12 @@ logger::logger(const std::string& path, size_t rotsize, message_type level)
 	init();
 }
 
-logger::~logger()
+logfile::~logfile()
 {
+	add_log(logfile::info, "Destroying log file.");
 }
 
-void logger::init()
+void logfile::init()
 {
 	strlevels_.push_back("NONE    ");
 	strlevels_.push_back("CRITICAL");
@@ -30,13 +31,13 @@ void logger::init()
 	strlevels_.push_back("DEBUG   ");
 }
 
-int logger::log_level(message_type level)
+int logfile::log_level(message_type level)
 {
 	level_ = level;
 	return (int)level_;
 }
 
-int logger::log_level(const std::string& level)
+int logfile::log_level(const std::string& level)
 {
 	if (level == "none")
 		level_ = none;
@@ -51,19 +52,19 @@ int logger::log_level(const std::string& level)
 	return (int)level_;
 }
 
-int logger::log_level()
+int logfile::log_level()
 {
 	return (int)level_;
 }
 
-std::string logger::get_message_type(message_type level)
+std::string logfile::get_message_type(message_type level)
 {
 	if (level >= strlevels_.size())
 		return std::string("UNKNOWN ");
 	return strlevels_[level];
 }
 
-std::string logger::get_time()
+std::string logfile::get_time()
 {
     char run_date[200];
     std::time_t tod;
@@ -72,7 +73,7 @@ std::string logger::get_time()
     return std::string(run_date);
 }
 
-bool logger::add_log(message_type type, const char *fmt, ...)
+bool logfile::add_log(message_type type, const char *fmt, ...)
 {
 	bool result = true;
 	va_list args;
@@ -85,7 +86,7 @@ bool logger::add_log(message_type type, const char *fmt, ...)
 	return result;
 }
 
-bool logger::add_log_v(message_type type, const char *fmt, va_list args)
+bool logfile::add_log_v(message_type type, const char *fmt, va_list args)
 {
 	FILE *pfile = NULL;
 	if (type > none && type <= level_) {
@@ -104,27 +105,27 @@ bool logger::add_log_v(message_type type, const char *fmt, va_list args)
 	return true;
 }
 
-std::string logger::get_log_filepath()
+std::string logfile::get_log_filepath()
 {
 	return logfile_;
 }
 
-void logger::set_log_filepath(const std::string& path)
+void logfile::set_log_filepath(const std::string& path)
 {
 	logfile_ = boost::filesystem::system_complete(boost::filesystem::path(path)).string();
 }
 
-void logger::set_max_size(size_t rotsize)
+void logfile::set_max_size(size_t rotsize)
 {
 	rotsize_ = rotsize;
 }
 
-void logger::set_rotation_extension(const std::string& oldext)
+void logfile::set_rotation_extension(const std::string& oldext)
 {
 	rotext_ = oldext;
 }
 
-void logger::rotate()
+void logfile::rotate()
 {
 	boost::filesystem::path cur_filepath(logfile_);
 	boost::filesystem::path old_filepath(logfile_ + rotext_);

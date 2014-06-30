@@ -7,12 +7,13 @@
 #include <boost/noncopyable.hpp>
 #include <boost/filesystem.hpp>
 #include "libcmdargs/cmdargs.h"
+#include "liblogger/logfile.h"
 #include "liblogger/logger.h"
 #include "libhttp/logger.hpp"
 #include "userrpcserver.h"
 
 
-class server_app : private boost::noncopyable
+class server_app : private boost::noncopyable, public logger<logfile>
 {
 public:
 	server_app(const cmd_args& args = cmd_args());

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <boost/scoped_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include "libhttp/http_client.hpp"
 #include "json.h"

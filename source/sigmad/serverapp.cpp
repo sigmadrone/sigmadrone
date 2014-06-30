@@ -9,7 +9,8 @@
 #include "daemon.h"
 
 server_app::server_app(const cmd_args& args)
-	: io_service_()
+	: logger("server_app: ", boost::shared_ptr<logfile>(new logfile("server.log", 1024*1024*2, logfile::none)))
+	, io_service_()
 	, signals_(io_service_)
 	, args_(args)
 {
@@ -52,9 +53,7 @@ void server_app::init_user_rpcserver()
 			io_service_,
 			args_.get_value("rpcconnect", "127.0.0.1"),
 			args_.get_value("rpcport", "18222")));
-//	user_rpcserver_->set_logger(logger_);
-//	logger_->log_level(args_.get_value("loglevel", "none"));
-//	logger_->add_log(logger::debug, "Starting user rpc server.");
+	log_info_message("Starting user rpc server.");
 }
 
 
@@ -62,10 +61,11 @@ int server_app::run(int argc, char *argv[])
 {
 	if (args_.get_value("daemon") == "1")
 		daemon_init();
-	boost::filesystem::path logfile = "debug.log";
-//	logger_.reset(new application_logger(logfile.string(), 1024*1024*2, logger::none));
+	get_log_file()->log_level(args_.get_value("loglevel", "info"));
+	log_info_message("Server starting.");
 	init_user_rpcserver();
 	boost::thread rpc_thread(boost::bind(&boost::asio::io_service::run, &io_service_));
 	rpc_thread.join();
+	log_info_message("Server stopping.");
 	return 0;
 }

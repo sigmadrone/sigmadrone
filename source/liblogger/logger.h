@@ -7,40 +7,112 @@
 #include <boost/thread/locks.hpp>
 #include <boost/filesystem.hpp>
 
+template<class LOGFILE>
 class logger
 {
 public:
-	typedef enum {none = 0, critical, error, warning, info, debug, unknown} message_type;
+	logger(const char* prefix, boost::shared_ptr<LOGFILE> logfile = boost::shared_ptr<LOGFILE>()) : prefix_(prefix), logfile_(logfile)
+	{
+	}
 
-	logger(const std::string& path = "default.log", size_t rotsize = default_rotsize, message_type level = none);
-	~logger();
-	bool add_log(message_type type, const char *fmt, ...);
-	bool add_log_v(message_type type, const char *fmt, va_list args);
-	std::string get_log_filepath();
-	void set_log_filepath(const std::string& path);
-	void set_max_size(size_t rotsize);
-	int log_level(message_type level);
-	int log_level(const std::string& level);
-	int log_level();
-	void set_rotation_extension(const std::string& ext);
-	std::string get_message_type(message_type level);
-	static const size_t default_rotsize = 1024 * 1024 * 10;		// 10 MB
-	static const size_t default_msgcount = 100;					// check log size every default_msgcount messages
+	void set_log_file(boost::shared_ptr<LOGFILE> logfile)
+	{
+		logfile_ = logfile;
+	}
 
-private:
-	void rotate();
-	std::string get_time();
-	void init();
+	boost::shared_ptr<LOGFILE> get_log_file()
+	{
+		return logfile_;
+	}
 
-private:
-	std::string logfile_;
-	std::string rotext_;
-	size_t rotsize_;
-	int msgcount_;
-	message_type level_;
-	mutable boost::mutex m_;
-	std::vector<std::string> strlevels_;
+	bool log_debug_message(const char *fmt, va_list args)
+	{
+		if (!logfile_)
+			return false;
+		return logfile_->add_log_v(LOGFILE::debug, (prefix_ + fmt).c_str(), args);
+	}
+
+	bool log_info_message(const char *fmt, va_list args)
+	{
+		if (!logfile_)
+			return false;
+		return logfile_->add_log_v(LOGFILE::info, (prefix_ + fmt).c_str(), args);
+	}
+
+	bool log_warning_message(const char *fmt, va_list args)
+	{
+		if (!logfile_)
+			return false;
+		return logfile_->add_log_v(LOGFILE::warning, (prefix_ + fmt).c_str(), args);
+	}
+
+	bool log_error_message(const char *fmt, va_list args)
+	{
+		if (!logfile_)
+			return false;
+		return logfile_->add_log_v(LOGFILE::error, (prefix_ + fmt).c_str(), args);
+	}
+
+	bool log_critical_message(const char *fmt, va_list args)
+	{
+		if (!logfile_)
+			return false;
+		return logfile_->add_log_v(LOGFILE::critical, (prefix_ + fmt).c_str(), args);
+	}
+
+	bool log_debug_message(const char *fmt, ...)
+	{
+		bool result = true;
+		va_list args;
+		va_start(args, fmt);
+		result = log_debug_message(fmt, args);
+		va_end(args);
+		return result;
+	}
+
+	bool log_info_message(const char *fmt, ...)
+	{
+		bool result = true;
+		va_list args;
+		va_start(args, fmt);
+		result = log_info_message(fmt, args);
+		va_end(args);
+		return result;
+	}
+
+	bool log_warning_message(const char *fmt, ...)
+	{
+		bool result = true;
+		va_list args;
+		va_start(args, fmt);
+		result = log_warning_message(fmt, args);
+		va_end(args);
+		return result;
+	}
+
+	bool log_error_message(const char *fmt, ...)
+	{
+		bool result = true;
+		va_list args;
+		va_start(args, fmt);
+		result = log_error_message(fmt, args);
+		va_end(args);
+		return result;
+	}
+
+	bool log_critical_message(const char *fmt, ...)
+	{
+		bool result = true;
+		va_list args;
+		va_start(args, fmt);
+		result = log_critical_message(fmt, args);
+		va_end(args);
+		return result;
+	}
+
+protected:
+	std::string prefix_;
+	boost::shared_ptr<LOGFILE> logfile_;
 };
 
-
-#endif /* _LOGGER_H_ */
+#endif // _LOGGER_H_

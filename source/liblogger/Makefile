@@ -9,7 +9,7 @@ xLDFLAGS = $(LDFLAGS)
 TARGET = liblogger.a
 
 OBJS= \
-    obj/logger.o \
+    obj/logfile.o \
 
 all: obj $(TARGET)
 
