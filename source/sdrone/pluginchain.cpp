@@ -309,13 +309,11 @@ int PluginChain::StartPlugins(
 			break;
 		}
 	}
-	if (0 != err) {
-		for (PluginMapIt it = m_chain.begin(); it != m_chain.end(); it++) {
-			it->second->m_plugin->Stop(0);
-		}
-	}
 	m_pluginsStarted = true;
 	Unlock();
+	if (0 != err) {
+		StopPlugins(0);
+	}
 	return err;
 }
 

@@ -143,7 +143,7 @@ int Drone::Run(const _CommandArgs& args)
 		return ENOMEM;
 	}
 	m_rpcDispatch->AddRequestCallback(
-			SdCommandCodeToString(SD_COMMAND_FLY),
+			SdCommandCodeToString(SD_COMMAND_RUN),
 			OnRpcCommandFly,
 			this);
 	m_rpcDispatch->AddRequestCallback(
@@ -155,7 +155,7 @@ int Drone::Run(const _CommandArgs& args)
 			OnRpcCommandExit,
 			this);
 	m_rpcDispatch->AddRequestCallback(
-			SdCommandCodeToString(SD_COMMAND_GET_STATE),
+			SdCommandCodeToString(SD_COMMAND_GET_CONFIG),
 			OnRpcCommandGetState,
 			this);
 	m_rpcDispatch->AddRequestCallback(
@@ -167,7 +167,7 @@ int Drone::Run(const _CommandArgs& args)
 	// Execute the command that came with the command line
 	//
 	switch(args.GetCommand()) {
-	case SD_COMMAND_FLY:
+	case SD_COMMAND_RUN:
 		OnFly();
 		break;
 	case SD_COMMAND_RESET:

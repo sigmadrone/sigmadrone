@@ -151,7 +151,7 @@ _CommandArgs::ParseArgs(
 
 	if (m_cmdArgs.GetValue("command").c_str() == std::string("run") ||
 		m_cmdArgs.GetValue("command").c_str() == std::string("fly")) {
-		m_Command = SD_COMMAND_FLY;
+		m_Command = SD_COMMAND_RUN;
 	} else if (m_cmdArgs.GetValue("command").c_str() == std::string("reset")) {
 		m_Command = SD_COMMAND_RESET;
 	} else if (m_cmdArgs.GetValue("command").c_str() == std::string("exit")) {

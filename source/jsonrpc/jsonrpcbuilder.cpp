@@ -117,7 +117,7 @@ bool SdJsonRpcBuilder::BuildReply(
 		SdJsonObject errObj;
 		errObj.AddMember("code",error);
 		errObj.AddMember("message",errorMessage);
-		rootObj.AddMember("error",SdJsonValue(rootObj));
+		rootObj.AddMember("error",SdJsonValue(errObj));
 	}
 	rootObj.AddMember("id",SdJsonValue(rpcId));
 	root.SetValueAsObject(&rootObj);

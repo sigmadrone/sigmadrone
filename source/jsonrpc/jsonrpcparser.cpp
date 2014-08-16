@@ -236,7 +236,7 @@ const IJsonValue* SdJsonRpcParser::GetResult() const {
 
 const IJsonObject* SdJsonRpcParser::GetError() const {
 	if (RootObj() && IsErrorReply()) {
-		return RootObj()->GetMember("result")->AsObject();
+		return RootObj()->GetMember("error")->AsObject();
 	}
 	return 0;
 }

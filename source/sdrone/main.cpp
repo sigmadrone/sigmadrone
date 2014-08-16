@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 			req.MethodName = SdCommandCodeToString(cmdArgs.GetCommand());
 
 			switch (cmdArgs.GetCommand()) {
-			case SD_COMMAND_FLY:
+			case SD_COMMAND_RUN:
 			case SD_COMMAND_RESET:
 				req.Params = cmdArgs.GetCommandArgsAsJobj();
 				break;

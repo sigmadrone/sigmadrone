@@ -58,35 +58,40 @@ __inline const char* SdLogLevelToString(uint32_t level) {
 
 typedef enum _SdCommandCode {
 	SD_COMMAND_NONE = 0,
-	SD_COMMAND_FLY,
+	SD_COMMAND_RUN,
 	SD_COMMAND_RESET,
 	SD_COMMAND_EXIT,
 	SD_COMMAND_LOAD_PLUGIN,
 	SD_COMMAND_UNLOAD_PLUGIN,
 	SD_COMMAND_PING,
 	SD_COMMAND_CONFIG,
-	SD_COMMAND_GET_STATE
+	SD_COMMAND_GET_CONFIG,
+	SD_COMMAND_THRUST,
+	SD_COMMAND_GET_THRUST,
+	SD_COMMAND_TARGET_ATTITUDE,
+	SD_COMMAND_GET_ATTITUDE,
+	SD_COMMAND_ALTITUDE,
+	SD_COMMAND_GET_ALTITUDE,
 } SdCommandCode;
 
+static const char* SdCommandCodeAsStr[] = {"SD_COMMAND_NONE","SD_COMMAND_RUN","SD_COMMAND_RESET",
+		"SD_COMMAND_EXIT","SD_COMMAND_LOAD_PLUGIN","SD_COMMAND_UNLOAD_PLUGIN",
+		"SD_COMMAND_PING","SD_COMMAND_CONFIG","SD_COMMAND_GET_CONFIG",
+		"SD_COMMAND_THRUST", "SD_COMMAND_GET_THRUST", "SD_COMMAND_TARGET_ATTITUDE",
+		"SD_COMMAND_ALTITUDE", "SD_COMMAND_GET_ALTITUDE"};
+
 __inline SdCommandCode SdStringToCommandCode(const char* str) {
-	if (str) {
-		if (0 == strcmp("SD_COMMAND_FLY",str)) { return SD_COMMAND_FLY; }
-		if (0 == strcmp("SD_COMMAND_RESET",str)) { return SD_COMMAND_RESET; }
-		if (0 == strcmp("SD_COMMAND_EXIT",str)) { return SD_COMMAND_EXIT; }
-		if (0 == strcmp("SD_COMMAND_LOAD_PLUGIN",str)) { return SD_COMMAND_LOAD_PLUGIN; }
-		if (0 == strcmp("SD_COMMAND_UNLOAD_PLUGIN",str)) { return SD_COMMAND_UNLOAD_PLUGIN; }
-		if (0 == strcmp("SD_COMMAND_PING",str)) { return SD_COMMAND_PING; }
-		if (0 == strcmp("SD_COMMAND_CONFIG",str)) { return SD_COMMAND_CONFIG; }
-		if (0 == strcmp("SD_COMMAND_GET_STATE",str)) { return SD_COMMAND_GET_STATE; }
+	for (size_t i = 0; i < ARRAYSIZE(SdCommandCodeAsStr); i++) {
+		if (0 == strcmp(str, SdCommandCodeAsStr[i])) {
+			return static_cast<SdCommandCode>(i);
+		}
 	}
 	return SD_COMMAND_NONE;
 }
 
 __inline const char* SdCommandCodeToString(SdCommandCode cmd) {
-	const char* cmdAsStr[] = {"SD_COMMAND_NONE","SD_COMMAND_FLY","SD_COMMAND_RESET",
-		"SD_COMMAND_EXIT","SD_COMMAND_LOAD_PLUGIN","SD_COMMAND_UNLOAD_PLUGIN",
-		"SD_COMMAND_PING","SD_COMMAND_CONFIG","SD_COMMAND_GET_STATE"};
-	return (cmd < ARRAYSIZE(cmdAsStr)) ? cmdAsStr[cmd] : "SD_COMMAND_NONE";
+	return (cmd < ARRAYSIZE(SdCommandCodeAsStr)) ?
+			SdCommandCodeAsStr[cmd] : SdCommandCodeAsStr[0];
 }
 
 #define SD_PING_REPLY_DATA "SigmaDrone OK"
@@ -743,27 +748,37 @@ struct IPlugin
 	 */
 	virtual int IoDispatchThread() = 0;
 
+#if 0
+	virtual int ExecuteCommand(
+			SdCommandArgs* commandArgs
+			) = 0;
+
+	virtual int SetThrottle(
+			double min,
+			double max,
+			double val
+			)  { return SD_ESUCCESS; }
+	virtual int SetTargetAttitude(
+			const QuaternionD&
+			) { return SD_ESUCCESS; }
+	virtual int SetMission(
+			const std::vector<SdWayPoint>&
+			) { return SD_ESUCCESS; }
+#endif
+
 protected:
 	virtual ~IPlugin() {}
 };
 
-struct ICommandArgs
+struct SdCommandArgs
 {
-	virtual SdCommandCode GetCommandCode() = 0;
-	virtual double GetMinThrust() = 0;
-	virtual double GetMaxThrust() = 0;
-	virtual double GetDesiredThrust() = 0;
-	virtual const QuaternionD* GetTargetAttitude() = 0;
-	virtual const SdDroneConfig* GetDroneConfig() = 0;
-
-	virtual const char* GetRawJsonSchema(OUT uint32_t* length) = 0;
+	virtual SdCommandCode CommandCode() = 0;
+	virtual const SdIoData& Args() = 0;
+	virtual const std::string& GetRawJsonSchema() = 0;
 	virtual const IJsonObject* RefJsonSchema() = 0;
-	virtual const IJsonObject* RefJsonObjectForPlugin(
-			const char* pluginName
-			) = 0;
 
 protected:
-	virtual ~ICommandArgs() {}
+	virtual ~SdCommandArgs() {}
 };
 
 
