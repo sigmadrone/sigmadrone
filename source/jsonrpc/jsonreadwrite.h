@@ -54,6 +54,10 @@ public:
 	const IJsonObject* AsObject() const;
 	bool AsDoubleSafe(double*) const;
 	bool AsIntSafe(int64_t*) const;
+	bool AsIntSafe(int32_t*) const;
+	bool AsUintSafe(uint64_t*) const;
+	bool AsUintSafe(uint32_t*) const;
+	bool AsStringSafe(std::string*) const;
 	bool AsBoolSafe(bool*) const;
 
 	IJsonValue* Clone() const;
@@ -99,7 +103,7 @@ public:
 	const IJsonValue* GetMember(
 			IN const char* memberName
 			) const;
-	bool IsMemberPreset(
+	bool IsMemberPresent(
 			IN const char* memberName
 			) const;
 	bool AddMember(

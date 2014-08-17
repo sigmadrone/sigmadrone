@@ -185,7 +185,7 @@ void SdJsonParser::PrintJsonArray(const IJsonArray* jarr)
 
 bool SdJsonRpcParser::IsValidRpcSchema() const
 {
-	if (RootObj() && RootObj()->IsMemberPreset("jsonrpc")) {
+	if (RootObj() && RootObj()->IsMemberPresent("jsonrpc")) {
 		return RootObj()->GetMember("jsonrpc")->AsString() == "2.0" &&
 				(IsRequest() || IsReply());
 	}
@@ -194,23 +194,23 @@ bool SdJsonRpcParser::IsValidRpcSchema() const
 
 std::string SdJsonRpcParser::GetRpcMethod() const
 {
-	if (RootObj() && RootObj()->IsMemberPreset("method")) {
+	if (RootObj() && RootObj()->IsMemberPresent("method")) {
 		return RootObj()->GetMember("method")->AsString();
 	}
 	return "";
 }
 
 bool SdJsonRpcParser::IsRequest() const {
-	return RootObj() && RootObj()->IsMemberPreset("method");
+	return RootObj() && RootObj()->IsMemberPresent("method");
 }
 
 bool SdJsonRpcParser::IsReply() const {
-	return RootObj() && (RootObj()->IsMemberPreset("error") ||
-			RootObj()->IsMemberPreset("result"));
+	return RootObj() && (RootObj()->IsMemberPresent("error") ||
+			RootObj()->IsMemberPresent("result"));
 }
 
 bool SdJsonRpcParser::IsErrorReply() const {
-	return RootObj() && RootObj()->IsMemberPreset("error");
+	return RootObj() && RootObj()->IsMemberPresent("error");
 }
 
 const IJsonObject* SdJsonRpcParser::GetRpcParams() const
@@ -222,7 +222,7 @@ uint64_t SdJsonRpcParser::GetRpcCallId() const
 {
 	uint64_t callId = 0;
 	if (RootObj()) {
-		RootObj()->GetMember("id")->AsIntSafe((int64_t*)&callId);
+		RootObj()->GetMember("id")->AsUintSafe(&callId);
 	}
 	return callId;
 }

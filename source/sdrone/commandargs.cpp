@@ -223,7 +223,7 @@ bool _CommandArgs::IsRoleClient() const {
 }
 
 const IJsonObject* _CommandArgs::GetDroneConfigAsJobj() {
-	if (!m_jsonArgs.IsMemberPreset("GlobalConfig")) {
+	if (!m_jsonArgs.IsMemberPresent("GlobalConfig")) {
 		GetCommandArgsAsJobj();
 	}
 	return m_jsonArgs.GetMember("GlobalConfig")->AsObject();
@@ -249,12 +249,12 @@ bool _CommandArgs::ParseJsonImuConfig(
 	SdImuDeviceConfig* imu)
 {
 	if (obj) {
-		imu->DeviceName = obj->GetMember("DeviceName")->AsString();
-		imu->SamplingRate = obj->GetMember("SamplingRate")->AsInt();
-		imu->Scale = obj->GetMember("Scale")->AsInt();
-		imu->MaxReading = obj->GetMember("MaxReading")->AsInt();
-		imu->Watermark = obj->GetMember("Watermark")->AsInt();
-		imu->NumBiasSamples = obj->GetMember("NumBiasSamples")->AsInt();
+		obj->GetMember("DeviceName")->AsStringSafe(&imu->DeviceName);
+		obj->GetMember("SamplingRate")->AsIntSafe(&imu->SamplingRate);
+		obj->GetMember("Scale")->AsIntSafe(&imu->Scale);
+		obj->GetMember("MaxReading")->AsIntSafe(&imu->MaxReading);
+		obj->GetMember("Watermark")->AsIntSafe(&imu->Watermark);
+		obj->GetMember("NumBiasSamples")->AsIntSafe(&imu->NumBiasSamples);
 		const IJsonArray* arr;
 		if (0 != (arr = obj->GetMember("CoordinateMap")->AsArray())) {
 			if (arr->ElementCount() == 9) {
@@ -279,30 +279,30 @@ bool _CommandArgs::ParseJsonDroneConfig(
 		return false;
 	}
 
-	if (config->IsMemberPreset("Gyro")) {
+	if (config->IsMemberPresent("Gyro")) {
 		ParseJsonImuConfig(config->GetMember("Gyro")->AsObject(),
 				&droneCfg->Gyro);
 	}
-	if (config->IsMemberPreset("Accelerometer")) {
+	if (config->IsMemberPresent("Accelerometer")) {
 		ParseJsonImuConfig(config->GetMember("Accelerometer")->AsObject(),
 				&droneCfg->Accel);
 	}
-	if (config->IsMemberPreset("Magnetometer")) {
+	if (config->IsMemberPresent("Magnetometer")) {
 		ParseJsonImuConfig(config->GetMember("Magnetometer")->AsObject(),
 				&droneCfg->Mag);
 	}
 
 	if (0 != (obj = config->GetMember("Servo")->AsObject())) {
-		droneCfg->Servo.DeviceName = obj->GetMember("DeviceName")->AsString();
-		droneCfg->Servo.Rate = (uint32_t)obj->GetMember("SamplingRate")->AsInt();
-		droneCfg->Servo.ChannelMask = (uint32_t)obj->GetMember("ChannelMask")->AsInt();
-		droneCfg->Servo.BitCount = (uint32_t)obj->GetMember("BitCount")->AsInt();
+		obj->GetMember("DeviceName")->AsStringSafe(&droneCfg->Servo.DeviceName);
+		obj->GetMember("SamplingRate")->AsIntSafe(&droneCfg->Servo.Rate);
+		obj->GetMember("ChannelMask")->AsUintSafe(&droneCfg->Servo.ChannelMask);
+		obj->GetMember("BitCount")->AsUintSafe(&droneCfg->Servo.BitCount);
 	}
 
 	if (0 != (obj = config->GetMember("QuadPilot")->AsObject())) {
-		droneCfg->Quad.Kp = obj->GetMember("Kp")->AsDouble();
-		droneCfg->Quad.Ki = obj->GetMember("Ki")->AsDouble();
-		droneCfg->Quad.Kd = obj->GetMember("Kd")->AsDouble();
+		obj->GetMember("Kp")->AsDoubleSafe(&droneCfg->Quad.Kp);
+		obj->GetMember("Ki")->AsDoubleSafe(&droneCfg->Quad.Ki);
+		obj->GetMember("Kd")->AsDoubleSafe(&droneCfg->Quad.Kd);
 		if (0 != (arr = obj->GetMember("MotorToServoMap")->AsArray()) &&
 			arr->ElementCount() == 4) {
 			for (size_t i = 0; i < 4; i++) {
@@ -317,18 +317,17 @@ bool _CommandArgs::ParseJsonDroneConfig(
 	}
 
 	if (0 != (obj = config->GetMember("ControlChannel")->AsObject())) {
-		droneCfg->ServerAddress = obj->GetMember("ServerAddress")->AsString();
-		droneCfg->ServerPort = (int32_t)obj->GetMember("ServerPort")->AsInt();
+		obj->GetMember("ServerAddress")->AsStringSafe(&droneCfg->ServerAddress);
+		obj->GetMember("ServerPort")->AsIntSafe(&droneCfg->ServerPort);
 	}
 	if (config->GetMember("LogLevel")->GetType() == SD_JSONVALUE_STRING) {
 		droneCfg->LogLevel = SdStringToLogLevel(
 				config->GetMember("LogLevel")->AsString().c_str());
 	}
 
-	droneCfg->LogFileName = config->GetMember("LogFileName")->AsString();
-	droneCfg->LogRotationMatrix = (int32_t)
-			config->GetMember("LogRotationMatrix")->AsInt();
-	droneCfg->LogRate = config->GetMember("LogRate")->AsDouble();
+	config->GetMember("LogFileName")->AsStringSafe(&droneCfg->LogFileName);
+	config->GetMember("LogRotationMatrix")->AsIntSafe(&droneCfg->LogRotationMatrix);
+	config->GetMember("LogRate")->AsDoubleSafe(&droneCfg->LogRate);
 	return true;
 }
 
@@ -339,10 +338,12 @@ bool _CommandArgs::ParseJsonRpcArgs(const IJsonObject* args)
 
 	if (args->GetMember("TargetQuaternion")->GetType() == SD_JSONVALUE_ARRAY) {
 		const IJsonArray* jarr = args->GetMember("TargetQuaternion")->AsArray();
-		m_targetAttitude.w = jarr->GetElement(0)->AsDouble();
-		m_targetAttitude.x = jarr->GetElement(1)->AsDouble();
-		m_targetAttitude.y = jarr->GetElement(2)->AsDouble();
-		m_targetAttitude.z = jarr->GetElement(3)->AsDouble();
+		if (jarr->ElementCount() == 4) {
+			m_targetAttitude.w = jarr->GetElement(0)->AsDouble();
+			m_targetAttitude.x = jarr->GetElement(1)->AsDouble();
+			m_targetAttitude.y = jarr->GetElement(2)->AsDouble();
+			m_targetAttitude.z = jarr->GetElement(3)->AsDouble();
+		}
 	}
 
 	return ret;
@@ -357,13 +358,13 @@ bool _CommandArgs::ParseJsonThrust(
 	const IJsonObject* flight = 0;
 	if (0 != (flight = rpcParams->GetMember("Flight")->AsObject())) {
 		if (thrust) {
-			*thrust = flight->GetMember("Thrust")->AsDouble();
+			flight->GetMember("Thrust")->AsDoubleSafe(thrust);
 		}
 		if (maxThrust) {
-			*maxThrust = flight->GetMember("MaxThrust")->AsDouble();
+			flight->GetMember("MaxThrust")->AsDoubleSafe(maxThrust);
 		}
 		if (minThrust) {
-			*minThrust = flight->GetMember("MinThrust")->AsDouble();
+			flight->GetMember("MinThrust")->AsDoubleSafe(minThrust);
 		}
 	}
 	return !!flight;

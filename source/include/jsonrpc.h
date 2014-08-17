@@ -73,7 +73,11 @@ struct IJsonValue
 	 */
 	virtual bool AsDoubleSafe(OUT double*) const = 0;
 	virtual bool AsIntSafe(OUT int64_t*) const = 0;
+	virtual bool AsIntSafe(OUT int32_t*) const = 0;
+	virtual bool AsUintSafe(OUT uint64_t*) const = 0;
+	virtual bool AsUintSafe(OUT uint32_t*) const = 0;
 	virtual bool AsBoolSafe(OUT bool*) const = 0;
+	virtual bool AsStringSafe(OUT std::string*) const = 0;
 
 	virtual bool SetValueAsObject(
 			IN const IJsonObject*) = 0;
@@ -120,7 +124,7 @@ struct IJsonObject
 	virtual const IJsonValue* GetMember(
 			IN const char* memberName
 			) const = 0;
-	virtual bool IsMemberPreset(
+	virtual bool IsMemberPresent(
 			IN const char* memberName
 			) const = 0;
 	virtual bool AddMember(

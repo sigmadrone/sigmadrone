@@ -244,10 +244,38 @@ bool SdJsonValue::AsIntSafe(int64_t* val) const
 	return false;
 }
 
+bool SdJsonValue::AsIntSafe(int32_t* val) const
+{
+	if (GetType() == SD_JSONVALUE_INT) {
+		*val = (int32_t)AsInt();
+		return true;
+	}
+	return false;
+}
+
+bool SdJsonValue::AsUintSafe(uint64_t* val) const
+{
+	return AsIntSafe((int64_t*)val);
+}
+
+bool SdJsonValue::AsUintSafe(uint32_t* val) const
+{
+	return AsIntSafe((int32_t*)val);
+}
+
 bool SdJsonValue::AsBoolSafe(bool* val) const
 {
 	if (GetType() == SD_JSONVALUE_BOOL) {
 		*val = AsBool();
+		return true;
+	}
+	return false;
+}
+
+bool SdJsonValue::AsStringSafe(std::string* val) const
+{
+	if (GetType() == SD_JSONVALUE_STRING) {
+		*val = AsString();
 		return true;
 	}
 	return false;
@@ -479,7 +507,7 @@ const IJsonValue* SdJsonObject::GetMember(
 	return it != m_members.end() ? it->second : &s_nullJsonValue;
 }
 
-bool SdJsonObject::IsMemberPreset(
+bool SdJsonObject::IsMemberPresent(
 	IN const char* memberName) const
 {
 	return GetMember(memberName)->GetType() != SD_JSONVALUE_NULL;
