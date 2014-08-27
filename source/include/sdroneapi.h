@@ -27,7 +27,7 @@
 #define ARRAYSIZE(x) (sizeof(x)/sizeof(x[0]))
 #endif
 
-#define SD_DEFAULT_PORT 2222
+#define SD_DEFAULT_TCP_PORT 2222
 
 #define SD_LOG_LEVEL_NONE 0
 #define SD_LOG_LEVEL_ERROR 1
@@ -64,21 +64,21 @@ typedef enum _SdCommandCode {
 	SD_COMMAND_LOAD_PLUGIN,
 	SD_COMMAND_UNLOAD_PLUGIN,
 	SD_COMMAND_PING,
-	SD_COMMAND_CONFIG,
+	SD_COMMAND_SET_CONFIG,
 	SD_COMMAND_GET_CONFIG,
-	SD_COMMAND_THRUST,
+	SD_COMMAND_SET_THRUST,
 	SD_COMMAND_GET_THRUST,
-	SD_COMMAND_TARGET_ATTITUDE,
+	SD_COMMAND_SET_TARGET_ATTITUDE,
 	SD_COMMAND_GET_ATTITUDE,
-	SD_COMMAND_ALTITUDE,
+	SD_COMMAND_SET_TARGET_ALTITUDE,
 	SD_COMMAND_GET_ALTITUDE,
 } SdCommandCode;
 
 static const char* SdCommandCodeAsStr[] = {"SD_COMMAND_NONE","SD_COMMAND_RUN","SD_COMMAND_RESET",
 		"SD_COMMAND_EXIT","SD_COMMAND_LOAD_PLUGIN","SD_COMMAND_UNLOAD_PLUGIN",
-		"SD_COMMAND_PING","SD_COMMAND_CONFIG","SD_COMMAND_GET_CONFIG",
-		"SD_COMMAND_THRUST", "SD_COMMAND_GET_THRUST", "SD_COMMAND_TARGET_ATTITUDE",
-		"SD_COMMAND_ALTITUDE", "SD_COMMAND_GET_ALTITUDE"};
+		"SD_COMMAND_PING","SD_COMMAND_SET_CONFIG","SD_COMMAND_GET_CONFIG",
+		"SD_COMMAND_SET_THRUST", "SD_COMMAND_GET_THRUST", "SD_COMMAND_SET_TARGET_ATTITUDE",
+		"SD_COMMAND_SET_TARGET_ALTITUDE", "SD_COMMAND_GET_ALTITUDE"};
 
 __inline SdCommandCode SdStringToCommandCode(const char* str) {
 	for (size_t i = 0; i < ARRAYSIZE(SdCommandCodeAsStr); i++) {
@@ -162,6 +162,11 @@ typedef struct _SdQuadRotorConfig
 	 * Motors are paired, i.e. Motor[0] and Motor[2] map to the motors
 	 * lying on the X axis and Motor[1] and Motor[3] map to the Y axis
 	 */
+	_SdQuadRotorConfig() {
+		Motor[0]=Motor[1]=Motor[2]=Motor[3]=-1;
+		Kp = Ki = Kd = 0;
+		ImuAngleAxisZ = -1;
+	}
 	int Motor[4];
 	int ImuAngleAxisZ;  // IMU axes may not be aligned with the quadrotor axes
 	double Kp;
@@ -172,7 +177,7 @@ typedef struct _SdQuadRotorConfig
 typedef struct _SdDroneConfig
 {
 	inline _SdDroneConfig() {
-		ServerPort=SD_DEFAULT_PORT;
+		ServerPort=SD_DEFAULT_TCP_PORT;
 		LogRotationMatrix=LogLevel=LogRate=0;
 	}
 	SdImuDeviceConfig Gyro;
@@ -293,13 +298,6 @@ inline  SdPluginAltitude SD_ALTITUDE_LAST_IN_GROUP(SdPluginAltitude alt) {
  */
 #define SD_IOCODE_GET_STATE 2
 
-/*
- * SD_IOCODE_COMMAND
- * Used by the framework to notify all the plugins about newly received
- * command. Sent against SD_DEVICEID_COMMAND
- */
-#define SD_IOCODE_COMMAND	3
-
 #define SD_IOCODE_TO_FLAG(iocode) (1<<(iocode))
 
 typedef uint64_t SdDeviceId;
@@ -310,7 +308,6 @@ typedef uint64_t SdDeviceId;
 #define SD_DEVICEID_CAMERA		4
 #define SD_DEVICEID_SONAR		5
 #define SD_DEVICEID_FILTER		32
-#define SD_DEVICEID_COMMAND		33
 #define SD_DEVICEID_LAST		63
 #define SD_DEVICEID_ALL		((uint64_t)-1)
 
@@ -373,7 +370,12 @@ typedef struct _SdServoIoData
 	double value [16];
 } SdServoIoData;
 
-struct CommandArgs;
+typedef struct _SdThrustValues {
+	_SdThrustValues() { thrust = minThrust = maxThrust = 0.0;}
+	double thrust;
+	double minThrust;
+	double maxThrust;
+} SdThrustValues;
 
 struct SdIoData
 {
@@ -387,9 +389,10 @@ struct SdIoData
 	static const uint32_t TYPE_VECTOR4D 	= 7;
 	static const uint32_t TYPE_QUATERNION 	= 8;
 	static const uint32_t TYPE_IMU 			= 9;
-	static const uint32_t TYPE_COMMAND_ARGS = 10;
+	static const uint32_t TYPE_DRONE_CONFIG = 10;
 	static const uint32_t TYPE_SERVO 		= 11;
 	static const uint32_t TYPE_VOID_PTR 	= 12;
+	static const uint32_t TYPE_THRUST 		= 13;
 
 	SdIoData() { dataType = TYPE_INVALID; asDouble = 0; }
 	SdIoData(int32_t i) { dataType = TYPE_INT32; asInt32 = i; }
@@ -402,9 +405,10 @@ struct SdIoData
 	SdIoData(const QuaternionD* qt) { dataType = TYPE_QUATERNION; asQuaternion = qt; }
 	SdIoData(const SdImuData* imu) { dataType = TYPE_IMU; asImuData = imu; }
 	SdIoData(const SdServoIoData* siod) { dataType = TYPE_SERVO; asServoData = siod; }
-	SdIoData(const CommandArgs* args) {
-		dataType = TYPE_COMMAND_ARGS; asCommandArgs = args;
+	SdIoData(const SdDroneConfig* config) {
+		dataType = TYPE_DRONE_CONFIG; asDroneConfig = config;
 	}
+	SdIoData(const SdThrustValues* thr) { dataType = TYPE_THRUST; asThrust = thr; }
 	SdIoData(const void* p, uint32_t size) {
 			dataType = TYPE_BLOB; asBlob.blob = p; asBlob.blobSize = size;
 	}
@@ -426,8 +430,9 @@ struct SdIoData
 		const Vector4d* asVector4d;
 		const Vector3d* asVector3d;
 		const SdImuData* asImuData;
-		const CommandArgs* asCommandArgs;
+		const SdDroneConfig* asDroneConfig;
 		const SdServoIoData* asServoData;
+		const SdThrustValues* asThrust;
 	};
 };
 
@@ -631,32 +636,10 @@ struct IPluginRuntime
 			SdIoPacket*
 			) = 0;
 
-#if 0
-	/*
-	 * Returns altitude for any plugin
-	 */
-	virtual SdPluginAltitude GetPluginAltitude(
-			IN IPlugin*
-			) = 0;
-
-	virtual struct IPluginIterator* GetPluginSnapshot() = 0;
-#endif
-
 protected:
 	virtual ~IPluginRuntime() {}
 };
 
-struct IPluginIterator
-{
-	virtual int AddRef() = 0;
-	virtual int Release() = 0;
-
-	virtual void Reset() = 0;
-	virtual IPlugin* GetNextPlugin() = 0;
-
-protected:
-	virtual ~IPluginIterator() {}
-};
 
 struct IPlugin
 {
@@ -664,21 +647,22 @@ struct IPlugin
 	virtual int Release() = 0;
 
 	/*
-	 * Called to tell the plugin to perform any post init steps and update
-	 * its configuration; when this API completes, the plugin must be ready
-	 * to process IOs, provided the plugin has called SetIoFilters.
+	 * Invoked to tell the plugin to carry out the specified command. The plugin must
+	 * process at least the following:
+	 * - SD_COMMAND_RUN - perform any post init steps and update its configuration
+	 *   and subscribe for IOs; when this command completes the plugin must be ready
+	 *   to process IOs
+	 * - SD_COMMAND_RESET - IO processing has stopped on the chain and the drone
+	 *   hardware must be reset, most importantly the plugin controlling the servo PWM,
+	 *   must shutdown the motors
+	 * - SD_COMMAND_EXIT - plugin must perform SD_COMMAND_RESET, followed by detaching
+	 *   itself from the chain
+	 * Plugins may choose to ignore the rest of the commands, but they can't opt out
+	 * to receive them.
 	 */
-	virtual int Start(
-			const CommandArgs*
-			)  = 0;
-	/*
-	 * IO processing has stopped on the chain and the drone hardware is being
-	 * reset.
-	 */
-	static const int FLAG_STOP_AND_DETACH = 0x01;
-	virtual void Stop(
-			int flags
-			)  = 0;
+	virtual int ExecuteCommand(
+			struct SdCommandParams* commandArgs
+			) = 0;
 
 	/*
 	 * Returns the name of the plugin - should be unique and contain only
@@ -708,22 +692,6 @@ struct IPlugin
 	virtual const char* GetDlFileName(
 			) = 0;
 
-#if 0
-	/*
-	 * Returns a list of plugins that must have lower altitude than _this_
-	 * plugin. If there are no dependencies NULL should be returned.
-	 */
-	virtual const char* const* GetLowerPluginDependencies(
-			) = 0;
-
-	/*
-	 * Returns a list of plugins that must have higher altitude than _this_
-	 * plugin. If there are no dependencies NULL should be returned.
-	 */
-	virtual const char* const* GetUpperPluginDependencies(
-			) = 0;
-#endif
-
 	/*
 	 * IO processing callback. The plugin is free to modify any of the ioPacket
 	 * fields.
@@ -746,52 +714,20 @@ struct IPlugin
 	 * until non-zero error code is returned or StartStopIoDispatchThread(false) is
 	 * called
 	 */
-	virtual int IoDispatchThread() = 0;
-
-#if 0
-	virtual int ExecuteCommand(
-			SdCommandArgs* commandArgs
-			) = 0;
-
-	virtual int SetThrottle(
-			double min,
-			double max,
-			double val
-			)  { return SD_ESUCCESS; }
-	virtual int SetTargetAttitude(
-			const QuaternionD&
-			) { return SD_ESUCCESS; }
-	virtual int SetMission(
-			const std::vector<SdWayPoint>&
-			) { return SD_ESUCCESS; }
-#endif
+	virtual int IoDispatchThread() { return SD_ESUCCESS; }
 
 protected:
 	virtual ~IPlugin() {}
 };
 
-struct SdCommandArgs
+struct SdCommandParams
 {
 	virtual SdCommandCode CommandCode() = 0;
-	virtual const SdIoData& Args() = 0;
-	virtual const std::string& GetRawJsonSchema() = 0;
-	virtual const IJsonObject* RefJsonSchema() = 0;
+	virtual const SdIoData& Params() = 0;
+	virtual const IJsonValue* RpcParams() = 0;
 
 protected:
-	virtual ~SdCommandArgs() {}
-};
-
-
-struct CommandArgs
-{
-	virtual SdCommandCode GetCommand() const = 0;
-	virtual double GetMinThrust() const = 0;
-	virtual double GetMaxThrust() const = 0;
-	virtual double GetDesiredThrust() const = 0;
-	virtual const QuaternionD* GetTargetAttitude() const = 0;
-	virtual const SdDroneConfig* GetDroneConfig() const = 0;
-protected:
-	virtual ~CommandArgs() {}
+	virtual ~SdCommandParams() {}
 };
 
 #endif // SDRONE_API_H_

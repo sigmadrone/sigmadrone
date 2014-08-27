@@ -3,6 +3,7 @@ CXX	    ?= $(CROSS_COMPILE)g++
 CC          ?= $(CROSS_COMPILE)gcc
 HTTPSERVER_SRCDIR = ../libhttp
 JSONRPC_SRCDIR = ../jsonrpc
+CMDARGS_SRCDIR = ../libcmdargs
 INCLUDES    = -I../include -I../ -I$(JSONRPC_SRCDIR)/
 INCLUDES   += $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
 LIBS		= -lm -lrt -lpthread -ldl
@@ -29,10 +30,12 @@ OBJECTS		= \
 	imulowpassfilter.o\
 	iopacket.o\
 	kalmanattitudefilter.o\
-	cmdargs.o\
 	daemon.c\
+	dronerpcclient.o\
+	droneconfig.o\
 	$(JSONRPC_SRCDIR)/libjsonrpc.a\
-	$(HTTPSERVER_SRCDIR)/libhttp.a
+	$(HTTPSERVER_SRCDIR)/libhttp.a\
+	$(CMDARGS_SRCDIR)/libcmdargs.a
 
 all : $(TARGET)
 

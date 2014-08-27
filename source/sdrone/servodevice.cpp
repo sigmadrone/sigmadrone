@@ -43,9 +43,27 @@ void ServoDevice::Close()
 	}
 }
 
-int ServoDevice::Start(const CommandArgs* cmdArgs)
+int ServoDevice::ExecuteCommand(
+		SdCommandParams* params)
 {
-	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
+	int err = SD_ESUCCESS;
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		err = Start(params->Params().asDroneConfig);
+		break;
+	case SD_COMMAND_RESET:
+		Stop(false);
+		break;
+	case SD_COMMAND_EXIT:
+		Stop(true);
+		break;
+	default:break;
+	}
+	return err;
+}
+
+int ServoDevice::Start(const SdDroneConfig* droneConfig)
+{
 	const SdServoConfig* config = &droneConfig->Servo;
 	int err = EINVAL;
 
@@ -102,7 +120,7 @@ int ServoDevice::Start(const CommandArgs* cmdArgs)
 	return err;
 }
 
-void ServoDevice::Stop(int flags)
+void ServoDevice::Stop(bool detach)
 {
 	// disarm the motors
 	if (-1 != m_Fd) {
@@ -115,7 +133,7 @@ void ServoDevice::Stop(int flags)
 			mask >>= 1;
 		}
 	}
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
+	if (detach) {
 		m_Runtime->DetachPlugin();
 	}
 }

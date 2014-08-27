@@ -24,8 +24,7 @@ public:
 public:
 	int AddRef();
 	int Release();
-	int Start(const CommandArgs*);
-	void Stop(int flags);
+	int ExecuteCommand(SdCommandParams* commandArgs);
 	const char* GetName();
 	SdDeviceId GetDeviceId();
 	const char* GetVersion();
@@ -35,6 +34,7 @@ public:
 
 private:
 	~ImuBias();
+	int Start(const SdDroneConfig* droneConfig);
 
 private:
 	Vector3d m_EarthG;

@@ -34,10 +34,24 @@ int ImuRemap::AttachToChain(
 	return err;
 }
 
-int ImuRemap::Start(
-	const CommandArgs* cmdArgs)
+int ImuRemap::ExecuteCommand(
+		SdCommandParams* params)
 {
-	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
+	int err = SD_ESUCCESS;
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		err = Start(params->Params().asDroneConfig);
+		break;
+	case SD_COMMAND_EXIT:
+		m_Runtime->DetachPlugin();
+		break;
+	default:break;
+	}
+	return err;
+}
+
+int ImuRemap::Start(const SdDroneConfig* droneConfig)
+{
 	m_AccelMap = droneConfig->Accel.CoordinateMap;
 	m_GyroMap = droneConfig->Gyro.CoordinateMap;
 	m_MagMap = droneConfig->Mag.CoordinateMap;
@@ -59,13 +73,6 @@ int ImuRemap::Release()
 		delete this;
 	}
 	return refCnt;
-}
-
-void ImuRemap::Stop(int flags)
-{
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
-		m_Runtime->DetachPlugin();
-	}
 }
 
 const char* ImuRemap::GetName()

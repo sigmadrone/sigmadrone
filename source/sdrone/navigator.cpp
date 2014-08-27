@@ -35,17 +35,27 @@ int Navigator::AttachToChain(
 	return err;
 }
 
-int Navigator::Start(const CommandArgs* cmdArgs)
+int Navigator::ExecuteCommand(
+		SdCommandParams* params)
 {
-	assert(!!m_Runtime);
-	m_Runtime->SetIoFilters(
-			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU) |
-			SD_DEVICEID_TO_FLAG(SD_DEVICEID_BAR) |
-			SD_DEVICEID_TO_FLAG(SD_DEVICEID_GPS) |
-			SD_DEVICEID_TO_FLAG(SD_DEVICEID_COMMAND),
-			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE)|
-			SD_IOCODE_TO_FLAG(SD_IOCODE_COMMAND));
-	return 0;
+	int err = SD_ESUCCESS;
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		m_Runtime->SetIoFilters(
+				SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU) |
+				SD_DEVICEID_TO_FLAG(SD_DEVICEID_BAR) |
+				SD_DEVICEID_TO_FLAG(SD_DEVICEID_GPS),
+				SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
+		break;
+	case SD_COMMAND_RESET:
+		//TODO:
+		break;
+	case SD_COMMAND_EXIT:
+		m_Runtime->DetachPlugin();
+		break;
+	default:break;
+	}
+	return err;
 }
 
 int Navigator::AddRef()
@@ -60,14 +70,6 @@ int Navigator::Release()
 		delete this;
 	}
 	return refCnt;
-}
-
-void Navigator::Stop(int flags)
-{
-	assert(!!m_Runtime);
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
-		m_Runtime->DetachPlugin();
-	}
 }
 
 const char* Navigator::GetName()
@@ -103,17 +105,11 @@ int Navigator::IoCallback(SdIoPacket* ioPacket)
 			// Set up the target quaternion
 			//
 			ioPacket->SetAttribute(SDIO_ATTR_TARGET_Q,SdIoData(&m_TargetAttitude));
-		} else if (SD_IOCODE_COMMAND == ioPacket->IoCode()) {
-			// TODO: the target attitude can be controlled here
 		}
-		ret = SD_ESUCCESS;
 		break;
 	case SD_DEVICEID_GPS: // TODO
 	case SD_DEVICEID_BAR: // TODO
-	case SD_DEVICEID_COMMAND:
-		ret = SD_ESUCCESS;
-		break;
-	default:;
+	default:break;
 	}
 	return ret;
 }

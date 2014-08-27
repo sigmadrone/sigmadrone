@@ -124,7 +124,9 @@
 }
 
 {
- "jsonrpc": "2.0", "method": "SD_COMMAND_CONFIG", "params": {
+ "jsonrpc": "2.0", 
+ "method": "SD_COMMAND_CONFIG", 
+ "params": {
 	"GlobalConfig": {
 		"Gyro": {
 			"DeviceName": "/dev/gyro0",
@@ -246,7 +248,9 @@
 { "jsonrpc": "2.0", "result": 0, "id": 1234 }
 
 {
- "jsonrpc": "2.0", "method": "SD_COMMAND_THRUST", "params": {
+ "jsonrpc": "2.0", 
+ "method": "SD_COMMAND_THRUST", 
+ "params": {
 	 "Thrust": 0.4,
 	 "MinThrust": 0.3,
 	 "MaxThrust": 1.0

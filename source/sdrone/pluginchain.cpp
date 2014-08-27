@@ -7,26 +7,19 @@
 
 #include "pluginchain.h"
 #include "iopacket.h"
+#include "plugincommandparams.h"
 
-PluginChain::PluginChain() : m_pluginsStarted(false)
+PluginChain::PluginChain()
 {
 	pthread_rwlock_init(&m_lock,0);
 }
 
 PluginChain::~PluginChain()
 {
+	StopPlugins(true);
 	while (!m_chain.empty()) {
 		PluginMap::iterator it = m_chain.begin();
 		PluginContext* pluginCtx = it->second;
-		int altitude = pluginCtx->GetMyAltitude();
-		assert(pluginCtx);
-
-		/*
-		 * Call stop with DETACH flag set. This should result in a call to
-		 * PluginRuntime::DetachPlugin, which should dispose off the plugin
-		 */
-		pluginCtx->m_plugin->Stop(IPlugin::FLAG_STOP_AND_DETACH);
-		it = m_chain.find(altitude);
 		if (0 != it->second) {
 			printf("ERROR: plugin %s did not respond to Stop command, "
 				"will unload it dirty", pluginCtx->m_plugin->GetName());
@@ -289,64 +282,39 @@ int PluginChain::DispatchIo(
 	return err;
 }
 
-int PluginChain::StartPlugins(
-		const _CommandArgs* cmdArgs)
-{
-	int err = SD_ESUCCESS;
-	LockWrite();
-	if (ArePluginsStarted()) {
-		Unlock();
-		return err;
-	}
-	for (PluginMapIt it = m_chain.begin(); it != m_chain.end(); it++) {
-		printf("Starting plugin %s @%f \n",
-			it->second->m_plugin->GetName(), it->second->GetMyAltitude());
-		it->second->ConfigUpdated(cmdArgs);
-		err = it->second->m_plugin->Start(cmdArgs);
-		if (SD_ESUCCESS != err) {
-			printf("Plugin %s failed to start, err=%d %s\n",
-					it->second->m_plugin->GetName(), err, strerror(err));
-			break;
-		}
-	}
-	m_pluginsStarted = true;
-	Unlock();
-	if (0 != err) {
-		StopPlugins(0);
-	}
-	return err;
-}
-
 int PluginChain::StopPlugins(bool detachPlugins)
 {
-	RefedPluginListIterator it;
-	int stopFlag = detachPlugins ? IPlugin::FLAG_STOP_AND_DETACH : 0;
-	ReferencePluginList(&it,0,
-			SD_FLAG_DISPATCH_DOWN | SD_FLAG_DISPATCH_TO_ALL, 0, 0);
-	for (it.BeginIterate(); 0 != it.Get(); it.Next()) {
-		printf("Stopping plugin %s @%f \n",
-				it.Get()->m_plugin->GetName(),
-				it.Get()->GetMyAltitude());
-		it.Get()->m_plugin->Stop(stopFlag);
-	}
-	m_pluginsStarted = false;
+	PluginCommandParams params(detachPlugins ? SD_COMMAND_EXIT : SD_COMMAND_RESET);
+	ExecuteCommand(&params);
 	return 0;
 }
 
-int PluginChain::ExecuteCommand(const _CommandArgs* cmdArgs)
+int PluginChain::ExecuteCommand(SdCommandParams* cmdParams)
 {
-	int err = 0;
+	int err = SD_ESUCCESS;
 	RefedPluginListIterator it;
-	IoPacket* iop = new IoPacket(SD_ALTITUDE_FIRST,
-			SD_IOCODE_COMMAND,
-			SD_DEVICEID_COMMAND,
-			"bcast");
-	if (0 == iop) {
-		return ENOMEM;
+	ReferencePluginList(&it,0,
+			SD_FLAG_DISPATCH_DOWN | SD_FLAG_DISPATCH_TO_ALL, 0, 0);
+	for (it.BeginIterate(); 0 != it.Get(); it.Next()) {
+		if (cmdParams->CommandCode() == SD_COMMAND_RESET ||
+			cmdParams->CommandCode() == SD_COMMAND_EXIT) {
+			printf("Stopping plugin %s @%f \n",
+					it.Get()->m_plugin->GetName(),
+					it.Get()->GetMyAltitude());
+		} else if (cmdParams->CommandCode() == SD_COMMAND_RUN) {
+			printf("Starting plugin %s @%f \n",
+				it.Get()->m_plugin->GetName(), it.Get()->GetMyAltitude());
+		}
+		err = it.Get()->m_plugin->ExecuteCommand(cmdParams);
+		if (0 != err) {
+			printf("Plugin %s failed %s with %s", it.Get()->m_plugin->GetName(),
+					SdCommandCodeToString(cmdParams->CommandCode()), strerror(err));
+			if (!(cmdParams->CommandCode() == SD_COMMAND_RESET ||
+					cmdParams->CommandCode() == SD_COMMAND_EXIT)) {
+				break;
+			}
+		}
 	}
-	iop->SetIoData(SdIoData(cmdArgs),true);
-	err = DispatchIo(0,iop,SD_FLAG_DISPATCH_TO_ALL);
-	delete iop;
 	return err;
 }
 

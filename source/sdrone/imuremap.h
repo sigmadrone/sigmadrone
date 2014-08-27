@@ -24,14 +24,14 @@ public:
 public:
 	int AddRef();
 	int Release();
-	int Start(const CommandArgs*);
-	void Stop(int flags);
-	const char* GetName();
+	int ExecuteCommand(SdCommandParams* params);
+const char* GetName();
 	SdDeviceId GetDeviceId();
 	const char* GetVersion();
 	const char* GetDlFileName();
 	int IoCallback(SdIoPacket* ioPacket);
 	int IoDispatchThread();
+	int Start(const SdDroneConfig* droneConfig);
 
 private:
 	~ImuRemap();

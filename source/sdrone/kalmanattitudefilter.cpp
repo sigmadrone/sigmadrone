@@ -34,12 +34,21 @@ int KalmanAttitudeFilter::AttachToChain(
 	return err;
 }
 
-int KalmanAttitudeFilter::Start(const CommandArgs* cmdArgs)
+int KalmanAttitudeFilter::ExecuteCommand(
+		SdCommandParams* params)
 {
-	m_Runtime->SetIoFilters(
-			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
-			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
-	return 0;
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		m_Runtime->SetIoFilters(
+					SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
+					SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
+		break;
+	case SD_COMMAND_EXIT:
+		m_Runtime->DetachPlugin();
+		break;
+	default:break;
+	}
+	return SD_ESUCCESS;
 }
 
 int KalmanAttitudeFilter::AddRef()
@@ -54,13 +63,6 @@ int KalmanAttitudeFilter::Release()
 		delete this;
 	}
 	return refCnt;
-}
-
-void KalmanAttitudeFilter::Stop(int flags)
-{
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
-		m_Runtime->DetachPlugin();
-	}
 }
 
 const char* KalmanAttitudeFilter::GetName()

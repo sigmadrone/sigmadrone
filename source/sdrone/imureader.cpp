@@ -54,12 +54,30 @@ void ImuReader::Close()
 	m_Counter = 0;
 }
 
-int ImuReader::Start(
-	const CommandArgs* cmdArgs)
+int ImuReader::ExecuteCommand(SdCommandParams* params)
+{
+	int err = SD_ESUCCESS;
+	switch(params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		Run(params->Params().asDroneConfig);
+		break;
+	case SD_COMMAND_RESET:
+		m_RunTime->StartStopIoDispatchThread(false);
+		break;
+	case SD_COMMAND_EXIT:
+		m_RunTime->StartStopIoDispatchThread(false);
+		m_RunTime->DetachPlugin();
+		break;
+	default:break;
+	}
+	return err;
+}
+
+int ImuReader::Run(
+	const SdDroneConfig* droneConfig)
 {
 	int err = EINVAL;
 	Close();
-	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
 	remove("./sensordata.dat_bak");
 	rename("./sensordata.dat","./sensordata.dat_bak");
 	m_SensorLog = fopen("./sensordata.dat", "w");
@@ -172,14 +190,6 @@ int ImuReader::Release()
 		delete this;
 	}
 	return refCnt;
-}
-
-void ImuReader::Stop(int flags)
-{
-	m_RunTime->StartStopIoDispatchThread(false);
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
-		m_RunTime->DetachPlugin();
-	}
 }
 
 const char* ImuReader::GetName()

@@ -14,7 +14,7 @@ QuadRotorPilot::QuadRotorPilot() :
 		m_Step(s_InitialStep,s_InitialStep,s_InitialStep)
 {
 	m_MinRev = 0.0;
-	m_MaxRev = 1.0;
+	m_MaxRev = 0.0;
 	m_Counter = 0;
 	m_Skip = 0;
 	m_ErrorAngle = 0;
@@ -43,10 +43,33 @@ int QuadRotorPilot::AttachToChain(
 	return err;
 }
 
-int QuadRotorPilot::Start(
-		const CommandArgs* cmdArgs)
+int QuadRotorPilot::ExecuteCommand(
+		SdCommandParams* params)
 {
-	const SdDroneConfig* config = cmdArgs->GetDroneConfig();
+	int err = SD_ESUCCESS;
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		err = Start(params->Params().asDroneConfig);
+		break;
+	case SD_COMMAND_RESET:
+		Stop(false);
+		break;
+	case SD_COMMAND_EXIT:
+		Stop(true);
+		break;
+	case SD_COMMAND_SET_THRUST:
+		SetMinRev(params->Params().asThrust->minThrust);
+		SetMaxRev(params->Params().asThrust->maxThrust);
+		m_DesiredRev = fmin(m_MaxRev,params->Params().asThrust->thrust);
+		m_DesiredRev = fmax(m_MinRev,m_DesiredRev);
+		break;
+	default:break;
+	}
+	return err;
+}
+
+int QuadRotorPilot::Start(const SdDroneConfig* config)
+{
 	assert(config);
 	assert(m_Runtime);
 	m_Config = config->Quad;
@@ -61,15 +84,10 @@ int QuadRotorPilot::Start(
 		Vector3d(0,0,1),DEG2RAD(-m_Config.ImuAngleAxisZ));
 	m_GyroFilt.Reset();
 	m_Step = Vector3d(s_InitialStep,s_InitialStep,s_InitialStep);
-	m_MinRev = cmdArgs->GetMinThrust();
-	m_MaxRev = cmdArgs->GetMaxThrust();
-	m_DesiredRev = cmdArgs->GetDesiredThrust();
 
 	m_Runtime->SetIoFilters(
-			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU) |
-			SD_DEVICEID_TO_FLAG(SD_DEVICEID_COMMAND),
-			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE)|
-			SD_IOCODE_TO_FLAG(SD_IOCODE_COMMAND));
+			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
+			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
 
 	return 0;
 }
@@ -88,7 +106,7 @@ int QuadRotorPilot::Release()
 	return refCnt;
 }
 
-void QuadRotorPilot::Stop(int flags)
+void QuadRotorPilot::Stop(bool detach)
 {
 	/*
 	 * Shutdown the motors
@@ -96,7 +114,7 @@ void QuadRotorPilot::Stop(int flags)
 	m_MinRev = m_MaxRev = 0;
 	CalcThrustFromErrAxis(Vector3d(0,0,0),0);
 	IssueCommandToServo();
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
+	if (detach) {
 		m_Runtime->DetachPlugin();
 	}
 }
@@ -150,19 +168,6 @@ int QuadRotorPilot::IoCallback(
 		 *  rest of the chain
 		 */
 		ioPacket->SetAttribute(SDIO_ATTR_MOTORS,SdIoData(&m_Motors));
-
-	} else if (SD_IOCODE_COMMAND == ioPacket->IoCode()) {
-		if (ioPacket->GetIoData(true).dataType == SdIoData::TYPE_COMMAND_ARGS) {
-			const CommandArgs* args = ioPacket->GetIoData(true).asCommandArgs;
-			SetMinRev(args->GetMinThrust());
-			SetMaxRev(args->GetMaxThrust());
-			m_DesiredRev = fmin(args->GetMaxThrust(),args->GetDesiredThrust());
-			m_DesiredRev = fmax(args->GetMinThrust(),m_DesiredRev);
-		} else {
-			assert(false);
-			err = EINVAL;
-		}
-
 	} else {
 		assert(false);
 	}

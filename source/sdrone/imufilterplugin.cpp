@@ -33,14 +33,23 @@ int ImuFilterPlugin::AttachToChain(
 	return err;
 }
 
-int ImuFilterPlugin::Start(const CommandArgs* cmdArgs)
+int ImuFilterPlugin::ExecuteCommand(
+		SdCommandParams* params)
 {
-	m_ImuFilter.Reset();
-	m_SetEarthG = true;
-	m_Runtime->SetIoFilters(
-			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
-			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
-	return 0;
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		m_ImuFilter.Reset();
+			m_SetEarthG = true;
+			m_Runtime->SetIoFilters(
+					SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
+					SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
+		break;
+	case SD_COMMAND_EXIT:
+		m_Runtime->DetachPlugin();
+		break;
+	default:break;
+	}
+	return SD_ESUCCESS;
 }
 
 int ImuFilterPlugin::AddRef()
@@ -55,13 +64,6 @@ int ImuFilterPlugin::Release()
 		delete this;
 	}
 	return refCnt;
-}
-
-void ImuFilterPlugin::Stop(int flags)
-{
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
-		m_Runtime->DetachPlugin();
-	}
 }
 
 const char* ImuFilterPlugin::GetName()

@@ -1,14 +1,8 @@
 #include "commoninc.h"
 
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <sys/file.h>
-
 #include "drone.h"
 #include "commandargs.h"
-#include "jsonrpcdispatch.h"
+#include "dronerpcclient.h"
 
 #define _WHANT_FPE_
 
@@ -21,7 +15,7 @@ char **g_Argv;
 
 int main(int argc, char *argv[])
 {
-	_CommandArgs cmdArgs;
+	CommandLineArgs cmdArgs(argc,argv);
 
 #ifdef _WHANT_FPE_
 	feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
@@ -31,11 +25,7 @@ int main(int argc, char *argv[])
 	g_Argv = argv;
 
 	int err = -1;
-	if (!cmdArgs.ParseArgs(argc,argv)) {
-		goto __return;
-	}
-
-	if (argc == 1) {
+	if (cmdArgs.IsHelpNeeded() || argc==1) {
 		cmdArgs.PrintUsage(argc,argv);
 		goto __return;
 	}
@@ -50,50 +40,8 @@ int main(int argc, char *argv[])
 		/*
 		 * Execute the client logic - send command to the server
 		 */
-		IRpcTransport* rpcTransport=IRpcTransport::Create(
-				IRpcTransport::TRANSPORT_HTTP);
-		if (rpcTransport)
-		{
-			SdJsonRpcDispatcher rpcDispatch(rpcTransport);
-			SdJsonRpcRequest req;
-			SdJsonRpcReply rep;
-			req.MethodName = SdCommandCodeToString(cmdArgs.GetCommand());
-
-			switch (cmdArgs.GetCommand()) {
-			case SD_COMMAND_RUN:
-			case SD_COMMAND_RESET:
-				req.Params = cmdArgs.GetCommandArgsAsJobj();
-				break;
-			default:break;
-			}
-
-			if (rpcDispatch.SendJsonRequest(req,
-					cmdArgs.GetHostAddress(),
-					cmdArgs.GetServerPort(),&rep))
-			{
-				printf("Successfully sent command %s, ret value %d\n",
-						req.MethodName.c_str(), rep.ErrorCode);
-
-				switch (cmdArgs.GetCommand()) {
-				case SD_COMMAND_PING:
-					if (rep.Results.GetType()==SD_JSONVALUE_STRING) {
-						printf("Ping reply: %s\n", rep.Results.AsString().c_str());
-					} else {
-						printf("WARNING: Ping reply carries wrong type: %s\n",
-								rep.Results.GetTypeAsString());
-					}
-					break;
-				default:break;
-				}
-			}
-			else
-			{
-				printf("Failed to send command %s to %s, error \"%s\"",
-						req.MethodName.c_str(),cmdArgs.GetHostAddress(),
-						strerror(err));
-			}
-			delete rpcTransport;
-		}
+		DroneRpcClient client;
+		err = client.ExecuteCommand(cmdArgs);
 	} else {
 		printf("\nERROR: Server or client mode must be enabled!\n\n\n");
 		goto __return;

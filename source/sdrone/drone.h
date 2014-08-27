@@ -13,11 +13,15 @@
 #include "pluginchain.h"
 #include "commandargs.h"
 #include "filelock.h"
+#include "droneconfig.h"
 
 class SdJsonRpcDispatcher;
 struct SdJsonRpcReply;
 struct SdJsonRpcRequest;
 struct IRpcTransport;
+class SdJsonArray;
+class SdJsonObject;
+class SdJsonValue;
 
 /*
  * Aggregate class representing an instance of a drone.
@@ -32,7 +36,7 @@ public:
 	static void Destroy();
 	static Drone* Only() { return s_Only; }
 
-	int Run(const _CommandArgs& args);
+	int Run(CommandLineArgs& args);
 
 	inline bool IsRunning(void) { return m_isRunning; }
 
@@ -41,12 +45,13 @@ private:
 	~Drone();
 	void InitInternalPlugins();
 	int OnExit();
-	int OnFly();
+	int OnRun(const IJsonValue* rpcParams);
 	int OnReset();
+	int OnSetThrust(const SdThrustValues&);
+	int OnSetConfig(const SdDroneConfig&, const IJsonValue* rpcParams);
+	int OnSetTargetQuaternion(const QuaternionD&);
 
-//	inline void SetConfig(const SdDroneConfig* cfg) { m_config = *cfg; }
-
-	static void OnRpcCommandFly(
+	static void OnRpcCommandRun(
 			void* Context,
 			const SdJsonRpcRequest*,
 			SdJsonRpcReply*);
@@ -58,15 +63,69 @@ private:
 			void* Context,
 			const SdJsonRpcRequest*,
 			SdJsonRpcReply*);
-	static void OnRpcCommandGetState(
-				void* Context,
-				const SdJsonRpcRequest*,
-				SdJsonRpcReply*);
+	static void OnRpcCommandSetConfig(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandGetConfig(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
 	static void OnRpcCommandPing(
-				void* Context,
-				const SdJsonRpcRequest*,
-				SdJsonRpcReply*);
-	static void PrintConfig(const SdDroneConfig* config);
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandSetThrust(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandGetThrust(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandSetTargetAttitude(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandGetAttitude(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandSetTargetAltitude(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandGetAltitude(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+
+	static bool ParseJsonDroneConfig(
+			const IJsonValue* jsonRpcParams,
+			SdDroneConfig*);
+	static bool ParseJsonImuConfig(
+			const IJsonObject* jsonImuObj,
+			SdImuDeviceConfig*);
+	static bool ParseJsonThrust(
+			const IJsonValue* jsonRpcParams,
+			SdThrustValues*);
+	static bool ParseJsonTargetQuaternion(
+			const IJsonValue* jsonRpcParams,
+			QuaternionD*);
+	static bool BuildJsonDroneConfig(
+			SdJsonObject* jsonDroneConfig,
+			const SdDroneConfig&);
+	static bool BuildJsonImuConfig(
+			SdJsonObject* jsonImuConfig,
+			const SdImuDeviceConfig&);
+	static bool BuildJsonThrustParams(
+			SdJsonObject* jsonFlightParams,
+			double thrust,
+			double minThrust,
+			double maxThrust);
+	static bool BuildJsonPingParams(
+			SdJsonValue* jsonPing,
+			double timestamp);
 
 	static void fatal_error_signal(int sig);
 
@@ -80,11 +139,13 @@ private:
 		);
 
 private:
-	_CommandArgs m_commandArgs;
 	SdJsonRpcDispatcher* m_rpcDispatch;
 	IRpcTransport* m_rpcTransport;
 	PluginChain m_pluginChain;
 	FileLock m_globalLock;
+	DroneConfig m_droneConfig;
+	SdThrustValues m_thrustValues;
+	QuaternionD m_targetQ;
 	bool m_isRunning;
 	static Drone* s_Only;
 };

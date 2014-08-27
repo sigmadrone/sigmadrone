@@ -38,16 +38,24 @@ int TraceLogPlugin::AttachToChain(
 	return err;
 }
 
-int TraceLogPlugin::Start(
-	const CommandArgs* cmdArgs)
+int TraceLogPlugin::ExecuteCommand(
+		SdCommandParams* params)
 {
-	m_iteration = 0;
-	m_logLevel = cmdArgs->GetDroneConfig()->LogLevel;
-	m_logRotMatrix = cmdArgs->GetDroneConfig()->LogRotationMatrix;
-	m_logPeriod = 1.0/(double)cmdArgs->GetDroneConfig()->LogRate;
-	m_runtime->SetIoFilters(
-		SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
-		SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		m_iteration = 0;
+		m_logLevel = params->Params().asDroneConfig->LogLevel;
+		m_logRotMatrix = params->Params().asDroneConfig->LogRotationMatrix;
+		m_logPeriod = 1.0/(double)params->Params().asDroneConfig->LogRate;
+		m_runtime->SetIoFilters(
+			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
+			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
+		break;
+	case SD_COMMAND_EXIT:
+		m_runtime->DetachPlugin();
+		break;
+	default:break;
+	}
 	return SD_ESUCCESS;
 }
 
@@ -63,13 +71,6 @@ int TraceLogPlugin::Release()
 		delete this;
 	}
 	return refCnt;
-}
-
-void TraceLogPlugin::Stop(int flags)
-{
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
-		m_runtime->DetachPlugin();
-	}
 }
 
 const char* TraceLogPlugin::GetName()

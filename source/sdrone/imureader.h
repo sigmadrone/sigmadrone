@@ -24,14 +24,14 @@ public:
 public:
 	int AddRef();
 	int Release();
-	int Start(const CommandArgs*);
-	void Stop(int flags);
+	int Run(const SdDroneConfig* config);
 	const char* GetName();
 	SdDeviceId GetDeviceId();
 	const char* GetVersion();
 	const char* GetDlFileName();
 	int IoCallback(SdIoPacket* ioPacket);
 	int IoDispatchThread();
+	int ExecuteCommand(SdCommandParams*);
 
 private:
 	inline bool IsInTextMode() { return !!m_File; }

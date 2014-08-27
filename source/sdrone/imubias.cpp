@@ -36,13 +36,28 @@ int ImuBias::AttachToChain(
 	return err;
 }
 
-int ImuBias::Start(
-	const CommandArgs* cmdArgs)
+int ImuBias::ExecuteCommand(
+		SdCommandParams* params)
 {
-	int biasSamples = cmdArgs->GetDroneConfig()->Gyro.NumBiasSamples;
+	int err = SD_ESUCCESS;
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		err = Start(params->Params().asDroneConfig);
+		break;
+	case SD_COMMAND_EXIT:
+		m_Runtime->DetachPlugin();
+		break;
+	default:break;
+	}
+	return err;
+}
+
+int ImuBias::Start(const SdDroneConfig* droneConfig)
+{
+	int biasSamples = droneConfig->Gyro.NumBiasSamples;
 	m_CurrentBiasSamples = 0;
 	m_ElapsedTime = 0;
-	m_TotalBiasCalcTime = (double)biasSamples/cmdArgs->GetDroneConfig()->Gyro.SamplingRate;
+	m_TotalBiasCalcTime = (double)biasSamples/droneConfig->Gyro.SamplingRate;
 	m_Runtime->Log(SD_LOG_LEVEL_INFO,
 			"--> Will calculate bias for %d samples (%2.3lf sec), stay still...\n",
 			 biasSamples, m_TotalBiasCalcTime);
@@ -64,13 +79,6 @@ int ImuBias::Release()
 		delete this;
 	}
 	return refCnt;
-}
-
-void ImuBias::Stop(int flags)
-{
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
-		m_Runtime->DetachPlugin();
-	}
 }
 
 const char* ImuBias::GetName()

@@ -42,14 +42,22 @@ int ImuLowPassFilter::AttachToChain(
 	return err;
 }
 
-int ImuLowPassFilter::Start(
-	const CommandArgs* cmdArgs)
+int ImuLowPassFilter::ExecuteCommand(
+		SdCommandParams* params)
 {
-	m_Runtime->SetIoFilters(
-		SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
-		SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
-	m_AccelFilt.Reset();
-	m_GyroFilt.Reset();
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		m_Runtime->SetIoFilters(
+				SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
+				SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
+		m_AccelFilt.Reset();
+		m_GyroFilt.Reset();
+		break;
+	case SD_COMMAND_EXIT:
+		m_Runtime->DetachPlugin();
+		break;
+	default:break;
+	}
 	return SD_ESUCCESS;
 }
 
@@ -65,13 +73,6 @@ int ImuLowPassFilter::Release()
 		delete this;
 	}
 	return refCnt;
-}
-
-void ImuLowPassFilter::Stop(int flags)
-{
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
-		m_Runtime->DetachPlugin();
-	}
 }
 
 const char* ImuLowPassFilter::GetName()

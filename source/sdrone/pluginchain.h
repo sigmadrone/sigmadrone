@@ -33,11 +33,7 @@ public:
 			SdIoPacket* iop,
 			uint32_t dispatchFlags
 			);
-
-	int StartPlugins(const _CommandArgs*);
-	int StopPlugins(bool detachPlugins);
-	int ExecuteCommand(const _CommandArgs*);
-	bool ArePluginsStarted() { return m_pluginsStarted; }
+	int ExecuteCommand(SdCommandParams*);
 
 private:
 	typedef std::map<SdPluginAltitude,PluginContext*> PluginMap;
@@ -76,6 +72,7 @@ private:
 			SdPluginAltitude prevLo,
 			SdPluginAltitude desiredAltitude,
 			SdPluginAltitude nextHi);
+	int StopPlugins(bool detachPlugins);
 
 	static bool IsStringInList(
 			const char* str,
@@ -87,7 +84,6 @@ private:
 private:
 	PluginMap m_chain;
 	pthread_rwlock_t m_lock;
-	bool m_pluginsStarted;
 };
 
 #endif /* PLUGINCHAIN_H_ */

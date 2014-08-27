@@ -18,7 +18,7 @@ struct SdJsonRpcRequest
 		Params = 0;
 	}
 	std::string MethodName;
-	const IJsonObject* Params;
+	SdJsonValue Params;
 	uint64_t Id; // may not be initialized
 };
 
@@ -32,6 +32,21 @@ struct SdJsonRpcReply
 	uint64_t Id;
 	int ErrorCode;
 	std::string ErrorMessage;
+};
+
+struct SdJsonRpcMethod {
+	SdJsonRpcMethod(const std::string& methodName) {}
+	virtual ~SdJsonRpcMethod() {}
+	virtual bool Execute(
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	const std::string& Name();
+	void PrintRequestSchema();
+	void PrintReplySchema();
+private:
+	SdJsonRpcReply reply;
+	SdJsonRpcRequest request;
+	std::string methodName;
 };
 
 typedef void (*SdJsonRpcRequestCallbackT)(
