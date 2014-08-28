@@ -132,36 +132,53 @@ bool ParseJsonThrust(
 	if (rpcParams->GetType() != SD_JSONVALUE_OBJECT) {
 		return false;
 	}
-	bool ret = true;
+	bool ret = false;
 	const IJsonObject* jobj = rpcParams->AsObject();
-	ret = ret && jobj->GetMember("Thrust")->AsDoubleSafe(&thrustVals->thrust);
-	ret = ret && jobj->GetMember("MaxThrust")->AsDoubleSafe(&thrustVals->maxThrust);
-	ret = ret && jobj->GetMember("MinThrust")->AsDoubleSafe(&thrustVals->minThrust);
+	double thr, min, max;
+	if (jobj->GetMember("Thrust")->AsDoubleSafe(&thr)) {
+		ret = true;
+	} else {
+		thr = thrustVals->Thrust();
+	}
+	if (jobj->GetMember("MaxThrust")->AsDoubleSafe(&max)) {
+		ret = true;
+	} else {
+		max = thrustVals->MaxThrust();
+	}
+	if (jobj->GetMember("MinThrust")->AsDoubleSafe(&min)) {
+		ret = true;
+	} else {
+		min = thrustVals->MinThrust();
+	}
+	*thrustVals = SdThrustValues(thr,min,max);
 	return ret;
 }
 
 bool BuildJsonDroneConfig(
-		SdJsonObject* jsonDroneConfig,
-		const SdDroneConfig& droneCfg)
+		SdJsonObject* jsonRpcParams,
+		const SdDroneConfig& droneCfg,
+		const SdJsonArray* pluginsConfig)
 {
 	bool ret = true;
 	SdJsonObject tmpObj;
 	SdJsonArray tmpArr;
+	SdJsonObject jsonDroneConfig;
 
-	jsonDroneConfig->Reset();
+	jsonRpcParams->Reset();
+
 	ret = ret && BuildJsonImuConfig(&tmpObj,droneCfg.Gyro);
-	ret = ret && jsonDroneConfig->AddMember("Gyro",SdJsonValue(tmpObj));
+	ret = ret && jsonDroneConfig.AddMember("Gyro",SdJsonValue(tmpObj));
 	ret = ret && BuildJsonImuConfig(&tmpObj,droneCfg.Accel);
-	ret = ret && jsonDroneConfig->AddMember("Accelerometer",SdJsonValue(tmpObj));
+	ret = ret && jsonDroneConfig.AddMember("Accelerometer",SdJsonValue(tmpObj));
 	ret = ret && BuildJsonImuConfig(&tmpObj,droneCfg.Mag);
-	ret = ret && jsonDroneConfig->AddMember("Magnetometer",SdJsonValue(tmpObj));
+	ret = ret && jsonDroneConfig.AddMember("Magnetometer",SdJsonValue(tmpObj));
 
 	tmpObj.Reset();
 	ret = ret && tmpObj.AddMember("DeviceName",SdJsonValue(droneCfg.Servo.DeviceName));
 	ret = ret && tmpObj.AddMember("SamplingRage",SdJsonValue(droneCfg.Servo.Rate));
 	ret = ret && tmpObj.AddMember("ChannelMask",SdJsonValue(droneCfg.Servo.ChannelMask));
 	ret = ret && tmpObj.AddMember("BitCount",SdJsonValue(droneCfg.Servo.BitCount));
-	ret = ret && jsonDroneConfig->AddMember("Servo",SdJsonValue(tmpObj));
+	ret = ret && jsonDroneConfig.AddMember("Servo",SdJsonValue(tmpObj));
 
 	tmpObj.Reset();
 	tmpArr.Reset();
@@ -176,22 +193,27 @@ bool BuildJsonDroneConfig(
 	ret = ret && tmpObj.AddMember("Kp",SdJsonValue(droneCfg.Quad.Kp));
 	ret = ret && tmpObj.AddMember("Ki",SdJsonValue(droneCfg.Quad.Ki));
 	ret = ret && tmpObj.AddMember("Kd",SdJsonValue(droneCfg.Quad.Kd));
-	ret = ret && jsonDroneConfig->AddMember("QuadPilot",SdJsonValue(tmpObj));
+	ret = ret && jsonDroneConfig.AddMember("QuadPilot",SdJsonValue(tmpObj));
 
 	tmpObj.Reset();
 	ret = ret && tmpObj.AddMember("ServerAddress",SdJsonValue(
 			droneCfg.ServerAddress));
 	ret = ret && tmpObj.AddMember("ServerPort",SdJsonValue(droneCfg.ServerPort));
-	ret = ret && jsonDroneConfig->AddMember("ControlChannel",SdJsonValue(tmpObj));
+	ret = ret && jsonDroneConfig.AddMember("ControlChannel",SdJsonValue(tmpObj));
 
-	ret = ret && jsonDroneConfig->AddMember("LogLevel",
+	ret = ret && jsonDroneConfig.AddMember("LogLevel",
 			SdLogLevelToString(droneCfg.LogLevel));
-	ret = ret && jsonDroneConfig->AddMember("LogRotationMatrix",
+	ret = ret && jsonDroneConfig.AddMember("LogRotationMatrix",
 			SdJsonValue((bool)droneCfg.LogRotationMatrix));
-	ret = ret && jsonDroneConfig->AddMember("LogFileName",SdJsonValue(
+	ret = ret && jsonDroneConfig.AddMember("LogFileName",SdJsonValue(
 			droneCfg.LogFileName));
-	ret = ret && jsonDroneConfig->AddMember("LogRate",SdJsonValue(
+	ret = ret && jsonDroneConfig.AddMember("LogRate",SdJsonValue(
 			droneCfg.LogRate));
+
+	ret = ret && jsonRpcParams->AddMember("GlobalConfig",SdJsonValue(jsonDroneConfig));
+	if (!!pluginsConfig && pluginsConfig->ElementCount()) {
+		ret = ret && jsonRpcParams->AddMember("Plugins", SdJsonValue(*pluginsConfig));
+	}
 
 	return ret;
 }
@@ -251,6 +273,7 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 	 * will trump over the settings from the json config file.
 	 */
 	SdJsonObject jobjDroneConfig;
+	SdJsonArray jarrPluginConfig;
 
 	const std::string& configFile = cmdArgs.GetConfigFile();
 	if (configFile.length() > 0) {
@@ -262,6 +285,9 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 		const IJsonObject* jobjFromFile = jsonParser.RootObj();
 		if (jobjFromFile->GetMember("GlobalConfig")->GetType() == SD_JSONVALUE_OBJECT) {
 			jobjDroneConfig = *(SdJsonObject*)jobjFromFile->GetMember("GlobalConfig")->AsObject();
+		}
+		if (jobjFromFile->GetMember("Plugins")->GetType() == SD_JSONVALUE_ARRAY) {
+			jarrPluginConfig = *(SdJsonArray*)jobjFromFile->GetMember("Plugins")->AsArray();
 		}
 	}
 
@@ -349,7 +375,12 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 		jobjDroneConfig.AddMember("QuadPilot",jobjQuadPilot);
 	}
 
-	jsonArgs->SetValueAsObject(&jobjDroneConfig);
+	SdJsonObject configObj;
+	configObj.AddMember("GlobalConfig",SdJsonValue(jobjDroneConfig));
+	if (jarrPluginConfig.ElementCount() > 0) {
+		configObj.AddMember("Plugins",SdJsonValue(jarrPluginConfig));
+	}
+	jsonArgs->SetValueAsObject(&configObj);
 	return true;
 }
 

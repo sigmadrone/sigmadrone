@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 		if (!Drone::Create()) {
 			goto __return;
 		}
-		Drone::Only()->Run(cmdArgs);
+		err = Drone::Only()->Run(cmdArgs);
 		Drone::Destroy();
 	} else if (cmdArgs.IsRoleClient()) {
 		/*

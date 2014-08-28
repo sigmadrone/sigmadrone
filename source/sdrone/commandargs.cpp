@@ -87,27 +87,19 @@ SdCommandCode CommandLineArgs::GetCommand() const
 	return command;
 }
 
-double CommandLineArgs::LimitThrust(double thrust)
-{
-	return max(min(thrust,1.0),0.0);
-}
-
 double CommandLineArgs::GetMinThrust() const {
-	double thrust = 0.3;
-	GetValueAsDouble("minthrust",&thrust);
-	return LimitThrust(thrust);
+	double thrust;
+	return GetValueAsDouble("minthrust",&thrust) ? thrust : SdThrustValues::MIN;
 }
 
 double CommandLineArgs::GetMaxThrust() const {
-	double thrust = 0.3;
-	GetValueAsDouble("maxthrust",&thrust);
-	return LimitThrust(thrust);
+	double thrust;
+	return GetValueAsDouble("maxthrust",&thrust) ? thrust : SdThrustValues::MIN;
 }
 
 double CommandLineArgs::GetDesiredThrust() const {
-	double thrust = 0.3;
-	GetValueAsDouble("thrust",&thrust);
-	return LimitThrust(thrust);
+	double thrust;
+	return GetValueAsDouble("thrust",&thrust) ? thrust : SdThrustValues::MIN;
 }
 
 int CommandLineArgs::GetServerPort() const

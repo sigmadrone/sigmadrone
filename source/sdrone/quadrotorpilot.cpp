@@ -58,10 +58,9 @@ int QuadRotorPilot::ExecuteCommand(
 		Stop(true);
 		break;
 	case SD_COMMAND_SET_THRUST:
-		SetMinRev(params->Params().asThrust->minThrust);
-		SetMaxRev(params->Params().asThrust->maxThrust);
-		m_DesiredRev = fmin(m_MaxRev,params->Params().asThrust->thrust);
-		m_DesiredRev = fmax(m_MinRev,m_DesiredRev);
+		SetMinRev(params->Params().asThrust->MinThrust());
+		SetMaxRev(params->Params().asThrust->MaxThrust());
+		m_DesiredRev = fmax(fmin(m_MaxRev,params->Params().asThrust->Thrust()),m_MinRev);
 		break;
 	default:break;
 	}

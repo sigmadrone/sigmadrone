@@ -123,9 +123,9 @@ int Drone::Run(CommandLineArgs& args)
 		daemon_init();
 	}
 
-	m_thrustValues.thrust = args.GetDesiredThrust();
-	m_thrustValues.minThrust = args.GetMinThrust();
-	m_thrustValues.maxThrust = args.GetMaxThrust();
+	m_thrustValues.Thrust(args.GetDesiredThrust());
+	m_thrustValues.MinThrust(args.GetMinThrust());
+	m_thrustValues.MaxThrust(args.GetMaxThrust());
 
 	InitInternalPlugins();
 
@@ -201,10 +201,13 @@ int Drone::Run(CommandLineArgs& args)
 	//
 	switch(args.GetCommand()) {
 	case SD_COMMAND_RUN: {
+		int err;
 		SdJsonValue jsonArgs;
 		RpcParams::BuildJsonDroneConfigFromCmdLineArgs(&jsonArgs, args);
 		RpcParams::ParseJsonDroneConfig(&jsonArgs,&m_droneConfig.m_config);
-		OnRun(&jsonArgs);
+		if (SD_ESUCCESS != (err = OnRun(&jsonArgs))) {
+			return err;
+		}
 		OnSetThrust(m_thrustValues);
 		break;
 	}
@@ -271,6 +274,9 @@ int Drone::OnRun(const IJsonValue* rpcParams)
 int Drone::OnSetThrust(const SdThrustValues& thrustVals)
 {
 	SdIoData data(&thrustVals);
+	printf("Setthing thrust %.3f, min %.3f, max %.3f\n",
+			thrustVals.Thrust(), thrustVals.MinThrust(),
+			thrustVals.MaxThrust());
 	PluginCommandParams params(SD_COMMAND_SET_THRUST,data,0);
 	m_thrustValues = thrustVals;
 	return m_pluginChain.ExecuteCommand(&params);
@@ -366,7 +372,7 @@ void Drone::OnRpcCommandGetConfig(
 	assert(context == Only());
 	SdJsonObject jobj;
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
-	if (!RpcParams::BuildJsonDroneConfig(&jobj,Only()->m_droneConfig.m_config)) {
+	if (!RpcParams::BuildJsonDroneConfig(&jobj,Only()->m_droneConfig.m_config,0)) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
 	} else {
 		rep->Results.SetValueAsObject(&jobj);
@@ -379,12 +385,12 @@ void Drone::OnRpcCommandPing(
 		const SdJsonRpcRequest* req,
 		SdJsonRpcReply* rep)
 {
-	double timestamp = 0;
+	int64_t timestamp = 0;
 	assert(context == Only());
-	if (req->Params.AsDoubleSafe(&timestamp)) {
-		printf("Sending ping reply %f\n",timestamp);
+	if (req->Params.AsIntSafe(&timestamp)) {
+		printf("Sending ping reply %ld\n",timestamp);
 		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
-		rep->Results.SetValueAsString(SD_PING_REPLY_DATA);
+		rep->Results.SetValueAsInt(timestamp);
 	} else {
 		rep->ErrorMessage = "Ping request carries wrong timestamp value type ";
 		rep->ErrorMessage += req->Params.GetTypeAsString();
@@ -444,8 +450,8 @@ void Drone::OnRpcCommandGetThrust(
 {
 	SdJsonObject res;
 	const SdThrustValues& thrust = Only()->m_thrustValues;
-	RpcParams::BuildJsonThrustParams(&res,thrust.thrust,
-			thrust.minThrust,thrust.maxThrust);
+	RpcParams::BuildJsonThrustParams(&res,thrust.Thrust(),
+			thrust.MinThrust(),thrust.MaxThrust());
 	rep->Results.SetValueAsObject(&res);
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 	rep->Id = req->Id;

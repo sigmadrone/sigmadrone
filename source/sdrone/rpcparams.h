@@ -27,8 +27,9 @@ bool ParseJsonTargetQuaternion(
 		const IJsonValue* jsonRpcParams,
 		QuaternionD*);
 bool BuildJsonDroneConfig(
-		SdJsonObject* jsonDroneConfig,
-		const SdDroneConfig&);
+		SdJsonObject* jsonRpcParams,
+		const SdDroneConfig&,
+		const SdJsonArray* pluginsConfig);
 bool BuildJsonImuConfig(
 		SdJsonObject* jsonImuConfig,
 		const SdImuDeviceConfig&);

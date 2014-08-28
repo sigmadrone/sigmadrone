@@ -209,7 +209,7 @@ double SdJsonValue::AsDouble() const {
 	if (GetType() == SD_JSONVALUE_DOUBLE) {
 		return json_node_get_double(const_cast<JsonNode*>(m_jnode));
 	}
-	return 0;
+	return AsInt();
 }
 
 int64_t SdJsonValue::AsInt() const {
@@ -228,7 +228,8 @@ bool SdJsonValue::AsBool() const {
 
 bool SdJsonValue::AsDoubleSafe(double* val) const
 {
-	if (GetType() == SD_JSONVALUE_DOUBLE) {
+	if (GetType() == SD_JSONVALUE_DOUBLE ||
+		GetType() == SD_JSONVALUE_INT) {
 		*val = AsDouble();
 		return true;
 	}

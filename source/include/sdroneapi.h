@@ -374,7 +374,17 @@ typedef struct _SdServoIoData
 } SdServoIoData;
 
 typedef struct _SdThrustValues {
-	_SdThrustValues() { thrust = minThrust = maxThrust = 0.0;}
+	static const double MIN = 0.0;
+	static const double MAX = 1.0;
+	_SdThrustValues(double thr=MIN, double minThr=MIN, double maxThr=MIN) {
+		minThrust = fmin(fmax(MIN, minThr), maxThr);
+		maxThrust = fmax(fmin(MAX, maxThr), minThrust);
+		thrust = fmin(fmax(minThrust,thr),maxThrust);
+	}
+	double Thrust() const { return thrust; }
+	double MinThrust() const { return minThrust; }
+	double MaxThrust() const { return maxThrust; }
+private:
 	double thrust;
 	double minThrust;
 	double maxThrust;

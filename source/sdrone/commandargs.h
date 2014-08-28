@@ -75,8 +75,6 @@ private:
 		return m_cmdArgs.get_value(name).length() > 0;
 	}
 
-	static double LimitThrust(double thrust);
-
 private:
 	cmd_args m_cmdArgs;
 };

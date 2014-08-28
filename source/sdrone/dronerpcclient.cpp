@@ -35,8 +35,12 @@ int DroneRpcClient::ExecuteCommand(const CommandLineArgs& cmdArgs)
 		case SD_COMMAND_SET_THRUST:
 			RpcParams::BuildJsonThrustParamsFromCmdLineArgs(&req.Params, cmdArgs);
 			break;
-		case SD_COMMAND_PING:
-			req.Params = (double)clock();
+		case SD_COMMAND_PING: {
+			timespec ts = {0};
+			clock_gettime(CLOCK_MONOTONIC,&ts);
+			int64_t clockValue = (int64_t)ts.tv_sec*1000*1000*1000 + ts.tv_nsec;
+			req.Params = SdJsonValue(clockValue);
+		}
 			break;
 		case SD_COMMAND_SET_TARGET_ATTITUDE:
 			break;
@@ -53,13 +57,13 @@ int DroneRpcClient::ExecuteCommand(const CommandLineArgs& cmdArgs)
 			{
 				switch (cmdArgs.GetCommand()) {
 				case SD_COMMAND_PING: {
-					double receivedTimestamp = 0.0;
-					rep.Results.AsDoubleSafe(&receivedTimestamp);
-					if (receivedTimestamp == req.Params.AsDouble()) {
-						printf("Ping reply: %f\n", receivedTimestamp);
+					int64_t receivedTimestamp = 0;
+					rep.Results.AsIntSafe(&receivedTimestamp);
+					if (receivedTimestamp == req.Params.AsInt()) {
+						printf("Ping reply: %ld\n", receivedTimestamp);
 					} else {
-						printf("WARNING: Ping reply carries wrong time stamp: %f, "
-								"expected %f\n", receivedTimestamp, req.Params.AsDouble());
+						printf("WARNING: Ping reply carries wrong time stamp: %ld, "
+								"expected %ld\n", receivedTimestamp, req.Params.AsInt());
 					}
 					break;
 				}

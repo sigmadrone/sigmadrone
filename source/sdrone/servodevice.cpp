@@ -78,14 +78,14 @@ int ServoDevice::Start(const SdDroneConfig* droneConfig)
 		} else if (0 == (m_File = fopen(config->DeviceName.c_str(),"w"))) {
 			fprintf(stdout,"ServoDevice::Init failed to open %s, err=%d\n",
 					config->DeviceName.c_str(),errno);
-			err = -1;
+			err = errno;
 			goto __return;
 		}
 		fprintf(stdout,"ServoDevice is operating in text mode.\n");
 	} else if (-1 == (m_Fd = open(config->DeviceName.c_str(),O_RDWR))) {
 		fprintf(stdout,"ServoDevice::Init failed to open %s, err=%d\n",
 				config->DeviceName.c_str(),errno);
-		err = -1;
+		err = errno;
 		goto __return;
 	}
 
