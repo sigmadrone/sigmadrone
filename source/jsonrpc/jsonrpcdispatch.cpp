@@ -60,7 +60,7 @@ bool SdJsonRpcDispatcher::SendJsonRequest(
 		SdJsonRpcBuilder bldr;
 		std::string serializedRequest;
 		std::string serializedReply;
-		bldr.BuildRequest(request.MethodName.c_str(),request.Params,request.Id);
+		bldr.BuildRequest(request.MethodName.c_str(),&request.Params,request.Id);
 		serializedRequest.assign(bldr.GetJsonStream(),bldr.GetJsonStreamSize());
 		if (m_transport->SendData(remoteHost,remotePort,serializedRequest,
 				serializedReply)) {

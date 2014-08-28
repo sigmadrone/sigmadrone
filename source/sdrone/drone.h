@@ -100,33 +100,6 @@ private:
 			const SdJsonRpcRequest*,
 			SdJsonRpcReply*);
 
-	static bool ParseJsonDroneConfig(
-			const IJsonValue* jsonRpcParams,
-			SdDroneConfig*);
-	static bool ParseJsonImuConfig(
-			const IJsonObject* jsonImuObj,
-			SdImuDeviceConfig*);
-	static bool ParseJsonThrust(
-			const IJsonValue* jsonRpcParams,
-			SdThrustValues*);
-	static bool ParseJsonTargetQuaternion(
-			const IJsonValue* jsonRpcParams,
-			QuaternionD*);
-	static bool BuildJsonDroneConfig(
-			SdJsonObject* jsonDroneConfig,
-			const SdDroneConfig&);
-	static bool BuildJsonImuConfig(
-			SdJsonObject* jsonImuConfig,
-			const SdImuDeviceConfig&);
-	static bool BuildJsonThrustParams(
-			SdJsonObject* jsonFlightParams,
-			double thrust,
-			double minThrust,
-			double maxThrust);
-	static bool BuildJsonPingParams(
-			SdJsonValue* jsonPing,
-			double timestamp);
-
 	static void fatal_error_signal(int sig);
 
 	static int PluginAttach(

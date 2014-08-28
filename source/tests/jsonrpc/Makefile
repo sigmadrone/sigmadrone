@@ -2,7 +2,7 @@ CXX		?= $(CROSS_COMPILE)g++
 CC		?= $(CROSS_COMPILE)gcc
 ROOTDIR	= ../..
 SDRONE_SRCDIR = $(ROOTDIR)/sdrone
-INCLUDES	= -I$(SDRONE_SRCDIR) -I$(ROOTDIR)/include -I$(ROOTDIR)/jsonrpc
+INCLUDES	= -I$(SDRONE_SRCDIR) -I$(ROOTDIR)/include -I$(ROOTDIR)/jsonrpc -I$(ROOTDIR)/libcmdargs
 INCLUDES   += $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
 LIBS		= -lm -lrt -lpthread -ldl
 LIBS        += $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs json-glib-1.0)
@@ -11,9 +11,10 @@ CFLAGS		= -g -O0 -Wall -Wno-psabi
 TARGET		= test_jsonrpc
 OBJECTS		= \
 		test_jsonrpc.o \
-		cmdargs.o\
+		rpcparams.o\
 		commandargs.o\
-		$(ROOTDIR)/jsonrpc/libjsonrpc.a
+		$(ROOTDIR)/jsonrpc/libjsonrpc.a\
+		$(ROOTDIR)/libcmdargs/libcmdargs.a
 
 
 all : $(TARGET)

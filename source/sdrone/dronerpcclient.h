@@ -14,13 +14,6 @@ public:
 	DroneRpcClient();
 	~DroneRpcClient();
 	int ExecuteCommand(const CommandLineArgs& cmdArgs);
-
-	static bool BuildJsonDroneConfigFromCmdLineArgs(
-			SdJsonValue* jsonArgs,
-			const CommandLineArgs& cmdArgs);
-	static bool BuildJsonThrustParamsFromCmdLineArgs(
-			SdJsonValue* jsonArgs,
-			const CommandLineArgs&);
 private:
 };
 

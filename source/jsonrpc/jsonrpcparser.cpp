@@ -213,9 +213,9 @@ bool SdJsonRpcParser::IsErrorReply() const {
 	return RootObj() && RootObj()->IsMemberPresent("error");
 }
 
-const IJsonObject* SdJsonRpcParser::GetRpcParams() const
+const IJsonValue* SdJsonRpcParser::GetRpcParams() const
 {
-	return !!RootObj() ? RootObj()->GetMember("params")->AsObject() : 0;
+	return !!RootObj() ? RootObj()->GetMember("params") : 0;
 }
 
 uint64_t SdJsonRpcParser::GetRpcCallId() const

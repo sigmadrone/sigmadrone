@@ -14,6 +14,7 @@
 #include <string>
 #include "matrix.h"
 #include "jsonrpc.h"
+#include "axesdata.h"
 
 #ifndef IN
 #define IN
@@ -36,14 +37,15 @@
 #define SD_LOG_LEVEL_VERBOSE 4
 #define SD_LOG_LEVEL_DEBUG 5
 
-__inline uint32_t SdStringToLogLevel(const char* str) {
-	if (str) {
-		if (0 == strcmp("SD_LOG_LEVEL_NONE",str)) { return SD_LOG_LEVEL_NONE; }
-		if (0 == strcmp("SD_LOG_LEVEL_ERROR",str)) { return SD_LOG_LEVEL_ERROR; }
-		if (0 == strcmp("SD_LOG_LEVEL_WARNING",str)) { return SD_LOG_LEVEL_WARNING; }
-		if (0 == strcmp("SD_LOG_LEVEL_INFO",str)) { return SD_LOG_LEVEL_INFO; }
-		if (0 == strcmp("SD_LOG_LEVEL_VERBOSE",str)) { return SD_LOG_LEVEL_VERBOSE; }
-		if (0 == strcmp("SD_LOG_LEVEL_DEBUG",str)) { return SD_LOG_LEVEL_DEBUG; }
+__inline uint32_t SdStringToLogLevel(const char* _str) {
+	if (_str) {
+		std::string str(_str);
+		if (std::string("SD_LOG_LEVEL_NONE") == str) { return SD_LOG_LEVEL_NONE; }
+		if (std::string("SD_LOG_LEVEL_ERROR") == str) { return SD_LOG_LEVEL_ERROR; }
+		if (std::string("SD_LOG_LEVEL_WARNING") == str) { return SD_LOG_LEVEL_WARNING; }
+		if (std::string("SD_LOG_LEVEL_INFO") == str) { return SD_LOG_LEVEL_INFO; }
+		if (std::string("SD_LOG_LEVEL_VERBOSE") == str) { return SD_LOG_LEVEL_VERBOSE; }
+		if (std::string("SD_LOG_LEVEL_DEBUG") == str) { return SD_LOG_LEVEL_DEBUG; }
 	}
 	return SD_LOG_LEVEL_VERBOSE;
 }
@@ -80,9 +82,10 @@ static const char* SdCommandCodeAsStr[] = {"SD_COMMAND_NONE","SD_COMMAND_RUN","S
 		"SD_COMMAND_SET_THRUST", "SD_COMMAND_GET_THRUST", "SD_COMMAND_SET_TARGET_ATTITUDE",
 		"SD_COMMAND_SET_TARGET_ALTITUDE", "SD_COMMAND_GET_ALTITUDE"};
 
-__inline SdCommandCode SdStringToCommandCode(const char* str) {
+__inline SdCommandCode SdStringToCommandCode(const char* _str) {
+	std::string str(_str);
 	for (size_t i = 0; i < ARRAYSIZE(SdCommandCodeAsStr); i++) {
-		if (0 == strcmp(str, SdCommandCodeAsStr[i])) {
+		if (std::string(SdCommandCodeAsStr[i]) == str) {
 			return static_cast<SdCommandCode>(i);
 		}
 	}

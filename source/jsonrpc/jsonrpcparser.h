@@ -43,7 +43,7 @@ public:
 	bool IsReply() const;
 	bool IsErrorReply() const;
 	std::string GetRpcMethod() const;
-	const IJsonObject* GetRpcParams() const;
+	const IJsonValue* GetRpcParams() const;
 	const IJsonValue* GetResult() const;
 	const IJsonObject* GetError() const;
 	int GetErrorCode() const;
