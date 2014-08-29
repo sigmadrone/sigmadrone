@@ -119,6 +119,10 @@ Drone::~Drone()
 
 int Drone::Run(CommandLineArgs& args)
 {
+	SdJsonValue jsonArgs;
+	RpcParams::BuildJsonDroneConfigFromCmdLineArgs(&jsonArgs, args);
+	RpcParams::ParseJsonDroneConfig(&jsonArgs,&m_droneConfig.m_config);
+
 	if (args.IsDaemon()) {
 		daemon_init();
 	}
@@ -201,9 +205,9 @@ int Drone::Run(CommandLineArgs& args)
 	switch(args.GetCommand()) {
 	case SD_COMMAND_RUN: {
 		int err;
-		SdJsonValue jsonArgs;
-		RpcParams::BuildJsonDroneConfigFromCmdLineArgs(&jsonArgs, args);
-		RpcParams::ParseJsonDroneConfig(&jsonArgs,&m_droneConfig.m_config);
+		SdJsonObject jsonDroneConfig;
+		RpcParams::BuildJsonDroneConfig(&jsonDroneConfig,m_droneConfig.m_config,0);
+		jsonArgs.SetValueAsObject(&jsonDroneConfig);
 		if (SD_ESUCCESS != (err = OnRun(&jsonArgs))) {
 			return err;
 		}
