@@ -33,7 +33,7 @@ public:
 			SdIoPacket* iop,
 			uint32_t dispatchFlags
 			);
-	int ExecuteCommand(SdCommandParams*);
+	int ExecuteCommand(SdCommandParams*, uint32_t dispatchFlags);
 
 private:
 	typedef std::map<SdPluginAltitude,PluginContext*> PluginMap;

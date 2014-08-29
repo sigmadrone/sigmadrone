@@ -123,9 +123,8 @@ int Drone::Run(CommandLineArgs& args)
 		daemon_init();
 	}
 
-	m_thrustValues.Thrust(args.GetDesiredThrust());
-	m_thrustValues.MinThrust(args.GetMinThrust());
-	m_thrustValues.MaxThrust(args.GetMaxThrust());
+	m_thrustValues = SdThrustValues(
+			args.GetDesiredThrust(), args.GetMinThrust(), args.GetMaxThrust());
 
 	InitInternalPlugins();
 
@@ -232,7 +231,7 @@ int Drone::Run(CommandLineArgs& args)
 int Drone::OnReset()
 {
 	PluginCommandParams params(SD_COMMAND_RESET,SdIoData(),0);
-	int err = m_pluginChain.ExecuteCommand(&params);
+	int err = m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 	if (err < 0) {
 		fprintf(stdout,"Failed to reset the drone, err=%d\n",err);
 	} else {
@@ -247,7 +246,7 @@ int Drone::OnExit()
 {
 	int err = OnReset();
 	PluginCommandParams params(SD_COMMAND_EXIT,SdIoData(),0);
-	m_pluginChain.ExecuteCommand(&params);
+	m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 
 	assert (m_rpcDispatch);
 	m_rpcDispatch->StopServingRequests();
@@ -262,7 +261,7 @@ int Drone::OnRun(const IJsonValue* rpcParams)
 		SdIoData data(&m_droneConfig.m_config);
 		PluginCommandParams params(SD_COMMAND_RUN,data,rpcParams);
 		m_droneConfig.PrintConfig();
-		if (0 == (err = m_pluginChain.ExecuteCommand(&params))) {
+		if (0 == (err = m_pluginChain.ExecuteCommand(&params, 0))) {
 			m_isRunning = true;
 		} else {
 			OnReset();
@@ -279,7 +278,7 @@ int Drone::OnSetThrust(const SdThrustValues& thrustVals)
 			thrustVals.MaxThrust());
 	PluginCommandParams params(SD_COMMAND_SET_THRUST,data,0);
 	m_thrustValues = thrustVals;
-	return m_pluginChain.ExecuteCommand(&params);
+	return m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 }
 
 int Drone::OnSetConfig(
@@ -289,7 +288,7 @@ int Drone::OnSetConfig(
 	SdIoData data(&config);
 	PluginCommandParams params(SD_COMMAND_SET_CONFIG,data,rpcParams);
 	m_droneConfig.m_config = config;
-	return m_pluginChain.ExecuteCommand(&params);
+	return m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 }
 
 int Drone::OnSetTargetQuaternion(const QuaternionD& targetQ)
@@ -297,7 +296,7 @@ int Drone::OnSetTargetQuaternion(const QuaternionD& targetQ)
 	SdIoData data(&targetQ);
 	PluginCommandParams params(SD_COMMAND_SET_TARGET_ATTITUDE,data,0);
 	m_targetQ = targetQ;
-	return m_pluginChain.ExecuteCommand(&params);
+	return m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 }
 
 void Drone::InitInternalPlugins()

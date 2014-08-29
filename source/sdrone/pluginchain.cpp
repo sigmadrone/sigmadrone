@@ -285,16 +285,18 @@ int PluginChain::DispatchIo(
 int PluginChain::StopPlugins(bool detachPlugins)
 {
 	PluginCommandParams params(detachPlugins ? SD_COMMAND_EXIT : SD_COMMAND_RESET);
-	ExecuteCommand(&params);
+	ExecuteCommand(&params,0);
 	return 0;
 }
 
-int PluginChain::ExecuteCommand(SdCommandParams* cmdParams)
+int PluginChain::ExecuteCommand(
+		SdCommandParams* cmdParams,
+		uint32_t dispatchFlags)
 {
 	int err = SD_ESUCCESS;
 	RefedPluginListIterator it;
 	ReferencePluginList(&it,0,
-			SD_FLAG_DISPATCH_DOWN | SD_FLAG_DISPATCH_TO_ALL, 0, 0);
+			dispatchFlags | SD_FLAG_DISPATCH_TO_ALL, 0, 0);
 	for (it.BeginIterate(); 0 != it.Get(); it.Next()) {
 		if (cmdParams->CommandCode() == SD_COMMAND_RESET ||
 			cmdParams->CommandCode() == SD_COMMAND_EXIT) {
@@ -307,7 +309,7 @@ int PluginChain::ExecuteCommand(SdCommandParams* cmdParams)
 		}
 		err = it.Get()->m_plugin->ExecuteCommand(cmdParams);
 		if (0 != err) {
-			printf("Plugin %s failed %s with %s", it.Get()->m_plugin->GetName(),
+			printf("Plugin %s failed %s with \"%s\"\n", it.Get()->m_plugin->GetName(),
 					SdCommandCodeToString(cmdParams->CommandCode()), strerror(err));
 			if (!(cmdParams->CommandCode() == SD_COMMAND_RESET ||
 					cmdParams->CommandCode() == SD_COMMAND_EXIT)) {

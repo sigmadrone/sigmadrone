@@ -59,7 +59,7 @@ int ImuReader::ExecuteCommand(SdCommandParams* params)
 	int err = SD_ESUCCESS;
 	switch(params->CommandCode()) {
 	case SD_COMMAND_RUN:
-		Run(params->Params().asDroneConfig);
+		err = Run(params->Params().asDroneConfig);
 		break;
 	case SD_COMMAND_RESET:
 		m_RunTime->StartStopIoDispatchThread(false);
