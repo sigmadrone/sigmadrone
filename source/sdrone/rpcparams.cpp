@@ -98,7 +98,8 @@ bool ParseJsonDroneConfig(
 	}
 
 	config->GetMember("LogFileName")->AsStringSafe(&droneCfg->LogFileName);
-	config->GetMember("LogRotationMatrix")->AsIntSafe(&droneCfg->LogRotationMatrix);
+	config->GetMember("LogRotationMatrix")->AsBoolSafe(
+			(bool*)&droneCfg->LogRotationMatrix);
 	config->GetMember("LogRate")->AsDoubleSafe(&droneCfg->LogRate);
 	return true;
 }
@@ -345,9 +346,9 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 		jobjDroneConfig.AddMember("Servo", SdJsonValue(jobjServoConfig));
 	}
 	if (cmdArgs.GetLogRate(&doubleVal)) {
-		jobjDroneConfig.AddMember("LogRate",doubleVal);
+		jobjDroneConfig.AddMember("LogRate",SdJsonValue(doubleVal));
 	}
-	jobjDroneConfig.AddMember("LogRotationMatrix",cmdArgs.LogRotMatrix());
+	jobjDroneConfig.AddMember("LogRotationMatrix",SdJsonValue(cmdArgs.LogRotMatrix()));
 	if (cmdArgs.GetImuToRotorAxisAngle(&intVal) ||
 		cmdArgs.GetKp(&doubleVal) ||
 		cmdArgs.GetKi(&doubleVal) ||

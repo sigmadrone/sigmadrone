@@ -54,6 +54,11 @@ int TraceLogPlugin::ExecuteCommand(
 	case SD_COMMAND_EXIT:
 		m_runtime->DetachPlugin();
 		break;
+	case SD_COMMAND_SET_CONFIG:
+		m_logLevel = params->Params().asDroneConfig->LogLevel;
+		m_logRotMatrix = params->Params().asDroneConfig->LogRotationMatrix;
+		m_logPeriod = 1.0/(double)params->Params().asDroneConfig->LogRate;
+		break;
 	default:break;
 	}
 	return SD_ESUCCESS;
