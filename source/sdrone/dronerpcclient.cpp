@@ -60,10 +60,10 @@ int DroneRpcClient::ExecuteCommand(const CommandLineArgs& cmdArgs)
 					int64_t receivedTimestamp = 0;
 					rep.Results.AsIntSafe(&receivedTimestamp);
 					if (receivedTimestamp == req.Params.AsInt()) {
-						printf("Ping reply: %ld\n", receivedTimestamp);
+						printf("Ping reply: %lu\n", receivedTimestamp);
 					} else {
-						printf("WARNING: Ping reply carries wrong time stamp: %ld, "
-								"expected %ld\n", receivedTimestamp, req.Params.AsInt());
+						printf("WARNING: Ping reply carries wrong time stamp: %lu, "
+								"expected %lu\n", receivedTimestamp, req.Params.AsInt());
 					}
 					break;
 				}

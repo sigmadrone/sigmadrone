@@ -96,7 +96,7 @@ const char* Navigator::GetDlFileName()
 int Navigator::IoCallback(SdIoPacket* ioPacket)
 {
 	assert(!!m_Runtime);
-	int ret = EINVAL;
+	int ret = SD_ESUCCESS;
 	switch (ioPacket->DeviceId())
 	{
 	case SD_DEVICEID_IMU:

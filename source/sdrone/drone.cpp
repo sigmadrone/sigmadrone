@@ -391,7 +391,7 @@ void Drone::OnRpcCommandPing(
 	int64_t timestamp = 0;
 	assert(context == Only());
 	if (req->Params.AsIntSafe(&timestamp)) {
-		printf("Sending ping reply %ld\n",timestamp);
+		printf("Sending ping reply %lu\n",timestamp);
 		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 		rep->Results.SetValueAsInt(timestamp);
 	} else {

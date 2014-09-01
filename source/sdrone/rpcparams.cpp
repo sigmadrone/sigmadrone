@@ -314,9 +314,9 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 			jobjGyroConfig.AddMember("Scale",SdJsonValue(intVal));
 		}
 		if (cmdArgs.GetImuSamplingRage(&intVal)) {
-			jobjGyroConfig.AddMember("SamplingRage",SdJsonValue(intVal));
-			jobjAccConfig.AddMember("SamplingRage",SdJsonValue(intVal));
-			jobjMagConfig.AddMember("SamplingRage",SdJsonValue(intVal));
+			jobjGyroConfig.AddMember("SamplingRate",SdJsonValue(intVal));
+			jobjAccConfig.AddMember("SamplingRate",SdJsonValue(intVal));
+			jobjMagConfig.AddMember("SamplingRate",SdJsonValue(intVal));
 		}
 		std::string infile = cmdArgs.GetImuInputFile();
 		if (infile.length() > 0) {
