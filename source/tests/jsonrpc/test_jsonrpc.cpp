@@ -137,7 +137,7 @@ void TestParseJsonRpcFromBuffer()
 
 	SdThrustValues thrust;
 	RpcParams::ParseJsonThrust(parser.GetRpcParams(), &thrust);
-	if (thrust.thrust != 0.5 || thrust.minThrust != 0.3 || thrust.maxThrust != 0.7) {
+	if (thrust.Thrust() != 0.5 || thrust.MinThrust() != 0.3 || thrust.MaxThrust() != 0.7) {
 		TEST_FAILED();
 		return;
 	}
@@ -152,7 +152,7 @@ void TestParseJsonRpcFromBuffer()
 	}
 
 	RpcParams::ParseJsonThrust(parser.GetRpcParams(), &thrust);
-	if (thrust.thrust != 0.5 || thrust.minThrust != 0.3 || thrust.maxThrust != 0.7) {
+	if (thrust.Thrust() != 0.5 || thrust.MinThrust() != 0.3 || thrust.MaxThrust() != 0.7) {
 		TEST_FAILED();
 		return;
 	}
@@ -166,7 +166,7 @@ void TestParseJsonRpcFromBuffer()
 	}
 
 	RpcParams::ParseJsonThrust(parser.GetRpcParams(), &thrust);
-	if (thrust.thrust != 0.6 || thrust.minThrust != 0.4 || thrust.maxThrust != 0.8) {
+	if (thrust.Thrust() != 0.6 || thrust.MinThrust() != 0.4 || thrust.MaxThrust() != 0.8) {
 		TEST_FAILED();
 		return;
 	}
