@@ -307,6 +307,7 @@ int PluginChain::ExecuteCommand(
 			printf("Starting plugin %s @%f \n",
 				it.Get()->m_plugin->GetName(), it.Get()->GetMyAltitude());
 		}
+		it.Get()->ExecuteCommandNotify(cmdParams);
 		err = it.Get()->m_plugin->ExecuteCommand(cmdParams);
 		if (0 != err) {
 			printf("Plugin %s failed %s with \"%s\"\n", it.Get()->m_plugin->GetName(),

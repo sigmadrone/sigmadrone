@@ -128,8 +128,8 @@ int ImuBias::IoCallback(
 		 * between the sensor and the drone coordinate systems. For now we will
 		 * just hard-code it
 		 */
-		if (m_EarthG.at(2,0) > -0.98) {
-			m_EarthG = Vector3d(0,0,-1);
+		if (m_EarthG.at(2,0) < 0.995) {
+			m_EarthG = Vector3d(0,0,1);
 		}
 
 		m_Runtime->Log(SD_LOG_LEVEL_INFO,"\n--> Done calculating bias!\n");

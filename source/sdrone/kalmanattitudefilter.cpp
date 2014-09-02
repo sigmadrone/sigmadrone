@@ -102,7 +102,7 @@ int KalmanAttitudeFilter::IoCallback(SdIoPacket* ioPacket)
 	Vector3d accelEst = (~m_AttQ).rotate(earthG);
 	QuaternionD qdiff = QuaternionD::fromVectors(
 			accel,accelEst);
-	Vector3d gyroFromAccel = Qt2Euler(qdiff) / ioPacket->DeltaTime() / 3;
+	Vector3d gyroFromAccel = Qt2Euler(qdiff) / ioPacket->DeltaTime();
 
 	/*
 	 * Obtain the kalman estimate for the actual angular speed
@@ -163,8 +163,8 @@ KalmanAttitudeFilter::KalmanState::KalmanState() :
 	 * measurements
 	 */
 	//m_Rk = Vector3d(0.1110,0.1550,0.1000)*0.5;
-	//m_Rk = Vector3d(0.1,0.1,0.1);
-	m_Rk = Vector3d(0.0571,0.0975,0.0959);
+	m_Rk = Vector3d(0.1,0.1,0.1);
+	//m_Rk = Vector3d(0.0571,0.0975,0.0959);
 }
 
 KalmanAttitudeFilter::KalmanState::~KalmanState() {}

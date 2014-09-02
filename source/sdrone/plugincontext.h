@@ -66,10 +66,7 @@ public:
 	SdDeviceId GetPluginDeviceFilter();
 	uint32_t GetPluginIoCodeFilter();
 
-	void ConfigUpdated(SdCommandParams* args) {
-		assert(args->Params().dataType == SdIoData::TYPE_DRONE_CONFIG);
-		m_logLevel = args->Params().asDroneConfig->LogLevel;
-	}
+	void ExecuteCommandNotify(SdCommandParams* args);
 
 private:
 	virtual ~PluginContext();

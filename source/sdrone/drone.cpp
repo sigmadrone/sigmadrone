@@ -277,7 +277,7 @@ int Drone::OnRun(const IJsonValue* rpcParams)
 int Drone::OnSetThrust(const SdThrustValues& thrustVals)
 {
 	SdIoData data(&thrustVals);
-	printf("Setthing thrust %.3f, min %.3f, max %.3f\n",
+	printf("Setting thrust %.3f, min %.3f, max %.3f\n",
 			thrustVals.Thrust(), thrustVals.MinThrust(),
 			thrustVals.MaxThrust());
 	PluginCommandParams params(SD_COMMAND_SET_THRUST,data,0);
@@ -309,9 +309,9 @@ void Drone::InitInternalPlugins()
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_REMAP);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_BIAS);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_LOWPASSFILTER);
-	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_FILTER);
+	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_FILTER);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_KALMAN_FILTER);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_SERVO_PCA9685);
+	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_SERVO_PCA9685);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_NAVIGATOR);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_QUADPILOT);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_TRACELOG);

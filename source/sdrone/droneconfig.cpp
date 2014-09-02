@@ -34,7 +34,7 @@ void DroneConfig::Init(SdDroneType droneType)
 		m_config.Quad.Motor[1] = 1;
 		m_config.Quad.Motor[2] = 2;
 		m_config.Quad.Motor[3] = 3;
-		m_config.Quad.ImuAngleAxisZ = 45;
+		m_config.Quad.ImuAngleAxisZ = -135;
 		/*
 		 * PID coefficients for big props on DJI F450
 		 * Kp = 1.0 <-> 1.3
@@ -48,13 +48,13 @@ void DroneConfig::Init(SdDroneType droneType)
 		m_config.LogRate = 1;
 
 		m_config.Accel.CoordinateMap = Matrix3d(
-				1, 0, 0,
+				-1, 0, 0,
 				0, 1, 0,
-				0, 0, -1);
+				0, 0, 1);
 		m_config.Mag.CoordinateMap = m_config.Accel.CoordinateMap;
 		m_config.Gyro.CoordinateMap = Matrix3d(
 				1, 0, 0,
-				0, 1, 0,
+				0, -1, 0,
 				0, 0, -1);
 	} else {
 		// BIG TODO:
