@@ -114,6 +114,7 @@ public:
 			IN const SdJsonValue& member) {
 		return AddMember(name,&member);
 	}
+	void RemoveMember(const char* name);
 
 	IJsonObject* Clone() const;
 	const SdJsonObject& operator=(const SdJsonObject& rhs);

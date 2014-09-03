@@ -57,7 +57,7 @@ void CommandLineArgs::PrintUsage(int argc, char* argv[]) const
 			"Server process can be started just by specifying --server; if command is \n"
 			"specified in conjunction with --server then the process will carry out the\n"
 			"command and will wait for further instructions. --server or --host must be\n"
-			"specified. If specified, --configfile must contain a valid RPC call. If config\n"
+			"specified. If specified, --configfile must contain a valid json schema. If config\n"
 			"file is passed on the daemon command line, then the config file will be parsed,\n"
 			"together with any additional command line arguments; the command line arguments\n"
 			"will take precedence over the values in the config file.\n\n");

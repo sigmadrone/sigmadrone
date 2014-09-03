@@ -455,11 +455,10 @@ void SdJsonObject::Reset()
 		json_object_unref(m_jobj);
 		m_jobj = 0;
 	}
-	MemberMapIt it = m_members.begin();
-	while (it != m_members.end()) {
+	MemberMapIt it;
+	while ((it = m_members.begin()) != m_members.end()) {
 		m_members.erase(it);
 		delete it->second;
-		it = m_members.begin();
 	}
 	m_names.clear();
 }
@@ -519,6 +518,7 @@ bool SdJsonObject::AddMember(
 		const IJsonValue* _member)
 {
 	const SdJsonValue* member = dynamic_cast<const SdJsonValue*>(_member);
+	RemoveMember(name);
 	if (!m_jobj) {
 		m_jobj = json_object_new();
 	}
@@ -534,6 +534,25 @@ bool SdJsonObject::AddMember(
 	return false;
 }
 
+void SdJsonObject::RemoveMember(const char* name)
+{
+	if (m_jobj && IsMemberPresent(name)) {
+		MemberMapIt it = m_members.find(name);
+		assert(it != m_members.end());
+		m_members.erase(it);
+		delete it->second;
+
+		std::string strName(name);
+		for (size_t i = 0; i < m_names.size(); i++) {
+			if (m_names[i] == strName) {
+				m_names.erase(m_names.begin() + i);
+				break;
+			}
+		}
+		json_object_remove_member(m_jobj,name);
+	}
+}
+
 IJsonObject* SdJsonObject::Clone() const
 {
 	return new SdJsonObject(*this);
@@ -542,9 +561,10 @@ IJsonObject* SdJsonObject::Clone() const
 const SdJsonObject& SdJsonObject::operator=(const SdJsonObject& rhs)
 {
 	Reset();
-	m_jobj = rhs.m_jobj;
-	if (m_jobj) {
-		json_object_ref(m_jobj);
+	for (size_t i = 0; i < rhs.GetMemberCount(); i++) {
+		const char* memberName = rhs.GetMemberName(i);
+		assert(memberName);
+		AddMember(memberName,rhs.GetMember(memberName));
 	}
 	return *this;
 }
@@ -619,9 +639,8 @@ void SdJsonArray::Reset()
 const SdJsonArray& SdJsonArray::operator=(const SdJsonArray& rhs)
 {
 	Reset();
-	m_jarr = rhs.m_jarr;
-	if (m_jarr) {
-		json_array_ref(m_jarr);
+	for (size_t i = 0; i < rhs.ElementCount(); i++) {
+		AddElement(rhs.GetElement(i));
 	}
 	return *this;
 }

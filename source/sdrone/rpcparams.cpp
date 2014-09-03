@@ -301,14 +301,16 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 		SdJsonObject jobjGyroConfig;
 		SdJsonObject jobjAccConfig;
 		SdJsonObject jobjMagConfig;
+		SdImuDeviceConfig imuConfig, imuConfig1;
 		if (jobjDroneConfig.GetMember("Gyro")->GetType() == SD_JSONVALUE_OBJECT) {
 			jobjGyroConfig = *(SdJsonObject*)jobjDroneConfig.GetMember("Gyro")->AsObject();
+			ParseJsonImuConfig(&jobjGyroConfig,&imuConfig);
 		}
 		if (jobjDroneConfig.GetMember("Accelerometer")->GetType()==SD_JSONVALUE_OBJECT) {
-			jobjGyroConfig = *(SdJsonObject*)jobjDroneConfig.GetMember("Accelerometer")->AsObject();
+			jobjAccConfig = *(SdJsonObject*)jobjDroneConfig.GetMember("Accelerometer")->AsObject();
 		}
 		if (jobjDroneConfig.GetMember("Magnetometer")->GetType()==SD_JSONVALUE_OBJECT) {
-			jobjGyroConfig = *(SdJsonObject*)jobjDroneConfig.GetMember("Magnetometer")->AsObject();
+			jobjMagConfig = *(SdJsonObject*)jobjDroneConfig.GetMember("Magnetometer")->AsObject();
 		}
 		if (cmdArgs.GetMaxDps(&intVal)) {
 			jobjGyroConfig.AddMember("Scale",SdJsonValue(intVal));
@@ -326,6 +328,7 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 		}
 		if (jobjGyroConfig.GetMemberCount() > 0) {
 			jobjDroneConfig.AddMember("Gyro",SdJsonValue(jobjGyroConfig));
+			ParseJsonImuConfig(&jobjGyroConfig,&imuConfig1);
 		}
 		if (jobjAccConfig.GetMemberCount() > 0) {
 			jobjDroneConfig.AddMember("Accelerometer",SdJsonValue(jobjAccConfig));
