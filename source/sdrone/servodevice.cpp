@@ -92,6 +92,10 @@ int ServoDevice::Start(const SdDroneConfig* droneConfig)
 	fprintf(stdout,"ServoDevice opened %s\n",config->DeviceName.c_str());
 	fprintf(stdout,"ServoDevice channel mask 0x%x\n",config->ChannelMask);
 
+	if ((err=TurnPowerOn()) < 0) {
+		goto __return;
+	}
+
 	if (0 == (err = SetRate((config->Rate > 0) ? config->Rate : 50))) {
 		/*
 		 * Reset all the available channels
@@ -133,6 +137,7 @@ void ServoDevice::Stop(bool detach)
 			mask >>= 1;
 		}
 	}
+	TurnPowerOff();
 	if (detach) {
 		m_Runtime->DetachPlugin();
 	}
@@ -305,3 +310,53 @@ int ServoDevice::GetRate(int* freq)
 	*freq = IsInTextMode() ? m_Rate : ioctl(m_Fd,PCA9685_IOC_GETRATE,0);
 	return (*freq > 0) ? 0 : *freq;
 }
+
+int ServoDevice::TurnPowerOn()
+{
+	if (-1 == m_Fd) {
+		return -1;
+	}
+	int err = ioctl(m_Fd,PCA9685_IOC_SETMOTOROE,1);
+	if (0 == err) {
+		fprintf(stdout,"ServoDevice - motor power is ON!\n");
+		err = ioctl(m_Fd,PCA9685_IOC_SETPWMOE,1);
+		if (0 == err) {
+			fprintf(stdout,"ServoDevice - PWM power is ON!\n");
+		} else {
+			fprintf(stdout,"ServoDevice::TurnPowerOn PCA9685_IOC_SETPWMOE failed, "
+					"err=%d, %s\n", errno,strerror(errno));
+		}
+	}
+	else {
+		fprintf(stdout,"ServoDevice::TurnPowerOn PCA9685_IOC_SETMOTOROE failed, "
+				"err=%d, %s\n",errno,strerror(errno));
+	}
+	if (err < 0) {
+		err = errno;
+		TurnPowerOff();
+	}
+	return err;
+}
+
+int ServoDevice::TurnPowerOff()
+{
+	if (-1 == m_Fd) {
+		return -1;
+	}
+	int err = ioctl(m_Fd,PCA9685_IOC_SETMOTOROE,0);
+	if (err < 0) {
+		fprintf(stdout,"ServoDevice::TurnPowerOff PCA9685_IOC_SETMOTOROE failed, "
+				"err=%d, %s\n",errno,strerror(errno));
+	} else {
+		fprintf(stdout,"ServoDevice - motor power is OFF!\n");
+	}
+	int err1 = ioctl(m_Fd,PCA9685_IOC_SETPWMOE,0);
+	if (err1 < 0) {
+		fprintf(stdout,"ServoDevice::TurnPowerOff PCA9685_IOC_SETPWMOE failed, "
+				"err=%d, %s\n", errno,strerror(errno));
+	} else {
+		fprintf(stdout,"ServoDevice - PWM power is OFF!\n");
+	}
+	return (err < 0 || err1 < 0) ? errno : 0;
+}
+

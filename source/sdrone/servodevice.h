@@ -51,6 +51,7 @@ public:
 	int GetRate(
 			int* freq
 			);
+
 	inline bool IsInTextMode() { return !!m_File; }
 
 private:
@@ -58,6 +59,8 @@ private:
 	~ServoDevice();
 	int Start(const SdDroneConfig* config);
 	void Stop(bool detach);
+	int TurnPowerOn();
+	int TurnPowerOff();
 
 private:
 	int m_Fd;
