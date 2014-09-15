@@ -65,7 +65,13 @@ public:
 	bool GetKd(double* doubleVal) const {
 		return GetValueAsDouble("Kd", doubleVal);
 	}
+	std::string GetApiName() const {
+		return SdCommandCodeToString(FromCommanddLineArgToSdCommand(
+				m_cmdArgs.get_value("apiname")));
+	}
 private:
+
+	static SdCommandCode FromCommanddLineArgToSdCommand(const std::string&);
 
 	bool /*value present*/ GetValueAsDouble(const std::string& name, double* value) const;
 	bool /*value present*/ GetValueAsInt(const std::string &name, int32_t* value) const;

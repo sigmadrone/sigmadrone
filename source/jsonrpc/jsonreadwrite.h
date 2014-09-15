@@ -115,7 +115,6 @@ public:
 		return AddMember(name,&member);
 	}
 	void RemoveMember(const char* name);
-
 	IJsonObject* Clone() const;
 	const SdJsonObject& operator=(const SdJsonObject& rhs);
 	_JsonObject* PeekGlibObj() { return m_jobj; }
@@ -159,6 +158,20 @@ private:
 	_JsonArray* m_jarr;
 	std::vector<SdJsonValue*> m_elements;
 };
+
+class SdJsonValueSpec
+{
+public:
+	SdJsonValueSpec(const SdJsonValue&);
+	~SdJsonValueSpec() {}
+	const SdJsonValue& Get();
+private:
+	void OnJsonValue(const SdJsonValue& val, SdJsonValue* parent);
+	const SdJsonValue& m_value;
+	SdJsonValue m_spec;
+};
+
+std::string SdJsonValueToText(const SdJsonValue& val);
 
 #endif /* JSONREADWRITE_H_ */
 

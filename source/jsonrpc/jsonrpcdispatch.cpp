@@ -43,9 +43,12 @@ void SdJsonRpcDispatcher::StopServingRequests() {
 void SdJsonRpcDispatcher::AddRequestCallback(
 		const char* methodName,
 		SdJsonRpcRequestCallbackT callback,
-		void* context)
+		void* context,
+		const SdJsonValue& paramsSpec,
+		const SdJsonValue& resultSpec)
 {
-	CallbackEntry entry = {callback,context};
+	CallbackEntry entry = {callback,context,SdJsonValueSpec(paramsSpec).Get(),
+			SdJsonValueSpec(resultSpec).Get()};
 	m_callbacks[methodName] = entry;
 }
 
@@ -119,4 +122,26 @@ int SdJsonRpcDispatcher::ReceiveData(
 	dataOut.assign(rpcBuilder.GetJsonStream(),
 			rpcBuilder.GetJsonStreamSize());
 	return 0;
+}
+
+bool SdJsonRpcDispatcher::GetParamsSpec(const std::string& methodName,
+		SdJsonValue* spec)
+{
+	CallbackMapIt it = m_callbacks.find(methodName);
+	if (it == m_callbacks.end()) {
+		return false;
+	}
+	*spec = it->second.ParamsSpec;
+	return true;
+}
+
+bool SdJsonRpcDispatcher::GetResultSpec(const std::string& methodName,
+		SdJsonValue* spec)
+{
+	CallbackMapIt it = m_callbacks.find(methodName);
+	if (it == m_callbacks.end()) {
+		return false;
+	}
+	*spec = it->second.ResultSpec;
+	return true;
 }

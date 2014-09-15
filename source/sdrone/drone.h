@@ -99,6 +99,10 @@ private:
 			void* Context,
 			const SdJsonRpcRequest*,
 			SdJsonRpcReply*);
+	static void OnRpcCommandGetSpec(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
 
 	static void fatal_error_signal(int sig);
 

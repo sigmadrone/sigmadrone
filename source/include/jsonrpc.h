@@ -43,8 +43,13 @@ enum SdJsonValueType
 	SD_JSONVALUE_DOUBLE,
 	SD_JSONVALUE_BOOL,
 	SD_JSONVALUE_OBJECT,
-	SD_JSONVALUE_ARRAY,
+	SD_JSONVALUE_ARRAY
 };
+
+__inline const char* SdJsonValueTypeAsString(SdJsonValueType t) {
+	const char* asStr[] = {"null","string","int","double","bool","object","array"};
+	return t < ARRAYSIZE(asStr) ? asStr[t] : "null";
+}
 
 struct IJsonArray;
 struct IJsonObject;
