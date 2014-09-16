@@ -11,7 +11,7 @@
 
 static cmd_arg_spec s_argSpec[] = {
 		{"help",		"h", "Display this help", CMD_ARG_BOOL},
-		{"command",		"c", "reset|exit|run|ping|thrust|config|getconfig|getthrust|spec", CMD_ARG_STRING},
+		{"command",		"c", "reset|exit|run|ping|thrust|config|getconfig|getthrust|spec|list", CMD_ARG_STRING},
 		{"server",		"s", "Run as server and control drone hardware", CMD_ARG_BOOL},
 		{"daemon",		"d", "Run as daemon, note: server must be specified", CMD_ARG_BOOL},
 		{"rot-matrix",	"",	 "Print rotational matrix", CMD_ARG_BOOL},
@@ -91,7 +91,9 @@ SdCommandCode CommandLineArgs::FromCommanddLineArgToSdCommand(
 	} else if (commandAsStr == std::string("thrust")) {
 		command = SD_COMMAND_SET_THRUST;
 	} else if (commandAsStr == std::string("spec")) {
-		command = SD_COMMAND_GET_SPEC;
+		command = SD_COMMAND_GET_RPC_SPEC;
+	} else if (commandAsStr == std::string("list")) {
+		command = SD_COMMAND_GET_RPC_LIST;
 	} else {
 		command = SdStringToCommandCode(commandAsStr.c_str());
 	}

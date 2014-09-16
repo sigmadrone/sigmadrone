@@ -46,7 +46,7 @@ int DroneRpcClient::ExecuteCommand(const CommandLineArgs& cmdArgs)
 		case SD_COMMAND_SET_TARGET_ATTITUDE:
 			RpcParams::BuildJsonTargetQuaternion(&req.Params,cmdArgs.GetTargetAttitude());
 			break;
-		case SD_COMMAND_GET_SPEC:
+		case SD_COMMAND_GET_RPC_SPEC:
 			req.Params = SdJsonValue(cmdArgs.GetApiName());
 			break;
 		case SD_COMMAND_NONE:
@@ -80,7 +80,8 @@ int DroneRpcClient::ExecuteCommand(const CommandLineArgs& cmdArgs)
 					case SD_COMMAND_GET_THRUST:
 					case SD_COMMAND_GET_ALTITUDE:
 					case SD_COMMAND_GET_ATTITUDE:
-					case SD_COMMAND_GET_SPEC:
+					case SD_COMMAND_GET_RPC_SPEC:
+					case SD_COMMAND_GET_RPC_LIST:
 						cout << SdJsonValueToText(rep.Results) << "\n";
 						break;
 					default:break;

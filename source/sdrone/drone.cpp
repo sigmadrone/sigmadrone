@@ -217,11 +217,16 @@ int Drone::Run(CommandLineArgs& args)
 			OnRpcCommandSetTargetAltitude,
 			this);
 	m_rpcDispatch->AddRequestCallback(
-			SdCommandCodeToString(SD_COMMAND_GET_SPEC),
-			OnRpcCommandGetSpec,
+			SdCommandCodeToString(SD_COMMAND_GET_RPC_SPEC),
+			OnRpcCommandGetRpcSpec,
 			this,
 			SdJsonValue("SD_COMMAND_CODE_XXX"),
 			SdJsonValue("Spec"));
+
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_RPC_LIST),
+			OnRpcCommandGetRpcList,
+			this);
 
 	//
 	// Execute the command that came with the command line
@@ -514,7 +519,7 @@ void Drone::OnRpcCommandGetAltitude(void* Context, const SdJsonRpcRequest*,
 	//TODO:
 }
 
-void Drone::OnRpcCommandGetSpec(
+void Drone::OnRpcCommandGetRpcSpec(
 	void* context,
 	const SdJsonRpcRequest* req,
 	SdJsonRpcReply* rep)
@@ -534,6 +539,22 @@ void Drone::OnRpcCommandGetSpec(
 		rep->Results.SetValueAsObject(&obj);
 		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandGetRpcList(
+	void* context,
+	const SdJsonRpcRequest* req,
+	SdJsonRpcReply* rep)
+{
+	std::vector<std::string> rpcList;
+	SdJsonArray jarr;
+	Only()->m_rpcDispatch->GetRegisteredMethods(rpcList);
+	for (size_t i = 0; i < rpcList.size(); i++) {
+		jarr.AddElement(SdJsonValue(rpcList[i]));
+	}
+	rep->Results.SetValueAsArray(&jarr);
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 	rep->Id = req->Id;
 }
 

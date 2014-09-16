@@ -99,7 +99,11 @@ private:
 			void* Context,
 			const SdJsonRpcRequest*,
 			SdJsonRpcReply*);
-	static void OnRpcCommandGetSpec(
+	static void OnRpcCommandGetRpcSpec(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandGetRpcList(
 			void* Context,
 			const SdJsonRpcRequest*,
 			SdJsonRpcReply*);

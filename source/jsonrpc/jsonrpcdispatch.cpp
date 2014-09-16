@@ -145,3 +145,10 @@ bool SdJsonRpcDispatcher::GetResultSpec(const std::string& methodName,
 	*spec = it->second.ResultSpec;
 	return true;
 }
+
+void SdJsonRpcDispatcher::GetRegisteredMethods(std::vector<std::string>& list)
+{
+	for (CallbackMapIt it = m_callbacks.begin(); it != m_callbacks.end(); it++) {
+		list.push_back(it->first);
+	}
+}

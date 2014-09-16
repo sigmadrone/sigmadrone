@@ -77,6 +77,7 @@ public:
 			SdJsonRpcReply* reply);
 	bool GetParamsSpec(const std::string& methodName, SdJsonValue* spec);
 	bool GetResultSpec(const std::string& methodName, SdJsonValue* spec);
+	void GetRegisteredMethods(std::vector<std::string>& list);
 private:
 
 	int ReceiveData(
