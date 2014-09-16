@@ -103,7 +103,7 @@ int main(int argc, const char *argv[])
 		perror("Open Gyro");
 		return -1;
 	}
-	acc_fd = open(g_devacc, O_RDONLY);
+	acc_fd = open(g_devacc, O_RDONLY|O_NONBLOCK);
 	if (acc_fd < 0) {
 		perror("Open Accelerometer");
 		return -1;
@@ -115,7 +115,7 @@ int main(int argc, const char *argv[])
 	}
 
 	ioctl(acc_fd, AXISDATA_IOC_SETRATE, 200);
-	ioctl(gyr_fd, AXISDATA_IOC_SETRATE, 200);
+	ioctl(gyr_fd, AXISDATA_IOC_SETRATE, 190);
 	ioctl(acc_fd, AXISDATA_IOC_SETSCALE, 4);
 	ioctl(gyr_fd, AXISDATA_IOC_SETSCALE, 2000);
 	ioctl(acc_fd, AXISDATA_IOC_SETENABLED, 0);
@@ -144,7 +144,7 @@ int main(int argc, const char *argv[])
 
 	while (1) {
 		ret = read(acc_fd, &raw.accel, sizeof(raw.accel));
-		if (ret < 0) {
+		if (ret < 0 && errno != EAGAIN) {
 			perror("Read Accel");
 			return -1;
 		}
