@@ -26,15 +26,18 @@ bool ParseJsonThrust(
 bool ParseJsonTargetQuaternion(
 		const IJsonValue* jsonRpcParams,
 		QuaternionD*);
+bool BuildJsonTargetQuaternion(
+		SdJsonValue* jsonRpcParams,
+		const QuaternionD&);
 bool BuildJsonDroneConfig(
-		SdJsonObject* jsonRpcParams,
+		SdJsonValue* jsonRpcParams,
 		const SdDroneConfig&,
 		const SdJsonArray* pluginsConfig);
 bool BuildJsonImuConfig(
 		SdJsonObject* jsonImuConfig,
 		const SdImuDeviceConfig&);
 bool BuildJsonThrustParams(
-		SdJsonObject* jsonFlightParams,
+		SdJsonValue* jsonFlightParams,
 		double thrust,
 		double minThrust,
 		double maxThrust);

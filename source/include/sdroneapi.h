@@ -74,13 +74,16 @@ typedef enum _SdCommandCode {
 	SD_COMMAND_GET_ATTITUDE,
 	SD_COMMAND_SET_TARGET_ALTITUDE,
 	SD_COMMAND_GET_ALTITUDE,
+	SD_COMMAND_GET_RPC_SPEC,
+	SD_COMMAND_GET_RPC_LIST,
 } SdCommandCode;
 
 static const char* SdCommandCodeAsStr[] = {"SD_COMMAND_NONE","SD_COMMAND_RUN","SD_COMMAND_RESET",
 		"SD_COMMAND_EXIT","SD_COMMAND_LOAD_PLUGIN","SD_COMMAND_UNLOAD_PLUGIN",
 		"SD_COMMAND_PING","SD_COMMAND_SET_CONFIG","SD_COMMAND_GET_CONFIG",
 		"SD_COMMAND_SET_THRUST", "SD_COMMAND_GET_THRUST", "SD_COMMAND_SET_TARGET_ATTITUDE",
-		"SD_COMMAND_SET_TARGET_ALTITUDE", "SD_COMMAND_GET_ALTITUDE"};
+		"SD_COMMAND_GET_ATTITUDE","SD_COMMAND_SET_TARGET_ALTITUDE", "SD_COMMAND_GET_ALTITUDE",
+		"SD_COMMAND_GET_RPC_SPEC", "SD_COMMAND_GET_RPC_LIST"};
 
 __inline SdCommandCode SdStringToCommandCode(const char* _str) {
 	std::string str(_str);
@@ -96,8 +99,6 @@ __inline const char* SdCommandCodeToString(SdCommandCode cmd) {
 	return (cmd < ARRAYSIZE(SdCommandCodeAsStr)) ?
 			SdCommandCodeAsStr[cmd] : SdCommandCodeAsStr[0];
 }
-
-#define SD_PING_REPLY_DATA "SigmaDrone OK"
 
 typedef enum _SdDroneType
 {

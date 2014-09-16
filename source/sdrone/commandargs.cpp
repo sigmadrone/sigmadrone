@@ -11,7 +11,7 @@
 
 static cmd_arg_spec s_argSpec[] = {
 		{"help",		"h", "Display this help", CMD_ARG_BOOL},
-		{"command",		"c", "reset|exit|run|ping|thrust|config|getconfig|getthrust", CMD_ARG_STRING},
+		{"command",		"c", "reset|exit|run|ping|thrust|config|getconfig|getthrust|spec|list", CMD_ARG_STRING},
 		{"server",		"s", "Run as server and control drone hardware", CMD_ARG_BOOL},
 		{"daemon",		"d", "Run as daemon, note: server must be specified", CMD_ARG_BOOL},
 		{"rot-matrix",	"",	 "Print rotational matrix", CMD_ARG_BOOL},
@@ -31,6 +31,7 @@ static cmd_arg_spec s_argSpec[] = {
 		{"Ki",          "",	 "PID controller integral coefficient", CMD_ARG_STRING},
 		{"Kd",          "",	 "PID controller derivative coefficient", CMD_ARG_STRING},
 		{"configfile",  "",  "Configuration file name", CMD_ARG_STRING},
+		{"apiname",     "",  "Api name - one of the commands passed  to -c=. Used with -c=spec\n", CMD_ARG_STRING},
 };
 
 
@@ -65,8 +66,14 @@ void CommandLineArgs::PrintUsage(int argc, char* argv[]) const
 
 SdCommandCode CommandLineArgs::GetCommand() const
 {
+	return FromCommanddLineArgToSdCommand(
+			m_cmdArgs.get_value("command").c_str());
+}
+
+SdCommandCode CommandLineArgs::FromCommanddLineArgToSdCommand(
+		const std::string& commandAsStr)
+{
 	SdCommandCode command = SD_COMMAND_NONE;
-	std::string commandAsStr = m_cmdArgs.get_value("command").c_str();
 	if (commandAsStr == std::string("run")) {
 		command = SD_COMMAND_RUN;
 	} else if (commandAsStr == std::string("reset")) {
@@ -83,6 +90,12 @@ SdCommandCode CommandLineArgs::GetCommand() const
 		command = SD_COMMAND_SET_CONFIG;
 	} else if (commandAsStr == std::string("thrust")) {
 		command = SD_COMMAND_SET_THRUST;
+	} else if (commandAsStr == std::string("spec")) {
+		command = SD_COMMAND_GET_RPC_SPEC;
+	} else if (commandAsStr == std::string("list")) {
+		command = SD_COMMAND_GET_RPC_LIST;
+	} else {
+		command = SdStringToCommandCode(commandAsStr.c_str());
 	}
 	return command;
 }

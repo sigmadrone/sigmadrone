@@ -313,6 +313,9 @@ int ServoDevice::GetRate(int* freq)
 
 int ServoDevice::TurnPowerOn()
 {
+	if (IsInTextMode()) {
+		return 0;
+	}
 	if (-1 == m_Fd) {
 		return -1;
 	}
@@ -340,6 +343,9 @@ int ServoDevice::TurnPowerOn()
 
 int ServoDevice::TurnPowerOff()
 {
+	if (IsInTextMode()) {
+		return 0;
+	}
 	if (-1 == m_Fd) {
 		return -1;
 	}

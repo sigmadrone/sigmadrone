@@ -644,3 +644,62 @@ const SdJsonArray& SdJsonArray::operator=(const SdJsonArray& rhs)
 	}
 	return *this;
 }
+
+
+SdJsonValueSpec::SdJsonValueSpec(const SdJsonValue& val) : m_value(val) {}
+
+const SdJsonValue& SdJsonValueSpec::Get() {
+	if (m_spec.GetType() == SD_JSONVALUE_NULL) {
+		OnJsonValue(m_value,&m_spec);
+	}
+	return m_spec;
+}
+
+void SdJsonValueSpec::OnJsonValue(const SdJsonValue& val, SdJsonValue* spec) {
+	if (SD_JSONVALUE_OBJECT == val.GetType()) {
+		SdJsonObject jobj;
+		for (size_t i = 0; i < val.AsObject()->GetMemberCount(); i++) {
+			SdJsonValue newVal;
+			const char* memberName = val.AsObject()->GetMemberName(i);
+			OnJsonValue(*(SdJsonValue*)(val.AsObject()->GetMember(memberName)),&newVal);
+			jobj.AddMember(memberName,newVal);
+		}
+		spec->SetValueAsObject(&jobj);
+	} else if (SD_JSONVALUE_ARRAY == val.GetType()) {
+		SdJsonArray jarr;
+		for (size_t i = 0; i < val.AsArray()->ElementCount(); i++) {
+			SdJsonValue newVal;
+			OnJsonValue(*(SdJsonValue*)(val.AsArray()->GetElement(i)),&newVal);
+			jarr.AddElement(newVal);
+		}
+		spec->SetValueAsArray(&jarr);
+	} else {
+		spec->SetValueAsString(SdJsonValueTypeAsString(val.GetType()));
+	}
+}
+
+std::string SdJsonValueToText(const SdJsonValue& val)
+{
+	SdJsonValue dup = val;
+	std::string text;
+	size_t dataLen;
+	char* data;
+	JsonGenerator* 	jsonGenerator;
+	if (0 == (jsonGenerator = json_generator_new())) {
+		goto __return;
+	}
+	json_generator_set_indent_char(jsonGenerator, ' ');
+	json_generator_set_indent(jsonGenerator,4);
+	json_generator_set_pretty(jsonGenerator,true);
+	json_generator_set_root(jsonGenerator,dup.PeekGlibNode());
+	if (0 == (data = json_generator_to_data(jsonGenerator,&dataLen))) {
+		goto __return;
+	}
+	text.assign(data,dataLen);
+	g_free(data);
+	__return:
+	if (0 != jsonGenerator) {
+		g_object_unref(jsonGenerator);
+	}
+	return text;
+}

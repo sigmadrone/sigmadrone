@@ -66,13 +66,18 @@ public:
 	void AddRequestCallback(
 			const char* methodName,
 			SdJsonRpcRequestCallbackT,
-			void* context);
+			void* context,
+			const SdJsonValue& paramsSpec = SdJsonValue(),
+			const SdJsonValue& resultSpec = SdJsonValue());
 	void DeleteRequestCallback(const char* methodName);
 	bool SendJsonRequest(
 			const SdJsonRpcRequest& request,
 			const std::string& remoteHost,
 			int remotePort,
 			SdJsonRpcReply* reply);
+	bool GetParamsSpec(const std::string& methodName, SdJsonValue* spec);
+	bool GetResultSpec(const std::string& methodName, SdJsonValue* spec);
+	void GetRegisteredMethods(std::vector<std::string>& list);
 private:
 
 	int ReceiveData(
@@ -83,6 +88,8 @@ private:
 	{
 		SdJsonRpcRequestCallbackT Callback;
 		void* Context;
+		SdJsonValue ParamsSpec;
+		SdJsonValue ResultSpec;
 	};
 
 	typedef std::map<std::string, CallbackEntry> CallbackMap;

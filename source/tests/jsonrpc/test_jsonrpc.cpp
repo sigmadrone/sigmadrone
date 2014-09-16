@@ -246,6 +246,10 @@ void TestJsonRpcBuilder()
 		return;
 	}
 
+	SdJsonValueSpec spec(*(SdJsonValue*)parser.GetRpcParams());
+	std::string str = SdJsonValueToText(spec.Get());
+	cout << str <<"\n";
+
 	TEST_PASSED();
 	return;
 }

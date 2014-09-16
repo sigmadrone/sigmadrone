@@ -10,6 +10,7 @@
 #include "dronerpcclient.h"
 #include "jsonrpcdispatch.h"
 #include "rpcparams.h"
+#include <iostream>
 
 DroneRpcClient::DroneRpcClient() {}
 
@@ -43,41 +44,58 @@ int DroneRpcClient::ExecuteCommand(const CommandLineArgs& cmdArgs)
 		}
 			break;
 		case SD_COMMAND_SET_TARGET_ATTITUDE:
+			RpcParams::BuildJsonTargetQuaternion(&req.Params,cmdArgs.GetTargetAttitude());
+			break;
+		case SD_COMMAND_GET_RPC_SPEC:
+			req.Params = SdJsonValue(cmdArgs.GetApiName());
+			break;
+		case SD_COMMAND_NONE:
+			printf("Unrecognized command!\n");
 			break;
 		default:break;
 		}
 
-		if (rpcDispatch.SendJsonRequest(req,
-				cmdArgs.GetHostAddress(),
-				cmdArgs.GetServerPort(),&rep))
-		{
-			printf("Successfully sent command %s, ret value %d\n",
-					req.MethodName.c_str(), rep.ErrorCode);
-			if (SD_JSONRPC_ERROR_SUCCESS == rep.ErrorCode)
+		if (SD_COMMAND_NONE != cmdArgs.GetCommand()) {
+			if (rpcDispatch.SendJsonRequest(req,
+					cmdArgs.GetHostAddress(),
+					cmdArgs.GetServerPort(),&rep))
 			{
-				switch (cmdArgs.GetCommand()) {
-				case SD_COMMAND_PING: {
-					int64_t receivedTimestamp = 0;
-					rep.Results.AsIntSafe(&receivedTimestamp);
-					if (receivedTimestamp == req.Params.AsInt()) {
-						printf("Ping reply: %lu\n", receivedTimestamp);
-					} else {
-						printf("WARNING: Ping reply carries wrong time stamp: %lu, "
-								"expected %lu\n", receivedTimestamp, req.Params.AsInt());
+				printf("Successfully sent command %s, ret value %d\n",
+						req.MethodName.c_str(), rep.ErrorCode);
+				if (SD_JSONRPC_ERROR_SUCCESS == rep.ErrorCode)
+				{
+					switch (cmdArgs.GetCommand()) {
+					case SD_COMMAND_PING: {
+						int64_t receivedTimestamp = 0;
+						rep.Results.AsIntSafe(&receivedTimestamp);
+						if (receivedTimestamp == req.Params.AsInt()) {
+							printf("Ping reply: %lu\n", receivedTimestamp);
+						} else {
+							printf("WARNING: Ping reply carries wrong time stamp: %lu, "
+									"expected %lu\n", receivedTimestamp, req.Params.AsInt());
+						}
+						break;
 					}
-					break;
+					case SD_COMMAND_GET_CONFIG:
+					case SD_COMMAND_GET_THRUST:
+					case SD_COMMAND_GET_ALTITUDE:
+					case SD_COMMAND_GET_ATTITUDE:
+					case SD_COMMAND_GET_RPC_SPEC:
+					case SD_COMMAND_GET_RPC_LIST:
+						cout << SdJsonValueToText(rep.Results) << "\n";
+						break;
+					default:break;
+					}
+				} else {
+					printf("WARNING: Command errored out: %d!\n",rep.ErrorCode);
 				}
-				default:break;
-				}
-			} else {
-				printf("WARNING: Command errored out: %d!\n",rep.ErrorCode);
 			}
-		}
-		else
-		{
-			printf("Failed to send command %s to %s, error \"%s\"",
-					req.MethodName.c_str(),cmdArgs.GetHostAddress().c_str(),
-					strerror(err));
+			else
+			{
+				printf("Failed to send command %s to %s, error \"%s\"",
+						req.MethodName.c_str(),cmdArgs.GetHostAddress().c_str(),
+						strerror(err));
+			}
 		}
 		delete rpcTransport;
 	}
