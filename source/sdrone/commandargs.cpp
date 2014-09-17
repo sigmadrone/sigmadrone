@@ -35,7 +35,7 @@ static cmd_arg_spec s_argSpec[] = {
 };
 
 
-CommandLineArgs::CommandLineArgs(int argc, char* argv[])
+CommandLineArgs::CommandLineArgs(int argc, const char* argv[])
 {
 	m_cmdArgs.add_specs(s_argSpec,sizeof(s_argSpec)/sizeof(s_argSpec[0]));
 	try {
@@ -48,7 +48,7 @@ CommandLineArgs::CommandLineArgs(int argc, char* argv[])
 CommandLineArgs::~CommandLineArgs() {}
 
 
-void CommandLineArgs::PrintUsage(int argc, char* argv[]) const
+void CommandLineArgs::PrintUsage(int argc, const char* argv[]) const
 {
 	printf("Sigma Drone 0.1\n\n");
 	printf("Usage: %s <options>\n", argc>0 ? argv[0] : "sdroned");

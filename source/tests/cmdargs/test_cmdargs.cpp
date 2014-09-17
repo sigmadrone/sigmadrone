@@ -28,13 +28,13 @@ static cmd_arg_spec g_argspec2[] = {
 		{"Ki",	"",			"PID integral component", CMD_ARG_MULTISTRING},
 };
 
-void usage(int argc, char *argv[])
+void usage(int argc, const char *argv[])
 {
 	std::cout << argv[0] << " <options>" << std::endl;
 	std::cout << g_args.get_help_message() << std::endl;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	std::map<std::string, std::vector<std::string> >::iterator it;
 	std::vector<std::string> args;

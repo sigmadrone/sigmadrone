@@ -18,7 +18,7 @@ class server_app : private boost::noncopyable, public logger<logfile>
 public:
 	server_app(const cmd_args& args = cmd_args());
 	~server_app();
-	int run(int argc, char *argv[]);
+	int run(int argc, const char *argv[]);
 	void stop();
 
 public:

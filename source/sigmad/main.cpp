@@ -20,7 +20,7 @@ static cmd_arg_spec g_argspec2[] = {
 		{"Ki",		"",		"PID integral component", CMD_ARG_MULTISTRING},
 };
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	cmd_args args;
 

@@ -6,10 +6,10 @@ DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj ../include)
 DEBUGFLAGS = -g -O0
 xCXXFLAGS = -O2 -Wall -Wextra $(DEBUGFLAGS) $(DEFS) $(CXXFLAGS) 
 xLDFLAGS = $(LDFLAGS)
-TARGET = libcmdargs.a
+TARGET = libdevice.a
 
 OBJS= \
-    obj/imudevice.o \
+    obj/imusensor.o \
 
 all: obj $(TARGET)
 

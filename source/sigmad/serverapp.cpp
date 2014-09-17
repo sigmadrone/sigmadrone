@@ -57,7 +57,7 @@ void server_app::init_user_rpcserver()
 }
 
 
-int server_app::run(int argc, char *argv[])
+int server_app::run(int argc, const char *argv[])
 {
 	if (args_.get_value("daemon") == "1")
 		daemon_init();
