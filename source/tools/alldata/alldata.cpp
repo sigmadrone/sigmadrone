@@ -29,8 +29,9 @@ static cmd_arg_spec g_argspec[] = {
 		{"gyr-device",	"",		"Set the gyroscope device filename. Default: /dev/gyro0", CMD_ARG_STRING},
 		{"acc-device",	"",		"Set the accelerometer device filename. Default: /dev/accel0", CMD_ARG_STRING},
 		{"mag-device",	"",		"Set the magnetometer device filename. Default: /dev/mag0", CMD_ARG_STRING},
-
-
+		{"gyr-scale",	"",		"Set gyroscope full scale. Supported scales (DPS): 250, 500, 2000. Default: 2000", CMD_ARG_STRING},
+		{"acc-scale",	"",		"Set accelerometer full scale. Supported scales (G): 2, 4, 8, 16. Default: 4", CMD_ARG_STRING},
+		{"mag-scale",	"",		"Set magnetometer full scale. Supported scales (Gauss): 1300, 1900, 2500, 4000, 4700, 5600, 8100. Default: 1300", CMD_ARG_STRING},
 };
 
 
@@ -53,6 +54,9 @@ int main(int argc, const char *argv[])
 		std::string gyr_rate = args.get_value("gyr-rate", "190");
 		std::string acc_rate = args.get_value("acc-rate", "200");
 		std::string mag_rate = args.get_value("mag-rate", "220");
+		std::string gyr_scale = args.get_value("gyr-scale", "2000");
+		std::string acc_scale = args.get_value("acc-scale", "4");
+		std::string mag_scale = args.get_value("mag-scale", "1300");
 		std::string gyr_fifo = args.get_value("gyr-fifo", "4");
 		std::string acc_fifo = args.get_value("acc-fifo", "4");
 		std::string gyr_device = args.get_value("gyr-device", "/dev/gyro0");
@@ -67,14 +71,17 @@ int main(int argc, const char *argv[])
 		mag.open();
 		gyr.set_rate(atoi(gyr_rate.c_str()));
 		acc.set_rate(atoi(acc_rate.c_str()));
+		gyr.set_full_scale(atoi(gyr_scale.c_str()));
+		acc.set_full_scale(atoi(acc_scale.c_str()));
+		mag.set_full_scale(atoi(mag_scale.c_str()));
 		gyr.set_fifo_threshold(atoi(gyr_fifo.c_str()));
 		acc.set_fifo_threshold(atoi(acc_fifo.c_str()));
 		while (true) {
-			gyr.read_average(gyr_data.x, gyr_data.y, gyr_data.z);
-			acc.read_average(acc_data.x, acc_data.y, acc_data.z);
+			gyr.read_scaled_average(gyr_data.x, gyr_data.y, gyr_data.z);
+			acc.read_scaled_average(acc_data.x, acc_data.y, acc_data.z);
 			if ((i++) % 5 == 0)
-				mag.read_average(mag_data.x, mag_data.y, mag_data.z);
-			fprintf(stdout, "%10.0f %10.0f %10.0f %10.0f %10.0f %10.0f %10.0f %10.0f %10.0f\n",
+				mag.read_scaled_average(mag_data.x, mag_data.y, mag_data.z);
+			fprintf(stdout, "%10.2f %10.2f %10.2f %10.2f %10.2f %10.2f %10.2f %10.2f %10.2f\n",
 					acc_data.x, acc_data.y, acc_data.z, gyr_data.x, gyr_data.y, gyr_data.z, mag_data.x, mag_data.y, mag_data.z);
 		}
 

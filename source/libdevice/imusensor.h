@@ -41,6 +41,17 @@ public:
 	 */
 	bool read_average(double& x, double& y, double &z);
 
+	/**
+	 * Calculate the average values over the number of samples read
+	 * by using the read_raw function and then apply the current scale
+	 * for the device.
+	 *
+	 * Return: true if x, y, z are set, false otherwise. Normally false
+	 * is returned if the device is opened with O_NONBLOCK and no new data
+	 * is available yet.
+	 */
+	bool read_scaled_average(double& x, double& y, double &z);
+
 	void close();
 
 	void enable();

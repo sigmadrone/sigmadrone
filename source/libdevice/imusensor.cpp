@@ -91,6 +91,17 @@ bool imu_sensor::read_average(double& x, double& y, double &z)
 	return true;
 }
 
+bool imu_sensor::read_scaled_average(double& x, double& y, double &z)
+{
+	if (!read_average(x, y, z))
+		return false;
+	double scale = get_full_scale();
+	x *= scale / 32768;
+	y *= scale / 32768;
+	z *= scale / 32768;
+	return true;
+}
+
 void imu_sensor::close()
 {
 	if (fd_ >= 0)
