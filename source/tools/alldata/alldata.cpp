@@ -83,6 +83,7 @@ int main(int argc, const char *argv[])
 				mag.read_scaled_average(mag_data.x, mag_data.y, mag_data.z);
 			fprintf(stdout, "%10.2f %10.2f %10.2f %10.2f %10.2f %10.2f %10.2f %10.2f %10.2f\n",
 					acc_data.x, acc_data.y, acc_data.z, gyr_data.x, gyr_data.y, gyr_data.z, mag_data.x, mag_data.y, mag_data.z);
+			fflush(stdout);
 		}
 
 	} catch (std::exception& e) {
