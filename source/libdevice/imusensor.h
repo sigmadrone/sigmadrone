@@ -1,5 +1,5 @@
-#ifndef IMUDEVICE_H_
-#define IMUDEVICE_H_
+#ifndef IMUSENSOR_H_
+#define IMUSENSOR_H_
 
 class imu_sensor
 {
@@ -15,13 +15,16 @@ public:
 	};
 	/**
 	 * @filename The name of the device file. Example: /dev/gyro0
-	 * @mode The mode used to open the device o_default corresponds to O_RDONLY, o_nonblock: O_RDONLY|O_NONBLOCK
 	 */
-	imu_sensor(const std::string& filename, open_mode_t mode = o_default);
+	imu_sensor(const std::string& filename, unsigned int trottle = 0, double scale = 1.0);
 
 	~imu_sensor();
 
-	void open();
+	/**
+	 *
+	 * @mode The mode used to open the device o_default corresponds to O_RDONLY, o_nonblock: O_RDONLY|O_NONBLOCK
+	 */
+	void open(open_mode_t mode = o_default);
 
 	/**
 	 * buffer pointer to array of double3d_t elements
@@ -88,7 +91,10 @@ public:
 protected:
 	int fd_;
 	std::string filename_;
-	open_mode_t mode_;
+	unsigned int trottle_;
+	unsigned int trottle_counter_;
+	double3d_t cached_value_;
+	double scale_;
 };
 
 

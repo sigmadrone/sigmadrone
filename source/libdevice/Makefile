@@ -10,6 +10,8 @@ TARGET = libdevice.a
 
 OBJS= \
     obj/imusensor.o \
+    obj/filesensor.o \
+    obj/sampler.o \
 
 all: obj $(TARGET)
 
