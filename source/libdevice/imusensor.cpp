@@ -10,12 +10,13 @@
 #include "axesdata.h"
 #include "imusensor.h"
 
-imu_sensor::imu_sensor(const std::string& filename, open_mode_t mode)
+imu_sensor::imu_sensor(const std::string& filename, unsigned int trottle, double scale)
 	: fd_(-1)
 	, filename_(filename)
-	, mode_(mode)
+	, trottle_(trottle)
+	, trottle_counter_(0)
+	, scale_(scale)
 {
-
 }
 
 imu_sensor::~imu_sensor()
@@ -23,18 +24,18 @@ imu_sensor::~imu_sensor()
 	close();
 }
 
-void imu_sensor::open()
+void imu_sensor::open(open_mode_t mode)
 {
 	if (filename_.empty()) {
 		throw std::runtime_error(std::string("No device filename"));
 	}
-	switch (mode_) {
+	switch (mode) {
 	default:
 	case o_default:
 		fd_ = ::open(filename_.c_str(), O_RDONLY);
 		break;
 	case o_nonblock:
-		fd_ = ::open(filename_.c_str(), O_RDONLY|O_NONBLOCK);
+		fd_ = ::open(filename_.c_str(), O_RDONLY | O_NONBLOCK);
 		break;
 	}
 	if (fd_ < 0) {
@@ -47,10 +48,16 @@ size_t imu_sensor::read(double3d_t* buffer, size_t size)
 	short3d_t data[64];
 	int ret, records;
 
+	if (trottle_ && (trottle_counter_++ % trottle_)) {
+		if (!size)
+			return 0;
+		*buffer = cached_value_;
+		return 1;
+	}
 	errno = 0;
 	ret = ::read(fd_, data, sizeof(data));
 	if (ret < 0) {
-		if ((mode_ == o_nonblock) && errno == EAGAIN) {
+		if (errno == EAGAIN) {
 			return 0;
 		} else {
 			std::stringstream code;
@@ -63,9 +70,9 @@ size_t imu_sensor::read(double3d_t* buffer, size_t size)
 	for (unsigned int i = 0; i < size; i++) {
 		if (!records)
 			break;
-		buffer->x = data[i].x;
-		buffer->y = data[i].y;
-		buffer->z = data[i].z;
+		cached_value_.x = buffer->x = data[i].x * scale_;
+		cached_value_.y = buffer->y = data[i].y * scale_;
+		cached_value_.z = buffer->z = data[i].z * scale_;
 		++ret;
 		++buffer;
 		--records;
@@ -95,10 +102,10 @@ bool imu_sensor::read_scaled_average(double& x, double& y, double &z)
 {
 	if (!read_average(x, y, z))
 		return false;
-	double scale = get_full_scale();
-	x *= scale / 32768;
-	y *= scale / 32768;
-	z *= scale / 32768;
+	double fullscale = get_full_scale();
+	x *= fullscale / 32768;
+	y *= fullscale / 32768;
+	z *= fullscale / 32768;
 	return true;
 }
 
