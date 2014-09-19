@@ -223,10 +223,15 @@ int Drone::Run(CommandLineArgs& args)
 			SdJsonValue("SD_COMMAND_CODE_XXX"),
 			SdJsonValue("Spec"));
 
+
+	SdJsonArray jarr;
+	jarr.AddElement(SdJsonValue("sd_run"));
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_GET_RPC_LIST),
 			OnRpcCommandGetRpcList,
-			this);
+			this,
+			SdJsonValue(),
+			SdJsonValue(jarr));
 
 	//
 	// Execute the command that came with the command line

@@ -58,48 +58,6 @@ __inline const char* SdLogLevelToString(uint32_t level) {
 	return (level < ARRAYSIZE(asStr)) ? asStr[level] : "SD_LOG_LEVEL_NONE";
 }
 
-typedef enum _SdCommandCode {
-	SD_COMMAND_NONE = 0,
-	SD_COMMAND_RUN,
-	SD_COMMAND_RESET,
-	SD_COMMAND_EXIT,
-	SD_COMMAND_LOAD_PLUGIN,
-	SD_COMMAND_UNLOAD_PLUGIN,
-	SD_COMMAND_PING,
-	SD_COMMAND_SET_CONFIG,
-	SD_COMMAND_GET_CONFIG,
-	SD_COMMAND_SET_THRUST,
-	SD_COMMAND_GET_THRUST,
-	SD_COMMAND_SET_TARGET_ATTITUDE,
-	SD_COMMAND_GET_ATTITUDE,
-	SD_COMMAND_SET_TARGET_ALTITUDE,
-	SD_COMMAND_GET_ALTITUDE,
-	SD_COMMAND_GET_RPC_SPEC,
-	SD_COMMAND_GET_RPC_LIST,
-} SdCommandCode;
-
-static const char* SdCommandCodeAsStr[] = {"SD_COMMAND_NONE","SD_COMMAND_RUN","SD_COMMAND_RESET",
-		"SD_COMMAND_EXIT","SD_COMMAND_LOAD_PLUGIN","SD_COMMAND_UNLOAD_PLUGIN",
-		"SD_COMMAND_PING","SD_COMMAND_SET_CONFIG","SD_COMMAND_GET_CONFIG",
-		"SD_COMMAND_SET_THRUST", "SD_COMMAND_GET_THRUST", "SD_COMMAND_SET_TARGET_ATTITUDE",
-		"SD_COMMAND_GET_ATTITUDE","SD_COMMAND_SET_TARGET_ALTITUDE", "SD_COMMAND_GET_ALTITUDE",
-		"SD_COMMAND_GET_RPC_SPEC", "SD_COMMAND_GET_RPC_LIST"};
-
-__inline SdCommandCode SdStringToCommandCode(const char* _str) {
-	std::string str(_str);
-	for (size_t i = 0; i < ARRAYSIZE(SdCommandCodeAsStr); i++) {
-		if (std::string(SdCommandCodeAsStr[i]) == str) {
-			return static_cast<SdCommandCode>(i);
-		}
-	}
-	return SD_COMMAND_NONE;
-}
-
-__inline const char* SdCommandCodeToString(SdCommandCode cmd) {
-	return (cmd < ARRAYSIZE(SdCommandCodeAsStr)) ?
-			SdCommandCodeAsStr[cmd] : SdCommandCodeAsStr[0];
-}
-
 typedef enum _SdDroneType
 {
 	SD_DRONE_TYPE_INVALID,

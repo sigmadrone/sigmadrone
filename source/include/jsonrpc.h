@@ -70,6 +70,50 @@ __inline const char* SdJsonValueTypeAsString(SdJsonValueType t) {
 	return t < ARRAYSIZE(asStr) ? asStr[t] : "null";
 }
 
+typedef enum _SdCommandCode {
+	SD_COMMAND_NONE = 0,
+	SD_COMMAND_RUN,
+	SD_COMMAND_RESET,
+	SD_COMMAND_EXIT,
+	SD_COMMAND_LOAD_PLUGIN,
+	SD_COMMAND_UNLOAD_PLUGIN,
+	SD_COMMAND_PING,
+	SD_COMMAND_SET_CONFIG,
+	SD_COMMAND_GET_CONFIG,
+	SD_COMMAND_SET_THRUST,
+	SD_COMMAND_GET_THRUST,
+	SD_COMMAND_SET_TARGET_ATTITUDE,
+	SD_COMMAND_GET_ATTITUDE,
+	SD_COMMAND_SET_TARGET_ALTITUDE,
+	SD_COMMAND_GET_ALTITUDE,
+	SD_COMMAND_GET_RPC_SPEC,
+	SD_COMMAND_GET_RPC_LIST,
+} SdCommandCode;
+
+static const char* SdCommandCodeAsStr[] = {
+		"sd_none","sd_run","sd_reset","sd_exit","sd_load_plugin",
+		"sd_unload_plugin","sd_ping","sd_set_config","sd_get_config",
+		"sd_set_thrust", "sd_get_thrust", "sd_set_target_attitude",
+		"sd_get_attitude","sd_set_altitude", "sd_get_altitude",
+		"sd_get_rpc_spec", "sd_get_rpc_list"
+};
+
+__inline SdCommandCode SdStringToCommandCode(const char* _str) {
+	std::string str(_str);
+	for (size_t i = 0; i < ARRAYSIZE(SdCommandCodeAsStr); i++) {
+		if (std::string(SdCommandCodeAsStr[i]) == str) {
+			return static_cast<SdCommandCode>(i);
+		}
+	}
+	return SD_COMMAND_NONE;
+}
+
+__inline const char* SdCommandCodeToString(SdCommandCode cmd) {
+	return (cmd < ARRAYSIZE(SdCommandCodeAsStr)) ?
+			SdCommandCodeAsStr[cmd] : SdCommandCodeAsStr[0];
+}
+
+
 struct IJsonArray;
 struct IJsonObject;
 

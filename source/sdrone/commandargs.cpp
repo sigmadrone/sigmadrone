@@ -13,7 +13,7 @@ static cmd_arg_spec s_argSpec[] = {
 		{"help",		"h", "Display this help", CMD_ARG_BOOL},
 		{"command",		"c", "reset|exit|run|ping|thrust|config|getconfig|getthrust|spec|list", CMD_ARG_STRING},
 		{"server",		"s", "Run as server and control drone hardware", CMD_ARG_BOOL},
-		{"daemon",		"d", "Run as daemon, note: server must be specified", CMD_ARG_BOOL},
+		{"daemon",		"d", "Run as daemon, implicitly sets the role to server", CMD_ARG_BOOL},
 		{"rot-matrix",	"",	 "Print rotational matrix", CMD_ARG_BOOL},
 		{"host",        "",	 "Server IP address; client role assumed  when arg present", CMD_ARG_STRING},
 		{"port",        "",	 "Server port, default port is 2222", CMD_ARG_STRING},
@@ -128,7 +128,7 @@ std::string CommandLineArgs::GetHostAddress() const {
 }
 
 bool CommandLineArgs::IsRoleServer() const {
-	return GetBoolValue("server");
+	return GetBoolValue("server") || IsDaemon();
 }
 
 bool CommandLineArgs::IsDaemon() const {
