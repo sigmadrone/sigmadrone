@@ -1,3 +1,4 @@
+SUBDIRS += libdevice
 SUBDIRS += libhttp
 SUBDIRS += libcmdargs
 SUBDIRS += liblogger

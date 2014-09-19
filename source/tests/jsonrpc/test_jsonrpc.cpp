@@ -268,13 +268,13 @@ static cmd_arg_spec g_argspec[] = {
 };
 
 
-void usage(int argc, char *argv[])
+void usage(int argc, const char *argv[])
 {
 	std::cout << argv[0] << " <options>" << std::endl;
 	std::cout << g_args.get_help_message() << std::endl;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	g_args.add_specs(g_argspec, sizeof(g_argspec)/sizeof(*g_argspec));
 	g_args.parse_command_line(argc, argv);

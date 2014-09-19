@@ -14,9 +14,9 @@
 class CommandLineArgs
 {
 public:
-	CommandLineArgs(int argc, char* argv[]);
+	CommandLineArgs(int argc, const char* argv[]);
 	virtual ~CommandLineArgs();
-	void PrintUsage(int argc, char* argv[]) const;
+	void PrintUsage(int argc, const char* argv[]) const;
 	SdCommandCode GetCommand() const;
 	bool GetThrust(double*) const;
 	bool GetMinThrust(double*) const;

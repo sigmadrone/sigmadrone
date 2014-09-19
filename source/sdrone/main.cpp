@@ -11,9 +11,9 @@
 #endif
 
 int g_Argc;
-char **g_Argv;
+const char **g_Argv;
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	CommandLineArgs cmdArgs(argc,argv);
 

@@ -15,8 +15,119 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include "axesdata.h"
+#include <iostream>
+#include "cmdargs.h"
+#include "imusensor.h"
 
+static cmd_arg_spec g_argspec[] = {
+		{"help",		"h",	"Display this help", CMD_ARG_BOOL},
+		{"gyr-rate",	"",		"Set gyroscope sampling rate. Supported rates: 95, 190, 380, 760. Default: 190", CMD_ARG_STRING},
+		{"acc-rate",	"",		"Set accelerometer sampling rate. Supported rates: 1, 10, 25, 50, 100, 200, 400. Default: 200", CMD_ARG_STRING},
+		{"mag-rate",	"",		"Set magnetometer sampling rate. Supported rates: 3, 15, 30, 75, 220. Default: 220", CMD_ARG_STRING},
+		{"gyr-fifo",	"",		"Set gyroscope FIFO threshold. Must be from 1 to 32. Default: 4", CMD_ARG_STRING},
+		{"acc-fifo",	"",		"Set accelerometer FIFO threshold. Must be from 1 to 32. Default: 4", CMD_ARG_STRING},
+		{"gyr-device",	"",		"Set the gyroscope device filename. Default: /dev/gyro0", CMD_ARG_STRING},
+		{"acc-device",	"",		"Set the accelerometer device filename. Default: /dev/accel0", CMD_ARG_STRING},
+		{"mag-device",	"",		"Set the magnetometer device filename. Default: /dev/mag0", CMD_ARG_STRING},
+		{"gyr-scale",	"",		"Set gyroscope full scale. Supported scales (DPS): 250, 500, 2000. Default: 2000", CMD_ARG_STRING},
+		{"acc-scale",	"",		"Set accelerometer full scale. Supported scales (G): 2, 4, 8, 16. Default: 4", CMD_ARG_STRING},
+		{"mag-scale",	"",		"Set magnetometer full scale. Supported scales (Gauss): 1300, 1900, 2500, 4000, 4700, 5600, 8100. Default: 1300", CMD_ARG_STRING},
+};
+
+
+int main(int argc, const char *argv[])
+{
+	int i = 0;
+	cmd_args args;
+	imu_sensor::double3d_t acc_data = {0, 0, 0};
+	imu_sensor::double3d_t gyr_data = {0, 0, 0};
+	imu_sensor::double3d_t mag_data = {0, 0, 0};
+
+	try {
+		args.add_specs(g_argspec, sizeof(g_argspec)/sizeof(*g_argspec));
+		args.parse_command_line(argc, argv);
+		if (!args.get_value("help").empty()) {
+			std::cout << argv[0] << " <options>" << std::endl;
+			std::cout << args.get_help_message() << std::endl;
+			return 0;
+		}
+		std::string gyr_rate = args.get_value("gyr-rate", "190");
+		std::string acc_rate = args.get_value("acc-rate", "200");
+		std::string mag_rate = args.get_value("mag-rate", "220");
+		std::string gyr_scale = args.get_value("gyr-scale", "2000");
+		std::string acc_scale = args.get_value("acc-scale", "4");
+		std::string mag_scale = args.get_value("mag-scale", "1300");
+		std::string gyr_fifo = args.get_value("gyr-fifo", "4");
+		std::string acc_fifo = args.get_value("acc-fifo", "4");
+		std::string gyr_device = args.get_value("gyr-device", "/dev/gyro0");
+		std::string acc_device = args.get_value("acc-device", "/dev/accel0");
+		std::string mag_device = args.get_value("mag-device", "/dev/mag0");
+
+		imu_sensor gyr(gyr_device);
+		imu_sensor acc(acc_device, imu_sensor::o_nonblock);
+		imu_sensor mag(mag_device);
+		gyr.open();
+		acc.open();
+		mag.open();
+		gyr.set_rate(atoi(gyr_rate.c_str()));
+		acc.set_rate(atoi(acc_rate.c_str()));
+		gyr.set_full_scale(atoi(gyr_scale.c_str()));
+		acc.set_full_scale(atoi(acc_scale.c_str()));
+		mag.set_full_scale(atoi(mag_scale.c_str()));
+		gyr.set_fifo_threshold(atoi(gyr_fifo.c_str()));
+		acc.set_fifo_threshold(atoi(acc_fifo.c_str()));
+		while (true) {
+			gyr.read_scaled_average(gyr_data.x, gyr_data.y, gyr_data.z);
+			acc.read_scaled_average(acc_data.x, acc_data.y, acc_data.z);
+			if ((i++) % 5 == 0)
+				mag.read_scaled_average(mag_data.x, mag_data.y, mag_data.z);
+			fprintf(stdout, "%10.2f %10.2f %10.2f %10.2f %10.2f %10.2f %10.2f %10.2f %10.2f\n",
+					acc_data.x, acc_data.y, acc_data.z, gyr_data.x, gyr_data.y, gyr_data.z, mag_data.x, mag_data.y, mag_data.z);
+			fflush(stdout);
+		}
+
+	} catch (std::exception& e) {
+		std::cout << "Error: " << e.what() << std::endl;
+	}
+	return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#if 0
+#include "axesdata.h"
 #define GYRO_BUFFER_SIZE 256
 #define DEFAULT_FRAME_SIZE 60
 #define AXIS_NET_PROT "axes://"
@@ -103,7 +214,7 @@ int main(int argc, const char *argv[])
 		perror("Open Gyro");
 		return -1;
 	}
-	acc_fd = open(g_devacc, O_RDONLY);
+	acc_fd = open(g_devacc, O_RDONLY|O_NONBLOCK);
 	if (acc_fd < 0) {
 		perror("Open Accelerometer");
 		return -1;
@@ -115,7 +226,7 @@ int main(int argc, const char *argv[])
 	}
 
 	ioctl(acc_fd, AXISDATA_IOC_SETRATE, 200);
-	ioctl(gyr_fd, AXISDATA_IOC_SETRATE, 200);
+	ioctl(gyr_fd, AXISDATA_IOC_SETRATE, 190);
 	ioctl(acc_fd, AXISDATA_IOC_SETSCALE, 4);
 	ioctl(gyr_fd, AXISDATA_IOC_SETSCALE, 2000);
 	ioctl(acc_fd, AXISDATA_IOC_SETENABLED, 0);
@@ -144,7 +255,7 @@ int main(int argc, const char *argv[])
 
 	while (1) {
 		ret = read(acc_fd, &raw.accel, sizeof(raw.accel));
-		if (ret < 0) {
+		if (ret < 0 && errno != EAGAIN) {
 			perror("Read Accel");
 			return -1;
 		}
@@ -188,3 +299,4 @@ int main(int argc, const char *argv[])
 	return 0;
 }
 
+#endif
