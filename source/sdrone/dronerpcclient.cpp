@@ -60,8 +60,6 @@ int DroneRpcClient::ExecuteCommand(const CommandLineArgs& cmdArgs)
 					cmdArgs.GetHostAddress(),
 					cmdArgs.GetServerPort(),&rep))
 			{
-				printf("Successfully sent command %s, ret value %d\n",
-						req.MethodName.c_str(), rep.ErrorCode);
 				if (SD_JSONRPC_ERROR_SUCCESS == rep.ErrorCode)
 				{
 					switch (cmdArgs.GetCommand()) {
@@ -87,11 +85,11 @@ int DroneRpcClient::ExecuteCommand(const CommandLineArgs& cmdArgs)
 					default:break;
 					}
 				} else {
-					printf("WARNING: Command errored out: %d!\n",rep.ErrorCode);
+					printf("WARNING: Command errored out: %d %s!\n",rep.ErrorCode,
+							SdIsJsonRpcError(rep.ErrorCode) ? SdJsonRpcErrorToString(rep.ErrorCode) :
+							strerror(rep.ErrorCode));
 				}
-			}
-			else
-			{
+			} else {
 				printf("Failed to send command %s to %s, error \"%s\"",
 						req.MethodName.c_str(),cmdArgs.GetHostAddress().c_str(),
 						strerror(err));

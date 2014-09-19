@@ -123,11 +123,8 @@ int CommandLineArgs::GetServerPort() const
 }
 
 std::string CommandLineArgs::GetHostAddress() const {
-	return m_cmdArgs.get_value("host");
-}
-
-bool CommandLineArgs::IsRoleClient() const {
-	return GetHostAddress().length() > 0;
+	std::string host = m_cmdArgs.get_value("host");
+	return  host.empty() ? "localhost" : host;
 }
 
 bool CommandLineArgs::IsRoleServer() const {

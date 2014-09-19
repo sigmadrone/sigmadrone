@@ -27,7 +27,6 @@ public:
 	QuaternionD GetTargetAttitude() const;
 	bool IsHelpNeeded() const;
 	bool IsRoleServer() const;
-	bool IsRoleClient() const;
 	bool IsDaemon() const;
 	int GetServerPort() const;
 	std::string GetHostAddress() const;

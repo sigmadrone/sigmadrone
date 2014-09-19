@@ -36,18 +36,12 @@ int main(int argc, char *argv[])
 		}
 		err = Drone::Only()->Run(cmdArgs);
 		Drone::Destroy();
-	} else if (cmdArgs.IsRoleClient()) {
+	} else {
 		/*
 		 * Execute the client logic - send command to the server
 		 */
-		DroneRpcClient client;
-		err = client.ExecuteCommand(cmdArgs);
-	} else {
-		printf("\nERROR: Server or client mode must be enabled!\n\n\n");
-		goto __return;
+		err = DroneRpcClient().ExecuteCommand(cmdArgs);
 	}
-
-	err = 0;
 
 	__return:
 
