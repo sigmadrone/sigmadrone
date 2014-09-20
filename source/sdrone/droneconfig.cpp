@@ -15,17 +15,18 @@ void DroneConfig::Init(SdDroneType droneType)
 {
 	if (SD_DRONE_TYPE_QUADROTOR == droneType) {
 		m_config.Accel.DeviceName = "/dev/accel0";
-		m_config.Accel.SamplingRate = 200;
+		m_config.Accel.SamplingRate = 400;
 		m_config.Accel.Scale = 4;
 		m_config.Accel.MaxReading = 32768;
 		m_config.Accel.Watermark = 2;
 		m_config.Gyro.DeviceName = "/dev/gyro0";
-		m_config.Gyro.SamplingRate = 200;
+		m_config.Gyro.SamplingRate = 380;
 		m_config.Gyro.Scale = 2000;
 		m_config.Gyro.MaxReading = 32768;
 		m_config.Gyro.NumBiasSamples = 4000;
 		m_config.Gyro.Watermark = 2;
 		m_config.Mag.DeviceName = "/dev/mag0";
+		m_config.Mag.Scale = 1300;
 		m_config.Servo.DeviceName = "/dev/pwm0";
 		m_config.Servo.ChannelMask = 0xff;
 		m_config.Servo.Rate = 390;

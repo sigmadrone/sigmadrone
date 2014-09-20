@@ -31,7 +31,9 @@ static cmd_arg_spec s_argSpec[] = {
 		{"Ki",          "",	 "PID controller integral coefficient", CMD_ARG_STRING},
 		{"Kd",          "",	 "PID controller derivative coefficient", CMD_ARG_STRING},
 		{"configfile",  "",  "Configuration file name", CMD_ARG_STRING},
-		{"apiname",     "",  "Api name - one of the commands passed  to -c=. Used with -c=spec\n", CMD_ARG_STRING},
+		{"apiname",     "",  "Api name - one of the commands passed  to -c=. Used with -c=spec", CMD_ARG_STRING},
+		{"gyrofifo",    "",  "Gyro fifo threshold in number of samples [1..32], default=2", CMD_ARG_STRING},
+		{"accelfifo",   "",  "Accel fifo threshold in number of samples [1..32], default=2", CMD_ARG_STRING}
 };
 
 

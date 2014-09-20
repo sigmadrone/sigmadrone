@@ -68,6 +68,12 @@ public:
 		return SdCommandCodeToString(FromCommanddLineArgToSdCommand(
 				m_cmdArgs.get_value("apiname")));
 	}
+	bool GetGyroWatermark(int* value) const {
+		return GetValueAsInt("gyrofifo",value);
+	}
+	bool GetAccelWatermark(int* value) const {
+		return GetValueAsInt("accelfifo",value);
+	}
 private:
 
 	static SdCommandCode FromCommanddLineArgToSdCommand(const std::string&);

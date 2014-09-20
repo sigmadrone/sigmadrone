@@ -113,6 +113,7 @@ int ImuReader::Run(
 		}
 	}
 	m_GyroConfig = droneConfig->Gyro;
+	DeltaT();
 
 	/*
 	 * Since this is a device plugin, that needs to read data,
@@ -179,9 +180,7 @@ int ImuReader::IoCallback(
 int ImuReader::IoDispatchThread()
 {
 	int ret = 0;
-	static int totalSamples = 0;
 	Vector3d accelData;
-	Vector3d gyroData;
 	Vector3d magData;
 
 	SdIoPacket* ioPacket = m_RunTime->AllocIoPacket(
@@ -196,17 +195,15 @@ int ImuReader::IoDispatchThread()
 
 	} else {
 		m_Sampler->update();
-		double timeToReadSensors = m_Sampler->data.dtime_;
 		ioPacket->SetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS,
-				SdIoData(timeToReadSensors));
+				SdIoData(m_Sampler->data.dtime_));
 		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
-				SdIoData(timeToReadSensors + m_Sampler->data.dtime_));
+				SdIoData(DeltaT()));
 	}
-	gyroData = m_Sampler->data.gyr3d_;
 	accelData = m_Sampler->data.acc3d_.normalize();
 	magData = m_Sampler->data.mag3d_.normalize();
 	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(&accelData));
-	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(&gyroData));
+	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(&m_Sampler->data.gyr3d_));
 	ioPacket->SetAttribute(SDIO_ATTR_MAG,SdIoData(&magData));
 	ret = m_RunTime->DispatchIo(ioPacket,0);
 	m_RunTime->FreeIoPacket(ioPacket);

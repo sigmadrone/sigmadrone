@@ -306,7 +306,9 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 	double doubleVal;
 	if (cmdArgs.GetMaxDps(&intVal) ||
 		cmdArgs.GetImuSamplingRage(&intVal) ||
-		cmdArgs.GetImuInputFile().length() > 0)
+		cmdArgs.GetImuInputFile().length() > 0 ||
+		cmdArgs.GetGyroWatermark(&intVal) ||
+		cmdArgs.GetAccelWatermark(&intVal))
 	{
 		SdJsonObject jobjGyroConfig;
 		SdJsonObject jobjAccConfig;
@@ -325,10 +327,14 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 		if (cmdArgs.GetMaxDps(&intVal)) {
 			jobjGyroConfig.AddMember("Scale",SdJsonValue(intVal));
 		}
+		if (cmdArgs.GetGyroWatermark(&intVal)) {
+			jobjGyroConfig.AddMember("Watermark",SdJsonValue(intVal));
+		}
 		if (cmdArgs.GetImuSamplingRage(&intVal)) {
 			jobjGyroConfig.AddMember("SamplingRate",SdJsonValue(intVal));
-			jobjAccConfig.AddMember("SamplingRate",SdJsonValue(intVal));
-			jobjMagConfig.AddMember("SamplingRate",SdJsonValue(intVal));
+		}
+		if (cmdArgs.GetAccelWatermark(&intVal)) {
+			jobjAccConfig.AddMember("Watermark",intVal);
 		}
 		std::string infile = cmdArgs.GetImuInputFile();
 		if (infile.length() > 0) {
