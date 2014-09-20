@@ -153,7 +153,7 @@ void imu_sensor::set_rate(unsigned int rate)
 		std::stringstream strrate;
 		strcode << errno;
 		strrate << rate;
-		throw std::runtime_error(std::string("Failed to set rate: ") + strrate.str() + "for device: " + filename_ + std::string(", error code: ") + strcode.str());
+		throw std::runtime_error(std::string("Failed to set rate: ") + strrate.str() + ", for device: " + filename_ + std::string(", error code: ") + strcode.str());
 	}
 }
 
@@ -175,7 +175,7 @@ void imu_sensor::set_fifo_threshold(unsigned int threshold)
 		std::stringstream strthreshold;
 		strcode << errno;
 		strthreshold << threshold;
-		throw std::runtime_error(std::string("Failed to set threshold: ") + strthreshold.str() + "for device: " + filename_ + std::string(", error code: ") + strcode.str());
+		throw std::runtime_error(std::string("Failed to set threshold: ") + strthreshold.str() + ", for device: " + filename_ + std::string(", error code: ") + strcode.str());
 	}
 }
 
@@ -194,10 +194,10 @@ void imu_sensor::set_full_scale(int scale)
 {
 	if (ioctl(fd_, AXISDATA_IOC_SETSCALE, scale) < 0) {
 		std::stringstream strcode;
-		std::stringstream strthreshold;
+		std::stringstream strscale;
 		strcode << errno;
-		strthreshold << scale;
-		throw std::runtime_error(std::string("Failed to set threshold: ") + strthreshold.str() + "for device: " + filename_ + std::string(", error code: ") + strcode.str());
+		strscale << scale;
+		throw std::runtime_error(std::string("Failed to set scale: ") + strscale.str() + ", for device: " + filename_ + std::string(", error code: ") + strcode.str());
 	}
 }
 
