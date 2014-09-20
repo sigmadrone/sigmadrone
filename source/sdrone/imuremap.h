@@ -9,7 +9,6 @@
 #define IMUREMAP_H_
 
 #include "commoninc.h"
-#include "imudevice.h"
 
 /*
  * Reads data from all the sensor devices

@@ -8,8 +8,9 @@
 #ifndef IMUREADER_H_
 #define IMUREADER_H_
 
+#include <boost/scoped_ptr.hpp>
 #include "commoninc.h"
-#include "imudevice.h"
+#include "sampler.h"
 
 /*
  * Reads data from all the sensor devices
@@ -40,10 +41,6 @@ private:
 	~ImuReader();
 
 private:
-	ImuDevice m_AccDevice;
-	ImuDevice m_MagDevice;
-	ImuDevice m_GyroDevice;
-	SdImuData m_ImuData;
 	SdImuDeviceConfig m_GyroConfig;
 	IPluginRuntime* m_RunTime;
 	int m_RefCnt;
@@ -51,6 +48,7 @@ private:
 	FILE* m_SensorLog;
 	timespec m_LastTime;
 	uint32_t m_Counter;
+	boost::scoped_ptr<sampler> m_Sampler;
 };
 
 #endif /* IMUREADER_H_ */

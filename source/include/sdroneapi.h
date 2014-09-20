@@ -167,16 +167,6 @@ typedef enum _SdImuDeviceId
 	SD_IMU_DEVICE_MAG
 } SdImuDeviceId;
 
-typedef struct _SdImuData
-{
-	short3d_t gyro[16];
-	short3d_t acc[16];
-	short3d_t mag[16];
-	size_t gyro_samples;
-	size_t acc_samples;
-	size_t mag_samples;
-} SdImuData;
-
 
 typedef double SdPluginAltitude;
 
@@ -375,7 +365,6 @@ struct SdIoData
 	SdIoData(const Vector3d* v3d) { dataType = TYPE_VECTOR3D; asVector3d = v3d; }
 	SdIoData(const Vector4d* v4d) { dataType = TYPE_VECTOR4D; asVector4d = v4d; }
 	SdIoData(const QuaternionD* qt) { dataType = TYPE_QUATERNION; asQuaternion = qt; }
-	SdIoData(const SdImuData* imu) { dataType = TYPE_IMU; asImuData = imu; }
 	SdIoData(const SdServoIoData* siod) { dataType = TYPE_SERVO; asServoData = siod; }
 	SdIoData(const SdDroneConfig* config) {
 		dataType = TYPE_DRONE_CONFIG; asDroneConfig = config;
@@ -401,7 +390,6 @@ struct SdIoData
 		const QuaternionD* asQuaternion;
 		const Vector4d* asVector4d;
 		const Vector3d* asVector3d;
-		const SdImuData* asImuData;
 		const SdDroneConfig* asDroneConfig;
 		const SdServoIoData* asServoData;
 		const SdThrustValues* asThrust;

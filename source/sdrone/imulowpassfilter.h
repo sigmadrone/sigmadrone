@@ -9,7 +9,6 @@
 #define IMULPF_H
 
 #include "commoninc.h"
-#include "imudevice.h"
 #include "firfilt.h"
 
 /*
