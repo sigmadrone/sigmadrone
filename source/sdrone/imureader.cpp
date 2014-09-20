@@ -73,7 +73,7 @@ int ImuReader::ExecuteCommand(SdCommandParams* params)
 int ImuReader::Run(
 	const SdDroneConfig* droneConfig)
 {
-	int err = EINVAL;
+	int err = 0;
 	Close();
 	remove("./sensordata.dat_bak");
 	rename("./sensordata.dat","./sensordata.dat_bak");
