@@ -200,6 +200,15 @@ int ImuReader::IoDispatchThread()
 		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
 				SdIoData(DeltaT()));
 	}
+
+	fprintf(m_SensorLog, "%10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    %10.2lf    %10.3lf\n",
+			m_Sampler->data.acc3d_.at(0, 0), m_Sampler->data.acc3d_.at(1, 0), m_Sampler->data.acc3d_.at(2, 0),
+			m_Sampler->data.gyr3d_.at(0, 0), m_Sampler->data.gyr3d_.at(1, 0), m_Sampler->data.gyr3d_.at(2, 0),
+			m_Sampler->data.mag3d_.at(0, 0), m_Sampler->data.mag3d_.at(1, 0), m_Sampler->data.mag3d_.at(2, 0),
+			m_Sampler->data.bar1d_,
+			m_Sampler->data.dtime_);
+	fflush(m_SensorLog);
+
 	accelData = m_Sampler->data.acc3d_.normalize();
 	magData = m_Sampler->data.mag3d_.normalize();
 	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(&accelData));
