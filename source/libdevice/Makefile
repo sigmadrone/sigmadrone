@@ -12,6 +12,7 @@ OBJS= \
     obj/imusensor.o \
     obj/filesensor.o \
     obj/sampler.o \
+    obj/filesampler.o \
 
 all: obj $(TARGET)
 

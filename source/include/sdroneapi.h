@@ -322,6 +322,12 @@ typedef struct _SdServoIoData
 	double value [16];
 } SdServoIoData;
 
+typedef struct _SdImuData {
+	Vector3d gyro3d;
+	Vector3d acc3d;
+	Vector3d mag3d;
+} SdImuData;
+
 typedef struct _SdThrustValues {
 	static const double MIN = 0.0;
 	static const double MAX = 1.0;
@@ -373,6 +379,7 @@ struct SdIoData
 	SdIoData(const void* p, uint32_t size) {
 			dataType = TYPE_BLOB; asBlob.blob = p; asBlob.blobSize = size;
 	}
+	SdIoData(const SdImuData* imuData) { dataType = TYPE_IMU; asImuData = imuData; }
 
 	uint32_t dataType; /*one of the above types*/
 	union
@@ -393,6 +400,7 @@ struct SdIoData
 		const SdDroneConfig* asDroneConfig;
 		const SdServoIoData* asServoData;
 		const SdThrustValues* asThrust;
+		const SdImuData* asImuData;
 	};
 };
 

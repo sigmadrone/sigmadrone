@@ -11,6 +11,7 @@
 #include <boost/scoped_ptr.hpp>
 #include "commoninc.h"
 #include "sampler.h"
+#include "filesampler.h"
 
 /*
  * Reads data from all the sensor devices
@@ -35,7 +36,6 @@ public:
 	int ExecuteCommand(SdCommandParams*);
 
 private:
-	inline bool IsInTextMode() { return !!m_File; }
 	double DeltaT();
 	void Close();
 	~ImuReader();
@@ -44,10 +44,10 @@ private:
 	SdImuDeviceConfig m_GyroConfig;
 	IPluginRuntime* m_RunTime;
 	int m_RefCnt;
-	FILE* m_File;
 	FILE* m_SensorLog;
 	timespec m_LastTime;
 	uint32_t m_Counter;
+	boost::scoped_ptr<file_sampler> m_FileSampler;
 	boost::scoped_ptr<sampler> m_Sampler;
 };
 

@@ -11,7 +11,6 @@
 
 ImuReader::ImuReader()
 {
-	m_File = 0;
 	m_SensorLog = 0;
 	m_RunTime = 0;
 	clock_gettime(CLOCK_REALTIME, &m_LastTime);
@@ -40,10 +39,6 @@ int ImuReader::AttachToChain(
 
 void ImuReader::Close()
 {
-	if (0 != m_File) {
-		fclose(m_File);
-		m_File = 0;
-	}
 	if (0 != m_SensorLog) {
 		fflush(m_SensorLog);
 		fclose(m_SensorLog);
@@ -82,10 +77,14 @@ int ImuReader::Run(
 		/*
 		 * Operating in text mode
 		 */
-		m_File = fopen(droneConfig->Accel.DeviceName.c_str(),"r");
-		if (0 == m_File) {
-			fprintf(stdout,"ImuReader::Init failed to open %s, err %d\n",
-				droneConfig->Accel.DeviceName.c_str(),errno);
+		m_FileSampler.reset(new file_sampler(droneConfig->Accel.DeviceName.c_str(), true));
+		try {
+			m_FileSampler.reset(new file_sampler(
+					droneConfig->Accel.DeviceName.c_str(),
+					true));
+		} catch (std::exception& e) {
+			fprintf(stdout, "Error: %s\n", e.what());
+			err = EINVAL;
 			goto __return;
 		}
 		err = 0;
@@ -180,8 +179,8 @@ int ImuReader::IoCallback(
 int ImuReader::IoDispatchThread()
 {
 	int ret = 0;
-	Vector3d accelData;
-	Vector3d magData;
+	SdImuData imuData;
+	double pressure;
 
 	SdIoPacket* ioPacket = m_RunTime->AllocIoPacket(
 			SD_IOCODE_RECEIVE, GetDeviceId(), GetName());
@@ -191,30 +190,49 @@ int ImuReader::IoDispatchThread()
 
 	++m_Counter;
 
-	if (0 != m_File) {
-
+	if (m_FileSampler) {
+		if (!m_FileSampler->update()) {
+			ret = EIO;
+			goto __return;
+		}
+		imuData.acc3d = m_FileSampler->data.acc3d_;
+		imuData.gyro3d = m_FileSampler->data.gyr3d_;
+		imuData.mag3d = m_FileSampler->data.mag3d_;
+		pressure = m_FileSampler->data.bar1d_;
+		ioPacket->SetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS,
+				SdIoData(m_FileSampler->data.dtime_));
+		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
+				SdIoData(DeltaT()));
 	} else {
 		m_Sampler->update();
+		imuData.acc3d = m_Sampler->data.acc3d_;
+		imuData.gyro3d = m_Sampler->data.gyr3d_;
+		imuData.mag3d = m_Sampler->data.mag3d_;
+		pressure = m_Sampler->data.bar1d_;
 		ioPacket->SetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS,
 				SdIoData(m_Sampler->data.dtime_));
 		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
 				SdIoData(DeltaT()));
 	}
 
+	ioPacket->SetIoData(SdIoData(&imuData),true);
+
 	fprintf(m_SensorLog, "%10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    %10.2lf    %10.3lf\n",
-			m_Sampler->data.acc3d_.at(0, 0), m_Sampler->data.acc3d_.at(1, 0), m_Sampler->data.acc3d_.at(2, 0),
-			m_Sampler->data.gyr3d_.at(0, 0), m_Sampler->data.gyr3d_.at(1, 0), m_Sampler->data.gyr3d_.at(2, 0),
-			m_Sampler->data.mag3d_.at(0, 0), m_Sampler->data.mag3d_.at(1, 0), m_Sampler->data.mag3d_.at(2, 0),
-			m_Sampler->data.bar1d_,
-			m_Sampler->data.dtime_);
+			imuData.acc3d.at(0, 0), imuData.acc3d.at(1, 0), imuData.acc3d.at(2, 0),
+			imuData.gyro3d.at(0, 0), imuData.gyro3d.at(1, 0), imuData.gyro3d.at(2, 0),
+			imuData.mag3d.at(0, 0), imuData.mag3d.at(1, 0), imuData.mag3d.at(2, 0),
+			pressure,
+			ioPacket->GetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS).asDouble);
 	fflush(m_SensorLog);
 
-	accelData = m_Sampler->data.acc3d_.normalize();
-	magData = m_Sampler->data.mag3d_.normalize();
-	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(&accelData));
-	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(&m_Sampler->data.gyr3d_));
-	ioPacket->SetAttribute(SDIO_ATTR_MAG,SdIoData(&magData));
+	imuData.acc3d = imuData.acc3d.normalize();
+	imuData.mag3d = imuData.mag3d.normalize();
+	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(&imuData.acc3d));
+	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(&imuData.gyro3d));
+	ioPacket->SetAttribute(SDIO_ATTR_MAG,SdIoData(&imuData.mag3d));
 	ret = m_RunTime->DispatchIo(ioPacket,0);
+
+	__return:
 	m_RunTime->FreeIoPacket(ioPacket);
 
 	return ret;
