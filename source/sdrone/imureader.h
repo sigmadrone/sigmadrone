@@ -37,18 +37,17 @@ public:
 
 private:
 	double DeltaT();
-	void Close();
+	void CloseSensorLog();
 	~ImuReader();
 
 private:
-	SdImuDeviceConfig m_GyroConfig;
 	IPluginRuntime* m_RunTime;
-	int m_RefCnt;
-	FILE* m_SensorLog;
-	timespec m_LastTime;
-	uint32_t m_Counter;
-	boost::scoped_ptr<file_sampler> m_FileSampler;
-	boost::scoped_ptr<sampler> m_Sampler;
+	int m_refCnt;
+	FILE* m_sensorLog;
+	timespec m_lastTime;
+	uint32_t m_counter;
+	boost::scoped_ptr<file_sampler> m_fileSampler;
+	boost::scoped_ptr<sampler> m_sampler;
 };
 
 #endif /* IMUREADER_H_ */

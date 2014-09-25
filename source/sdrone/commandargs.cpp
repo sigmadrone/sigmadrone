@@ -37,7 +37,8 @@ static cmd_arg_spec s_argSpec[] = {
 };
 
 
-CommandLineArgs::CommandLineArgs(int argc, const char* argv[])
+CommandLineArgs::CommandLineArgs(int argc, const char* argv[]) :
+		m_argc(argc), m_argv(argv)
 {
 	m_cmdArgs.add_specs(s_argSpec,sizeof(s_argSpec)/sizeof(s_argSpec[0]));
 	try {
@@ -68,8 +69,15 @@ void CommandLineArgs::PrintUsage(int argc, const char* argv[]) const
 
 SdCommandCode CommandLineArgs::GetCommand() const
 {
-	return FromCommanddLineArgToSdCommand(
-			m_cmdArgs.get_value("command").c_str());
+	std::string command = m_cmdArgs.get_value("command").c_str();
+	if (command.empty()) {
+		for (int i = 1; i < m_argc; ++i) {
+			if (*(m_argv[i]) != '-') {
+				command = m_argv[i];
+			}
+		}
+	}
+	return FromCommanddLineArgToSdCommand(command);
 }
 
 SdCommandCode CommandLineArgs::FromCommanddLineArgToSdCommand(

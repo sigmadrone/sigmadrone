@@ -11,16 +11,16 @@
 
 ImuReader::ImuReader()
 {
-	m_SensorLog = 0;
+	m_sensorLog = 0;
 	m_RunTime = 0;
-	clock_gettime(CLOCK_REALTIME, &m_LastTime);
-	m_RefCnt = 1;
+	clock_gettime(CLOCK_REALTIME, &m_lastTime);
+	m_refCnt = 1;
 }
 
 ImuReader::~ImuReader()
 {
-	assert(0 == m_RefCnt);
-	Close();
+	assert(0 == m_refCnt);
+	CloseSensorLog();
 }
 
 int ImuReader::AttachToChain(
@@ -37,12 +37,12 @@ int ImuReader::AttachToChain(
 	return err;
 }
 
-void ImuReader::Close()
+void ImuReader::CloseSensorLog()
 {
-	if (0 != m_SensorLog) {
-		fflush(m_SensorLog);
-		fclose(m_SensorLog);
-		m_SensorLog = 0;
+	if (0 != m_sensorLog) {
+		fflush(m_sensorLog);
+		fclose(m_sensorLog);
+		m_sensorLog = 0;
 	}
 }
 
@@ -69,17 +69,14 @@ int ImuReader::Run(
 	const SdDroneConfig* droneConfig)
 {
 	int err = 0;
-	Close();
-	remove("./sensordata.dat_bak");
-	rename("./sensordata.dat","./sensordata.dat_bak");
-	m_SensorLog = fopen("./sensordata.dat", "w");
+	CloseSensorLog();
 	if (droneConfig->Accel.DeviceName == droneConfig->Gyro.DeviceName) {
 		/*
 		 * Operating in text mode
 		 */
-		m_FileSampler.reset(new file_sampler(droneConfig->Accel.DeviceName.c_str(), true));
+		m_fileSampler.reset(new file_sampler(droneConfig->Accel.DeviceName.c_str(), true));
 		try {
-			m_FileSampler.reset(new file_sampler(
+			m_fileSampler.reset(new file_sampler(
 					droneConfig->Accel.DeviceName.c_str(),
 					true));
 		} catch (std::exception& e) {
@@ -92,26 +89,28 @@ int ImuReader::Run(
 			droneConfig->Accel.DeviceName.c_str());
 	} else {
 		try {
-			m_Sampler.reset(new sampler(
+			m_sampler.reset(new sampler(
 					droneConfig->Gyro.DeviceName,
 					droneConfig->Accel.DeviceName,
 					droneConfig->Mag.DeviceName,
 					"/sys/bus/i2c/devices/4-0077/pressure0_input"
 			));
-			m_Sampler->gyr_.set_rate(droneConfig->Gyro.SamplingRate);
-			m_Sampler->acc_.set_rate(droneConfig->Accel.SamplingRate);
-			m_Sampler->gyr_.set_full_scale(droneConfig->Gyro.Scale);
-			m_Sampler->acc_.set_full_scale(droneConfig->Accel.Scale);
-			m_Sampler->mag_.set_full_scale(droneConfig->Mag.Scale ? droneConfig->Mag.Scale : 1300);
-			m_Sampler->gyr_.set_fifo_threshold(droneConfig->Gyro.Watermark);
-			m_Sampler->acc_.set_fifo_threshold(droneConfig->Accel.Watermark);
-			m_Sampler->init();
+			m_sampler->gyr_.set_rate(droneConfig->Gyro.SamplingRate);
+			m_sampler->acc_.set_rate(droneConfig->Accel.SamplingRate);
+			m_sampler->gyr_.set_full_scale(droneConfig->Gyro.Scale);
+			m_sampler->acc_.set_full_scale(droneConfig->Accel.Scale);
+			m_sampler->mag_.set_full_scale(droneConfig->Mag.Scale ? droneConfig->Mag.Scale : 1300);
+			m_sampler->gyr_.set_fifo_threshold(droneConfig->Gyro.Watermark);
+			m_sampler->acc_.set_fifo_threshold(droneConfig->Accel.Watermark);
+			m_sampler->init();
+			remove("./sensordata.dat_bak");
+			rename("./sensordata.dat","./sensordata.dat_bak");
+			m_sensorLog = fopen("./sensordata.dat", "w");
 		} catch (std::exception& e) {
 			fprintf(stdout, "Error: %s\n", e.what());
 			goto __return;
 		}
 	}
-	m_GyroConfig = droneConfig->Gyro;
 	DeltaT();
 
 	/*
@@ -129,20 +128,20 @@ double ImuReader::DeltaT()
 	timespec now;
 	double dT;
 	clock_gettime(CLOCK_REALTIME, &now);
-	dT = (now.tv_sec - m_LastTime.tv_sec) +
-			(now.tv_nsec - m_LastTime.tv_nsec)/1000000000.0;
-	m_LastTime = now;
+	dT = (now.tv_sec - m_lastTime.tv_sec) +
+			(now.tv_nsec - m_lastTime.tv_nsec)/1000000000.0;
+	m_lastTime = now;
 	return dT; // sec
 }
 
 int ImuReader::AddRef()
 {
-	return __sync_fetch_and_add(&m_RefCnt,1);
+	return __sync_fetch_and_add(&m_refCnt,1);
 }
 
 int ImuReader::Release()
 {
-	int refCnt = __sync_sub_and_fetch(&m_RefCnt,1);
+	int refCnt = __sync_sub_and_fetch(&m_refCnt,1);
 	if (0 == refCnt) {
 		delete this;
 	}
@@ -188,42 +187,45 @@ int ImuReader::IoDispatchThread()
 		return ENOMEM;
 	}
 
-	++m_Counter;
+	++m_counter;
 
-	if (m_FileSampler) {
-		if (!m_FileSampler->update()) {
+	if (m_fileSampler) {
+		if (!m_fileSampler->update()) {
 			ret = EIO;
 			goto __return;
 		}
-		imuData.acc3d = m_FileSampler->data.acc3d_;
-		imuData.gyro3d = m_FileSampler->data.gyr3d_;
-		imuData.mag3d = m_FileSampler->data.mag3d_;
-		pressure = m_FileSampler->data.bar1d_;
+		imuData.acc3d = m_fileSampler->data.acc3d_;
+		imuData.gyro3d = m_fileSampler->data.gyr3d_;
+		imuData.mag3d = m_fileSampler->data.mag3d_;
+		pressure = m_fileSampler->data.bar1d_;
 		ioPacket->SetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS,
-				SdIoData(m_FileSampler->data.dtime_));
+				SdIoData(m_fileSampler->data.dtime_));
 		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
 				SdIoData(DeltaT()));
 	} else {
-		m_Sampler->update();
-		imuData.acc3d = m_Sampler->data.acc3d_;
-		imuData.gyro3d = m_Sampler->data.gyr3d_;
-		imuData.mag3d = m_Sampler->data.mag3d_;
-		pressure = m_Sampler->data.bar1d_;
+		m_sampler->update();
+		imuData.acc3d = m_sampler->data.acc3d_;
+		imuData.gyro3d = m_sampler->data.gyr3d_;
+		imuData.mag3d = m_sampler->data.mag3d_;
+		pressure = m_sampler->data.bar1d_;
 		ioPacket->SetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS,
-				SdIoData(m_Sampler->data.dtime_));
+				SdIoData(m_sampler->data.dtime_));
 		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
 				SdIoData(DeltaT()));
 	}
 
 	ioPacket->SetIoData(SdIoData(&imuData),true);
 
-	fprintf(m_SensorLog, "%10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    %10.2lf    %10.3lf\n",
-			imuData.acc3d.at(0, 0), imuData.acc3d.at(1, 0), imuData.acc3d.at(2, 0),
-			imuData.gyro3d.at(0, 0), imuData.gyro3d.at(1, 0), imuData.gyro3d.at(2, 0),
-			imuData.mag3d.at(0, 0), imuData.mag3d.at(1, 0), imuData.mag3d.at(2, 0),
-			pressure,
-			ioPacket->GetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS).asDouble);
-	fflush(m_SensorLog);
+	if (m_sensorLog) {
+		fprintf(m_sensorLog, "%10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    "
+				"%10.2lf %10.2lf %10.2lf    %10.2lf    %10.6lf\n",
+				imuData.acc3d.at(0, 0), imuData.acc3d.at(1, 0), imuData.acc3d.at(2, 0),
+				imuData.gyro3d.at(0, 0), imuData.gyro3d.at(1, 0), imuData.gyro3d.at(2, 0),
+				imuData.mag3d.at(0, 0), imuData.mag3d.at(1, 0), imuData.mag3d.at(2, 0),
+				pressure,
+				ioPacket->GetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS).asDouble);
+		fflush(m_sensorLog);
+	}
 
 	imuData.acc3d = imuData.acc3d.normalize();
 	imuData.mag3d = imuData.mag3d.normalize();
