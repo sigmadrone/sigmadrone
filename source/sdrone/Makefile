@@ -35,6 +35,8 @@ OBJECTS		= \
 	dronerpcclient.o\
 	droneconfig.o\
 	rpcparams.o\
+	pidpilotsd.o\
+	pidtorque.o\
 	$(JSONRPC_SRCDIR)/libjsonrpc.a\
 	$(HTTPSERVER_SRCDIR)/libhttp.a\
 	$(CMDARGS_SRCDIR)/libcmdargs.a

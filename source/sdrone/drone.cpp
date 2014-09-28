@@ -10,6 +10,7 @@
 #include <sys/signal.h>
 #include "drone.h"
 #include "quadrotorpilot.h"
+#include "pidpilotsd.h"
 #include "servodevice.h"
 #include "imufilter.h"
 #include "imureader.h"
@@ -345,7 +346,8 @@ void Drone::InitInternalPlugins()
 	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_KALMAN_FILTER);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_SERVO_PCA9685);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_NAVIGATOR);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_QUADPILOT);
+	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_QUADPILOT);
+	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_PIDPILOT);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_TRACELOG);
 }
 
@@ -605,6 +607,13 @@ int SdPluginInitialize(
 	}
 	if (0 == pluginName || 0 == (strcmp(pluginName,SD_PLUGIN_QUADPILOT))){
 		QuadRotorPilot* pilot = new QuadRotorPilot();
+		if (0 != pilot) {
+			pilot->AttachToChain(droneContext,attachPlugin);
+			pilot->Release();
+		}
+	}
+	if (0 == pluginName || 0 == (strcmp(pluginName,SD_PLUGIN_PIDPILOT))){
+		PidPilot* pilot = new PidPilot();
 		if (0 != pilot) {
 			pilot->AttachToChain(droneContext,attachPlugin);
 			pilot->Release();
