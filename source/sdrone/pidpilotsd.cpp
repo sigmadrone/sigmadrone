@@ -6,17 +6,12 @@
 #include "pidpilotsd.h"
 #include <dlfcn.h>
 
-static const double s_InitialStep = 0.005;
-
 PidPilot::PidPilot()
 {
-	m_MinRev = 0.0;
-	m_MaxRev = 0.0;
-	m_Counter = 0;
-	m_Skip = 0;
-	m_ErrorAngle = 0;
-	m_Runtime = 0;
-	m_RefCnt = 1;
+	m_minThrust = 0.0;
+	m_maxThrust = 0.0;
+	m_runtime = 0;
+	m_refCnt = 1;
 	m_targetThrust = 0.0;
 
 	Vector3d TrustDir(0, 0, 1);
@@ -29,7 +24,7 @@ PidPilot::PidPilot()
 
 PidPilot::~PidPilot()
 {
-	assert(0 == m_RefCnt);
+	assert(0 == m_refCnt);
 }
 
 int PidPilot::AttachToChain(
@@ -43,7 +38,7 @@ int PidPilot::AttachToChain(
 		SD_ALTITUDE_GROUP_APP+SD_ALTITUDE_FIRST/2,
 		attachAbove,
 		0,
-		&m_Runtime);
+		&m_runtime);
 	return err;
 }
 
@@ -64,7 +59,7 @@ int PidPilot::ExecuteCommand(
 	case SD_COMMAND_SET_THRUST:
 		SetMinRev(params->Params().asThrust->MinThrust());
 		SetMaxRev(params->Params().asThrust->MaxThrust());
-		m_targetThrust = fmax(fmin(m_MaxRev,params->Params().asThrust->Thrust()),m_MinRev);
+		m_targetThrust = fmax(fmin(m_maxThrust,params->Params().asThrust->Thrust()),m_minThrust);
 		break;
 	default:break;
 	}
@@ -74,12 +69,12 @@ int PidPilot::ExecuteCommand(
 int PidPilot::Start(const SdDroneConfig* config)
 {
 	assert(config);
-	assert(m_Runtime);
-	m_Config = config->Quad;
-	m_RotZQ = QuaternionD::fromAxisRot(
-		Vector3d(0,0,1),DEG2RAD(-m_Config.ImuAngleAxisZ));
+	assert(m_runtime);
 
-	m_Runtime->SetIoFilters(
+	m_config = config->Quad;
+	m_pid.Reset(m_config.Kp * 1000, m_config.Ki * 1000, m_config.Kd * 1000);
+
+	m_runtime->SetIoFilters(
 			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
 			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
 
@@ -88,12 +83,12 @@ int PidPilot::Start(const SdDroneConfig* config)
 
 int PidPilot::AddRef()
 {
-	return __sync_fetch_and_add(&m_RefCnt,1);
+	return __sync_fetch_and_add(&m_refCnt,1);
 }
 
 int PidPilot::Release()
 {
-	int refCnt = __sync_sub_and_fetch(&m_RefCnt,1);
+	int refCnt = __sync_sub_and_fetch(&m_refCnt,1);
 	if (0 == refCnt) {
 		delete this;
 	}
@@ -102,11 +97,11 @@ int PidPilot::Release()
 
 void PidPilot::Stop(bool detach)
 {
-	m_MinRev = m_MaxRev = 0;
-	CalcThrustFromErrAxis(Vector3d(0,0,0),0);
+	m_minThrust = m_maxThrust = 0;
+	m_motors = Vector4d();
 	IssueCommandToServo();
 	if (detach) {
-		m_Runtime->DetachPlugin();
+		m_runtime->DetachPlugin();
 	}
 }
 
@@ -142,22 +137,20 @@ int PidPilot::IoCallback(
 		 */
 		UpdateState(ioPacket);
 
-		if (0 == (m_Counter++%(m_Skip+1)))
-		{
-			//
-			// Issue commands to the servos. Since the servos are controlled by
-			// different device, we must issue new SdIoPacket "down" to the servo
-			// device. We do not want to stop the current packet as there may
-			// be another plugin on top that performs different functions, aka
-			// logging, etc.
-			//
-			err = IssueCommandToServo();
-		}
+		/**
+		 * Issue commands to the servos. Since the servos are controlled by
+		 * different device, we must issue new SdIoPacket "down" to the servo
+		 * device. We do not want to stop the current packet as there may
+		 * be another plugin on top that performs different functions, aka
+		 * logging, etc.
+		 */
+		err = IssueCommandToServo();
+
 		/*
 		 *  Set the motor values in the IO structures so it can be used by the
 		 *  rest of the chain
 		 */
-		ioPacket->SetAttribute(SDIO_ATTR_MOTORS,SdIoData(&m_Motors));
+		ioPacket->SetAttribute(SDIO_ATTR_MOTORS,SdIoData(&m_motors));
 	} else {
 		assert(false);
 	}
@@ -172,21 +165,21 @@ int PidPilot::IssueCommandToServo()
 	//
 	int err = ENOMEM;
 	SdServoIoData servoData;
-	SdIoPacket* ioPacket = m_Runtime->AllocIoPacket(
+	SdIoPacket* ioPacket = m_runtime->AllocIoPacket(
 			SD_IOCODE_SEND,
 			SD_DEVICEID_SERVO,
 			SD_PLUGIN_SERVO_PCA9685);
 	if (0 != ioPacket) {
 		servoData.numChannels = 4;
-		for (size_t i = 0; i < ARRAYSIZE(m_Config.Motor); i++) {
-			servoData.channels[i] = m_Config.Motor[i];
-			servoData.value[i] = m_Motors.at(i,0);
+		for (size_t i = 0; i < ARRAYSIZE(m_config.Motor); i++) {
+			servoData.channels[i] = m_config.Motor[i];
+			servoData.value[i] = m_motors.at(i,0);
 		}
 		ioPacket->SetIoData(SdIoData(&servoData),true);
-		err = m_Runtime->DispatchIo(ioPacket,SD_FLAG_DISPATCH_DOWN);
-		m_Runtime->FreeIoPacket(ioPacket);
+		err = m_runtime->DispatchIo(ioPacket,SD_FLAG_DISPATCH_DOWN);
+		m_runtime->FreeIoPacket(ioPacket);
 	} else {
-		m_Runtime->Log(SD_LOG_LEVEL_ERROR,
+		m_runtime->Log(SD_LOG_LEVEL_ERROR,
 				"Quadrotor pilot failed to alloc iopacket!\n");
 	}
 	return err;
@@ -201,74 +194,46 @@ int PidPilot::UpdateState(
 	int retVal = 0;
 	Vector3d _currentOmega = *(ioPacket->GetAttribute(SDIO_ATTR_GYRO).asVector3d);
 
-	Vector3d TorqueRPM;
+	Vector3d torqueRPM;
 
 	m_pid.SetTarget(targetQ);
-	m_TorqueCorrection = m_pid.GetTorque(attitudeQ, _currentOmega * M_PI / 180.0f,
+	m_torqueCorrection = m_pid.GetTorque(attitudeQ, _currentOmega * M_PI / 180.0f,
 			ioPacket->DeltaTime());
 
+#if 0
 	QuaternionD errQ = QuaternionD::fromAngularVelocity(m_pid.m_lastError, 1.0);
 	m_ErrorAngle = errQ.angle();
 	m_ErrorAxis = errQ.axis();
+#endif
 
 	//  From the motor trust measurement:
 	//  0.6 --> 450g * 22.5cm
 	//  0.6 --> (450/1000) * (22.5/100)
 	//  0.6 --> 0.10125 kg.m
-	TorqueRPM = m_TorqueCorrection * 0.6 / (101.25/1000.0) / 2.0;
+	torqueRPM = m_torqueCorrection * 0.6 / (101.25/1000.0) / 2.0;
 
-	m_Motors = Vector4d(
-			m_targetThrust + Vector3d::dot(TorqueRPM, m_M0),
-			m_targetThrust + Vector3d::dot(TorqueRPM, m_M1),
-			m_targetThrust + Vector3d::dot(TorqueRPM, m_M2),
-			m_targetThrust + Vector3d::dot(TorqueRPM, m_M3));
+	m_motors = Vector4d(
+			m_targetThrust + Vector3d::dot(torqueRPM, m_M0),
+			m_targetThrust + Vector3d::dot(torqueRPM, m_M1),
+			m_targetThrust + Vector3d::dot(torqueRPM, m_M2),
+			m_targetThrust + Vector3d::dot(torqueRPM, m_M3));
 
+	SetAndScaleMotors(
+			m_motors.at(0,0),
+			m_motors.at(1,0),
+			m_motors.at(2,0),
+			m_motors.at(3,0));
+
+
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_PID,SdIoData(&torqueRPM));
 #if 0
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_PID,SdIoData(&m_ErrorAxisPid));
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_P,SdIoData(&m_ErrorP));
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_I,SdIoData(&m_ErrorI));
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_D,SdIoData(&m_ErrorD));
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_ANGLE,SdIoData(angleDeg));
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_OMEGA,SdIoData(&omegaErrPid));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_ANGLE,SdIoData(RAD2DEG(m_ErrorAngle)));
 #endif
 	return retVal;
-}
-
-void PidPilot::CalcThrustFromErrAxis(
-		const Vector3d& err,
-		double _targetThrust)
-{
-	//
-	// Control the motors in pairs 1-3 and 2-4.
-	// We use the following equations:
-	// 		torgX = l * k * (m4^2 - m2^2);
-	// 		torgY = l * k * (m3^2 - m1^2);
-	// 		torgZ = b * (-m1^2 + m2^2 - m3^2 + m4^2);
-	// 		thrust = k * (m1^2 + m2^2 + m3^2 + m4^2);
-	// Since the rotation axis is exactly the same as the desired torque,
-	// we need to find w (motor rot velocity) deltas, that satisfy
-	// the equations above.
-	//
-	double targetThrust = fmax(_targetThrust,0.01);
-	double deltaX = err.at(0,0)/(4 * targetThrust);
-	double deltaY = err.at(1,0)/(4 * targetThrust);
-	double deltaZ = err.at(2,0)/(8 * targetThrust);
-	double m1 = targetThrust;
-	double m2 = targetThrust;
-	double m3 = targetThrust;
-	double m4 = targetThrust;
-
-	m2 -= deltaX;
-	m4 += deltaX;
-	m1 -= deltaY;
-	m3 += deltaY;
-
-	m1 -= deltaZ;
-	m3 -= deltaZ;
-	m2 += deltaZ;
-	m4 += deltaZ;
-
-	SetAndScaleMotors(m1,m2,m3,m4);
 }
 
 void PidPilot::SetAndScaleMotors(
@@ -279,35 +244,35 @@ void PidPilot::SetAndScaleMotors(
 {
 	Vector4d mv(m1,m2,m3,m4);
 	double minVal = mv.minValue();
-	if (minVal < m_MinRev) {
-		mv = mv + (m_MinRev - minVal);
+	if (minVal < m_minThrust) {
+		mv = mv + (m_minThrust - minVal);
 	}
 	double maxVal = mv.maxValue();
-	if (maxVal > m_MaxRev) {
-		mv = mv - (maxVal - m_MaxRev);
+	if (maxVal > m_maxThrust) {
+		mv = mv - (maxVal - m_maxThrust);
 	}
 	maxVal = mv.maxValue();
 	minVal = mv.minValue();
-	if (minVal < m_MinRev || maxVal > m_MaxRev) {
-		double scale = (m_MaxRev-m_MinRev)/(maxVal-minVal);
+	if (minVal < m_minThrust || maxVal > m_maxThrust) {
+		double scale = (m_maxThrust-m_minThrust)/(maxVal-minVal);
 		mv = mv - minVal;
 		mv = mv * scale;
-		mv = mv + m_MinRev;
+		mv = mv + m_minThrust;
 	}
-	m_Motors = mv;
+	m_motors = mv;
 }
 
 const Vector4d* PidPilot::GetMotors() const
 {
-	return &m_Motors;
+	return &m_motors;
 }
 
 void PidPilot::SetMinRev(double minRev)
 {
-	m_MinRev = fmax(0,minRev);
+	m_minThrust = fmax(0,minRev);
 }
 
 void PidPilot::SetMaxRev(double maxRev)
 {
-	m_MaxRev = fmin(1,maxRev);
+	m_maxThrust = fmin(1,maxRev);
 }

@@ -46,12 +46,8 @@ private:
 	void SetMinRev(double minRev);
 	void SetMaxRev(double maxRev);
 	const Vector4d* GetMotors() const;
-	double GetMinRev() const { return m_MinRev; }
-	double GetMaxRev() const { return m_MaxRev; }
-	const double GetErrorAngle() const { return m_ErrorAngle; }
-	const Vector3d& GetErrorAxis() const { return m_ErrorAxis; }
-	const Vector3d& GetOmega() const { return m_Omega; }
-	const Vector3d& GetAngularAccel() const { return m_AngAccel; }
+	double GetMinRev() const { return m_minThrust; }
+	double GetMaxRev() const { return m_maxThrust; }
 
 	int UpdateState(
 			SdIoPacket*
@@ -89,34 +85,17 @@ private:
 	static Vector3d FromQtToTorqueVector(const QuaternionD& q);
 
 private:
-	IPluginRuntime* m_Runtime;
-	Vector4d m_Motors;
-	Vector3d m_ErrorAxis;
-	Vector3d m_ErrorAxisPid;
-	Vector3d m_ErrorI;
-	Vector3d m_ErrorD;
-	Vector3d m_ErrorP;
-	SdQuadRotorConfig m_Config;
-	QuaternionD m_TargetQ;
-	QuaternionD m_PrevQ;
-	QuaternionD m_RotZQ;
-	LpPreFilter3d m_GyroFilt;
-	LpPreFilter3d m_ErrFilt;
-	LpPreFilter3d m_TcFilt;
-	double m_MinRev;
-	double m_MaxRev;
+	IPluginRuntime* m_runtime;
+	Vector4d m_motors;
+	SdQuadRotorConfig m_config;
+	double m_minThrust;
+	double m_maxThrust;
 	double m_targetThrust;
-	int m_Counter;
-	double m_ErrorAngle;
-	Vector3d m_Omega;
-	Vector3d m_AngAccel;
-	Vector3d m_Step;
-	int m_Skip;
-	int m_RefCnt;
+	int m_refCnt;
 
 
 	PidTorque m_pid;
-	Vector3d m_TorqueCorrection;
+	Vector3d m_torqueCorrection;
 	Vector3d m_M0, m_M1, m_M2, m_M3;
 };
 
