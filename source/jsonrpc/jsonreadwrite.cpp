@@ -8,6 +8,7 @@
 #include "jsonreadwrite.h"
 #include <json-glib/json-glib.h>
 #include <json-glib/json-gobject.h>
+#include <stdlib.h>
 
 struct GTypeInit
 {
@@ -316,6 +317,14 @@ const IJsonObject* SdJsonValue::AsObject() const
 	return 0;
 }
 
+const SdJsonArray& SdJsonValue::Array() const {
+	return *static_cast<const SdJsonArray*>(AsArray());
+}
+
+const SdJsonObject& SdJsonValue::Object() const {
+	return *static_cast<const SdJsonObject*>(AsObject());
+}
+
 IJsonValue* SdJsonValue::Clone() const
 {
 	return new SdJsonValue(*this);
@@ -431,6 +440,23 @@ const SdJsonValue& SdJsonValue::operator=(const SdJsonValue& rhs)
 	m_jnode = const_cast<SdJsonValue*>(&rhs)->DupGlibNode();
 	Init();
 	return *this;
+}
+
+bool SdJsonValue::operator==(const SdJsonValue& rhs) const
+{
+	if (GetType() == rhs.GetType()) {
+		switch (GetType()) {
+		case SD_JSONVALUE_NULL: return true;
+		case SD_JSONVALUE_STRING: return AsString() == rhs.AsString();
+		case SD_JSONVALUE_INT: return AsInt() == rhs.AsInt();
+		case SD_JSONVALUE_DOUBLE: return AsDouble() == rhs.AsDouble();
+		case SD_JSONVALUE_BOOL: return AsBool() == rhs.AsBool();
+		case SD_JSONVALUE_OBJECT: return Object() == rhs.Object();
+		case SD_JSONVALUE_ARRAY: return Array() == rhs.Array();
+		default: assert(false); break;
+		}
+	}
+	return false;
 }
 
 SdJsonObject::SdJsonObject() : m_jobj(0) {
@@ -569,6 +595,20 @@ const SdJsonObject& SdJsonObject::operator=(const SdJsonObject& rhs)
 	return *this;
 }
 
+bool SdJsonObject::operator==(const SdJsonObject& rhs) const
+{
+	if (GetMemberCount() != rhs.GetMemberCount()) {
+		return false;
+	}
+	for (size_t i = 0; i < rhs.GetMemberCount(); i++) {
+		const char* memberName = rhs.GetMemberName(i);
+		if (Member(memberName) != rhs.Member(memberName)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 SdJsonArray::SdJsonArray() : m_jarr(0) {}
 
 SdJsonArray::SdJsonArray(JsonArray* jarr) : m_jarr(jarr) {
@@ -645,6 +685,19 @@ const SdJsonArray& SdJsonArray::operator=(const SdJsonArray& rhs)
 	return *this;
 }
 
+bool SdJsonArray::operator==(const SdJsonArray& rhs) const
+{
+	if (ElementCount() != rhs.ElementCount()) {
+		return false;
+	}
+	for (size_t i = 0; i < rhs.ElementCount(); i++) {
+		if (Element(i) != rhs.Element(i)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 
 SdJsonValueSpec::SdJsonValueSpec(const SdJsonValue& val) : m_value(val) {}
 
@@ -675,6 +728,68 @@ void SdJsonValueSpec::OnJsonValue(const SdJsonValue& val, SdJsonValue* spec) {
 		spec->SetValueAsArray(&jarr);
 	} else {
 		spec->SetValueAsString(SdJsonValueTypeAsString(val.GetType()));
+	}
+}
+
+SdJsonValueFromSpec::SdJsonValueFromSpec(
+		const SdJsonValue& spec,
+		const std::vector<std::string>& data) : m_spec(spec), m_data(data), m_dataIndex(0)
+{
+}
+
+const SdJsonValue& SdJsonValueFromSpec::Get()
+{
+	if (m_value.GetType() == SD_JSONVALUE_NULL) {
+		OnJsonValueSpec(m_spec, &m_value);
+	}
+	return m_value;
+}
+
+void SdJsonValueFromSpec::OnJsonValueSpec(
+		const SdJsonValue& spec,
+		SdJsonValue* value)
+{
+	if (m_data.size() == m_dataIndex) {
+		return;
+	}
+	if (SD_JSONVALUE_OBJECT == spec.GetType()) {
+		SdJsonObject jobj;
+		for (size_t i = 0; i < spec.AsObject()->GetMemberCount(); i++) {
+			SdJsonValue newVal;
+			const char* memberName = spec.AsObject()->GetMemberName(i);
+			OnJsonValueSpec(*(SdJsonValue*)(spec.AsObject()->GetMember(memberName)),&newVal);
+			jobj.AddMember(memberName,newVal);
+		}
+		value->SetValueAsObject(&jobj);
+	} else if (SD_JSONVALUE_ARRAY == spec.GetType()) {
+		SdJsonArray jarr;
+		for (size_t i = 0; i < spec.AsArray()->ElementCount(); i++) {
+			SdJsonValue newVal;
+			OnJsonValueSpec(*(SdJsonValue*)(spec.AsArray()->GetElement(i)),&newVal);
+			jarr.AddElement(newVal);
+		}
+		value->SetValueAsArray(&jarr);
+	} else if (SD_JSONVALUE_STRING == spec.GetType()) {
+		switch (SdJsonValueTypeFromString(spec.AsString())) {
+		case SD_JSONVALUE_STRING:
+			value->SetValueAsString(m_data[m_dataIndex].c_str());
+			break;
+		case SD_JSONVALUE_INT:
+			value->SetValueAsInt(atoi(m_data[m_dataIndex].c_str()));
+			break;
+		case SD_JSONVALUE_BOOL:
+			if (m_data[m_dataIndex] == "true") {
+				value->SetValueAsBool(true);
+			} else if (m_data[m_dataIndex] == "false") {
+				value->SetValueAsBool(false);
+			}
+			break;
+		case SD_JSONVALUE_DOUBLE:
+			value->SetValueAsDouble(atof(m_data[m_dataIndex].c_str()));
+			break;
+		default: break;
+		}
+		++m_dataIndex;
 	}
 }
 

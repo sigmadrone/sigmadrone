@@ -66,8 +66,18 @@ enum SdJsonValueType
 };
 
 __inline const char* SdJsonValueTypeAsString(SdJsonValueType t) {
-	const char* asStr[] = {"null","string","int","double","bool","object","array"};
+	static const char* asStr[] = {"null","string","int","double","bool","object","array"};
 	return t < ARRAYSIZE(asStr) ? asStr[t] : "null";
+}
+
+__inline SdJsonValueType SdJsonValueTypeFromString(std::string val) {
+	static const char* asStr[] = {"null","string","int","double","bool","object","array"};
+	for (size_t i = 0; i < ARRAYSIZE(asStr); ++i) {
+		if (val == std::string(asStr[i])) {
+			return static_cast<SdJsonValueType>(i);
+		}
+	}
+	return SD_JSONVALUE_NULL;
 }
 
 typedef enum _SdCommandCode {

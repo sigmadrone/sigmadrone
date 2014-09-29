@@ -52,6 +52,8 @@ public:
 	std::string AsString() const;
 	const IJsonArray* AsArray() const;
 	const IJsonObject* AsObject() const;
+	const SdJsonArray& Array() const;
+	const SdJsonObject& Object() const;
 	bool AsDoubleSafe(double*) const;
 	bool AsIntSafe(int64_t*) const;
 	bool AsIntSafe(int32_t*) const;
@@ -70,6 +72,8 @@ public:
 	bool SetValueAsString( IN const char* value);
 
 	const SdJsonValue& operator=(const SdJsonValue&);
+	bool operator==(const SdJsonValue&) const;
+	bool operator!=(const SdJsonValue& rhs) const { return !operator==(rhs); }
 	_JsonNode* DupGlibNode() const;
 	_JsonNode* PeekGlibNode() { return m_jnode; }
 
@@ -117,7 +121,12 @@ public:
 	void RemoveMember(const char* name);
 	IJsonObject* Clone() const;
 	const SdJsonObject& operator=(const SdJsonObject& rhs);
+	bool operator==(const SdJsonObject& rhs) const;
+	bool operator!=(const SdJsonObject& rhs) const { return !operator==(rhs); }
 	_JsonObject* PeekGlibObj() { return m_jobj; }
+	const SdJsonValue& Member(const char* name) const {
+		return *static_cast<const SdJsonValue*>(GetMember(name));
+	}
 
 private:
 
@@ -151,8 +160,14 @@ public:
 	IJsonArray* Clone() const;
 	void Reset();
 	const SdJsonArray& operator=(const SdJsonArray&);
+	bool operator==(const SdJsonArray& rhs) const;
+	bool operator!=(const SdJsonArray& rhs) const { return !operator==(rhs); }
 
 	_JsonArray* PeekGlibArr() { return m_jarr; }
+
+	const SdJsonValue& Element(size_t index) const {
+		return *static_cast<const SdJsonValue*>(GetElement(index));
+	}
 
 private:
 	_JsonArray* m_jarr;
@@ -166,10 +181,27 @@ public:
 	~SdJsonValueSpec() {}
 	const SdJsonValue& Get();
 private:
-	void OnJsonValue(const SdJsonValue& val, SdJsonValue* parent);
+	void OnJsonValue(const SdJsonValue& val, SdJsonValue* spec);
 	const SdJsonValue& m_value;
 	SdJsonValue m_spec;
 };
+
+class SdJsonValueFromSpec
+{
+public:
+	SdJsonValueFromSpec(
+			const SdJsonValue& valueSpec,
+			const std::vector<std::string>& data);
+	const SdJsonValue& Get();
+private:
+	void OnJsonValueSpec(const SdJsonValue& spec, SdJsonValue* value);
+private:
+	const SdJsonValue& m_spec;
+	const std::vector<std::string>& m_data;
+	size_t m_dataIndex;
+	SdJsonValue m_value;
+};
+
 
 std::string SdJsonValueToText(const SdJsonValue& val);
 
