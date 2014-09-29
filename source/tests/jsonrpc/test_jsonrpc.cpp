@@ -305,12 +305,13 @@ void TestJsonSpec()
 	data.push_back("10");
 
 	SdJsonValue valFromSpec = SdJsonValueFromSpec(spec,data).Get();
+	printf("Original value: \n %s\n", SdJsonValueToText(orig).c_str());
+	printf("Value from spec:\n %s\n", SdJsonValueToText(valFromSpec).c_str());
 	if (valFromSpec == orig) {
 		TEST_PASSED();
 	} else {
 		TEST_FAILED();
 	}
-	printf("Value from spec:\n %s\n", SdJsonValueToText(valFromSpec).c_str());
 }
 
 
