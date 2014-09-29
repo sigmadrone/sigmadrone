@@ -254,6 +254,51 @@ void TestJsonRpcBuilder()
 	return;
 }
 
+void TestJsonSpec()
+{
+	TEST_BEGIN("TestJsonRpcBuilder");
+
+#if 0
+	static const char* schema1 =
+			"{"
+			"\"jsonrpc\": \"2.0\", \"method\": \"run\", \"params\": "
+			"{"
+			"\"Flight\": "
+			"{"
+			"\"Thrust\": 0.5,"
+			"\"MinThrust\":  0.3,"
+			"\"MaxThrust\": 0.7"
+			"}",
+			"\"SkyIsTheLimit\": true",
+			"\"Grounded\": false",
+			"}, "
+			"\"id\": 10"
+			"}";
+#endif
+	SdJsonValue orig;
+	SdJsonObject obj;
+	SdJsonObject params;
+	SdJsonObject flight;
+
+	obj.AddMember("jsonrpc",SdJsonValue("2.0"));
+	obj.AddMember("method",SdJsonValue("run"));
+	flight.AddMember("Thrust",SdJsonValue(0.5));
+	flight.AddMember("MinThrust",SdJsonValue(0.3));
+	flight.AddMember("MaxThrust",SdJsonValue(0.7));
+	params.AddMember("Flight", SdJsonValue(flight));
+	params.AddMember("SkyIsTheLimit", SdJsonValue(true));
+	params.AddMember("Grounded", SdJsonValue(false));
+	obj.AddMember("params",SdJsonValue(params));
+	obj.AddMember("id",SdJsonValue(10));
+	orig.SetValueAsObject(&obj);
+
+	SdJsonValue spec = SdJsonValueSpec(orig).Get();
+	std::vector<std::string> data;
+
+
+	TEST_PASSED();
+}
+
 
 cmd_args g_args;
 
