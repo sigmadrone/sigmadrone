@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include <errno.h>
 #include "../../jsonrpc/jsonrpcparser.h"
 #include "../../jsonrpc/jsonrpcbuilder.h"
@@ -256,7 +257,7 @@ void TestJsonRpcBuilder()
 
 void TestJsonSpec()
 {
-	TEST_BEGIN("TestJsonRpcBuilder");
+	TEST_BEGIN("TestJsonSpec");
 
 #if 0
 	static const char* schema1 =
@@ -294,9 +295,22 @@ void TestJsonSpec()
 
 	SdJsonValue spec = SdJsonValueSpec(orig).Get();
 	std::vector<std::string> data;
+	data.push_back("2.0");
+	data.push_back("run");
+	data.push_back("0.5");
+	data.push_back("0.3");
+	data.push_back("0.7");
+	data.push_back("true");
+	data.push_back("false");
+	data.push_back("10");
 
-
-	TEST_PASSED();
+	SdJsonValue valFromSpec = SdJsonValueFromSpec(spec,data).Get();
+	if (valFromSpec == orig) {
+		TEST_PASSED();
+	} else {
+		TEST_FAILED();
+	}
+	printf("Value from spec:\n %s\n", SdJsonValueToText(valFromSpec).c_str());
 }
 
 
@@ -336,6 +350,7 @@ int main(int argc, const char *argv[])
 	TestParseJsonRpcFile(jsonFileName);
 	TestParseJsonRpcFromBuffer();
 	TestJsonRpcBuilder();
+	TestJsonSpec();
 
 	TEST_STATS();
 
