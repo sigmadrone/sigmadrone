@@ -15,12 +15,12 @@
 	"GlobalConfig": {
 		"Gyro": {
 			"DeviceName": "/dev/gyro0",
-			"SamplingRate": 400,
+			"SamplingRate": 760,
 			"Scale": 2000,
 			"MaxReading": 32768,
 			"Watermark": 2,
-			"NumBiasSamples": 16000,
-			"CoordinateMap": [1,0,0, 0,1,0, 0,0,1]
+			"NumBiasSamples": 10000,
+			"CoordinateMap": [-1,0,0, 0,1,0, 0,0,1]
 		},
 		"Accelerometer": {
 			"DeviceName": "/dev/accel0",
@@ -28,7 +28,7 @@
 			"Scale": 4,
 			"MaxReading": 32768,
 			"Watermark": 2,
-			"CoordinateMap":[0,-1,0, 1,0,0, 0,0,1]
+			"CoordinateMap":[1,0,0, 0,-1,0, 0,0,-1]
 		},
 		"Magnetometer": {
 			"DeviceName": "/dev/mag0"
