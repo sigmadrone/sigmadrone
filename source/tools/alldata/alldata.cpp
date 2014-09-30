@@ -33,12 +33,18 @@ static cmd_arg_spec g_argspec[] = {
 		{"gyr-scale",	"",		"Set gyroscope full scale. Supported scales (DPS): 250, 500, 2000. Default: 2000", CMD_ARG_STRING},
 		{"acc-scale",	"",		"Set accelerometer full scale. Supported scales (G): 2, 4, 8, 16. Default: 4", CMD_ARG_STRING},
 		{"mag-scale",	"",		"Set magnetometer full scale. Supported scales (Gauss): 1300, 1900, 2500, 4000, 4700, 5600, 8100. Default: 1300", CMD_ARG_STRING},
+		{"gyr-disable",	"",		"Disable reading gyroscope", CMD_ARG_BOOL},
+		{"acc-disable",	"",		"Disable reading accelerometer", CMD_ARG_BOOL},
+		{"mag-disable",	"",		"Disable reading magnetometer", CMD_ARG_BOOL},
+		{"bar-disable",	"",		"Disable reading baromerter", CMD_ARG_BOOL},
+
 };
 
 
 int main(int argc, const char *argv[])
 {
 	cmd_args args;
+	std::string gyr_device, acc_device, mag_device, bar_device;
 
 	try {
 		args.add_specs(g_argspec, sizeof(g_argspec)/sizeof(*g_argspec));
@@ -48,27 +54,35 @@ int main(int argc, const char *argv[])
 			std::cout << args.get_help_message() << std::endl;
 			return 0;
 		}
-		std::string gyr_rate = args.get_value("gyr-rate", "190");
-		std::string acc_rate = args.get_value("acc-rate", "200");
-		std::string mag_rate = args.get_value("mag-rate", "220");
-		std::string gyr_scale = args.get_value("gyr-scale", "2000");
-		std::string acc_scale = args.get_value("acc-scale", "4");
-		std::string mag_scale = args.get_value("mag-scale", "1300");
-		std::string gyr_fifo = args.get_value("gyr-fifo", "4");
-		std::string acc_fifo = args.get_value("acc-fifo", "4");
-		std::string gyr_device = args.get_value("gyr-device", "/dev/gyro0");
-		std::string acc_device = args.get_value("acc-device", "/dev/accel0");
-		std::string mag_device = args.get_value("mag-device", "/dev/mag0");
-		std::string bar_device = args.get_value("bar-device", "/sys/bus/i2c/devices/4-0077/pressure0_input");
-
-		sampler sensorsamples(gyr_device, acc_device, mag_device, bar_device);
-		sensorsamples.gyr_.set_rate(atoi(gyr_rate.c_str()));
-		sensorsamples.acc_.set_rate(atoi(acc_rate.c_str()));
-		sensorsamples.gyr_.set_full_scale(atoi(gyr_scale.c_str()));
-		sensorsamples.acc_.set_full_scale(atoi(acc_scale.c_str()));
-		sensorsamples.mag_.set_full_scale(atoi(mag_scale.c_str()));
-		sensorsamples.gyr_.set_fifo_threshold(atoi(gyr_fifo.c_str()));
-		sensorsamples.acc_.set_fifo_threshold(atoi(acc_fifo.c_str()));
+		if (args.get_value("gyr-disable").empty())
+			gyr_device = args.get_value("gyr-device", "/dev/gyro0");
+		if (args.get_value("acc-disable").empty())
+			acc_device = args.get_value("acc-device", "/dev/accel0");
+		if (args.get_value("mag-disable").empty())
+			mag_device = args.get_value("mag-device", "/dev/mag0");
+		if (args.get_value("bar-disable").empty())
+			bar_device = args.get_value("bar-device", "/sys/bus/i2c/devices/4-0077/pressure0_input");
+		sampler sensorsamples(
+				args.get_value("gyr-disable").empty() ? args.get_value("gyr-device", "/dev/gyro0") : "",
+				args.get_value("acc-disable").empty() ? args.get_value("acc-device", "/dev/accel0") : "",
+				args.get_value("mag-disable").empty() ? args.get_value("mag-device", "/dev/mag0") : "",
+				args.get_value("bar-disable").empty() ? args.get_value("bar-device", "/sys/bus/i2c/devices/4-0077/pressure0_input") : "");
+		if (!args.get_value("gyr-disable").empty() && !args.get_value("gyr-rate").empty())
+			sensorsamples.gyr_.set_rate(atoi(args.get_value("gyr-rate").c_str()));
+		if (!args.get_value("acc-disable").empty() && !args.get_value("acc-rate").empty())
+			sensorsamples.acc_.set_rate(atoi(args.get_value("acc-rate").c_str()));
+		if (!args.get_value("mag-disable").empty() && !args.get_value("mag-rate").empty())
+			sensorsamples.mag_.set_rate(atoi(args.get_value("mag-rate").c_str()));
+		if (!args.get_value("gyr-disable").empty() && !args.get_value("gyr-scale").empty())
+			sensorsamples.gyr_.set_full_scale(atoi(args.get_value("gyr-scale").c_str()));
+		if (!args.get_value("acc-disable").empty() && !args.get_value("acc-scale").empty())
+			sensorsamples.acc_.set_full_scale(atoi(args.get_value("acc-scale").c_str()));
+		if (!args.get_value("mag-disable").empty() && !args.get_value("mag-scale").empty())
+			sensorsamples.mag_.set_full_scale(atoi(args.get_value("mag-scale").c_str()));
+		if (!args.get_value("gyr-disable").empty() && !args.get_value("gyr-fifo").empty())
+			sensorsamples.gyr_.set_fifo_threshold(atoi(args.get_value("gyr-fifo").c_str()));
+		if (!args.get_value("acc-disable").empty() && !args.get_value("acc-fifo").empty())
+			sensorsamples.acc_.set_fifo_threshold(atoi(args.get_value("acc-fifo").c_str()));
 		sensorsamples.init();
 		while (true) {
 			sensorsamples.update();

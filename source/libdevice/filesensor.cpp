@@ -6,9 +6,9 @@
 file_sensor::file_sensor(const std::string& filename, unsigned int trottle, double scale)
 	: filename_(filename)
 	, trottle_(trottle)
+	, scale_(scale)
 	, trottle_counter_(0)
 	, cachedvalue_(0)
-	, scale_(scale)
 	, updating_(false)
 {
 	if (pthread_cond_init(&cond_, NULL) != 0)
@@ -36,28 +36,34 @@ file_sensor::~file_sensor()
 void file_sensor::open()
 {
 	std::ifstream file;
-	file.exceptions( std::ifstream::failbit | std::ifstream::badbit );
 	file.open(filename_.c_str());
+	if (!file)
+		throw std::runtime_error(std::string("Failed to open device file: ") + filename_);
 	file.close();
 }
 
-double file_sensor::read()
+double file_sensor::read() const
 {
 	if (updating_ || (trottle_ && (trottle_counter_++ % trottle_))) {
 		return cachedvalue_;
 	}
 	pthread_t thread;
 	updating_ = true;
-	if (pthread_create(&thread, &detached_, file_sensor_thread, this) != 0) {
+	if (pthread_create(&thread, &detached_, file_sensor_thread, (void*)this) != 0) {
 		updating_ = false;
 		throw std::runtime_error("pthread_create failed.");
 	}
 	return cachedvalue_;
 }
 
-void file_sensor::read(double &value)
+void file_sensor::read(double &value) const
 {
 	value = read();
+}
+
+std::string file_sensor::filename() const
+{
+	return filename_;
 }
 
 void file_sensor::update_value()

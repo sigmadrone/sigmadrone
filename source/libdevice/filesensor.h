@@ -9,8 +9,9 @@ public:
 	file_sensor(const std::string& filename, unsigned int trottle = 0, double scale = 1.0);
 	~file_sensor();
 	void open();
-	void read(double &value);
-	double read();
+	void read(double &value) const;
+	double read() const;
+	std::string filename() const;
 
 protected:
 	static void *file_sensor_thread(void*);
@@ -19,13 +20,13 @@ protected:
 protected:
 	std::string filename_;
 	unsigned int trottle_;
-	unsigned int trottle_counter_;
-	double cachedvalue_;
 	double scale_;
-	bool updating_;
+	mutable unsigned int trottle_counter_;
+	mutable double cachedvalue_;
+	mutable bool updating_;
+	mutable pthread_attr_t detached_;
 	pthread_cond_t cond_;
 	pthread_mutex_t mutex_;
-	pthread_attr_t detached_;
 };
 
 #endif
