@@ -27,12 +27,22 @@ public:
 	void open(open_mode_t mode = o_default);
 
 	/**
+	 * Get device file name.
+	 */
+	std::string filename() const;
+
+	/**
+	 * Check if device is open.
+	 */
+	bool isopen() const;
+
+	/**
 	 * buffer pointer to array of double3d_t elements
 	 * size the number of elements of type double3d_t
 	 *
 	 * Returns the number of elements of type double3d_t put into the buffer
 	 */
-	size_t read(double3d_t* buffer, size_t size);
+	size_t read(double3d_t* buffer, size_t size) const;
 
 	/**
 	 * Calculate the average values over the number of samples read
@@ -42,7 +52,7 @@ public:
 	 * is returned if the device is opened with O_NONBLOCK and no new data
 	 * is available yet.
 	 */
-	bool read_average(double& x, double& y, double &z);
+	bool read_average(double& x, double& y, double &z) const;
 
 	/**
 	 * Calculate the average values over the number of samples read
@@ -53,7 +63,7 @@ public:
 	 * is returned if the device is opened with O_NONBLOCK and no new data
 	 * is available yet.
 	 */
-	bool read_scaled_average(double& x, double& y, double &z);
+	bool read_scaled_average(double& x, double& y, double &z) const;
 
 	void close();
 
@@ -64,7 +74,7 @@ public:
 	/**
 	 * Get the sampling rate of the device.
 	 */
-	int get_rate();
+	int get_rate() const;
 
 	/**
 	 * Set the sampling rate of the device.
@@ -75,11 +85,11 @@ public:
 	 * Set the number of samples to read in the FIFO before
 	 * returning the data, for devices that have FIFO buffer
 	 */
-	int get_fifo_threshold();
+	int get_fifo_threshold() const;
 
 	void set_fifo_threshold(unsigned int threshold);
 
-	int get_full_scale();
+	int get_full_scale() const;
 
 	void set_full_scale(int scale);
 
@@ -92,8 +102,8 @@ protected:
 	int fd_;
 	std::string filename_;
 	unsigned int trottle_;
-	unsigned int trottle_counter_;
-	double3d_t cached_value_;
+	mutable unsigned int trottle_counter_;
+	mutable double3d_t cached_value_;
 	double scale_;
 };
 

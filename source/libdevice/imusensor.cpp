@@ -43,7 +43,17 @@ void imu_sensor::open(open_mode_t mode)
 	}
 }
 
-size_t imu_sensor::read(double3d_t* buffer, size_t size)
+bool imu_sensor::isopen() const
+{
+	return (fd_ >= 0) ? true : false;
+}
+
+std::string imu_sensor::filename() const
+{
+	return filename_;
+}
+
+size_t imu_sensor::read(double3d_t* buffer, size_t size) const
 {
 	short3d_t data[64];
 	int ret, records;
@@ -80,7 +90,7 @@ size_t imu_sensor::read(double3d_t* buffer, size_t size)
 	return ret;
 }
 
-bool imu_sensor::read_average(double& x, double& y, double &z)
+bool imu_sensor::read_average(double& x, double& y, double &z) const
 {
 	double3d_t data[64];
 	int records = read(data, sizeof(data)/sizeof(data[0]));
@@ -98,7 +108,7 @@ bool imu_sensor::read_average(double& x, double& y, double &z)
 	return true;
 }
 
-bool imu_sensor::read_scaled_average(double& x, double& y, double &z)
+bool imu_sensor::read_scaled_average(double& x, double& y, double &z) const
 {
 	if (!read_average(x, y, z))
 		return false;
@@ -134,7 +144,7 @@ void imu_sensor::disable()
 	}
 }
 
-int imu_sensor::get_rate()
+int imu_sensor::get_rate() const
 {
 	int rate = ioctl(fd_, AXISDATA_IOC_GETRATE, 0);
 	if (rate < 0) {
@@ -157,7 +167,7 @@ void imu_sensor::set_rate(unsigned int rate)
 	}
 }
 
-int imu_sensor::get_fifo_threshold()
+int imu_sensor::get_fifo_threshold() const
 {
 	int threshold = ioctl(fd_, AXISDATA_IOC_GETWATERMARK, 0);
 	if (threshold < 0) {
@@ -179,7 +189,7 @@ void imu_sensor::set_fifo_threshold(unsigned int threshold)
 	}
 }
 
-int imu_sensor::get_full_scale()
+int imu_sensor::get_full_scale() const
 {
 	int scale = ioctl(fd_, AXISDATA_IOC_GETSCALE, 0);
 	if (scale < 0) {

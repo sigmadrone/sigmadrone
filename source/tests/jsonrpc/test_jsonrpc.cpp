@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <vector>
 #include <errno.h>
 #include "../../jsonrpc/jsonrpcparser.h"
 #include "../../jsonrpc/jsonrpcbuilder.h"
@@ -254,6 +255,65 @@ void TestJsonRpcBuilder()
 	return;
 }
 
+void TestJsonSpec()
+{
+	TEST_BEGIN("TestJsonSpec");
+
+#if 0
+	static const char* schema1 =
+			"{"
+			"\"jsonrpc\": \"2.0\", \"method\": \"run\", \"params\": "
+			"{"
+			"\"Flight\": "
+			"{"
+			"\"Thrust\": 0.5,"
+			"\"MinThrust\":  0.3,"
+			"\"MaxThrust\": 0.7"
+			"}",
+			"\"SkyIsTheLimit\": true",
+			"\"Grounded\": false",
+			"}, "
+			"\"id\": 10"
+			"}";
+#endif
+	SdJsonValue orig;
+	SdJsonObject obj;
+	SdJsonObject params;
+	SdJsonObject flight;
+
+	obj.AddMember("jsonrpc",SdJsonValue("2.0"));
+	obj.AddMember("method",SdJsonValue("run"));
+	flight.AddMember("Thrust",SdJsonValue(0.5));
+	flight.AddMember("MinThrust",SdJsonValue(0.3));
+	flight.AddMember("MaxThrust",SdJsonValue(0.7));
+	params.AddMember("Flight", SdJsonValue(flight));
+	params.AddMember("SkyIsTheLimit", SdJsonValue(true));
+	params.AddMember("Grounded", SdJsonValue(false));
+	obj.AddMember("params",SdJsonValue(params));
+	obj.AddMember("id",SdJsonValue(10));
+	orig.SetValueAsObject(&obj);
+
+	SdJsonValue spec = SdJsonValueSpec(orig).Get();
+	std::vector<std::string> data;
+	data.push_back("2.0");
+	data.push_back("run");
+	data.push_back("0.5");
+	data.push_back("0.3");
+	data.push_back("0.7");
+	data.push_back("true");
+	data.push_back("false");
+	data.push_back("10");
+
+	SdJsonValue valFromSpec = SdJsonValueFromSpec(spec,data).Get();
+	printf("Original value: \n %s\n", SdJsonValueToText(orig).c_str());
+	printf("Value from spec:\n %s\n", SdJsonValueToText(valFromSpec).c_str());
+	if (valFromSpec == orig) {
+		TEST_PASSED();
+	} else {
+		TEST_FAILED();
+	}
+}
+
 
 cmd_args g_args;
 
@@ -291,6 +351,7 @@ int main(int argc, const char *argv[])
 	TestParseJsonRpcFile(jsonFileName);
 	TestParseJsonRpcFromBuffer();
 	TestJsonRpcBuilder();
+	TestJsonSpec();
 
 	TEST_STATS();
 

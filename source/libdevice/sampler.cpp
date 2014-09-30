@@ -11,9 +11,14 @@ sampler::sampler(const std::string& gyrdev, const std::string& accdev, const std
 	, mag_(magdev, 10)
 	, bar_(bardev, 10, 0.01)
 {
-	gyr_.open();
-	acc_.open(imu_sensor::o_nonblock);
-	mag_.open(imu_sensor::o_nonblock);
+	if (!gyr_.filename().empty())
+		gyr_.open();
+	if (!acc_.filename().empty())
+		acc_.open(imu_sensor::o_nonblock);
+	if (!mag_.filename().empty())
+		mag_.open(imu_sensor::o_nonblock);
+	if (!bar_.filename().empty())
+		bar_.open();
 }
 
 sampler::~sampler()
@@ -22,10 +27,14 @@ sampler::~sampler()
 
 void sampler::update()
 {
-	bar_.read(data.bar1d_);
-	acc_.read_scaled_average(data.acc3d_.at(0, 0), data.acc3d_.at(1, 0), data.acc3d_.at(2, 0));
-	mag_.read_scaled_average(data.mag3d_.at(0, 0), data.mag3d_.at(1, 0), data.mag3d_.at(2, 0));
-	gyr_.read_scaled_average(data.gyr3d_.at(0, 0), data.gyr3d_.at(1, 0), data.gyr3d_.at(2, 0));
+	if (!bar_.filename().empty())
+		bar_.read(data.bar1d_);
+	if (!acc_.filename().empty())
+		acc_.read_scaled_average(data.acc3d_.at(0, 0), data.acc3d_.at(1, 0), data.acc3d_.at(2, 0));
+	if (!mag_.filename().empty())
+		mag_.read_scaled_average(data.mag3d_.at(0, 0), data.mag3d_.at(1, 0), data.mag3d_.at(2, 0));
+	if (!gyr_.filename().empty())
+		gyr_.read_scaled_average(data.gyr3d_.at(0, 0), data.gyr3d_.at(1, 0), data.gyr3d_.at(2, 0));
 	update_time();
 }
 
