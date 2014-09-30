@@ -17,8 +17,8 @@ PidPilot::PidPilot()
 	Vector3d TrustDir(0, 0, 1);
 	m_M0 = Vector3d::cross(Vector3d( 1.0, -1.0, 0.0), TrustDir).normalize();
 	m_M1 = Vector3d::cross(Vector3d( 1.0,  1.0, 0.0), TrustDir).normalize();
-	m_M2 = Vector3d::cross(Vector3d(-1.0, -1.0, 0.0), TrustDir).normalize();
-	m_M3 = Vector3d::cross(Vector3d(-1.0,  1.0, 0.0), TrustDir).normalize();
+	m_M2 = Vector3d::cross(Vector3d(-1.0,  1.0, 0.0), TrustDir).normalize();
+	m_M3 = Vector3d::cross(Vector3d(-1.0, -1.0, 0.0), TrustDir).normalize();
 
 }
 
@@ -72,7 +72,7 @@ int PidPilot::Start(const SdDroneConfig* config)
 	assert(m_runtime);
 
 	m_config = config->Quad;
-	m_pid.Reset(m_config.Kp * 1000, m_config.Ki * 1000, m_config.Kd * 1000);
+	m_pid.Reset(m_config.Kp, m_config.Ki, m_config.Kd);
 
 	m_runtime->SetIoFilters(
 			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
