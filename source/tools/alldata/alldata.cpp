@@ -44,7 +44,6 @@ static cmd_arg_spec g_argspec[] = {
 int main(int argc, const char *argv[])
 {
 	cmd_args args;
-	std::string gyr_device, acc_device, mag_device, bar_device;
 
 	try {
 		args.add_specs(g_argspec, sizeof(g_argspec)/sizeof(*g_argspec));
@@ -54,14 +53,6 @@ int main(int argc, const char *argv[])
 			std::cout << args.get_help_message() << std::endl;
 			return 0;
 		}
-		if (args.get_value("gyr-disable").empty())
-			gyr_device = args.get_value("gyr-device", "/dev/gyro0");
-		if (args.get_value("acc-disable").empty())
-			acc_device = args.get_value("acc-device", "/dev/accel0");
-		if (args.get_value("mag-disable").empty())
-			mag_device = args.get_value("mag-device", "/dev/mag0");
-		if (args.get_value("bar-disable").empty())
-			bar_device = args.get_value("bar-device", "/sys/bus/i2c/devices/4-0077/pressure0_input");
 		sampler sensorsamples(
 				args.get_value("gyr-disable").empty() ? args.get_value("gyr-device", "/dev/gyro0") : "",
 				args.get_value("acc-disable").empty() ? args.get_value("acc-device", "/dev/accel0") : "",
