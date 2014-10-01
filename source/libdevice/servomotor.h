@@ -4,6 +4,7 @@
 class servomotor
 {
 protected:
+	bool valid_;				/* Servo motor good state */
 	double pulse_;				/* Servo motor current position pulse length in msec */
 
 public:
@@ -30,6 +31,11 @@ public:
 	 * Return the current pulse in mSec, required for the motor to maintain the current offset
 	 */
 	double pulse() const;
+
+	/**
+	 * Check if the class is properly initialized and ready.
+	 */
+	bool valid() const;
 };
 
 #endif

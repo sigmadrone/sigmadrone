@@ -18,7 +18,7 @@ public:
 	/**
 	 * Get the rate of the generated PWM pulses
 	 */
-	virtual int getrate();
+	virtual unsigned int getrate();
 
 	/**
 	 * Update the hardware PWM controller with the motor(s) pulse
@@ -36,8 +36,8 @@ public:
 	virtual void disable();
 
 protected:
-	servomotor* motor_;
-	unsigned int channels_;
+	servomotor* motors_;
+	size_t channels_;
 	unsigned int rate_;
 };
 

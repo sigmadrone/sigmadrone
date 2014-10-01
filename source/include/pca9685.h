@@ -7,7 +7,10 @@
 
 #include <linux/types.h>
 
-#define PCA9685_PULSE(__on__, __off__) ((((((__u32)(__on__)) & 0x0FFF)) << 16) | (((__u32)(__off__)) & 0x0FFF))
+#define PCA9685_BITS 12
+#define PCA9685_SIZE (1 << PCA9685_BITS)
+#define PCA9685_MASK (PCA9685_SIZE - 1)
+#define PCA9685_PULSE(__on__, __off__) ((((((__u32)(__on__)) & PCA9685_MASK)) << 16) | (((__u32)(__off__)) & PCA9685_MASK))
 
 #define PCA9685_IOC_MAGIC	'P'
 #define PCA9685_IOC_SETLED0	_IO(PCA9685_IOC_MAGIC, 0)

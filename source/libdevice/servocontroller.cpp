@@ -3,7 +3,7 @@
 
 
 servocontroller::servocontroller(unsigned int channels)
-	: motor_(new servomotor[channels])
+	: motors_(new servomotor[channels])
 	, channels_(channels)
 	, rate_(0)
 {
@@ -12,21 +12,21 @@ servocontroller::servocontroller(unsigned int channels)
 
 servocontroller::~servocontroller()
 {
-	delete [] motor_;
+	delete [] motors_;
 }
 
 servomotor& servocontroller::operator[](unsigned int channel)
 {
 	if (channel >= channels_)
 		throw std::range_error("servocontroller::operator[], channel is outside of the available channels range");
-	return motor_[channel];
+	return motors_[channel];
 }
 
 void servocontroller::setrate(unsigned int)
 {
 }
 
-int servocontroller::getrate()
+unsigned int servocontroller::getrate()
 {
 	return rate_;
 }

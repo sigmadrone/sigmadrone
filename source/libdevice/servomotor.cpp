@@ -2,8 +2,14 @@
 #include "sstream"
 #include "servomotor.h"
 
+/*
+ * Default constructor is provided to allow the
+ * creation of array of motors. The valid_ state is
+ * set to false, so the motor is not usable in this state.
+ */
 servomotor::servomotor()
-	: pulse_(0.0)
+	: valid_(false)
+	, pulse_(0.0)
 	, reset_(0.0)
 	, neutral_(0.0)
 	, negative_(0.0)
@@ -12,13 +18,15 @@ servomotor::servomotor()
 }
 
 servomotor::servomotor(double reset, double neutral, double negative, double positive)
-	: pulse_(reset)
+	: valid_(true)
+	, pulse_(reset)
 	, reset_(reset)
 	, neutral_(neutral)
 	, negative_(negative)
 	, positive_(positive)
 {
-
+	if (reset < 0 || neutral < 0 || negative < 0 || positive < 0)
+		std::range_error("servomotor::servomotor initialization failed.");
 }
 
 void servomotor::offset(double percent)
@@ -41,5 +49,12 @@ void servomotor::reset()
 
 double servomotor::pulse() const
 {
+	if (!valid_)
+		throw std::runtime_error("servomotor::pulse must not be called until the motor is properly initialized.");
 	return pulse_;
+}
+
+bool servomotor::valid() const
+{
+	return valid_;
 }
