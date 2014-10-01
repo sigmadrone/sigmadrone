@@ -13,6 +13,9 @@ OBJS= \
     obj/filesensor.o \
     obj/sampler.o \
     obj/filesampler.o \
+    obj/servomotor.o \
+    obj/servocontroller.o \
+    obj/pca9685controller.o \
 
 all: obj $(TARGET)
 
