@@ -62,6 +62,8 @@ public:
 
 	bool log_debug_message(const char *fmt, ...)
 	{
+		if (!logfile_)
+			return false;
 		bool result = true;
 		va_list args;
 		va_start(args, fmt);
@@ -72,6 +74,8 @@ public:
 
 	bool log_info_message(const char *fmt, ...)
 	{
+		if (!logfile_)
+			return false;
 		bool result = true;
 		va_list args;
 		va_start(args, fmt);
@@ -82,6 +86,8 @@ public:
 
 	bool log_warning_message(const char *fmt, ...)
 	{
+		if (!logfile_)
+			return false;
 		bool result = true;
 		va_list args;
 		va_start(args, fmt);
@@ -92,6 +98,8 @@ public:
 
 	bool log_error_message(const char *fmt, ...)
 	{
+		if (!logfile_)
+			return false;
 		bool result = true;
 		va_list args;
 		va_start(args, fmt);
@@ -102,6 +110,8 @@ public:
 
 	bool log_critical_message(const char *fmt, ...)
 	{
+		if (!logfile_)
+			return false;
 		bool result = true;
 		va_list args;
 		va_start(args, fmt);
