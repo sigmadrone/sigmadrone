@@ -9,7 +9,7 @@
 #include "libcmdargs/cmdargs.h"
 #include "liblogger/logfile.h"
 #include "liblogger/logger.h"
-#include "libhttp/logger.hpp"
+#include "libdevice/pca9685controller.h"
 #include "userrpcserver.h"
 
 
@@ -24,10 +24,14 @@ public:
 public:
 	boost::scoped_ptr<user_rpcserver> user_rpcserver_;
 
+public:
+	boost::scoped_ptr<servocontroller> servoctrl_;
+
 protected:
 	void signal_handler_terminate();
 	void usage();
 	void init_user_rpcserver();
+	void init_servo_controller();
 
 	boost::asio::io_service io_service_;
 	boost::asio::signal_set signals_;

@@ -59,7 +59,9 @@ int client_app::run(int argc, const char *argv[])
 //		std::cout << "Raw RPC response(DEBUG): " << response.content << std::endl;
 		json::value val;
 		if (json::read(response.content, val)) {
-			if (val.get_obj()["result"].type() == json::str_type)
+			if (val.get_obj()["error"].type() == json::str_type) {
+				std::cout << "Error: " << val.get_obj()["error"].get_str() << std::endl;
+			} else if (val.get_obj()["result"].type() == json::str_type)
 				std::cout << val.get_obj()["result"].get_str() << std::endl;
 			else
 				std::cout << json::write_formatted(val.get_obj()["result"]) << std::endl;

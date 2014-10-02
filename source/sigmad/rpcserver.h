@@ -7,6 +7,9 @@
 #include <iostream>
 #include "json.h"
 
+#ifndef ARRAYSIZE
+#define ARRAYSIZE(x) (sizeof(x)/sizeof(x[0]))
+#endif
 
 enum rpc_error_code
 {

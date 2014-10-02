@@ -33,7 +33,7 @@ server_app::~server_app()
 void server_app::signal_handler_terminate()
 {
 	user_rpcserver_->stop();
-//	logger_->add_log(logger::debug, "Received terminate signal.");
+	log_info_message("Received terminate signal.");
 }
 
 void server_app::stop()
@@ -53,9 +53,24 @@ void server_app::init_user_rpcserver()
 			io_service_,
 			args_.get_value("rpcconnect", "127.0.0.1"),
 			args_.get_value("rpcport", "18222")));
+	user_rpcserver_->set_log_file(logfile_);
 	log_info_message("Starting user rpc server.");
 }
 
+void server_app::init_servo_controller()
+{
+	if (args_.get_value("servo-ctrl") == "pca9685") {
+		servoctrl_.reset(new pca9685controller(4));
+	} else {
+		servoctrl_.reset(new servocontroller(4));
+	}
+	servoctrl_->motor(0) = servomotor(1.0, 1.3, 1.1, 2.2);
+	servoctrl_->motor(1) = servomotor(1.0, 1.3, 1.1, 2.2);
+	servoctrl_->motor(2) = servomotor(1.0, 1.3, 1.1, 2.2);
+	servoctrl_->motor(3) = servomotor(1.0, 1.3, 1.1, 2.2);
+	servoctrl_->setrate(300);
+	servoctrl_->update();
+}
 
 int server_app::run(int argc, const char *argv[])
 {
@@ -63,6 +78,7 @@ int server_app::run(int argc, const char *argv[])
 		daemon_init();
 	get_log_file()->log_level(args_.get_value("loglevel", "info"));
 	log_info_message("Server starting.");
+	init_servo_controller();
 	init_user_rpcserver();
 	boost::thread rpc_thread(boost::bind(&boost::asio::io_service::run, &io_service_));
 	rpc_thread.join();

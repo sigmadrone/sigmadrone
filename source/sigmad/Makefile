@@ -8,8 +8,8 @@ DEBUGFLAGS 	= -g -O0
 INCLUDES	= -I../include -I../ -I../libhttp -I../libjsonspirit -I../libcmdargs -I../liblogger
 xCXXFLAGS 	= -O2 -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(DEBUGFLAGS) $(DEFS) $(CXXFLAGS)
 xLDFLAGS 	= $(LDFLAGS)
-LIBS		= -lhttp -ljsonspirit -lcmdargs -llogger -lm -lrt -lpthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-LIBS		+= -L../libcmdargs -L../liblogger -L../libhttp -L../libjsonspirit
+LIBS		= -llogger -ldevice -lhttp -ljsonspirit -lcmdargs -lm -lrt -lpthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
+LIBS		+= -L../libdevice -L../libcmdargs -L../liblogger -L../libhttp -L../libjsonspirit
 TARGET 		= sigmad
 OBJS		= \
 		obj/main.o \
