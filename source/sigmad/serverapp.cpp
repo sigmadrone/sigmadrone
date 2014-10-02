@@ -64,10 +64,10 @@ void server_app::init_servo_controller()
 	} else {
 		servoctrl_.reset(new servocontroller(4));
 	}
-	servoctrl_->motor(0) = servomotor(1.0, 1.3, 1.1, 2.2);
-	servoctrl_->motor(1) = servomotor(1.0, 1.3, 1.1, 2.2);
-	servoctrl_->motor(2) = servomotor(1.0, 1.3, 1.1, 2.2);
-	servoctrl_->motor(3) = servomotor(1.0, 1.3, 1.1, 2.2);
+	servoctrl_->motor(0) = servomotor(1.0, 1.32, 1.1, 2.2);
+	servoctrl_->motor(1) = servomotor(1.0, 1.32, 1.1, 2.2);
+	servoctrl_->motor(2) = servomotor(1.0, 1.32, 1.1, 2.2);
+	servoctrl_->motor(3) = servomotor(1.0, 1.32, 1.1, 2.2);
 	servoctrl_->setrate(300);
 	servoctrl_->update();
 }

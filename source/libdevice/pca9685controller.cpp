@@ -33,6 +33,7 @@ pca9685controller::~pca9685controller()
 void pca9685controller::setrate(unsigned int rate)
 {
 	ioctl(PCA9685_IOC_SETRATE, rate);
+	update();
 }
 
 unsigned int pca9685controller::getrate()
@@ -69,7 +70,13 @@ void pca9685controller::reset()
 
 unsigned int pca9685controller::getpulse(unsigned int channel)
 {
-	return ioctl(PCA9685_IOC_GETLED0 + channel, 0);
+	int on, off;
+	int ret = ioctl(PCA9685_IOC_GETLED0 + channel, 0);
+	on = ret >> 16;
+	off = ret & 0xFFFF;
+	if (off > on)
+		return off - on;
+	return PCA9685_SIZE - (on - off);
 }
 
 void pca9685controller::setpulse(unsigned int channel, unsigned int pulse)

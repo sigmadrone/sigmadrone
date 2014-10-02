@@ -13,9 +13,9 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("myaddress", &user_rpcserver::rpc_myaddress);
 	add("servorate", &user_rpcserver::rpc_servo_rate);
 	add("servoenable", &user_rpcserver::rpc_servo_enable);
-	add("servoposition", &user_rpcserver::rpc_servo_position);
-	add("servopulse", &user_rpcserver::rpc_servo_pulse);
-	add("servopulsems", &user_rpcserver::rpc_servo_pulsems);
+	add("servosetoffset", &user_rpcserver::rpc_servo_setoffset);
+	add("servogetpulse", &user_rpcserver::rpc_servo_getpulse);
+	add("servogetpulsems", &user_rpcserver::rpc_servo_getpulsems);
 
 	add_uri_handler("/jsonrpc", boost::bind(&user_rpcserver::jsonrpc_request_handler, this, _1, _2, _3));
 	add_uri_handler("/", boost::bind(&user_rpcserver::jsonrpc_request_handler, this, _1, _2, _3));
@@ -147,7 +147,7 @@ json::value user_rpcserver::rpc_servo_enable(http::server::connection_ptr connec
 	return "Servo is disabled";
 }
 
-json::value user_rpcserver::rpc_servo_position(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+json::value user_rpcserver::rpc_servo_setoffset(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_int_type, rpc_real_type};
 	if (mode != execute) {
@@ -156,7 +156,7 @@ json::value user_rpcserver::rpc_servo_position(http::server::connection_ptr conn
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "servoposition\n"
+	            "servosetoffset\n"
 	            "\nSet the servo motor position. The offset can be any value between -1.0 and +1.0"
 				"\n 0.0 -> neutral position."
 				"\n-1.0 -> the maximum negative position"
@@ -173,7 +173,7 @@ json::value user_rpcserver::rpc_servo_position(http::server::connection_ptr conn
 	return params[1];
 }
 
-json::value user_rpcserver::rpc_servo_pulse(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+json::value user_rpcserver::rpc_servo_getpulse(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_int_type};
 	if (mode != execute) {
@@ -182,7 +182,7 @@ json::value user_rpcserver::rpc_servo_pulse(http::server::connection_ptr connect
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "servopulse\n"
+	            "servogetpulse\n"
 	            "\nGet the servo current PWM pulse"
 				"\n"
 				"Arguments:\n"
@@ -193,7 +193,7 @@ json::value user_rpcserver::rpc_servo_pulse(http::server::connection_ptr connect
 	return (int)app_.servoctrl_->getpulse(params[0].get_int());
 }
 
-json::value user_rpcserver::rpc_servo_pulsems(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+json::value user_rpcserver::rpc_servo_getpulsems(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_int_type};
 	if (mode != execute) {
@@ -202,7 +202,7 @@ json::value user_rpcserver::rpc_servo_pulsems(http::server::connection_ptr conne
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "servopulsems\n"
+	            "servogetpulsems\n"
 	            "\nGet the servo current PWM pulse in mSec"
 				"\n"
 				"Arguments:\n"

@@ -21,9 +21,9 @@ public:
 	json::value rpc_myaddress(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_enable(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_rate(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
-	json::value rpc_servo_position(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
-	json::value rpc_servo_pulse(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
-	json::value rpc_servo_pulsems(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_servo_setoffset(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_servo_getpulse(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_servo_getpulsems(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 
 protected:
 	void jsonrpc_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);
