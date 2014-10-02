@@ -15,7 +15,7 @@ servocontroller::~servocontroller()
 	delete [] motors_;
 }
 
-servomotor& servocontroller::operator[](unsigned int channel)
+servomotor& servocontroller::motor(unsigned int channel)
 {
 	if (channel >= channels_)
 		throw std::range_error("servocontroller::operator[], channel is outside of the available channels range");

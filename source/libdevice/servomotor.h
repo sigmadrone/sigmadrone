@@ -6,13 +6,12 @@ class servomotor
 protected:
 	bool valid_;				/* Servo motor good state */
 	double pulse_;				/* Servo motor current position pulse length in msec */
+	double reset_;				/* Servo motor reset pulse length in mSec */
+	double neutral_;			/* Servo motor neutral position pulse length in mSec */
+	double negative_;			/* Servo motor max negative position pulse length in mSec */
+	double positive_;			/* Servo motor max positive position pulse length in mSec */
 
 public:
-	const double reset_;		/* Servo motor reset pulse length in mSec */
-	const double neutral_;		/* Servo motor neutral position pulse length in mSec */
-	const double negative_;		/* Servo motor max negative position pulse length in mSec */
-	const double positive_;		/* Servo motor max positive position pulse length in mSec */
-
 	servomotor();
 	servomotor(double reset, double neutral, double negative, double positive);
 

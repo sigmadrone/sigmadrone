@@ -8,7 +8,7 @@ class servocontroller
 public:
 	servocontroller(unsigned int channels);
 	virtual ~servocontroller();
-	servomotor& operator[](unsigned int channel);
+	servomotor& motor(unsigned int channel);
 
 	/**
 	 * Set the rate of the generated PWM pulses
