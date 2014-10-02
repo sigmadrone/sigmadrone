@@ -31,6 +31,21 @@ unsigned int servocontroller::getrate()
 	return rate_;
 }
 
+unsigned int servocontroller::getpulse(unsigned int )
+{
+	return 0;
+}
+
+void servocontroller::setpulse(unsigned int , unsigned int )
+{
+
+}
+
+double servocontroller::getpulse_ms(unsigned int )
+{
+	return 0.0;
+}
+
 void servocontroller::update()
 {
 

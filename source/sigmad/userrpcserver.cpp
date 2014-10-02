@@ -14,6 +14,8 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("servorate", &user_rpcserver::rpc_servo_rate);
 	add("servoenable", &user_rpcserver::rpc_servo_enable);
 	add("servoposition", &user_rpcserver::rpc_servo_position);
+	add("servopulse", &user_rpcserver::rpc_servo_pulse);
+	add("servopulsems", &user_rpcserver::rpc_servo_pulsems);
 
 	add_uri_handler("/jsonrpc", boost::bind(&user_rpcserver::jsonrpc_request_handler, this, _1, _2, _3));
 	add_uri_handler("/", boost::bind(&user_rpcserver::jsonrpc_request_handler, this, _1, _2, _3));
@@ -169,6 +171,46 @@ json::value user_rpcserver::rpc_servo_position(http::server::connection_ptr conn
 	app_.servoctrl_->motor(params[0].get_int()).offset(params[1].get_real());
 	app_.servoctrl_->update();
 	return params[1];
+}
+
+json::value user_rpcserver::rpc_servo_pulse(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_int_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "servopulse\n"
+	            "\nGet the servo current PWM pulse"
+				"\n"
+				"Arguments:\n"
+				"1. motor          (int, required) The channel of the motor\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return (int)app_.servoctrl_->getpulse(params[0].get_int());
+}
+
+json::value user_rpcserver::rpc_servo_pulsems(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_int_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "servopulsems\n"
+	            "\nGet the servo current PWM pulse in mSec"
+				"\n"
+				"Arguments:\n"
+				"1. motor          (int, required) The channel of the motor\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return app_.servoctrl_->getpulse_ms(params[0].get_int());
 }
 
 json::value user_rpcserver::rpc_servo_rate(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
