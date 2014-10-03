@@ -38,6 +38,7 @@ static cmd_arg_spec g_argspec[] = {
 		{"acc-disable",	"",		"Disable reading accelerometer", CMD_ARG_BOOL},
 		{"mag-disable",	"",		"Disable reading magnetometer", CMD_ARG_BOOL},
 		{"bar-disable",	"",		"Disable reading baromerter", CMD_ARG_BOOL},
+		{"rot-matrix",	"",		"Display the rotation matrix", CMD_ARG_BOOL},
 
 };
 
@@ -79,12 +80,18 @@ int main(int argc, const char *argv[])
 		sensorsamples.init();
 		while (true) {
 			sensorsamples.update();
-			fprintf(stdout, "%10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    %10.2lf    %10.3lf\n",
-					sensorsamples.data.acc3d_.at(0, 0), sensorsamples.data.acc3d_.at(1, 0), sensorsamples.data.acc3d_.at(2, 0),
-					sensorsamples.data.gyr3d_.at(0, 0), sensorsamples.data.gyr3d_.at(1, 0), sensorsamples.data.gyr3d_.at(2, 0),
-					sensorsamples.data.mag3d_.at(0, 0), sensorsamples.data.mag3d_.at(1, 0), sensorsamples.data.mag3d_.at(2, 0),
-					sensorsamples.data.bar1d_,
-					sensorsamples.data.dtime_);
+			if (!args.get_value("rot-matrix").empty()) {
+				Matrix4d R = sensorsamples.data.rotq_.rotMatrix4();
+				fprintf(stdout, "%5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf \n",
+						R.at(0, 0), R.at(0, 1), R.at(0, 2), R.at(1, 0), R.at(1, 1), R.at(1, 2), R.at(2, 0), R.at(2, 1), R.at(2, 2));
+			} else {
+				fprintf(stdout, "%10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    %10.2lf    %10.3lf\n",
+						sensorsamples.data.acc3d_.at(0, 0), sensorsamples.data.acc3d_.at(1, 0), sensorsamples.data.acc3d_.at(2, 0),
+						sensorsamples.data.gyr3d_.at(0, 0), sensorsamples.data.gyr3d_.at(1, 0), sensorsamples.data.gyr3d_.at(2, 0),
+						sensorsamples.data.mag3d_.at(0, 0), sensorsamples.data.mag3d_.at(1, 0), sensorsamples.data.mag3d_.at(2, 0),
+						sensorsamples.data.bar1d_,
+						sensorsamples.data.dtime_);
+			}
 			fflush(stdout);
 		}
 
