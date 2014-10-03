@@ -748,6 +748,7 @@ public:
 	T w, x, y, z;
 
 public:
+	static Quaternion<T> identity;
 	Quaternion(const Quaternion<T>& q)
 			: w(q.w), x(q.x), y(q.y), z(q.z)
 	{
@@ -1152,8 +1153,10 @@ public:
 		os << q.toString();
 		return os;
 	}
-
 };
+
+template<class T>
+Quaternion<T> Quaternion<T>::identity(1, 0, 0, 0);
 
 typedef MatrixMN<float, 3, 3> Matrix3f;
 typedef MatrixMN<double, 3, 3> Matrix3d;

@@ -27,7 +27,7 @@ public:
 		bool acc3d_upd_;
 		bool mag3d_upd_;
 		bool bar1d_upd_;
-		data() : bar1d_(0), dtime_(0), time_(0), gyr3d_upd_(false), acc3d_upd_(false), mag3d_upd_(false), bar1d_upd_(false) {}
+		data() : rotq_(QuaternionD::identity), bar1d_(0), dtime_(0), time_(0), gyr3d_upd_(false), acc3d_upd_(false), mag3d_upd_(false), bar1d_upd_(false) {}
 	} data;
 
 public:
