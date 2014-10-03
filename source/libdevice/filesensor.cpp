@@ -42,23 +42,20 @@ void file_sensor::open()
 	file.close();
 }
 
-double file_sensor::read() const
+bool file_sensor::read(double &value) const
 {
 	if (updating_ || (trottle_ && (trottle_counter_++ % trottle_))) {
-		return cachedvalue_;
+		return false;
 	}
+	value = cachedvalue_;
+	trottle_counter_ = 0;
 	pthread_t thread;
 	updating_ = true;
 	if (pthread_create(&thread, &detached_, file_sensor_thread, (void*)this) != 0) {
 		updating_ = false;
 		throw std::runtime_error("pthread_create failed.");
 	}
-	return cachedvalue_;
-}
-
-void file_sensor::read(double &value) const
-{
-	value = read();
+	return true;
 }
 
 std::string file_sensor::filename() const

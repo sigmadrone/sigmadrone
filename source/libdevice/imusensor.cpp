@@ -56,16 +56,14 @@ std::string imu_sensor::filename() const
 size_t imu_sensor::read(double3d_t* buffer, size_t size) const
 {
 	short3d_t data[64];
-	int ret, records;
+	size_t records = (size < (sizeof(data)/sizeof(data[0]))) ? size : sizeof(data)/sizeof(data[0]);
+	int ret;
 
 	if (trottle_ && (trottle_counter_++ % trottle_)) {
-		if (!size)
-			return 0;
-		*buffer = cached_value_;
-		return 1;
+		return 0;
 	}
 	errno = 0;
-	ret = ::read(fd_, data, sizeof(data));
+	ret = ::read(fd_, data, records * sizeof(short3d_t));
 	if (ret < 0) {
 		if (errno == EAGAIN) {
 			return 0;
@@ -80,9 +78,9 @@ size_t imu_sensor::read(double3d_t* buffer, size_t size) const
 	for (unsigned int i = 0; i < size; i++) {
 		if (!records)
 			break;
-		cached_value_.x = buffer->x = data[i].x * scale_;
-		cached_value_.y = buffer->y = data[i].y * scale_;
-		cached_value_.z = buffer->z = data[i].z * scale_;
+		buffer->x = data[i].x * scale_;
+		buffer->y = data[i].y * scale_;
+		buffer->z = data[i].z * scale_;
 		++ret;
 		++buffer;
 		--records;

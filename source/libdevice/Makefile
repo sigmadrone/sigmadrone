@@ -10,6 +10,7 @@ TARGET = libdevice.a
 
 OBJS= \
     obj/imusensor.o \
+    obj/biasimusensor.o \
     obj/filesensor.o \
     obj/sampler.o \
     obj/filesampler.o \

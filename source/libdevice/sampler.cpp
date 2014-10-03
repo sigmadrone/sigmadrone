@@ -25,22 +25,33 @@ sampler::~sampler()
 {
 }
 
-void sampler::update()
+void sampler::update_sensors()
 {
 	if (!bar_.filename().empty())
-		bar_.read(data.bar1d_);
+		data.bar1d_upd_ = bar_.read(data.bar1d_);
 	if (!acc_.filename().empty())
-		acc_.read_scaled_average(data.acc3d_.at(0, 0), data.acc3d_.at(1, 0), data.acc3d_.at(2, 0));
+		data.acc3d_upd_ = acc_.read_scaled_average(data.acc3d_.at(0, 0), data.acc3d_.at(1, 0), data.acc3d_.at(2, 0));
 	if (!mag_.filename().empty())
-		mag_.read_scaled_average(data.mag3d_.at(0, 0), data.mag3d_.at(1, 0), data.mag3d_.at(2, 0));
+		data.mag3d_upd_ = mag_.read_scaled_average(data.mag3d_.at(0, 0), data.mag3d_.at(1, 0), data.mag3d_.at(2, 0));
 	if (!gyr_.filename().empty())
-		gyr_.read_scaled_average(data.gyr3d_.at(0, 0), data.gyr3d_.at(1, 0), data.gyr3d_.at(2, 0));
+		data.gyr3d_upd_ = gyr_.read_scaled_average(data.gyr3d_.at(0, 0), data.gyr3d_.at(1, 0), data.gyr3d_.at(2, 0));
+}
+
+void sampler::update_rotation()
+{
+
+}
+
+void sampler::update()
+{
+	update_sensors();
 	update_time();
+	update_rotation();
 }
 
 void sampler::init()
 {
-	update();
+	update_time();
 }
 
 void sampler::update_time()
@@ -56,4 +67,3 @@ void sampler::update_time()
 	data.dtime_ = ((double)now.tv_sec) + ((double)now.tv_nsec)/1000000000.0 - data.time_;
 	data.time_ = ((double)now.tv_sec) + ((double)now.tv_nsec)/1000000000.0;
 }
-

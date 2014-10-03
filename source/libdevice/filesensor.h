@@ -9,8 +9,7 @@ public:
 	file_sensor(const std::string& filename, unsigned int trottle = 0, double scale = 1.0);
 	~file_sensor();
 	void open();
-	void read(double &value) const;
-	double read() const;
+	bool read(double &value) const;
 	std::string filename() const;
 
 protected:

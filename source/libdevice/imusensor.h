@@ -8,6 +8,7 @@ public:
 		double x;
 		double y;
 		double z;
+		double3d_t() : x(0), y(0), z(0) {}
 	};
 	enum open_mode_t {
 		o_default = 0,
@@ -18,23 +19,23 @@ public:
 	 */
 	imu_sensor(const std::string& filename, unsigned int trottle = 0, double scale = 1.0);
 
-	~imu_sensor();
+	virtual ~imu_sensor();
 
 	/**
 	 *
 	 * @mode The mode used to open the device o_default corresponds to O_RDONLY, o_nonblock: O_RDONLY|O_NONBLOCK
 	 */
-	void open(open_mode_t mode = o_default);
+	virtual void open(open_mode_t mode = o_default);
 
 	/**
 	 * Get device file name.
 	 */
-	std::string filename() const;
+	virtual std::string filename() const;
 
 	/**
 	 * Check if device is open.
 	 */
-	bool isopen() const;
+	virtual bool isopen() const;
 
 	/**
 	 * buffer pointer to array of double3d_t elements
@@ -42,7 +43,7 @@ public:
 	 *
 	 * Returns the number of elements of type double3d_t put into the buffer
 	 */
-	size_t read(double3d_t* buffer, size_t size) const;
+	virtual size_t read(double3d_t* buffer, size_t size) const;
 
 	/**
 	 * Calculate the average values over the number of samples read
@@ -52,7 +53,7 @@ public:
 	 * is returned if the device is opened with O_NONBLOCK and no new data
 	 * is available yet.
 	 */
-	bool read_average(double& x, double& y, double &z) const;
+	virtual bool read_average(double& x, double& y, double &z) const;
 
 	/**
 	 * Calculate the average values over the number of samples read
@@ -63,47 +64,46 @@ public:
 	 * is returned if the device is opened with O_NONBLOCK and no new data
 	 * is available yet.
 	 */
-	bool read_scaled_average(double& x, double& y, double &z) const;
+	virtual bool read_scaled_average(double& x, double& y, double &z) const;
 
-	void close();
+	virtual void close();
 
-	void enable();
+	virtual void enable();
 
-	void disable();
+	virtual void disable();
 
 	/**
 	 * Get the sampling rate of the device.
 	 */
-	int get_rate() const;
+	virtual int get_rate() const;
 
 	/**
 	 * Set the sampling rate of the device.
 	 */
-	void set_rate(unsigned int rate);
+	virtual void set_rate(unsigned int rate);
 
 	/**
 	 * Set the number of samples to read in the FIFO before
 	 * returning the data, for devices that have FIFO buffer
 	 */
-	int get_fifo_threshold() const;
+	virtual int get_fifo_threshold() const;
 
-	void set_fifo_threshold(unsigned int threshold);
+	virtual void set_fifo_threshold(unsigned int threshold);
 
-	int get_full_scale() const;
+	virtual int get_full_scale() const;
 
-	void set_full_scale(int scale);
+	virtual void set_full_scale(int scale);
 
 	/**
 	 * Reset the internal FIFO of the device.
 	 */
-	void reset_fifo();
+	virtual void reset_fifo();
 
 protected:
 	int fd_;
 	std::string filename_;
 	unsigned int trottle_;
 	mutable unsigned int trottle_counter_;
-	mutable double3d_t cached_value_;
 	double scale_;
 };
 

@@ -33,6 +33,7 @@ static cmd_arg_spec g_argspec[] = {
 		{"gyr-scale",	"",		"Set gyroscope full scale. Supported scales (DPS): 250, 500, 2000. Default: 2000", CMD_ARG_STRING},
 		{"acc-scale",	"",		"Set accelerometer full scale. Supported scales (G): 2, 4, 8, 16. Default: 4", CMD_ARG_STRING},
 		{"mag-scale",	"",		"Set magnetometer full scale. Supported scales (Gauss): 1300, 1900, 2500, 4000, 4700, 5600, 8100. Default: 1300", CMD_ARG_STRING},
+		{"bias-samples","",		"The number of samples to be used to calculate sensors bias", CMD_ARG_STRING},
 		{"gyr-disable",	"",		"Disable reading gyroscope", CMD_ARG_BOOL},
 		{"acc-disable",	"",		"Disable reading accelerometer", CMD_ARG_BOOL},
 		{"mag-disable",	"",		"Disable reading magnetometer", CMD_ARG_BOOL},
@@ -58,22 +59,23 @@ int main(int argc, const char *argv[])
 				args.get_value("acc-disable").empty() ? args.get_value("acc-device", "/dev/accel0") : "",
 				args.get_value("mag-disable").empty() ? args.get_value("mag-device", "/dev/mag0") : "",
 				args.get_value("bar-disable").empty() ? args.get_value("bar-device", "/sys/bus/i2c/devices/4-0077/pressure0_input") : "");
-		if (!args.get_value("gyr-disable").empty() && !args.get_value("gyr-rate").empty())
+		if (args.get_value("gyr-disable").empty() && !args.get_value("gyr-rate").empty())
 			sensorsamples.gyr_.set_rate(atoi(args.get_value("gyr-rate").c_str()));
-		if (!args.get_value("acc-disable").empty() && !args.get_value("acc-rate").empty())
+		if (args.get_value("acc-disable").empty() && !args.get_value("acc-rate").empty())
 			sensorsamples.acc_.set_rate(atoi(args.get_value("acc-rate").c_str()));
-		if (!args.get_value("mag-disable").empty() && !args.get_value("mag-rate").empty())
+		if (args.get_value("mag-disable").empty() && !args.get_value("mag-rate").empty())
 			sensorsamples.mag_.set_rate(atoi(args.get_value("mag-rate").c_str()));
-		if (!args.get_value("gyr-disable").empty() && !args.get_value("gyr-scale").empty())
+		if (args.get_value("gyr-disable").empty() && !args.get_value("gyr-scale").empty())
 			sensorsamples.gyr_.set_full_scale(atoi(args.get_value("gyr-scale").c_str()));
-		if (!args.get_value("acc-disable").empty() && !args.get_value("acc-scale").empty())
+		if (args.get_value("acc-disable").empty() && !args.get_value("acc-scale").empty())
 			sensorsamples.acc_.set_full_scale(atoi(args.get_value("acc-scale").c_str()));
-		if (!args.get_value("mag-disable").empty() && !args.get_value("mag-scale").empty())
+		if (args.get_value("mag-disable").empty() && !args.get_value("mag-scale").empty())
 			sensorsamples.mag_.set_full_scale(atoi(args.get_value("mag-scale").c_str()));
-		if (!args.get_value("gyr-disable").empty() && !args.get_value("gyr-fifo").empty())
+		if (args.get_value("gyr-disable").empty() && !args.get_value("gyr-fifo").empty())
 			sensorsamples.gyr_.set_fifo_threshold(atoi(args.get_value("gyr-fifo").c_str()));
-		if (!args.get_value("acc-disable").empty() && !args.get_value("acc-fifo").empty())
+		if (args.get_value("acc-disable").empty() && !args.get_value("acc-fifo").empty())
 			sensorsamples.acc_.set_fifo_threshold(atoi(args.get_value("acc-fifo").c_str()));
+		sensorsamples.gyr_.bias_update(atoi(args.get_value("bias-samples", "200").c_str()));
 		sensorsamples.init();
 		while (true) {
 			sensorsamples.update();
