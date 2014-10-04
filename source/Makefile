@@ -1,3 +1,4 @@
+SUBDIRS += libattitude
 SUBDIRS += libdevice
 SUBDIRS += libhttp
 SUBDIRS += libcmdargs

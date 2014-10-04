@@ -18,6 +18,7 @@
 #include <iostream>
 #include "cmdargs.h"
 #include "sampler.h"
+#include "attitudetracker.h"
 
 static cmd_arg_spec g_argspec[] = {
 		{"help",		"h",	"Display this help", CMD_ARG_BOOL},
@@ -34,6 +35,7 @@ static cmd_arg_spec g_argspec[] = {
 		{"acc-scale",	"",		"Set accelerometer full scale. Supported scales (G): 2, 4, 8, 16. Default: 4", CMD_ARG_STRING},
 		{"mag-scale",	"",		"Set magnetometer full scale. Supported scales (Gauss): 1300, 1900, 2500, 4000, 4700, 5600, 8100. Default: 1300", CMD_ARG_STRING},
 		{"bias-samples","",		"The number of samples to be used to calculate sensors bias", CMD_ARG_STRING},
+		{"nlerp-blend","",		"The g_blend used in attitude tracker.", CMD_ARG_STRING},
 		{"gyr-disable",	"",		"Disable reading gyroscope", CMD_ARG_BOOL},
 		{"acc-disable",	"",		"Disable reading accelerometer", CMD_ARG_BOOL},
 		{"mag-disable",	"",		"Disable reading magnetometer", CMD_ARG_BOOL},
@@ -55,6 +57,7 @@ int main(int argc, const char *argv[])
 			std::cout << args.get_help_message() << std::endl;
 			return 0;
 		}
+		attitudetracker attitude(atoi(args.get_value("nlerp-blend", "0.05").c_str()));
 		sampler sensorsamples(
 				args.get_value("gyr-disable").empty() ? args.get_value("gyr-device", "/dev/gyro0") : "",
 				args.get_value("acc-disable").empty() ? args.get_value("acc-device", "/dev/accel0") : "",
@@ -80,8 +83,12 @@ int main(int argc, const char *argv[])
 		sensorsamples.init();
 		while (true) {
 			sensorsamples.update();
+			attitude.track_gyroscope(DEG2RAD(sensorsamples.data.gyr3d_), sensorsamples.data.dtime_);
+			if (sensorsamples.data.acc3d_upd_)
+				attitude.track_accelerometer(sensorsamples.data.acc3d_.normalize());
 			if (!args.get_value("rot-matrix").empty()) {
-				Matrix4d R = sensorsamples.data.rotq_.rotMatrix4();
+//				Matrix4d R = sensorsamples.data.rotq_.rotMatrix4();
+				Matrix4d R = attitude.get_attitude().rotMatrix4();
 				fprintf(stdout, "%5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf \n",
 						R.at(0, 0), R.at(0, 1), R.at(0, 2), R.at(1, 0), R.at(1, 1), R.at(1, 2), R.at(2, 0), R.at(2, 1), R.at(2, 2));
 			} else {
