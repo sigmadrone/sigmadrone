@@ -15,9 +15,6 @@ struct GTypeInit
 	GTypeInit() { g_type_init(); }
 } gTypeInitOnly;
 
-static const SdJsonValue s_nullJsonValue;
-static const SdJsonObject s_nullJsonObject;
-static const SdJsonArray s_nullJsonArray;
 
 SdJsonValue::SdJsonValue() :
 		m_jnode(0),

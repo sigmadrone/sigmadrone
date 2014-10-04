@@ -17,7 +17,6 @@ public:
 	CommandLineArgs(int argc, const char* argv[]);
 	~CommandLineArgs();
 	void PrintUsage(int argc, const char* argv[]) const;
-	SdCommandCode GetCommand() const;
 	bool GetThrust(double*) const;
 	bool GetMinThrust(double*) const;
 	bool GetMaxThrust(double*) const;
@@ -31,6 +30,9 @@ public:
 	int GetServerPort() const;
 	std::string GetHostAddress() const;
 	std::string GetLogFile() const;
+	std::vector<std::string> GetRpcParamsList() const;
+	std::string GetRpcParamsAsJsonStream() const;
+	inline SdCommandCode GetCommand() const { return _GetCommand(0); }
 	std::string GetConfigFile() const {
 		return m_cmdArgs.get_value("configfile");
 	}
@@ -82,6 +84,7 @@ private:
 	bool /*value present*/ GetValueAsInt(const std::string &name, int32_t* value) const;
 	bool /*value*/ GetBoolValue(const std::string &name) const;
 
+	SdCommandCode _GetCommand(std::vector<std::string>* rpcParams=0) const;
 	inline bool IsValuePresent(const std::string& name) const {
 		return m_cmdArgs.get_value(name).length() > 0;
 	}

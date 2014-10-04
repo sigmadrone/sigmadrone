@@ -67,17 +67,48 @@ void CommandLineArgs::PrintUsage(int argc, const char* argv[]) const
 			"will take precedence over the values in the config file.\n\n");
 }
 
-SdCommandCode CommandLineArgs::GetCommand() const
+SdCommandCode CommandLineArgs::_GetCommand(std::vector<std::string>* rpcParams) const
 {
 	std::string command = m_cmdArgs.get_value("command").c_str();
 	if (command.empty()) {
 		for (int i = 1; i < m_argc; ++i) {
 			if (*(m_argv[i]) != '-') {
-				command = m_argv[i];
+				if (FromCommanddLineArgToSdCommand(command = m_argv[i]) != SD_COMMAND_NONE) {
+					if (0 != rpcParams) {
+						while (++i < m_argc && *(m_argv[i]) != '-') {
+							rpcParams->push_back(m_argv[i]);
+						}
+					}
+					break;
+				}
 			}
 		}
 	}
 	return FromCommanddLineArgToSdCommand(command);
+}
+
+std::vector<std::string> CommandLineArgs::GetRpcParamsList() const
+{
+	std::vector<std::string> rpcParams;
+	_GetCommand(&rpcParams);
+	if (rpcParams.size() > 0 && rpcParams[0].at(0) == '{') {
+		// json stream follows the command
+		rpcParams.clear();
+	}
+	return rpcParams;
+}
+
+std::string CommandLineArgs::GetRpcParamsAsJsonStream() const
+{
+	std::string jsonStream;
+	std::vector<std::string> rpcParams;
+	_GetCommand(&rpcParams);
+	if (rpcParams.size() > 0 && rpcParams[0].at(0) == '{') {
+		for (size_t i = 0; i < rpcParams.size(); ++i) {
+			jsonStream += rpcParams[i];
+		}
+	}
+	return jsonStream;
 }
 
 SdCommandCode CommandLineArgs::FromCommanddLineArgToSdCommand(

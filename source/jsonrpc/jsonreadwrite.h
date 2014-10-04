@@ -174,6 +174,10 @@ private:
 	std::vector<SdJsonValue*> m_elements;
 };
 
+static const SdJsonValue s_nullJsonValue;
+static const SdJsonObject s_nullJsonObject;
+static const SdJsonArray s_nullJsonArray;
+
 class SdJsonValueSpec
 {
 public:
