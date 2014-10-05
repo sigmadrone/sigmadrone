@@ -229,12 +229,7 @@ int TraceLogPlugin::IoCallback(
 		const QuaternionD& tgtQ = ioPacket->TargetAttitude();
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Tgt Q : %1.3lf %1.3lf %1.3lf %1.3lf\n",
 				tgtQ.w,tgtQ.w,tgtQ.y,tgtQ.z);
-		Matrix4d rotMx = attQ->rotMatrix4();
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"%5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf \n",
-				rotMx.at(0, 0), rotMx.at(0, 1), rotMx.at(0, 2),
-				rotMx.at(1, 0), rotMx.at(1, 1), rotMx.at(1, 2),
-				rotMx.at(2, 0), rotMx.at(2, 1), rotMx.at(2, 2));
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE, "%5.9lf %5.9lf %5.9lf %5.9lf \n", tgtQ.w, tgtQ.w, tgtQ.y, tgtQ.z);
 	}
 
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
