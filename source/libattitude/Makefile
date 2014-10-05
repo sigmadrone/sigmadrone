@@ -4,7 +4,7 @@ CC  ?= $(CROSS_COMPILE)gcc
 LD  ?= $(CROSS_COMPILE)ld
 DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj ../include)
 DEBUGFLAGS = -g -O0
-xCXXFLAGS = -O2 -Wall -Wextra $(DEBUGFLAGS) $(DEFS) $(CXXFLAGS) 
+xCXXFLAGS = -Wall -Wextra $(DEBUGFLAGS) $(DEFS) $(CXXFLAGS) 
 xLDFLAGS = $(LDFLAGS)
 TARGET = libattitude.a
 
