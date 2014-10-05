@@ -51,7 +51,7 @@ int DroneRpcClient::ExecuteCommand(const CommandLineArgs& cmdArgs)
 			req.Params = SdJsonValue(clockValue);
 		}
 		break;
-		case SD_COMMAND_SET_TARGET_ATTITUDE:
+		case SD_COMMAND_SET_ATTITUDE:
 			RpcParams::BuildJsonTargetQuaternion(&req.Params,cmdArgs.GetTargetAttitude());
 			break;
 		case SD_COMMAND_GET_RPC_SPEC:
@@ -153,11 +153,12 @@ bool DroneRpcClient::FillRequestParamsFromJsonStream(
 	SdJsonRpcParser parser;
 	std::string jsonStream = cmdArgs.GetRpcParamsAsJsonStream();
 	if (!parser.ParseBuffer(jsonStream.c_str(), jsonStream.length(), 0)) {
-		cout << "Failed to parse json buffer from command line\n" << jsonStream <<
+		cout << "Failed to parse json buffer from command line\n    " << jsonStream <<
 				std::endl;
+		return false;
 	}
 	rpcParams = parser.RootNode();
 	cout << "FillRequestParamsFromJsonStream: \n" <<
-			SdJsonValueToText(requestParams) << std::endl;
+			SdJsonValueToText(rpcParams) << std::endl;
 	return true;
 }

@@ -390,8 +390,8 @@ struct SdIoData
 		const void* asVoidPtr;
 		struct
 		{
-			uint32_t blobSize;
 			const void* blob;
+			uint32_t blobSize;
 		} asBlob;
 		FILE* asFile;
 		const QuaternionD* asQuaternion;
@@ -693,6 +693,8 @@ struct SdCommandParams
 	virtual SdCommandCode CommandCode() = 0;
 	virtual const SdIoData& Params() = 0;
 	virtual const IJsonValue* RpcParams() = 0;
+	virtual void SetOutParams(const SdIoData&) = 0;
+	virtual const SdIoData& OutParams() = 0;
 
 protected:
 	virtual ~SdCommandParams() {}

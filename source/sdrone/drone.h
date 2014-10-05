@@ -126,7 +126,6 @@ private:
 	FileLock m_globalLock;
 	DroneConfig m_droneConfig;
 	SdThrustValues m_thrustValues;
-	QuaternionD m_targetQ;
 	bool m_isRunning;
 	static Drone* s_Only;
 };

@@ -92,7 +92,6 @@ Drone::Drone() :
 		m_rpcDispatch(0),
 		m_rpcTransport(0),
 		m_globalLock("sigmadrone",true),
-		m_targetQ(1,0,0,0),
 		m_isRunning(false)
 {
 	/*
@@ -205,7 +204,7 @@ int Drone::Run(CommandLineArgs& args)
 			SdJsonValue(),
 			jsonArgs);
 	m_rpcDispatch->AddRequestCallback(
-			SdCommandCodeToString(SD_COMMAND_SET_TARGET_ATTITUDE),
+			SdCommandCodeToString(SD_COMMAND_SET_ATTITUDE),
 			OnRpcCommandSetTargetAttitude,
 			this,
 			jsonArgs);
@@ -331,8 +330,7 @@ int Drone::OnSetConfig(
 int Drone::OnSetTargetQuaternion(const QuaternionD& targetQ)
 {
 	SdIoData data(&targetQ);
-	PluginCommandParams params(SD_COMMAND_SET_TARGET_ATTITUDE,data,0);
-	m_targetQ = targetQ;
+	PluginCommandParams params(SD_COMMAND_SET_ATTITUDE,data,0);
 	return m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 }
 
@@ -511,9 +509,22 @@ void Drone::OnRpcCommandSetTargetAttitude(
 	rep->Id = req->Id;
 }
 
-void Drone::OnRpcCommandGetAttitude(void* Context, const SdJsonRpcRequest*,
-		SdJsonRpcReply*) {
-	//TODO:
+void Drone::OnRpcCommandGetAttitude(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	SdIoData data;
+	PluginCommandParams params(SD_COMMAND_GET_ATTITUDE,data,0);
+	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+	rep->Id = req->Id;
+	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
+		if (params.OutParams().dataType == SdIoData::TYPE_QUATERNION) {
+			RpcParams::BuildJsonTargetQuaternion(&rep->Results,
+					*params.OutParams().asQuaternion);
+			rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+		}
+	}
 }
 
 void Drone::OnRpcCommandSetTargetAltitude(void* Context, const SdJsonRpcRequest*,
