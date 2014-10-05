@@ -92,7 +92,7 @@ typedef enum _SdCommandCode {
 	SD_COMMAND_GET_CONFIG,
 	SD_COMMAND_SET_THRUST,
 	SD_COMMAND_GET_THRUST,
-	SD_COMMAND_SET_TARGET_ATTITUDE,
+	SD_COMMAND_SET_ATTITUDE,
 	SD_COMMAND_GET_ATTITUDE,
 	SD_COMMAND_SET_TARGET_ALTITUDE,
 	SD_COMMAND_GET_ALTITUDE,
@@ -103,7 +103,7 @@ typedef enum _SdCommandCode {
 static const char* SdCommandCodeAsStr[] = {
 		"sd_none","sd_run","sd_reset","sd_exit","sd_load_plugin",
 		"sd_unload_plugin","sd_ping","sd_set_config","sd_get_config",
-		"sd_set_thrust", "sd_get_thrust", "sd_set_target_attitude",
+		"sd_set_thrust", "sd_get_thrust", "sd_set_attitude",
 		"sd_get_attitude","sd_set_altitude", "sd_get_altitude",
 		"sd_get_rpc_spec", "sd_get_rpc_list"
 };

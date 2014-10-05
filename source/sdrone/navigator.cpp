@@ -48,10 +48,15 @@ int Navigator::ExecuteCommand(
 				SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
 		break;
 	case SD_COMMAND_RESET:
-		//TODO:
 		break;
 	case SD_COMMAND_EXIT:
 		m_Runtime->DetachPlugin();
+		break;
+	case SD_COMMAND_SET_ATTITUDE:
+		m_TargetAttitude = *params->Params().asQuaternion;
+		break;
+	case SD_COMMAND_GET_ATTITUDE:
+		params->SetOutParams(SdIoData(&m_TargetAttitude));
 		break;
 	default:break;
 	}
