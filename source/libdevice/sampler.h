@@ -19,7 +19,6 @@ public:
 		Vector3d gyr3d_;
 		Vector3d acc3d_;
 		Vector3d mag3d_;
-		QuaternionD rotq_;
 		double bar1d_;
 		double dtime_;
 		double time_;
@@ -27,7 +26,7 @@ public:
 		bool acc3d_upd_;
 		bool mag3d_upd_;
 		bool bar1d_upd_;
-		data() : rotq_(QuaternionD::identity), bar1d_(0), dtime_(0), time_(0), gyr3d_upd_(false), acc3d_upd_(false), mag3d_upd_(false), bar1d_upd_(false) {}
+		data() : bar1d_(0), dtime_(0), time_(0), gyr3d_upd_(false), acc3d_upd_(false), mag3d_upd_(false), bar1d_upd_(false) {}
 	} data;
 
 public:
@@ -38,7 +37,6 @@ public:
 
 protected:
 	void update_sensors();
-	void update_rotation();
 	void update_time();
 };
 
