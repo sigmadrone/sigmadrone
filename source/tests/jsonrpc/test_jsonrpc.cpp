@@ -2,8 +2,8 @@
 #include <string>
 #include <vector>
 #include <errno.h>
-#include "../../jsonrpc/jsonrpcparser.h"
-#include "../../jsonrpc/jsonrpcbuilder.h"
+#include "../../libjsonrpc/jsonrpcparser.h"
+#include "../../libjsonrpc/jsonrpcbuilder.h"
 #include "rpcparams.h"
 #include "sdroneapi.h"
 

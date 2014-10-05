@@ -2,7 +2,7 @@
 CXX	    ?= $(CROSS_COMPILE)g++
 CC          ?= $(CROSS_COMPILE)gcc
 HTTPSERVER_SRCDIR = ../libhttp
-JSONRPC_SRCDIR = ../jsonrpc
+JSONRPC_SRCDIR = ../libjsonrpc
 CMDARGS_SRCDIR = ../libcmdargs
 LIBDEVICE_SRCDIR = ../libdevice
 INCLUDES    = -I../include -I../ -I$(JSONRPC_SRCDIR)/ -I$(LIBDEVICE_SRCDIR)
