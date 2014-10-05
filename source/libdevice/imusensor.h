@@ -17,7 +17,7 @@ public:
 	/**
 	 * @filename The name of the device file. Example: /dev/gyro0
 	 */
-	imu_sensor(const std::string& filename, unsigned int trottle = 0, double scale = 1.0);
+	imu_sensor(const std::string& filename, unsigned int trottle = 0, double adjustment = 1.0);
 
 	virtual ~imu_sensor();
 
@@ -95,6 +95,16 @@ public:
 	virtual void set_full_scale(int scale);
 
 	/**
+	 * The actual reading from the sensors will be multiplied
+	 * by the adjustment value. The bias needs to be
+	 * updated after this function call, if this is a
+	 * biased sensor.
+	 */
+	virtual void set_adjustment(double adjustment);
+
+	virtual double get_adjustment();
+
+	/**
 	 * Reset the internal FIFO of the device.
 	 */
 	virtual void reset_fifo();
@@ -104,7 +114,7 @@ protected:
 	std::string filename_;
 	unsigned int trottle_;
 	mutable unsigned int trottle_counter_;
-	double scale_;
+	double adjustment_;
 };
 
 

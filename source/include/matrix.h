@@ -720,7 +720,7 @@ public:
 		return ret;
 	}
 
-	static const MatrixMN<T, 3, 1> cross(const MatrixMN<T, 3, 1>& u, const MatrixMN<T, 3, 1>& v)
+	static MatrixMN<T, 3, 1> cross(const MatrixMN<T, 3, 1>& u, const MatrixMN<T, 3, 1>& v)
 	{
 		return MatrixMN<T, 3, 1>(u.at(1,0) * v.at(2,0) - v.at(1,0) * u.at(2,0), u.at(2,0) * v.at(0,0) -
 				v.at(2,0) * u.at(0,0), u.at(0,0) * v.at(1,0) - v.at(0,0) * u.at(1,0));
@@ -732,6 +732,11 @@ public:
 		for (int i = 0; i < M; i++)
 			ret += u.at(i, 0) * v.at(i, 0);
 		return ret;
+	}
+
+	static MatrixMN<T, 3, 1> projection(const MatrixMN<T, 3, 1>& u, const MatrixMN<T, 3, 1>& v)
+	{
+		return v * dot(u, v) / v.lengthSq();
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const MatrixMN<T, M, N>& m)
@@ -865,6 +870,11 @@ public:
 	}
 
 	Quaternion<T> operator~() const
+	{
+		return conjugated();
+	}
+
+	Quaternion<T> conjugated() const
 	{
 		return Quaternion<T>(w, -x, -y, -z);
 	}
@@ -1093,6 +1103,28 @@ public:
 		return u.w*v.w + u.x*v.x + u.y*v.y + u.z*v.z;
 	}
 
+	/**
+	 * Every rotation can be decomposed to twist and swing
+	 * That is, first we do the twist around the direction axis
+	 * then we do the swing around an axis perpendicular to the
+	 * direction axis.
+	 * composite_rotation = swing * twist (this has singularity in case of
+	 * swing rotation close to 180 degrees).
+	 */
+	static void swing_twist_decomposition(
+			const Quaternion<T>& rotation,
+			const MatrixMN<T, 3, 1>& direction,
+			Quaternion<T>& swing,
+			Quaternion<T>& twist)
+	{
+		MatrixMN<T, 3, 1> rotation_axis(rotation.x, rotation.y, rotation.z);
+		// return projection v1 on to v2 (parallel component)
+		// here can be optimized if direction is unit
+		MatrixMN<T, 3, 1> proj = MatrixMN<T, 3, 1>::projection(rotation_axis, direction);
+		twist = Quaternion<T>(rotation.w, proj.at(0, 0), proj.at(1, 0), proj.at(2, 0));
+		twist.normalize();
+		swing = rotation * twist.conjugated();
+	}
 
 	/*
 	 * Angle between two quaternions
