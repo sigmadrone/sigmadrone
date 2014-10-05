@@ -10,12 +10,12 @@
 #include "axesdata.h"
 #include "imusensor.h"
 
-imu_sensor::imu_sensor(const std::string& filename, unsigned int trottle, double scale)
+imu_sensor::imu_sensor(const std::string& filename, unsigned int trottle, double adjustment)
 	: fd_(-1)
 	, filename_(filename)
 	, trottle_(trottle)
 	, trottle_counter_(0)
-	, scale_(scale)
+	, adjustment_(adjustment)
 {
 }
 
@@ -78,9 +78,9 @@ size_t imu_sensor::read(double3d_t* buffer, size_t size) const
 	for (unsigned int i = 0; i < size; i++) {
 		if (!records)
 			break;
-		buffer->x = data[i].x * scale_;
-		buffer->y = data[i].y * scale_;
-		buffer->z = data[i].z * scale_;
+		buffer->x = data[i].x * adjustment_;
+		buffer->y = data[i].y * adjustment_;
+		buffer->z = data[i].z * adjustment_;
 		++ret;
 		++buffer;
 		--records;
@@ -208,6 +208,17 @@ void imu_sensor::set_full_scale(int scale)
 		throw std::runtime_error(std::string("Failed to set scale: ") + strscale.str() + ", for device: " + filename_ + std::string(", error code: ") + strcode.str());
 	}
 }
+
+void imu_sensor::set_adjustment(double adjustment)
+{
+	adjustment_ = adjustment;
+}
+
+double imu_sensor::get_adjustment()
+{
+	return adjustment_;
+}
+
 
 void imu_sensor::reset_fifo()
 {
