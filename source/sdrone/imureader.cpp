@@ -201,7 +201,7 @@ int ImuReader::IoDispatchThread()
 		ioPacket->SetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS,
 				SdIoData(m_fileSampler->data.dtime_));
 		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
-				SdIoData(DeltaT()));
+				SdIoData(m_fileSampler->data.dtime_));
 	} else {
 		m_sampler->update();
 		imuData.acc3d = m_sampler->data.acc3d_;

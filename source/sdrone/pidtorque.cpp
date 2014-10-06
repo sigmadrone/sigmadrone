@@ -14,10 +14,11 @@ PidTorque::~PidTorque()
 
 void PidTorque::Reset(double Kp, double Ki, double Kd)
 {
-	fprintf(stdout, "-->Kp = %lf, Ki = %lf, Kd = %lf\n", Kp, Ki, Kd);
 	m_Kp = Kp / 1000.0 * 22.5 / 100.0 / (3.1415/2);
 	m_Ki = Ki / 1000.0 * 22.5 / 100.0 / (3.1415/2);
 	m_Kd = Kd / 1000.0 * 22.5 / 100.0 / (3.1415/2);
+	m_integralError = Vector3d();
+	m_lastError = Vector3d();
 }
 
 void PidTorque::SetTarget(const QuaternionD &setQ)
