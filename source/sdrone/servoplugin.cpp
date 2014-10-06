@@ -5,7 +5,7 @@
  *      Author: svassilev
  */
 
-#include "servodevice.h"
+#include "servoplugin.h"
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <dlfcn.h>

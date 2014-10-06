@@ -11,7 +11,7 @@
 #include "drone.h"
 #include "quadrotorpilot.h"
 #include "pidpilotsd.h"
-#include "servodevice.h"
+#include "servoplugin.h"
 #include "imufilter.h"
 #include "imureader.h"
 #include "navigator.h"

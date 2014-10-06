@@ -12,8 +12,6 @@
 #include "pidcontroller.h"
 #include "firfilt.h"
 
-class ServoDevicePlugin;
-
 class QuadRotorPilot: public IPlugin
 {
 public:
