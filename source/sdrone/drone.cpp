@@ -339,7 +339,7 @@ void Drone::InitInternalPlugins()
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_DEVICE);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_REMAP);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_BIAS);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_LOWPASSFILTER);
+//	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_LOWPASSFILTER);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_FILTER);
 	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_KALMAN_FILTER);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_SERVO_PCA9685);

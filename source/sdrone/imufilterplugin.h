@@ -10,6 +10,7 @@
 
 #include "commoninc.h"
 #include "imufilter.h"
+#include "attitudetracker.h"
 
 class ImuFilterPlugin : public IPlugin{
 public:
@@ -35,7 +36,7 @@ public:
 private:
 	virtual ~ImuFilterPlugin();
 private:
-	ImuFilter m_ImuFilter;
+	attitudetracker m_attitude;
 	IPluginRuntime* m_Runtime;
 	bool m_SetEarthG;
 	int m_RefCnt;

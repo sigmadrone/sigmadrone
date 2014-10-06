@@ -5,12 +5,13 @@ HTTPSERVER_SRCDIR = ../libhttp
 JSONRPC_SRCDIR = ../libjsonrpc
 CMDARGS_SRCDIR = ../libcmdargs
 LIBDEVICE_SRCDIR = ../libdevice
-INCLUDES    = -I../include -I../ -I$(JSONRPC_SRCDIR)/ -I$(LIBDEVICE_SRCDIR)
+LIBATTITUDE_SRCDIR = ../libattitude
+INCLUDES    = -I../include -I.. -I$(JSONRPC_SRCDIR) -I$(LIBDEVICE_SRCDIR) -I$(LIBATTITUDE_SRCDIR)
 INCLUDES   += $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
-LIBS		= -llogger -lm -lrt -pthread -ldl -ldevice
+LIBS		= -llogger -lm -lrt -pthread -ldl -ldevice -lattitude
 LIBS        += $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs json-glib-1.0)
 LIBS		+= -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-LIBS		+= -L$(LIBDEVICE_SRCDIR) -L../liblogger
+LIBS		+= -L$(LIBDEVICE_SRCDIR) -L$(LIBATTITUDE_SRCDIR) -L../liblogger
 #use -Wno-psabi to turn off warnings about ABI changes for va-list in GCC 4.4
 CFLAGS		= -g -O0 -Wall -Wno-psabi
 TARGET		= sdroned

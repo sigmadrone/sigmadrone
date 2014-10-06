@@ -15,6 +15,7 @@ ImuReader::ImuReader()
 	m_RunTime = 0;
 	clock_gettime(CLOCK_REALTIME, &m_lastTime);
 	m_refCnt = 1;
+	m_counter = 0;
 }
 
 ImuReader::~ImuReader()
@@ -95,6 +96,8 @@ int ImuReader::Run(
 					droneConfig->Mag.DeviceName,
 					"/sys/bus/i2c/devices/4-0077/pressure0_input"
 			));
+			m_sampler->gyr_.set_adjustment(1.2);
+			m_sampler->gyr_.bias_update(2000);
 			m_sampler->gyr_.set_rate(droneConfig->Gyro.SamplingRate);
 			m_sampler->acc_.set_rate(droneConfig->Accel.SamplingRate);
 			m_sampler->gyr_.set_full_scale(droneConfig->Gyro.Scale);
@@ -194,6 +197,9 @@ int ImuReader::IoDispatchThread()
 			ret = EIO;
 			goto __return;
 		}
+		imuData.mag3d_upd = true;
+		imuData.gyro3d_upd = true;
+		imuData.acc3d_upd = true;
 		imuData.acc3d = m_fileSampler->data.acc3d_;
 		imuData.gyro3d = m_fileSampler->data.gyr3d_;
 		imuData.mag3d = m_fileSampler->data.mag3d_;
@@ -204,6 +210,9 @@ int ImuReader::IoDispatchThread()
 				SdIoData(m_fileSampler->data.dtime_));
 	} else {
 		m_sampler->update();
+		imuData.mag3d_upd = m_sampler->data.mag3d_upd_;
+		imuData.gyro3d_upd = m_sampler->data.gyr3d_upd_;
+		imuData.acc3d_upd = m_sampler->data.acc3d_upd_;
 		imuData.acc3d = m_sampler->data.acc3d_;
 		imuData.gyro3d = m_sampler->data.gyr3d_;
 		imuData.mag3d = m_sampler->data.mag3d_;

@@ -326,6 +326,9 @@ typedef struct _SdImuData {
 	Vector3d gyro3d;
 	Vector3d acc3d;
 	Vector3d mag3d;
+	bool gyro3d_upd;
+	bool acc3d_upd;
+	bool mag3d_upd;
 } SdImuData;
 
 typedef struct _SdThrustValues {
