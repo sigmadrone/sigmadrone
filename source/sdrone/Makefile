@@ -21,7 +21,7 @@ OBJECTS		= \
 	plugincontext.o\
 	main.o\
 	drone.o\
-	servodevice.o\
+	servoplugin.o\
 	quadrotorpilot.o\
 	imureader.o\
 	navigator.o\

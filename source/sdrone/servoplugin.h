@@ -9,11 +9,13 @@
 #define SERVODEVICE_H_
 
 #include "commoninc.h"
+#include "servocontroller.h"
+#include <boost/scoped_ptr.hpp>
 
-class ServoDevice : public IPlugin
+class ServoDevicePlugin : public IPlugin
 {
 public:
-	ServoDevice();
+	ServoDevicePlugin();
 
 	int AttachToChain(void*,SdPluginAttachFunc attachPlugin);
 
@@ -27,50 +29,18 @@ public:
 	int IoCallback(SdIoPacket* ioPacket);
 	int IoDispatchThread();
 
-
-	/*
-	 *  Writes pulse to the specified channel.
-	 *  pulseWidth specifies relative range 0..1
-	 */
-	int SetPulse(
-			int channelNo,
-			double pulseWidth
-			);
-	int SetPulse(
-			int channelNo,
-			int on,
-			int off
-			);
-	int GetPulse(
-			int channelNo,
-			double* pulseWidth
-			);
-	int SetRate(
-			int freq
-			);
-	int GetRate(
-			int* freq
-			);
-
-	inline bool IsInTextMode() { return !!m_File; }
-
 private:
 	void Close();
-	~ServoDevice();
+	~ServoDevicePlugin();
 	int Start(const SdDroneConfig* config);
 	void Stop(bool detach);
 	int TurnPowerOn();
 	int TurnPowerOff();
 
 private:
-	int m_Fd;
-	uint32_t m_ChannelMask;
-	int m_MaxValue;
-	int m_OneMsInterval;
-	int m_Rate;
-	int m_RefCnt;
-	FILE* m_File;
-	IPluginRuntime* m_Runtime;
+	int ref_cnt_;
+	boost::scoped_ptr<servocontroller> servoctrl_;
+	IPluginRuntime* runtime_;
 };
 
 

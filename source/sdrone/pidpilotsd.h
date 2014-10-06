@@ -13,8 +13,6 @@
 #include "pidcontroller.h"
 #include "firfilt.h"
 
-class ServoDevice;
-
 class PidPilot: public IPlugin
 {
 public:
