@@ -17,8 +17,12 @@ struct SdJsonRpcRequest
 		Id = SD_JSONRPC_INVALID_ID;
 		Params = 0;
 	}
+	SdJsonRpcRequest(
+			const std::string& method,
+			const SdJsonValue& params=s_nullJsonValue,
+			uint64_t id=0) : MethodName(method), Params(params), Id(id) {}
 	std::string MethodName;
-	const IJsonObject* Params;
+	SdJsonValue Params;
 	uint64_t Id; // may not be initialized
 };
 
@@ -32,6 +36,21 @@ struct SdJsonRpcReply
 	uint64_t Id;
 	int ErrorCode;
 	std::string ErrorMessage;
+};
+
+struct SdJsonRpcMethod {
+	SdJsonRpcMethod(const std::string& methodName) {}
+	virtual ~SdJsonRpcMethod() {}
+	virtual bool Execute(
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	const std::string& Name();
+	void PrintRequestSchema();
+	void PrintReplySchema();
+private:
+	SdJsonRpcReply reply;
+	SdJsonRpcRequest request;
+	std::string methodName;
 };
 
 typedef void (*SdJsonRpcRequestCallbackT)(
@@ -51,13 +70,18 @@ public:
 	void AddRequestCallback(
 			const char* methodName,
 			SdJsonRpcRequestCallbackT,
-			void* context);
+			void* context,
+			const SdJsonValue& paramsSpec = SdJsonValue(),
+			const SdJsonValue& resultSpec = SdJsonValue());
 	void DeleteRequestCallback(const char* methodName);
 	bool SendJsonRequest(
 			const SdJsonRpcRequest& request,
 			const std::string& remoteHost,
 			int remotePort,
 			SdJsonRpcReply* reply);
+	bool GetParamsSpec(const std::string& methodName, SdJsonValue* spec);
+	bool GetResultSpec(const std::string& methodName, SdJsonValue* spec);
+	void GetRegisteredMethods(std::vector<std::string>& list);
 private:
 
 	int ReceiveData(
@@ -68,6 +92,8 @@ private:
 	{
 		SdJsonRpcRequestCallbackT Callback;
 		void* Context;
+		SdJsonValue ParamsSpec;
+		SdJsonValue ResultSpec;
 	};
 
 	typedef std::map<std::string, CallbackEntry> CallbackMap;

@@ -1,6 +1,7 @@
 {
- "jsonrpc": "2.0", "method": "SD_COMMAND_RESET", "params": {
-	"Title": "SigmaDrone",
+ 	"Title": "SigmaDrone",
+ 	"Description": "Drone configuration file passed on the command line",
+ 	"Description2": "Contains hardware description, global and plugin configuration settings",
 	"Version": "0.1",
 	"DroneType": "QuadRotor",
 	"DroneHardware": {
@@ -14,12 +15,12 @@
 	"GlobalConfig": {
 		"Gyro": {
 			"DeviceName": "/dev/gyro0",
-			"SamplingRate": 400,
+			"SamplingRate": 760,
 			"Scale": 2000,
 			"MaxReading": 32768,
 			"Watermark": 2,
-			"NumBiasSamples": 4000,
-			"CoordinateMap": [1,0,0, 0,1,0, 0,0,1]
+			"NumBiasSamples": 10000,
+			"CoordinateMap": [-1,0,0, 0,1,0, 0,0,1]
 		},
 		"Accelerometer": {
 			"DeviceName": "/dev/accel0",
@@ -27,7 +28,7 @@
 			"Scale": 4,
 			"MaxReading": 32768,
 			"Watermark": 2,
-			"CoordinateMap":[0,-1,0, 1,0,0, 0,0,1]
+			"CoordinateMap":[1,0,0, 0,-1,0, 0,0,-1]
 		},
 		"Magnetometer": {
 			"DeviceName": "/dev/mag0"
@@ -35,7 +36,7 @@
 		"Servo": {
 			"DeviceName": "/dev/pwm0",
 			"SamplingRate": 400,
-			"ChannelMask": 0xff,
+			"ChannelMask": 255,
 			"BitCount": 12
 		},
 		"QuadPilot": {
@@ -55,13 +56,6 @@
 		"LogRate": 200
 	},
 	
-	"Flight": {
-		"Thrust": 0.4,
-		"MinThrust": 0.3,
-		"MaxThrust": 0.6,
-		"TargetQuaternion": [1.0, 0.0, 0.0, 0.0]
-	},
-	
 	"Plugins": [
 		{
 			"Description": "Controls IMU devices - gyro/accel/mag",
@@ -73,7 +67,8 @@
 			"PluginName": "sd.imubias",
 			"DlFileName": "sdplugs.so",
 			"Config": {
-				"NumSamples": 2000
+				"NumSamples": 2000,
+				"Thrust": 0.5
 			}
 		},
 		{
@@ -126,6 +121,6 @@
 			}
 		}
 	]
- }, 
- "id": 1234
 }
+
+

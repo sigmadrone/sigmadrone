@@ -7,11 +7,12 @@
 
 
 static cmd_arg_spec g_argspec[] = {
-		{"help",	"h",	"Display this help", CMD_ARG_BOOL},
-		{"daemon",	"d",	"Run as daemon", CMD_ARG_BOOL},
-		{"service",	"",		"Same as daemon", CMD_ARG_BOOL},
-		{"pid-file","",		"PID file location", CMD_ARG_STRING},
-		{"loglevel","",		"Valid loglevels: none, critical, error, info, debug. Default: info", CMD_ARG_STRING},
+		{"help",			"h",	"Display this help", CMD_ARG_BOOL},
+		{"daemon",			"d",	"Run as daemon", CMD_ARG_BOOL},
+		{"service",			"",		"Same as daemon", CMD_ARG_BOOL},
+		{"pid-file",		"",		"PID file location", CMD_ARG_STRING},
+		{"servo-ctrl",		"",		"Specify which servo controller class to instantiate. Supported values: pca9685", CMD_ARG_STRING},
+		{"loglevel",		"",		"Valid loglevels: none, critical, error, info, debug. Default: info", CMD_ARG_STRING},
 };
 
 static cmd_arg_spec g_argspec2[] = {
@@ -20,7 +21,7 @@ static cmd_arg_spec g_argspec2[] = {
 		{"Ki",		"",		"PID integral component", CMD_ARG_MULTISTRING},
 };
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	cmd_args args;
 

@@ -2,12 +2,16 @@
 CXX	    ?= $(CROSS_COMPILE)g++
 CC          ?= $(CROSS_COMPILE)gcc
 HTTPSERVER_SRCDIR = ../libhttp
-JSONRPC_SRCDIR = ../jsonrpc
-INCLUDES    = -I../include -I../ -I$(JSONRPC_SRCDIR)/
+JSONRPC_SRCDIR = ../libjsonrpc
+CMDARGS_SRCDIR = ../libcmdargs
+LIBDEVICE_SRCDIR = ../libdevice
+LIBATTITUDE_SRCDIR = ../libattitude
+INCLUDES    = -I../include -I.. -I$(JSONRPC_SRCDIR) -I$(LIBDEVICE_SRCDIR) -I$(LIBATTITUDE_SRCDIR)
 INCLUDES   += $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
-LIBS		= -lm -lrt -lpthread -ldl
+LIBS		= -llogger -lm -lrt -pthread -ldl -ldevice -lattitude
 LIBS        += $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs json-glib-1.0)
 LIBS		+= -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
+LIBS		+= -L$(LIBDEVICE_SRCDIR) -L$(LIBATTITUDE_SRCDIR) -L../liblogger
 #use -Wno-psabi to turn off warnings about ABI changes for va-list in GCC 4.4
 CFLAGS		= -g -O0 -Wall -Wno-psabi
 TARGET		= sdroned
@@ -17,7 +21,6 @@ OBJECTS		= \
 	plugincontext.o\
 	main.o\
 	drone.o\
-	imudevice.o\
 	servodevice.o\
 	quadrotorpilot.o\
 	imureader.o\
@@ -29,10 +32,15 @@ OBJECTS		= \
 	imulowpassfilter.o\
 	iopacket.o\
 	kalmanattitudefilter.o\
-	cmdargs.o\
 	daemon.c\
+	dronerpcclient.o\
+	droneconfig.o\
+	rpcparams.o\
+	pidpilotsd.o\
+	pidtorque.o\
 	$(JSONRPC_SRCDIR)/libjsonrpc.a\
-	$(HTTPSERVER_SRCDIR)/libhttp.a
+	$(HTTPSERVER_SRCDIR)/libhttp.a\
+	$(CMDARGS_SRCDIR)/libcmdargs.a
 
 all : $(TARGET)
 

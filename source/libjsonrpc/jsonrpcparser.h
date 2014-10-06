@@ -23,6 +23,7 @@ public:
 		);
 	bool ParseFile(const char* fileName);
 	const IJsonObject* RootObj() const { return m_rootNode.AsObject(); }
+	const SdJsonValue& RootNode() const { return m_rootNode; }
 
 	static void PrintJsonObject(const IJsonObject*);
 	static void PrintJsonArray(const IJsonArray*);
@@ -43,7 +44,7 @@ public:
 	bool IsReply() const;
 	bool IsErrorReply() const;
 	std::string GetRpcMethod() const;
-	const IJsonObject* GetRpcParams() const;
+	const IJsonValue* GetRpcParams() const;
 	const IJsonValue* GetResult() const;
 	const IJsonObject* GetError() const;
 	int GetErrorCode() const;

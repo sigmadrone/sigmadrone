@@ -93,7 +93,7 @@ std::string cmd_args::get_help_message() const
 	return oss.str();
 }
 
-void cmd_args::parse_command_line(int argc, char *argv[]) throw(std::exception)
+void cmd_args::parse_command_line(int argc, const char *argv[]) throw(std::exception)
 {
 	std::vector<std::string> empty;
 	std::vector<cmd_arg_spec>::const_iterator itspec;

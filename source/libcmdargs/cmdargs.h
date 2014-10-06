@@ -31,7 +31,7 @@ public:
 			unsigned int aliaswidth = 5);
 	~cmd_args();
 	void add_specs(cmd_arg_spec *specs, unsigned int count);
-	void parse_command_line(int argc, char *argv[]) throw (std::exception);
+	void parse_command_line(int argc, const char *argv[]) throw (std::exception);
 	std::string get_value(const std::string& name, const std::string& defval = "") const;
 	std::vector<std::string> get_values(const std::string &name) const;
 	std::string get_help_message() const;

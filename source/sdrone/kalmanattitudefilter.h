@@ -17,8 +17,7 @@ public:
 
 	int AddRef();
 	int Release();
-	int Start(const CommandArgs*);
-	void Stop(int flags);
+	int ExecuteCommand(SdCommandParams* params);
 	const char* GetName();
 	SdDeviceId GetDeviceId();
 	const char* GetVersion();

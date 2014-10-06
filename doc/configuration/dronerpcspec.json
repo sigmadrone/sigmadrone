@@ -1,0 +1,159 @@
+{
+ "jsonrpc": "2.0", 
+ "method": "SD_COMMAND_CONFIG", 
+ "params": {
+	"GlobalConfig": {
+		"Gyro": {
+			"DeviceName": "/dev/gyro0",
+			"SamplingRate": 400,
+			"Scale": 2000,
+			"MaxReading": 32768,
+			"Watermark": 2,
+			"NumBiasSamples": 4000,
+			"CoordinateMap": [1,0,0, 0,1,0, 0,0,1]
+		},
+		"Accelerometer": {
+			"DeviceName": "/dev/accel0",
+			"SamplingRate": 400,
+			"Scale": 4,
+			"MaxReading": 32768,
+			"Watermark": 2,
+			"CoordinateMap":[0,-1,0, 1,0,0, 0,0,1]
+		},
+		"Magnetometer": {
+			"DeviceName": "/dev/mag0"
+		},
+		"Servo": {
+			"DeviceName": "/dev/pwm0",
+			"SamplingRate": 400,
+			"ChannelMask": 255,
+			"BitCount": 12
+		},
+		"QuadPilot": {
+			"MotorToServoMap": [0, 1, 2, 3],
+			"ImuCoordinateAngles": [0, 0, 45],
+			"Kp": 1.0,
+			"Ki": 1.2,
+			"Kd": 0.35
+		},
+		"ControlChannel": {
+			"ServerAddress": "127.0.0.1",
+			"ServerPort": 2222
+		},
+		"LogLevel": "SD_LOG_LEVEL_VERBOSE",
+		"LogRotationMatrix": false,
+		"LogFileName": "stdout",
+		"LogRate": 200
+	},
+
+	"Plugins": [
+		{
+			"Description": "Controls IMU devices - gyro/accel/mag",
+			"PluginName": "sd.imureader",
+			"DlFileName": "sdplugs.so"
+		},
+		{
+			"Description": "Calculates gyro bias and earth G vector",
+			"PluginName": "sd.imubias",
+			"DlFileName": "sdplugs.so",
+			"Config": {
+				"NumSamples": 2000,
+				"Thrust": 0.5
+			}
+		},
+		{
+			"Description": "Remaps the readings from the IMU devices",
+			"PluginName": "sd.imuremap",
+			"DlFileName": "sdplugs.so",
+			"Config": {
+			}
+		},
+		{
+			"Description": "Performs low-pass filtering on gyro/accel/etc",
+			"PluginName": "sd.imuprefilter",
+			"DlFileName": "sdplugs.so",
+			"Config": {
+				"GyroLpf": [
+				 	0.0143, 0.0303, 0.0723, 0.1245, 0.1670, 0.1833,
+					0.1670, 0.1245, 0.0723, 0.0303, 0.0143
+				],
+				"AccelLpf": [
+				 	0.0143, 0.0303, 0.0723, 0.1245, 0.1670, 0.1833,
+					0.1670, 0.1245, 0.0723, 0.0303, 0.0143
+				]
+			}
+		},
+		{
+			"Description": "Calculates drone attitude using current IMU readings",
+			"PluginName": "sd.imufilter",
+			"DlFileName": "sdplugs.so"
+		},
+		{
+			"Description": "Controls the servo/pwm device",
+			"PluginName": "sd.servo_pca9685",
+			"DlFileName": "sdplugs.so"
+		},
+		{
+			"Description": "Populates the desired attitude Qt and velocity vector",
+			"PluginName": "sd.navigator",
+			"DlFileName": "sdplugs.so"
+		},
+		{
+			"Description": "Calcs motor settings; issues commands to the servo plugin",
+			"PluginName": "sd.quadpilot",
+			"DlFileName": "sdplugs.so",
+			"Config": {
+				"PID": {
+					"Kp": 1.0,
+					"Ki": 1.2,
+					"Kd": 0.35
+				}
+			}
+		}
+	]
+ }, 
+ "id": 1234
+}
+
+{ "jsonrpc": "2.0", "method": "SD_COMMAND_RESET", "id": 1234 }
+
+{ "jsonrpc": "2.0", "method": "SD_COMMAND_RUN", "id": 1234 }
+
+{ "jsonrpc": "2.0", "method": "SD_COMMAND_EXIT", "id": 1234 }
+{ "jsonrpc": "2.0", "result": 0, "id": 1234 }
+
+{
+ "jsonrpc": "2.0", 
+ "method": "SD_COMMAND_THRUST", 
+ "params": {
+	 "Thrust": 0.4,
+	 "MinThrust": 0.3,
+	 "MaxThrust": 1.0
+ },
+ "id": 1234
+}
+
+{ "jsonrpc": "2.0", "method": "SD_COMMAND_GET_THRUST", "id": 789 }
+{ "jsonrpc": "2.0", "result": { "Thrust": 0.4, "MinThrust": 0.3, "MaxThrust": 1.0 }, "id": 789 }
+
+{
+ "jsonrpc": "2.0", "method": "SD_COMMAND_TARGET_ATTITUDE", "params": [1.0 0 0 0], "id": 1234
+}
+
+{ "jsonrpc": "2.0", "method": "SD_COMMAND_GET_ATTITUDE", "id": 345 }
+{ "jsonrpc": "2.0", "result": [1.0 0 0 0], "id": 345 }
+
+{
+ "jsonrpc": "2.0", "method": "SD_COMMAND_ALTITUDE", "params": {
+	 "AltitudeMeters": 100
+ },
+ "id": 1234
+}
+{ "jsonrpc": "2.0", "method": "SD_COMMAND_GET_ALTITUDE", "id": 456 }
+{ "jsonrpc": "2.0", "result": { "AltitudeMeters": 100 }, "id": 456 }
+
+{ "jsonrpc": "2.0", "method": "SD_COMMAND_PING", "params": 45495487, "id": 567 }
+{ "jsonrpc": "2.0", "result": 45495487, "id": 567 }
+
+
+

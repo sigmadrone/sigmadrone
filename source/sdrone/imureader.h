@@ -8,8 +8,10 @@
 #ifndef IMUREADER_H_
 #define IMUREADER_H_
 
+#include <boost/scoped_ptr.hpp>
 #include "commoninc.h"
-#include "imudevice.h"
+#include "sampler.h"
+#include "filesampler.h"
 
 /*
  * Reads data from all the sensor devices
@@ -24,33 +26,28 @@ public:
 public:
 	int AddRef();
 	int Release();
-	int Start(const CommandArgs*);
-	void Stop(int flags);
+	int Run(const SdDroneConfig* config);
 	const char* GetName();
 	SdDeviceId GetDeviceId();
 	const char* GetVersion();
 	const char* GetDlFileName();
 	int IoCallback(SdIoPacket* ioPacket);
 	int IoDispatchThread();
+	int ExecuteCommand(SdCommandParams*);
 
 private:
-	inline bool IsInTextMode() { return !!m_File; }
 	double DeltaT();
-	void Close();
+	void CloseSensorLog();
 	~ImuReader();
 
 private:
-	ImuDevice m_AccDevice;
-	ImuDevice m_MagDevice;
-	ImuDevice m_GyroDevice;
-	SdImuData m_ImuData;
-	SdImuDeviceConfig m_GyroConfig;
 	IPluginRuntime* m_RunTime;
-	int m_RefCnt;
-	FILE* m_File;
-	FILE* m_SensorLog;
-	timespec m_LastTime;
-	uint32_t m_Counter;
+	int m_refCnt;
+	FILE* m_sensorLog;
+	timespec m_lastTime;
+	uint32_t m_counter;
+	boost::scoped_ptr<file_sampler> m_fileSampler;
+	boost::scoped_ptr<sampler> m_sampler;
 };
 
 #endif /* IMUREADER_H_ */

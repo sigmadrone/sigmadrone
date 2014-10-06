@@ -9,7 +9,7 @@
 #include "libcmdargs/cmdargs.h"
 #include "liblogger/logfile.h"
 #include "liblogger/logger.h"
-#include "libhttp/logger.hpp"
+#include "libdevice/pca9685controller.h"
 #include "userrpcserver.h"
 
 
@@ -18,7 +18,7 @@ class server_app : private boost::noncopyable, public logger<logfile>
 public:
 	server_app(const cmd_args& args = cmd_args());
 	~server_app();
-	int run(int argc, char *argv[]);
+	int run(int argc, const char *argv[]);
 	void stop();
 
 public:
@@ -29,10 +29,14 @@ public:
 	boost::shared_ptr<logfile> logfile_;
 	boost::scoped_ptr<user_rpcserver> user_rpcserver_;
 
+public:
+	boost::scoped_ptr<servocontroller> servoctrl_;
+
 protected:
 	void signal_handler_terminate();
 	void usage();
 	void init_user_rpcserver();
+	void init_servo_controller();
 
 	boost::asio::io_service io_service_;
 	boost::asio::signal_set signals_;

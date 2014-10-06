@@ -8,12 +8,12 @@ namespace client {
 
 
 http_client::http_client(const std::string& server, const std::string& port, size_t timeout)
-	: stopped_(false)
+	: logger("HTTP Client: ")
+	, stopped_(false)
 	, io_timeout_(timeout)
 	, bytes_transferred_(0)
 	, server_(server)
 	, port_(port)
-	, log_prefix_(std::string("HTTP::CLIENT") + "; ")
 	, io_service_()
 	, buffer_()
 	, endpoint_()
@@ -21,7 +21,6 @@ http_client::http_client(const std::string& server, const std::string& port, siz
 	, resolver_(io_service_)
 	, socket_(io_service_)
 {
-	log_prefix_ = std::string("HTTP::CLIENT") + "@" + server_ + ":" + port_ + "; ";
 
 }
 

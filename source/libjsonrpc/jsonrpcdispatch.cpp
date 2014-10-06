@@ -43,9 +43,12 @@ void SdJsonRpcDispatcher::StopServingRequests() {
 void SdJsonRpcDispatcher::AddRequestCallback(
 		const char* methodName,
 		SdJsonRpcRequestCallbackT callback,
-		void* context)
+		void* context,
+		const SdJsonValue& paramsSpec,
+		const SdJsonValue& resultSpec)
 {
-	CallbackEntry entry = {callback,context};
+	CallbackEntry entry = {callback,context,SdJsonValueSpec(paramsSpec).Get(),
+			SdJsonValueSpec(resultSpec).Get()};
 	m_callbacks[methodName] = entry;
 }
 
@@ -60,7 +63,7 @@ bool SdJsonRpcDispatcher::SendJsonRequest(
 		SdJsonRpcBuilder bldr;
 		std::string serializedRequest;
 		std::string serializedReply;
-		bldr.BuildRequest(request.MethodName.c_str(),request.Params,request.Id);
+		bldr.BuildRequest(request.MethodName.c_str(),&request.Params,request.Id);
 		serializedRequest.assign(bldr.GetJsonStream(),bldr.GetJsonStreamSize());
 		if (m_transport->SendData(remoteHost,remotePort,serializedRequest,
 				serializedReply)) {
@@ -119,4 +122,33 @@ int SdJsonRpcDispatcher::ReceiveData(
 	dataOut.assign(rpcBuilder.GetJsonStream(),
 			rpcBuilder.GetJsonStreamSize());
 	return 0;
+}
+
+bool SdJsonRpcDispatcher::GetParamsSpec(const std::string& methodName,
+		SdJsonValue* spec)
+{
+	CallbackMapIt it = m_callbacks.find(methodName);
+	if (it == m_callbacks.end()) {
+		return false;
+	}
+	*spec = it->second.ParamsSpec;
+	return true;
+}
+
+bool SdJsonRpcDispatcher::GetResultSpec(const std::string& methodName,
+		SdJsonValue* spec)
+{
+	CallbackMapIt it = m_callbacks.find(methodName);
+	if (it == m_callbacks.end()) {
+		return false;
+	}
+	*spec = it->second.ResultSpec;
+	return true;
+}
+
+void SdJsonRpcDispatcher::GetRegisteredMethods(std::vector<std::string>& list)
+{
+	for (CallbackMapIt it = m_callbacks.begin(); it != m_callbacks.end(); it++) {
+		list.push_back(it->first);
+	}
 }

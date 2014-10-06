@@ -33,14 +33,23 @@ int ImuFilterPlugin::AttachToChain(
 	return err;
 }
 
-int ImuFilterPlugin::Start(const CommandArgs* cmdArgs)
+int ImuFilterPlugin::ExecuteCommand(
+		SdCommandParams* params)
 {
-	m_ImuFilter.Reset();
-	m_SetEarthG = true;
-	m_Runtime->SetIoFilters(
-			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
-			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
-	return 0;
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		m_attitude.reset_attitude();
+		m_SetEarthG = true;
+		m_Runtime->SetIoFilters(
+				SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
+				SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
+		break;
+	case SD_COMMAND_EXIT:
+		m_Runtime->DetachPlugin();
+		break;
+	default:break;
+	}
+	return SD_ESUCCESS;
 }
 
 int ImuFilterPlugin::AddRef()
@@ -55,13 +64,6 @@ int ImuFilterPlugin::Release()
 		delete this;
 	}
 	return refCnt;
-}
-
-void ImuFilterPlugin::Stop(int flags)
-{
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
-		m_Runtime->DetachPlugin();
-	}
 }
 
 const char* ImuFilterPlugin::GetName()
@@ -94,7 +96,7 @@ int ImuFilterPlugin::IoCallback(SdIoPacket* ioPacket)
 		if (m_SetEarthG) {
 			SdIoData earthG = ioPacket->GetAttribute(SDIO_ATTR_EARTH_G);
 			if (earthG.dataType == SdIoData::TYPE_VECTOR3D) {
-				m_ImuFilter.SetEarthG(*earthG.asVector3d);
+				m_attitude.set_earth_g(*earthG.asVector3d);
 				m_SetEarthG = false;
 			} else {
 				m_Runtime->Log(SD_LOG_LEVEL_ERROR,
@@ -103,14 +105,20 @@ int ImuFilterPlugin::IoCallback(SdIoPacket* ioPacket)
 			}
 		}
 
-		const QuaternionD& attQ = m_ImuFilter.Update(
-				ioPacket->GyroData(),
-				ioPacket->AccelData(),
-				ioPacket->MagData(),
-				ioPacket->DeltaTime());
+		const SdIoData& ioData = ioPacket->GetIoData(true);
+		if (ioData.asImuData->gyro3d_upd)
+			m_attitude.track_gyroscope(DEG2RAD(ioPacket->GyroData()), ioPacket->DeltaTime());
+		if (ioData.asImuData->acc3d_upd)
+			m_attitude.track_accelerometer(ioPacket->AccelData());
+		if (ioData.asImuData->mag3d_upd)
+			m_attitude.track_magnetometer(ioPacket->MagData());
+		const QuaternionD& attQ = m_attitude.get_attitude();
 		ioPacket->SetAttribute(SDIO_ATTR_ATTITUDE_Q,SdIoData(&attQ));
-		ioPacket->SetAttribute(SDIO_ATTR_CORR_VELOCITY,
-				SdIoData(&(m_ImuFilter.GetVg())));
+
+		/*
+		 * Do we need this?
+		 */
+		// ioPacket->SetAttribute(SDIO_ATTR_CORR_VELOCITY, SdIoData(&(m_ImuFilter.GetVg())));
 	}
 	return SD_ESUCCESS;
 }

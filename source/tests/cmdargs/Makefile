@@ -1,14 +1,14 @@
 CXX		?= $(CROSS_COMPILE)g++
 CC		?= $(CROSS_COMPILE)gcc
-SDRONE_SRCDIR	= ../../sdrone
-INCLUDES	= -I$(SDRONE_SRCDIR)
+ROOTDIR	= ../..
+INCLUDES	= -I$(ROOTDIR)/libcmdargs
 LIBS		= -lm -lrt -lpthread -ldl
 #use -Wno-psabi to turn off warnings about ABI changes for va-list in GCC 4.4
 CFLAGS		= -g -O0 -Wall -Wno-psabi
 TARGET		= test_cmdargs
 OBJECTS		= \
 		test_cmdargs.o \
-		cmdargs.o \
+		$(ROOTDIR)/libcmdargs/libcmdargs.a
 
 
 all : $(TARGET)

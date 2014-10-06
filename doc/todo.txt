@@ -1,0 +1,7 @@
+Hardware
+----------------
+
+1. Pull-up resistors for I2C
+2. Fix SPI level shifters directions.
+3. Add screw terminal blocks for the battery.
+

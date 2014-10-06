@@ -43,9 +43,27 @@ void ServoDevice::Close()
 	}
 }
 
-int ServoDevice::Start(const CommandArgs* cmdArgs)
+int ServoDevice::ExecuteCommand(
+		SdCommandParams* params)
 {
-	const SdDroneConfig* droneConfig = cmdArgs->GetDroneConfig();
+	int err = SD_ESUCCESS;
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		err = Start(params->Params().asDroneConfig);
+		break;
+	case SD_COMMAND_RESET:
+		Stop(false);
+		break;
+	case SD_COMMAND_EXIT:
+		Stop(true);
+		break;
+	default:break;
+	}
+	return err;
+}
+
+int ServoDevice::Start(const SdDroneConfig* droneConfig)
+{
 	const SdServoConfig* config = &droneConfig->Servo;
 	int err = EINVAL;
 
@@ -60,19 +78,23 @@ int ServoDevice::Start(const CommandArgs* cmdArgs)
 		} else if (0 == (m_File = fopen(config->DeviceName.c_str(),"w"))) {
 			fprintf(stdout,"ServoDevice::Init failed to open %s, err=%d\n",
 					config->DeviceName.c_str(),errno);
-			err = -1;
+			err = errno;
 			goto __return;
 		}
 		fprintf(stdout,"ServoDevice is operating in text mode.\n");
 	} else if (-1 == (m_Fd = open(config->DeviceName.c_str(),O_RDWR))) {
 		fprintf(stdout,"ServoDevice::Init failed to open %s, err=%d\n",
 				config->DeviceName.c_str(),errno);
-		err = -1;
+		err = errno;
 		goto __return;
 	}
 
 	fprintf(stdout,"ServoDevice opened %s\n",config->DeviceName.c_str());
 	fprintf(stdout,"ServoDevice channel mask 0x%x\n",config->ChannelMask);
+
+	if ((err=TurnPowerOn()) < 0) {
+		goto __return;
+	}
 
 	if (0 == (err = SetRate((config->Rate > 0) ? config->Rate : 50))) {
 		/*
@@ -102,7 +124,7 @@ int ServoDevice::Start(const CommandArgs* cmdArgs)
 	return err;
 }
 
-void ServoDevice::Stop(int flags)
+void ServoDevice::Stop(bool detach)
 {
 	// disarm the motors
 	if (-1 != m_Fd) {
@@ -115,7 +137,8 @@ void ServoDevice::Stop(int flags)
 			mask >>= 1;
 		}
 	}
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
+	TurnPowerOff();
+	if (detach) {
 		m_Runtime->DetachPlugin();
 	}
 }
@@ -287,3 +310,59 @@ int ServoDevice::GetRate(int* freq)
 	*freq = IsInTextMode() ? m_Rate : ioctl(m_Fd,PCA9685_IOC_GETRATE,0);
 	return (*freq > 0) ? 0 : *freq;
 }
+
+int ServoDevice::TurnPowerOn()
+{
+	if (IsInTextMode()) {
+		return 0;
+	}
+	if (-1 == m_Fd) {
+		return -1;
+	}
+	int err = ioctl(m_Fd,PCA9685_IOC_SETMOTOROE,1);
+	if (0 == err) {
+		fprintf(stdout,"ServoDevice - motor power is ON!\n");
+		err = ioctl(m_Fd,PCA9685_IOC_SETPWMOE,1);
+		if (0 == err) {
+			fprintf(stdout,"ServoDevice - PWM power is ON!\n");
+		} else {
+			fprintf(stdout,"ServoDevice::TurnPowerOn PCA9685_IOC_SETPWMOE failed, "
+					"err=%d, %s\n", errno,strerror(errno));
+		}
+	}
+	else {
+		fprintf(stdout,"ServoDevice::TurnPowerOn PCA9685_IOC_SETMOTOROE failed, "
+				"err=%d, %s\n",errno,strerror(errno));
+	}
+	if (err < 0) {
+		err = errno;
+		TurnPowerOff();
+	}
+	return err;
+}
+
+int ServoDevice::TurnPowerOff()
+{
+	if (IsInTextMode()) {
+		return 0;
+	}
+	if (-1 == m_Fd) {
+		return -1;
+	}
+	int err = ioctl(m_Fd,PCA9685_IOC_SETMOTOROE,0);
+	if (err < 0) {
+		fprintf(stdout,"ServoDevice::TurnPowerOff PCA9685_IOC_SETMOTOROE failed, "
+				"err=%d, %s\n",errno,strerror(errno));
+	} else {
+		fprintf(stdout,"ServoDevice - motor power is OFF!\n");
+	}
+	int err1 = ioctl(m_Fd,PCA9685_IOC_SETPWMOE,0);
+	if (err1 < 0) {
+		fprintf(stdout,"ServoDevice::TurnPowerOff PCA9685_IOC_SETPWMOE failed, "
+				"err=%d, %s\n", errno,strerror(errno));
+	} else {
+		fprintf(stdout,"ServoDevice - PWM power is OFF!\n");
+	}
+	return (err < 0 || err1 < 0) ? errno : 0;
+}
+

@@ -7,7 +7,10 @@
 
 #include <linux/types.h>
 
-#define PCA9685_PULSE(__on__, __off__) ((((((__u32)(__on__)) & 0x0FFF)) << 16) | (((__u32)(__off__)) & 0x0FFF))
+#define PCA9685_BITS 12
+#define PCA9685_SIZE (1 << PCA9685_BITS)
+#define PCA9685_MASK (PCA9685_SIZE - 1)
+#define PCA9685_PULSE(__on__, __off__) ((((((__u32)(__on__)) & PCA9685_MASK)) << 16) | (((__u32)(__off__)) & PCA9685_MASK))
 
 #define PCA9685_IOC_MAGIC	'P'
 #define PCA9685_IOC_SETLED0	_IO(PCA9685_IOC_MAGIC, 0)
@@ -46,6 +49,10 @@
 
 #define PCA9685_IOC_GETRATE	_IO(PCA9685_IOC_MAGIC, 32)
 #define PCA9685_IOC_SETRATE	_IO(PCA9685_IOC_MAGIC, 33)
+#define PCA9685_IOC_GETMOTOROE	_IO(PCA9685_IOC_MAGIC, 34)
+#define PCA9685_IOC_SETMOTOROE	_IO(PCA9685_IOC_MAGIC, 35)
+#define PCA9685_IOC_GETPWMOE	_IO(PCA9685_IOC_MAGIC, 36)
+#define PCA9685_IOC_SETPWMOE	_IO(PCA9685_IOC_MAGIC, 37)
 
 
 #endif

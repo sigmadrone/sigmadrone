@@ -9,69 +9,90 @@
 #define COMMANDARGS_H_
 
 #include "commoninc.h"
-#include "cmdargs.h"
-#include "jsonreadwrite.h"
+#include "../libcmdargs/cmdargs.h"
 
-class _CommandArgs: public CommandArgs
+class CommandLineArgs
 {
 public:
-	_CommandArgs();
-	virtual ~_CommandArgs();
-	void PrintUsage(int argc, char* argv[]) const;
-	bool ParseArgs(int argc, char* argv[]);
-	bool ParseJsonRpcArgs(const IJsonObject* args);
-	SdCommandCode GetCommand() const;
+	CommandLineArgs(int argc, const char* argv[]);
+	~CommandLineArgs();
+	void PrintUsage(int argc, const char* argv[]) const;
+	bool GetThrust(double*) const;
+	bool GetMinThrust(double*) const;
+	bool GetMaxThrust(double*) const;
 	double GetMinThrust() const;
 	double GetMaxThrust() const;
 	double GetDesiredThrust() const;
-	const QuaternionD* GetTargetAttitude() const;
-
+	QuaternionD GetTargetAttitude() const;
+	bool IsHelpNeeded() const;
 	bool IsRoleServer() const;
-	bool IsRoleClient() const;
-	bool IsDaemon() const { return m_IsDaemon; }
-	int GetServerPort() const { return m_ServerPort; }
-	const char* GetHostAddress() const { return m_HostAddress; }
-	const SdDroneConfig* GetDroneConfig() const { return &m_DroneCfg; }
-	const IJsonObject* GetDroneConfigAsJobj();
-	const IJsonObject* GetCommandArgsAsJobj();
-
-	static bool ParseJsonDroneConfig(
-			const IJsonObject* jsonRpcParams,
-			SdDroneConfig*);
-	static bool ParseJsonImuConfig(
-			const IJsonObject* jsonImuObj,
-			SdImuDeviceConfig*);
-	static bool ParseJsonThrust(
-			const IJsonObject* jsonRpcParams,
-			double* thrust,
-			double* minThrust,
-			double* maxThrust);
-	static bool BuildJsonDroneConfig(
-			SdJsonObject* jsonDroneConfig,
-			const SdDroneConfig&);
-	static bool BuildJsonImuConfig(
-			SdJsonObject* jsonImuConfig,
-			const SdImuDeviceConfig&);
-	static bool BuildJsonFlightParams(
-			SdJsonObject* jsonFlightParams,
-			double thrust,
-			double minThrust,
-			double maxThrust);
+	bool IsDaemon() const;
+	int GetServerPort() const;
+	std::string GetHostAddress() const;
+	std::string GetLogFile() const;
+	std::vector<std::string> GetRpcParamsList() const;
+	std::string GetRpcParamsAsJsonStream() const;
+	inline SdCommandCode GetCommand() const { return _GetCommand(0); }
+	std::string GetConfigFile() const {
+		return m_cmdArgs.get_value("configfile");
+	}
+	bool GetMaxDps(int32_t* maxDps) const {
+		return GetValueAsInt("maxdps",maxDps);
+	}
+	bool GetImuSamplingRage(int32_t* maxDps) const {
+		return GetValueAsInt("rate",maxDps);
+	}
+	std::string GetImuInputFile() const {
+		return m_cmdArgs.get_value("infile");
+	}
+	std::string GetServoOutputFile() const {
+		return m_cmdArgs.get_value("outfile");
+	}
+	bool GetLogRate(double* doubleVal) const {
+		return GetValueAsDouble("lograte",doubleVal);
+	}
+	bool LogRotMatrix() const {
+		return GetBoolValue("rot-matrix");
+	}
+	bool GetImuToRotorAxisAngle(int32_t* intVal) const {
+		return GetValueAsInt("imuangle",intVal);
+	}
+	bool GetKp(double* doubleVal) const {
+		return GetValueAsDouble("Kp", doubleVal);
+	}
+	bool GetKi(double* doubleVal) const {
+		return GetValueAsDouble("Ki", doubleVal);
+	}
+	bool GetKd(double* doubleVal) const {
+		return GetValueAsDouble("Kd", doubleVal);
+	}
+	std::string GetApiName() const {
+		return SdCommandCodeToString(FromCommanddLineArgToSdCommand(
+				m_cmdArgs.get_value("apiname")));
+	}
+	bool GetGyroWatermark(int* value) const {
+		return GetValueAsInt("gyrofifo",value);
+	}
+	bool GetAccelWatermark(int* value) const {
+		return GetValueAsInt("accelfifo",value);
+	}
 private:
-	SdCommandCode m_Command;
-	SdDroneConfig m_DroneCfg;
-	double m_Thrust;
-	double m_MinThrust;
-	double m_MaxThrust;
-	const char* m_HostAddress;
-	const char* m_LogFile;
-	int m_ServerPort;
-	bool m_IsServer;
-	bool m_IsClient;
-	bool m_IsDaemon;
-	QuaternionD m_targetAttitude;
-	CmdArgs m_cmdArgs;
-	SdJsonObject m_jsonArgs;
+
+	static SdCommandCode FromCommanddLineArgToSdCommand(const std::string&);
+
+	bool /*value present*/ GetValueAsDouble(const std::string& name, double* value) const;
+	bool /*value present*/ GetValueAsInt(const std::string &name, int32_t* value) const;
+	bool /*value*/ GetBoolValue(const std::string &name) const;
+
+	SdCommandCode _GetCommand(std::vector<std::string>* rpcParams=0) const;
+	inline bool IsValuePresent(const std::string& name) const {
+		return m_cmdArgs.get_value(name).length() > 0;
+	}
+
+private:
+	cmd_args m_cmdArgs;
+	int m_argc;
+	const char** m_argv;
 };
 
 #endif /* COMMANDARGS_H_ */

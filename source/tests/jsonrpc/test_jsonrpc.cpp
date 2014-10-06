@@ -1,9 +1,11 @@
 #include <iostream>
 #include <string>
-#include "cmdargs.h"
-#include "../../jsonrpc/jsonrpcparser.h"
-#include "../../jsonrpc/jsonrpcbuilder.h"
-#include "commandargs.h"
+#include <vector>
+#include <errno.h>
+#include "../../libjsonrpc/jsonrpcparser.h"
+#include "../../libjsonrpc/jsonrpcbuilder.h"
+#include "rpcparams.h"
+#include "sdroneapi.h"
 
 struct TestControl
 {
@@ -74,7 +76,7 @@ void TestParseJsonRpcFile(const std::string& fileName)
 
 
 	SdDroneConfig config;
-	if (!_CommandArgs::ParseJsonDroneConfig(parser.GetRpcParams(),&config)) {
+	if (!RpcParams::ParseJsonDroneConfig(parser.GetRpcParams(),&config)) {
 		TEST_FAILED();
 		return;
 	}
@@ -103,12 +105,9 @@ void TestParseJsonRpcFromBuffer()
 		"{"
 		    "\"jsonrpc\": \"2.0\", \"method\": \"run\", \"params\": "
 		    "{"
-				"\"Flight\": "
-				"{"
-				 	 "\"Thrust\": 0.5,"
-				 	 "\"MinThrust\":  0.3,"
-				 	 "\"MaxThrust\": 0.7"
-				"}"
+				"\"Thrust\": 0.5,"
+				"\"MinThrust\":  0.3,"
+				"\"MaxThrust\": 0.7"
 			"}, "
 			"\"id\": 0"
 		"}";
@@ -117,12 +116,9 @@ void TestParseJsonRpcFromBuffer()
 		"{"
 		    "\"jsonrpc\": \"2.0\", \"method\": \"run\", \"params\": "
 		    "{"
-				"\"Flight\": "
-				"{"
-				 	 "\"Thrust\": 0.6,"
-				 	 "\"MinThrust\":  0.4,"
-				 	 "\"MaxThrust\": 0.8"
-				"}"
+				"\"Thrust\": 0.6,"
+				"\"MinThrust\":  0.4,"
+				"\"MaxThrust\": 0.8"
 			"}, "
 			"\"id\": 0"
 		"}";
@@ -140,10 +136,9 @@ void TestParseJsonRpcFromBuffer()
 		return;
 	}
 
-	double thrust=0, minThrust=0, maxThrust=0;
-	_CommandArgs::ParseJsonThrust(parser.GetRpcParams(), &thrust, &minThrust,
-			&maxThrust);
-	if (thrust != 0.5 || minThrust != 0.3 || maxThrust != 0.7) {
+	SdThrustValues thrust;
+	RpcParams::ParseJsonThrust(parser.GetRpcParams(), &thrust);
+	if (thrust.Thrust() != 0.5 || thrust.MinThrust() != 0.3 || thrust.MaxThrust() != 0.7) {
 		TEST_FAILED();
 		return;
 	}
@@ -157,9 +152,8 @@ void TestParseJsonRpcFromBuffer()
 		return;
 	}
 
-	_CommandArgs::ParseJsonThrust(parser.GetRpcParams(), &thrust, &minThrust,
-			&maxThrust);
-	if (thrust != 0.5 || minThrust != 0.3 || maxThrust != 0.7) {
+	RpcParams::ParseJsonThrust(parser.GetRpcParams(), &thrust);
+	if (thrust.Thrust() != 0.5 || thrust.MinThrust() != 0.3 || thrust.MaxThrust() != 0.7) {
 		TEST_FAILED();
 		return;
 	}
@@ -172,9 +166,8 @@ void TestParseJsonRpcFromBuffer()
 		return;
 	}
 
-	_CommandArgs::ParseJsonThrust(parser.GetRpcParams(), &thrust, &minThrust,
-			&maxThrust);
-	if (thrust != 0.6 || minThrust != 0.4 || maxThrust != 0.8) {
+	RpcParams::ParseJsonThrust(parser.GetRpcParams(), &thrust);
+	if (thrust.Thrust() != 0.6 || thrust.MinThrust() != 0.4 || thrust.MaxThrust() != 0.8) {
 		TEST_FAILED();
 		return;
 	}
@@ -222,7 +215,7 @@ void TestJsonRpcBuilder()
 		return;
 	}
 	parser.ParseBuffer(bldr.GetJsonStream(),bldr.GetJsonStreamSize(),0);
-	const IJsonObject* parsedParams = parser.GetRpcParams();
+	const IJsonObject* parsedParams = parser.GetRpcParams()->AsObject();
 	if (parsedParams->GetMember("SkyIsTheLimit")->AsBool() !=
 			params.GetMember("SkyIsTheLimit")->AsBool()) {
 		TEST_FAILED();
@@ -254,12 +247,75 @@ void TestJsonRpcBuilder()
 		return;
 	}
 
+	SdJsonValueSpec spec(*(SdJsonValue*)parser.GetRpcParams());
+	std::string str = SdJsonValueToText(spec.Get());
+	cout << str <<"\n";
+
 	TEST_PASSED();
 	return;
 }
 
+void TestJsonSpec()
+{
+	TEST_BEGIN("TestJsonSpec");
 
-CmdArgs g_args;
+#if 0
+	static const char* schema1 =
+			"{"
+			"\"jsonrpc\": \"2.0\", \"method\": \"run\", \"params\": "
+			"{"
+			"\"Flight\": "
+			"{"
+			"\"Thrust\": 0.5,"
+			"\"MinThrust\":  0.3,"
+			"\"MaxThrust\": 0.7"
+			"}",
+			"\"SkyIsTheLimit\": true",
+			"\"Grounded\": false",
+			"}, "
+			"\"id\": 10"
+			"}";
+#endif
+	SdJsonValue orig;
+	SdJsonObject obj;
+	SdJsonObject params;
+	SdJsonObject flight;
+
+	obj.AddMember("jsonrpc",SdJsonValue("2.0"));
+	obj.AddMember("method",SdJsonValue("run"));
+	flight.AddMember("Thrust",SdJsonValue(0.5));
+	flight.AddMember("MinThrust",SdJsonValue(0.3));
+	flight.AddMember("MaxThrust",SdJsonValue(0.7));
+	params.AddMember("Flight", SdJsonValue(flight));
+	params.AddMember("SkyIsTheLimit", SdJsonValue(true));
+	params.AddMember("Grounded", SdJsonValue(false));
+	obj.AddMember("params",SdJsonValue(params));
+	obj.AddMember("id",SdJsonValue(10));
+	orig.SetValueAsObject(&obj);
+
+	SdJsonValue spec = SdJsonValueSpec(orig).Get();
+	std::vector<std::string> data;
+	data.push_back("2.0");
+	data.push_back("run");
+	data.push_back("0.5");
+	data.push_back("0.3");
+	data.push_back("0.7");
+	data.push_back("true");
+	data.push_back("false");
+	data.push_back("10");
+
+	SdJsonValue valFromSpec = SdJsonValueFromSpec(spec,data).Get();
+	printf("Original value: \n %s\n", SdJsonValueToText(orig).c_str());
+	printf("Value from spec:\n %s\n", SdJsonValueToText(valFromSpec).c_str());
+	if (valFromSpec == orig) {
+		TEST_PASSED();
+	} else {
+		TEST_FAILED();
+	}
+}
+
+
+cmd_args g_args;
 
 /*
  * Cmd args spec:
@@ -272,29 +328,30 @@ static cmd_arg_spec g_argspec[] = {
 };
 
 
-void usage(int argc, char *argv[])
+void usage(int argc, const char *argv[])
 {
 	std::cout << argv[0] << " <options>" << std::endl;
-	std::cout << g_args.HelpMessage() << std::endl;
+	std::cout << g_args.get_help_message() << std::endl;
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
-	g_args.AddSpecs(g_argspec, sizeof(g_argspec)/sizeof(*g_argspec));
-	g_args.Parse(argc, argv);
-	if (!g_args.GetValue("help").empty()) {
+	g_args.add_specs(g_argspec, sizeof(g_argspec)/sizeof(*g_argspec));
+	g_args.parse_command_line(argc, argv);
+	if (!g_args.get_value("help").empty()) {
 		usage(argc, argv);
 		return 0;
 	}
 
-	std::string jsonFileName = g_args.GetValue("jsonfile");
+	std::string jsonFileName = g_args.get_value("jsonfile");
 	if (0 == jsonFileName.length()) {
-		jsonFileName = "/home/svassilev/workspace/sigmadrone/"
-				"doc/configuration/droneconfig.json";
+		jsonFileName = std::string(argv[0]).substr(0,std::string(argv[0]).find_last_of('/'));
+		jsonFileName += "/droneconfig.json";
 	}
 	TestParseJsonRpcFile(jsonFileName);
 	TestParseJsonRpcFromBuffer();
 	TestJsonRpcBuilder();
+	TestJsonSpec();
 
 	TEST_STATS();
 

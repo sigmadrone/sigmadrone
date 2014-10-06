@@ -19,8 +19,7 @@ public:
 
 	int AddRef();
 	int Release();
-	int Start(const CommandArgs*);
-	void Stop(int flags);
+	int ExecuteCommand(SdCommandParams* commandArgs);
 	const char* GetName();
 	SdDeviceId GetDeviceId();
 	const char* GetVersion();
@@ -52,11 +51,16 @@ public:
 	int GetRate(
 			int* freq
 			);
+
 	inline bool IsInTextMode() { return !!m_File; }
 
 private:
 	void Close();
 	~ServoDevice();
+	int Start(const SdDroneConfig* config);
+	void Stop(bool detach);
+	int TurnPowerOn();
+	int TurnPowerOff();
 
 private:
 	int m_Fd;

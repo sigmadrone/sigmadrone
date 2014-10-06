@@ -19,7 +19,7 @@ client_app::~client_app()
 {
 }
 
-bool client_app::is_client(int argc, char *argv[])
+bool client_app::is_client(int argc, const char *argv[])
 {
 	bool client = false;
 	for (int i = 1; i < argc; i++) {
@@ -32,7 +32,7 @@ bool client_app::is_client(int argc, char *argv[])
 	return client;
 }
 
-int client_app::run(int argc, char *argv[])
+int client_app::run(int argc, const char *argv[])
 {
 	std::string host = args_.get_value("rpcconnect", "127.0.0.1");
 	std::string port = args_.get_value("rpcport", "18222");
@@ -59,7 +59,9 @@ int client_app::run(int argc, char *argv[])
 //		std::cout << "Raw RPC response(DEBUG): " << response.content << std::endl;
 		json::value val;
 		if (json::read(response.content, val)) {
-			if (val.get_obj()["result"].type() == json::str_type)
+			if (val.get_obj()["error"].type() == json::str_type) {
+				std::cout << "Error: " << val.get_obj()["error"].get_str() << std::endl;
+			} else if (val.get_obj()["result"].type() == json::str_type)
 				std::cout << val.get_obj()["result"].get_str() << std::endl;
 			else
 				std::cout << json::write_formatted(val.get_obj()["result"]) << std::endl;
@@ -70,7 +72,7 @@ int client_app::run(int argc, char *argv[])
 	return 0;
 }
 
-std::vector<std::string> client_app::parse_command_line(int argc, char *argv[])
+std::vector<std::string> client_app::parse_command_line(int argc, const char *argv[])
 {
 	std::vector<std::string> ret;
 

@@ -38,16 +38,29 @@ int TraceLogPlugin::AttachToChain(
 	return err;
 }
 
-int TraceLogPlugin::Start(
-	const CommandArgs* cmdArgs)
+int TraceLogPlugin::ExecuteCommand(
+		SdCommandParams* params)
 {
-	m_iteration = 0;
-	m_logLevel = cmdArgs->GetDroneConfig()->LogLevel;
-	m_logRotMatrix = cmdArgs->GetDroneConfig()->LogRotationMatrix;
-	m_logPeriod = 1.0/(double)cmdArgs->GetDroneConfig()->LogRate;
-	m_runtime->SetIoFilters(
-		SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
-		SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
+	switch (params->CommandCode()) {
+	case SD_COMMAND_RUN:
+		m_iteration = 0;
+		m_logLevel = params->Params().asDroneConfig->LogLevel;
+		m_logRotMatrix = params->Params().asDroneConfig->LogRotationMatrix;
+		m_logPeriod = 1.0/(double)params->Params().asDroneConfig->LogRate;
+		m_runtime->SetIoFilters(
+			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
+			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
+		break;
+	case SD_COMMAND_EXIT:
+		m_runtime->DetachPlugin();
+		break;
+	case SD_COMMAND_SET_CONFIG:
+		m_logLevel = params->Params().asDroneConfig->LogLevel;
+		m_logRotMatrix = params->Params().asDroneConfig->LogRotationMatrix;
+		m_logPeriod = 1.0/(double)params->Params().asDroneConfig->LogRate;
+		break;
+	default:break;
+	}
 	return SD_ESUCCESS;
 }
 
@@ -63,13 +76,6 @@ int TraceLogPlugin::Release()
 		delete this;
 	}
 	return refCnt;
-}
-
-void TraceLogPlugin::Stop(int flags)
-{
-	if (!!(flags&FLAG_STOP_AND_DETACH)) {
-		m_runtime->DetachPlugin();
-	}
 }
 
 const char* TraceLogPlugin::GetName()
@@ -220,15 +226,8 @@ int TraceLogPlugin::IoCallback(
 	}
 
 	if (m_logRotMatrix) {
-		const QuaternionD& tgtQ = ioPacket->TargetAttitude();
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> Tgt Q : %1.3lf %1.3lf %1.3lf %1.3lf\n",
-				tgtQ.w,tgtQ.w,tgtQ.y,tgtQ.z);
-		Matrix4d rotMx = attQ->rotMatrix4();
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
-				"%5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf %5.9lf \n",
-				rotMx.at(0, 0), rotMx.at(0, 1), rotMx.at(0, 2),
-				rotMx.at(1, 0), rotMx.at(1, 1), rotMx.at(1, 2),
-				rotMx.at(2, 0), rotMx.at(2, 1), rotMx.at(2, 2));
+		m_runtime->Log(SD_LOG_LEVEL_VERBOSE, "%5.9lf %5.9lf %5.9lf %5.9lf \n",
+				attQ->w,attQ->x,attQ->y,attQ->z);
 	}
 
 	m_runtime->Log(SD_LOG_LEVEL_VERBOSE,

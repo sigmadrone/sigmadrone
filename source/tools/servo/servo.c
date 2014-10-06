@@ -51,6 +51,10 @@ static int usage(int argc, const char *argv[])
 	fprintf(stderr, "\t-h, --help                          Display this help.\n");
 	fprintf(stderr, "\t--set-rate N                        Set sample rate. Setting to 0 powers down the device.\n");
 	fprintf(stderr, "\t--get-rate                          Get sample rate.\n");
+	fprintf(stderr, "\t--set-motoroe 1|0                   Enable or disable power OE to motors.\n");
+	fprintf(stderr, "\t--get-motoroe                       Get motor power OE state.\n");
+	fprintf(stderr, "\t--set-pwmoe 1|0                     Enable or disable PWM OE from the servo controller.\n");
+	fprintf(stderr, "\t--get-pwmoe                         Get PWM OE state.\n");
 	fprintf(stderr, "\t--set-pulse <chan> <on> <off>       Set pulse on channel: 1..15, on: 0..4095, off: 0..4095\n");
 	fprintf(stderr, "\t--get-pulse <chan>                  Set pulse on channel: 1..15, on: 0..4095, off: 0..4095\n");
 	fprintf(stderr, "\n\n");
@@ -150,6 +154,58 @@ static int servo_apply_commandline(int fd, int argc, const char *argv[])
 			return 0;
 		}
 	}
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--set-pwmoe") == 0) {
+			if (++i < argc) {
+				arg = atol(argv[i]);
+				ret = ioctl(fd, PCA9685_IOC_SETPWMOE, arg);
+				if (ret < 0) {
+					perror("PCA9685_IOC_SETPWMOE");
+					return -1;
+				}
+			}
+			return 0;
+		}
+	}
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--get-pwmoe") == 0) {
+			ret = ioctl(fd, PCA9685_IOC_GETPWMOE, 0);
+			if (ret < 0) {
+				perror("PCA9685_IOC_GETPWMOE");
+				return -1;
+			} else {
+				fprintf(stdout, "%d\n", ret);
+			}
+			return 0;
+		}
+	}
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--set-motoroe") == 0) {
+			if (++i < argc) {
+				arg = atol(argv[i]);
+				ret = ioctl(fd, PCA9685_IOC_SETMOTOROE, arg);
+				if (ret < 0) {
+					perror("PCA9685_IOC_SETMOTOROE");
+					return -1;
+				}
+			}
+			return 0;
+		}
+	}
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--get-motoroe") == 0) {
+			ret = ioctl(fd, PCA9685_IOC_GETMOTOROE, 0);
+			if (ret < 0) {
+				perror("PCA9685_IOC_GETMOTOROE");
+				return -1;
+			} else {
+				fprintf(stdout, "%d\n", ret);
+			}
+			return 0;
+		}
+	}
+
+
 
 	return 0;
 }

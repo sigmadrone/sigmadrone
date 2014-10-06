@@ -11,6 +11,7 @@
 #include "response.hpp"
 #include "response_parser.hpp"
 #include "liblogger/logger.h"
+#include "liblogger/logfile.h"
 
 namespace http {
 namespace client {
@@ -32,7 +33,7 @@ public:
 		{
 			if (ec)
 				client_.log_error_message("Connect error: %s", ec.message().c_str());
-			client_.log_debug_message("Trying to connect: %s", next->endpoint().address().to_string().c_str());
+				client_.log_debug_message("Trying to connect: %s", next->endpoint().address().to_string().c_str());
 			return next;
 		}
 		http_client& client_;
@@ -101,7 +102,6 @@ protected:
 	size_t bytes_transferred_;
 	std::string server_;
 	std::string port_;
-	std::string log_prefix_;
 	boost::asio::io_service io_service_;
 	buffer_type buffer_;
 	http::client::response_parser response_parser_;

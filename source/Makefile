@@ -1,9 +1,11 @@
+SUBDIRS += libattitude
+SUBDIRS += libdevice
 SUBDIRS += libhttp
 SUBDIRS += libcmdargs
 SUBDIRS += liblogger
 SUBDIRS += libjsonspirit
+SUBDIRS += libjsonrpc
 SUBDIRS += tools
-SUBDIRS += jsonrpc
 SUBDIRS += plugins
 SUBDIRS += sdrone
 SUBDIRS += sigmad

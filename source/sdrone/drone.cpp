@@ -10,6 +10,7 @@
 #include <sys/signal.h>
 #include "drone.h"
 #include "quadrotorpilot.h"
+#include "pidpilotsd.h"
 #include "servodevice.h"
 #include "imufilter.h"
 #include "imureader.h"
@@ -22,6 +23,9 @@
 #include "kalmanattitudefilter.h"
 #include "jsonrpcdispatch.h"
 #include "daemon.h"
+#include "plugincommandparams.h"
+#include "rpcparams.h"
+#include "jsonrpcparser.h"
 
 Drone* Drone::s_Only = 0;
 
@@ -114,13 +118,18 @@ Drone::~Drone()
 	}
 }
 
-int Drone::Run(const _CommandArgs& args)
+int Drone::Run(CommandLineArgs& args)
 {
+	SdJsonValue jsonArgs;
+	RpcParams::BuildJsonDroneConfigFromCmdLineArgs(&jsonArgs, args);
+	RpcParams::ParseJsonDroneConfig(&jsonArgs,&m_droneConfig.m_config);
+
 	if (args.IsDaemon()) {
 		daemon_init();
 	}
 
-	m_commandArgs = args;
+	m_thrustValues = SdThrustValues(
+			args.GetDesiredThrust(), args.GetMinThrust(), args.GetMaxThrust());
 
 	InitInternalPlugins();
 
@@ -142,9 +151,11 @@ int Drone::Run(const _CommandArgs& args)
 	if (0 == m_rpcDispatch) {
 		return ENOMEM;
 	}
+	SdJsonValue paramsSpec;
+	SdJsonValue resultSpec;
 	m_rpcDispatch->AddRequestCallback(
-			SdCommandCodeToString(SD_COMMAND_FLY),
-			OnRpcCommandFly,
+			SdCommandCodeToString(SD_COMMAND_RUN),
+			OnRpcCommandRun,
 			this);
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_RESET),
@@ -154,22 +165,87 @@ int Drone::Run(const _CommandArgs& args)
 			SdCommandCodeToString(SD_COMMAND_EXIT),
 			OnRpcCommandExit,
 			this);
+	RpcParams::BuildJsonDroneConfig(&jsonArgs,m_droneConfig.m_config,0);
 	m_rpcDispatch->AddRequestCallback(
-			SdCommandCodeToString(SD_COMMAND_GET_STATE),
-			OnRpcCommandGetState,
-			this);
+			SdCommandCodeToString(SD_COMMAND_GET_CONFIG),
+			OnRpcCommandGetConfig,
+			this,
+			SdJsonValue(),
+			jsonArgs);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_SET_CONFIG),
+			OnRpcCommandSetConfig,
+			this,
+			jsonArgs);
+	RpcParams::BuildJsonPingParams(&jsonArgs,0.0);
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_PING),
 			OnRpcCommandPing,
+			this,
+			jsonArgs,
+			jsonArgs);
+	RpcParams::BuildJsonThrustParams(&jsonArgs,0.0,0.0,1.0);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_THRUST),
+			OnRpcCommandGetThrust,
+			this,
+			SdJsonValue(),
+			jsonArgs);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_SET_THRUST),
+			OnRpcCommandSetThrust,
+			this,
+			jsonArgs);
+	RpcParams::BuildJsonTargetQuaternion(&jsonArgs,QuaternionD(1.0,0,0,0));
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_ATTITUDE),
+			OnRpcCommandGetAttitude,
+			this,
+			SdJsonValue(),
+			jsonArgs);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_SET_ATTITUDE),
+			OnRpcCommandSetTargetAttitude,
+			this,
+			jsonArgs);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_ALTITUDE),
+			OnRpcCommandGetAltitude,
 			this);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_SET_TARGET_ALTITUDE),
+			OnRpcCommandSetTargetAltitude,
+			this);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_RPC_SPEC),
+			OnRpcCommandGetRpcSpec,
+			this,
+			SdJsonValue("SD_COMMAND_CODE_XXX"),
+			SdJsonValue("Spec"));
+
+
+	SdJsonArray jarr;
+	jarr.AddElement(SdJsonValue("sd_run"));
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_RPC_LIST),
+			OnRpcCommandGetRpcList,
+			this,
+			SdJsonValue(),
+			SdJsonValue(jarr));
 
 	//
 	// Execute the command that came with the command line
 	//
 	switch(args.GetCommand()) {
-	case SD_COMMAND_FLY:
-		OnFly();
+	case SD_COMMAND_RUN: {
+		int err;
+		RpcParams::BuildJsonDroneConfig(&jsonArgs,m_droneConfig.m_config,0);
+		if (SD_ESUCCESS != (err = OnRun(&jsonArgs))) {
+			return err;
+		}
+		OnSetThrust(m_thrustValues);
 		break;
+	}
 	case SD_COMMAND_RESET:
 	case SD_COMMAND_NONE:
 		OnReset();
@@ -190,24 +266,23 @@ int Drone::Run(const _CommandArgs& args)
 
 int Drone::OnReset()
 {
-	int err = m_pluginChain.StopPlugins(false);
+	PluginCommandParams params(SD_COMMAND_RESET,SdIoData(),0);
+	int err = m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 	if (err < 0) {
 		fprintf(stdout,"Failed to reset the drone, err=%d\n",err);
 	} else {
 		printf("Drone was successfully reset!\n");
 	}
+	m_isRunning = false;
 
 	return err;
 }
 
 int Drone::OnExit()
 {
-	int err = m_pluginChain.StopPlugins(true);
-	if (err < 0) {
-		fprintf(stdout,"Failed to reset the drone, err=%d\n",err);
-	} else {
-		printf("Drone was successfully reset!\n");
-	}
+	int err = OnReset();
+	PluginCommandParams params(SD_COMMAND_EXIT,SdIoData(),0);
+	m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 
 	assert (m_rpcDispatch);
 	m_rpcDispatch->StopServingRequests();
@@ -215,37 +290,48 @@ int Drone::OnExit()
 	return err;
 }
 
-int Drone::OnFly()
+int Drone::OnRun(const IJsonValue* rpcParams)
 {
 	int err = 0;
-	if (!m_pluginChain.ArePluginsStarted()) {
-		PrintConfig(m_commandArgs.GetDroneConfig());
-		err = m_pluginChain.StartPlugins(&m_commandArgs);
-	} else {
-		err = m_pluginChain.ExecuteCommand(&m_commandArgs);
+	if (!m_isRunning) {
+		SdIoData data(&m_droneConfig.m_config);
+		PluginCommandParams params(SD_COMMAND_RUN,data,rpcParams);
+		m_droneConfig.PrintConfig();
+		if (0 == (err = m_pluginChain.ExecuteCommand(&params, 0))) {
+			m_isRunning = true;
+		} else {
+			OnReset();
+		}
 	}
 	return err;
 }
 
-void Drone::PrintConfig(const SdDroneConfig* config)
+int Drone::OnSetThrust(const SdThrustValues& thrustVals)
 {
-	printf("Drone configuration:\n");
-	printf("Gyro device:    %s\n",config->Gyro.DeviceName.c_str());
-	printf("Gyro rate:      %d Hz\n",config->Gyro.SamplingRate);
-	printf("Gyro scale:     %d DPS\n",config->Gyro.Scale);
-	printf("Gyro watermark: %d\n",config->Gyro.Watermark);
-	printf("Accel device:   %s\n",config->Accel.DeviceName.c_str());
-	printf("Accel rate:     %d Hz\n",config->Accel.SamplingRate);
-	printf("Accel scale:    %d G\n",config->Accel.Scale);
-	printf("Accel watermrk: %d\n",config->Accel.Watermark);
-	printf("Compass:        %s\n",config->Mag.DeviceName.c_str());
-	printf("IMU Angle:      %d\n",config->Quad.ImuAngleAxisZ);
-	for (int i = 0; (size_t)i < ARRAYSIZE(config->Quad.Motor); i++) {
-		printf("Quad M%d:        Servo %d\n",i,config->Quad.Motor[i]);
-	}
-	printf("Kp:             %1.8f\n", config->Quad.Kp);
-	printf("Ki:             %1.8f\n", config->Quad.Ki);
-	printf("Kd:             %1.8f\n", config->Quad.Kd);
+	SdIoData data(&thrustVals);
+	printf("Setting thrust %.3f, min %.3f, max %.3f\n",
+			thrustVals.Thrust(), thrustVals.MinThrust(),
+			thrustVals.MaxThrust());
+	PluginCommandParams params(SD_COMMAND_SET_THRUST,data,0);
+	m_thrustValues = thrustVals;
+	return m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
+}
+
+int Drone::OnSetConfig(
+		const SdDroneConfig& config,
+		const IJsonValue* rpcParams)
+{
+	SdIoData data(&config);
+	PluginCommandParams params(SD_COMMAND_SET_CONFIG,data,rpcParams);
+	m_droneConfig.m_config = config;
+	return m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
+}
+
+int Drone::OnSetTargetQuaternion(const QuaternionD& targetQ)
+{
+	SdIoData data(&targetQ);
+	PluginCommandParams params(SD_COMMAND_SET_ATTITUDE,data,0);
+	return m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 }
 
 void Drone::InitInternalPlugins()
@@ -253,25 +339,29 @@ void Drone::InitInternalPlugins()
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_DEVICE);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_REMAP);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_BIAS);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_LOWPASSFILTER);
-	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_FILTER);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_KALMAN_FILTER);
+//	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_LOWPASSFILTER);
+	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_FILTER);
+	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_KALMAN_FILTER);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_SERVO_PCA9685);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_NAVIGATOR);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_QUADPILOT);
+	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_QUADPILOT);
+	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_PIDPILOT);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_TRACELOG);
 }
 
-void Drone::OnRpcCommandFly(
+void Drone::OnRpcCommandRun(
 		void* context,
 		const SdJsonRpcRequest* req,
 		SdJsonRpcReply* rep)
 {
 	assert(context == Only());
+	int err;
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
-	Only()->m_commandArgs.ParseJsonRpcArgs(req->Params);
-	if (0 != Only()->OnFly()) {
+	if (!RpcParams::ParseJsonDroneConfig(&req->Params,&Only()->m_droneConfig.m_config)) {
+		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
+	} else if (0 != (err = Only()->OnRun(&req->Params))) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+		rep->ErrorMessage = strerror(err);
 	} else {
 		rep->Results.SetValueAsInt(0);
 	}
@@ -300,7 +390,6 @@ void Drone::OnRpcCommandReset(
 {
 	assert(context == Only());
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
-	Only()->m_commandArgs.ParseJsonRpcArgs(req->Params);
 	if (0 != Only()->OnReset()) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	} else {
@@ -309,18 +398,16 @@ void Drone::OnRpcCommandReset(
 	rep->Id = req->Id;
 }
 
-void Drone::OnRpcCommandGetState(
+void Drone::OnRpcCommandGetConfig(
 		void* context,
 		const SdJsonRpcRequest* req,
 		SdJsonRpcReply* rep)
 {
+
 	assert(context == Only());
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
-	if (!Only()->m_commandArgs.GetCommandArgsAsJobj()) {
-		rep->ErrorCode = SD_JSONRPC_ERROR_APP;
-	} else {
-		rep->Results.SetValueAsObject(
-			Only()->m_commandArgs.GetCommandArgsAsJobj());
+	if (!RpcParams::BuildJsonDroneConfig(&rep->Results,Only()->m_droneConfig.m_config,0)) {
+		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
 	}
 	rep->Id = req->Id;
 }
@@ -330,10 +417,162 @@ void Drone::OnRpcCommandPing(
 		const SdJsonRpcRequest* req,
 		SdJsonRpcReply* rep)
 {
+	int64_t timestamp = 0;
 	assert(context == Only());
-	printf("Sending ping reply %s\n",SD_PING_REPLY_DATA);
+	if (req->Params.AsIntSafe(&timestamp)) {
+		printf("Sending ping reply %lu\n",timestamp);
+		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+		rep->Results.SetValueAsInt(timestamp);
+	} else {
+		rep->ErrorMessage = "Ping request carries wrong timestamp value type ";
+		rep->ErrorMessage += req->Params.GetTypeAsString();
+		printf("WARN: %s\n", rep->ErrorMessage.c_str());
+		rep->ErrorCode = SD_JSONRPC_ERROR_INVALID_METHOD_PARAMS;
+	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandSetConfig(
+		void* context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	assert(context == Only());
+	SdDroneConfig config = Only()->m_droneConfig.m_config;
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
-	rep->Results.SetValueAsString(SD_PING_REPLY_DATA);
+	if (!RpcParams::ParseJsonDroneConfig(&req->Params,&config)) {
+		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
+	} else {
+		int err = Only()->OnSetConfig(config,&req->Params);
+		if (0 != err) {
+			rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+			rep->ErrorMessage = strerror(err);
+		}
+		rep->Results.SetValueAsInt(0);
+	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandSetThrust(
+		void* context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	SdThrustValues thrust = Only()->m_thrustValues;
+	assert(context == Only());
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	if (!RpcParams::ParseJsonThrust(&req->Params, &thrust)) {
+		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
+	} else {
+		int err;
+		if (0 != (err = Only()->OnSetThrust(thrust))) {
+			rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+			rep->ErrorMessage = strerror(err);
+		} else {
+			rep->Results.SetValueAsInt(0);
+		}
+	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandGetThrust(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	const SdThrustValues& thrust = Only()->m_thrustValues;
+	RpcParams::BuildJsonThrustParams(&rep->Results,thrust.Thrust(),
+			thrust.MinThrust(),thrust.MaxThrust());
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandSetTargetAttitude(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+
+{
+	QuaternionD targetQ;
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	if (!RpcParams::ParseJsonTargetQuaternion(&req->Params,&targetQ)) {
+		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
+	} else {
+		int err;
+		if (0 != (err = Only()->OnSetTargetQuaternion(targetQ))) {
+			rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+			rep->ErrorMessage = strerror(err);
+		} else {
+			rep->Results.SetValueAsInt(0);
+		}
+	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandGetAttitude(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	SdIoData data;
+	PluginCommandParams params(SD_COMMAND_GET_ATTITUDE,data,0);
+	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+	rep->Id = req->Id;
+	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
+		if (params.OutParams().dataType == SdIoData::TYPE_QUATERNION) {
+			RpcParams::BuildJsonTargetQuaternion(&rep->Results,
+					*params.OutParams().asQuaternion);
+			rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+		}
+	}
+}
+
+void Drone::OnRpcCommandSetTargetAltitude(void* Context, const SdJsonRpcRequest*,
+		SdJsonRpcReply*) {
+	//TODO:
+}
+
+void Drone::OnRpcCommandGetAltitude(void* Context, const SdJsonRpcRequest*,
+		SdJsonRpcReply*) {
+	//TODO:
+}
+
+void Drone::OnRpcCommandGetRpcSpec(
+	void* context,
+	const SdJsonRpcRequest* req,
+	SdJsonRpcReply* rep)
+{
+	std::string methodName;
+	SdJsonValue paramsSpec;
+	SdJsonValue resultSpec;
+	req->Params.AsStringSafe(&methodName);
+	if (!Only()->m_rpcDispatch->GetParamsSpec(methodName,&paramsSpec) ||
+			!Only()->m_rpcDispatch->GetResultSpec(methodName,&resultSpec)) {
+		rep->ErrorCode = SD_JSONRPC_ERROR_INVALID_METHOD_PARAMS;
+		rep->ErrorMessage = "Requested spec for unsupported method";
+	} else {
+		SdJsonObject obj;
+		obj.AddMember("params",paramsSpec);
+		obj.AddMember("result",resultSpec);
+		rep->Results.SetValueAsObject(&obj);
+		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandGetRpcList(
+	void* context,
+	const SdJsonRpcRequest* req,
+	SdJsonRpcReply* rep)
+{
+	std::vector<std::string> rpcList;
+	SdJsonArray jarr;
+	Only()->m_rpcDispatch->GetRegisteredMethods(rpcList);
+	for (size_t i = 0; i < rpcList.size(); i++) {
+		jarr.AddElement(SdJsonValue(rpcList[i]));
+	}
+	rep->Results.SetValueAsArray(&jarr);
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 	rep->Id = req->Id;
 }
 
@@ -384,6 +623,13 @@ int SdPluginInitialize(
 			pilot->Release();
 		}
 	}
+	if (0 == pluginName || 0 == (strcmp(pluginName,SD_PLUGIN_PIDPILOT))){
+		PidPilot* pilot = new PidPilot();
+		if (0 != pilot) {
+			pilot->AttachToChain(droneContext,attachPlugin);
+			pilot->Release();
+		}
+	}
 	if (0 == pluginName || 0 == (strcmp(pluginName,SD_PLUGIN_NAVIGATOR))){
 		Navigator* navigator = new Navigator();
 		if (0 != navigator) {
@@ -426,7 +672,7 @@ int SdPluginInitialize(
 			imuLpf->Release();
 		}
 	}
-//#if 0
+#if 0
 	if (0 == pluginName || 0 == (strcmp(pluginName,SD_PLUGIN_IMU_KALMAN_FILTER))){
 		KalmanAttitudeFilter* kf = new KalmanAttitudeFilter();
 		if (0 != kf) {
@@ -434,7 +680,6 @@ int SdPluginInitialize(
 			kf->Release();
 		}
 	}
-//#endif
+#endif
 	return 0;
 }
-

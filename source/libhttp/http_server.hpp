@@ -8,6 +8,7 @@
 #include "request_handler.hpp"
 #include "connection_manager.hpp"
 #include "liblogger/logger.h"
+#include "liblogger/logfile.h"
 
 namespace http {
 namespace server {
@@ -73,8 +74,6 @@ protected:
 
 	/// The next connection to be accepted.
 	connection_ptr new_connection_;
-
-	std::string log_prefix_;
 };
 
 } // namespace server

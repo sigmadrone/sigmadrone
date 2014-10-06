@@ -7,7 +7,9 @@
 
 class server_app;
 
-class user_rpcserver : public rpc_server<user_rpcserver, http::server::connection_ptr>, public http::server::http_server
+class user_rpcserver
+	: public rpc_server<user_rpcserver, http::server::connection_ptr>
+	, public http::server::http_server
 {
 public:
 	user_rpcserver(server_app& app, boost::asio::io_service& io_service, const std::string& address, const std::string& port);
@@ -17,6 +19,11 @@ public:
 	json::value rpc_help(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_stop(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_myaddress(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_servo_enable(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_servo_rate(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_servo_setoffset(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_servo_getpulse(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_servo_getpulsems(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 
 protected:
 	void jsonrpc_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);

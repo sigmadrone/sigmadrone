@@ -45,9 +45,7 @@ Vector4f applyW(const Vector4f &v)
 	return ret;
 }
 
-
-void
-display(void)
+void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -55,10 +53,8 @@ display(void)
 	glutSwapBuffers();
 }
 
-
 int main(int argc, char *argv[])
 {
-
 	GlutProgram prog(GLUT_MULTISAMPLE | GLUT_ALPHA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA, 800, 900, 160 * WINDOW_SIZE_FACTOR, 160 * WINDOW_SIZE_FACTOR);
 	GlShaders shaders;
 	int junk = pthread_getconcurrency();
@@ -92,6 +88,7 @@ int main(int argc, char *argv[])
 	return 0;
 }
 
+
 void IdleFunction(void)
 {
 	fd_set rset;
@@ -104,27 +101,24 @@ void IdleFunction(void)
 	maxfd = fileno (stdin);
 	tv.tv_sec = 0;
 	tv.tv_usec = 0;
+	QuaternionD q;
 
 again:
 	if (select (maxfd + 1, &rset, NULL, NULL, &tv) > 0) {
 		char buffer[256];
 		memset(buffer, 0, sizeof(buffer));
 		if (fgets(buffer, sizeof(buffer) - 1, stdin)) {
+			if (strncmp(buffer, "\n", 1) == 0 || strncmp(buffer, "\r\n", 2) == 0)
+				goto again;
 			if (strncmp(buffer, "-->", 3) == 0) {
 				if (gDebug)
 					fputs(buffer, stdout);
 				goto again;
 			}
-			sscanf(buffer, "%f %f %f %f %f %f %f %f %f",
-					&M.at(0,0), &M.at(0,1), &M.at(0,2),
-					&M.at(1,0), &M.at(1,1), &M.at(1,2),
-					&M.at(2,0), &M.at(2,1), &M.at(2,2));
-			M.at(3,3) = 1.0f;
+			sscanf(buffer, "%lf %lf %lf %lf", &q.w, &q.x, &q.y, &q.z);
+			M = q.rotMatrix4();
 			if (gDebug) {
-				fprintf(stdout, "%5.9f %5.9f %5.9f %5.9f %5.9f %5.9f %5.9f %5.9f %5.9f\n",
-								M.at(0,0), M.at(0,1), M.at(0,2),
-								M.at(1,0), M.at(1,1), M.at(1,2),
-								M.at(2,0), M.at(2,1), M.at(2,2));
+				fprintf(stdout, "%5.9lf %5.9lf %5.9lf %5.9lf\n", q.w, q.x, q.y, q.z);
 			}
 			GLuint mLoc;
 			Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(0), DEG2RAD(180)) * M);

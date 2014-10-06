@@ -7,7 +7,8 @@ namespace server {
 
 
 http_server::http_server(boost::asio::io_service& io_service, const std::string& address, const std::string& port)
-	: address_(address)
+	: logger("HTTP Server: ")
+	, address_(address)
 	, port_(port)
 	, io_service_(io_service)
 	, acceptor_(io_service_)
@@ -16,7 +17,6 @@ http_server::http_server(boost::asio::io_service& io_service, const std::string&
 	, connection_manager_(*this)
 	, request_handler_(*this)
 	, new_connection_()
-	, log_prefix_(std::string("HTTP::SERVER") + "@" + address + ":" + port + "; ")
 {
 	// Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
 	boost::asio::ip::tcp::resolver resolver(io_service_);

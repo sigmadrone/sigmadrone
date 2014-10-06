@@ -12,7 +12,7 @@
 
 static void* s_myModuleHandle = (void*)-1;
 extern char **g_Argv;
-extern _CommandArgs g_CmdArgs;
+extern CommandLineArgs g_CmdArgs;
 
 PluginContext::PluginContext(
 		IPlugin* plugin,
@@ -190,6 +190,7 @@ void PluginContext::Logv(
 		return;
 	}
 	vfprintf(stdout,format,args);
+	fflush(stdout);
 }
 
 SdDeviceId PluginContext::GetPluginDeviceFilter()
@@ -220,4 +221,10 @@ void PluginContext::FreeIoPacket(
 		SdIoPacket* iop)
 {
 	delete static_cast<IoPacket*>(iop);
+}
+
+void PluginContext::ExecuteCommandNotify(SdCommandParams* args) {
+	if (args->Params().dataType == SdIoData::TYPE_DRONE_CONFIG) {
+		m_logLevel = args->Params().asDroneConfig->LogLevel;
+	}
 }

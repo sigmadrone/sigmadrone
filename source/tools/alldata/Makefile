@@ -1,8 +1,8 @@
 CXX	    	?= $(CROSS_COMPILE)g++
 CC          	?= $(CROSS_COMPILE)gcc
-INCLUDES    	= -I../../include
-LIBS		= -lm 
-CFLAGS		= -g -Wall
+INCLUDES    	= -I../../include -I../../libdevice -I../../libcmdargs -I../../libattitude
+LIBS		= -lm -lcmdargs -ldevice -lattitude -pthread -L../../libcmdargs -L../../libdevice -L../../libattitude -lrt
+CFLAGS		= -g -O0 -Wall
 OBJECTS		= alldata.o
 SRCS        	= alldata.c
 TARGET		= alldata
