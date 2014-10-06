@@ -16,7 +16,6 @@ http_server::http_server(boost::asio::io_service& io_service, const std::string&
 	, connection_manager_(*this)
 	, request_handler_(*this)
 	, new_connection_()
-	, logger_()
 	, log_prefix_(std::string("HTTP::SERVER") + "@" + address + ":" + port + "; ")
 {
 	// Open the acceptor with the option to reuse the address (i.e. SO_REUSEADDR).
@@ -29,6 +28,7 @@ http_server::http_server(boost::asio::io_service& io_service, const std::string&
 	acceptor_.listen();
 	start_accept();
 	schedule_blocked_requests(5000);
+	set_log_prefix(std::string("HTTP::SERVER") + "@" + address + ":" + port + "; ");
 }
 
 boost::asio::io_service& http_server::io_service()
@@ -99,81 +99,6 @@ void http_server::stop(unsigned int milliseconds)
 {
 	timer_.expires_from_now(boost::posix_time::milliseconds(milliseconds));
 	timer_.async_wait(boost::bind(&http_server::handle_stop, this, boost::asio::placeholders::error));
-}
-
-bool http_server::log_debug_message(const char *fmt, ...)
-{
-	bool result = false;
-	va_list args;
-
-	if (!logger_)
-		return result;
-	va_start(args, fmt);
-	std::string format(log_prefix_ + fmt);
-	result = logger_->log_debug_message(format.c_str(), args);
-	va_end(args);
-	return result;
-}
-
-bool http_server::log_info_message(const char *fmt, ...)
-{
-	bool result = false;
-	va_list args;
-
-	if (!logger_)
-		return result;
-	va_start(args, fmt);
-	std::string format(log_prefix_ + fmt);
-	result = logger_->log_info_message(format.c_str(), args);
-	va_end(args);
-	return result;
-}
-
-bool http_server::log_warning_message(const char *fmt, ...)
-{
-	bool result = false;
-	va_list args;
-
-	if (!logger_)
-		return result;
-	va_start(args, fmt);
-	std::string format(log_prefix_ + fmt);
-	result = logger_->log_warning_message(format.c_str(), args);
-	va_end(args);
-	return result;
-}
-
-bool http_server::log_error_message(const char *fmt, ...)
-{
-	bool result = false;
-	va_list args;
-
-	if (!logger_)
-		return result;
-	va_start(args, fmt);
-	std::string format(log_prefix_ + fmt);
-	result = logger_->log_error_message(format.c_str(), args);
-	va_end(args);
-	return result;
-}
-
-bool http_server::log_critical_message(const char *fmt, ...)
-{
-	bool result = false;
-	va_list args;
-
-	if (!logger_)
-		return result;
-	va_start(args, fmt);
-	std::string format(log_prefix_ + fmt);
-	result = logger_->log_critical_message(format.c_str(), args);
-	va_end(args);
-	return result;
-}
-
-void http_server::set_logger(http::logger_ptr ptr)
-{
-		logger_ = ptr;
 }
 
 size_t http_server::get_remote_connections(std::vector<std::string>& connections)

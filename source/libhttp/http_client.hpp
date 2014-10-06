@@ -10,13 +10,16 @@
 #include "headers.hpp"
 #include "response.hpp"
 #include "response_parser.hpp"
-#include "logger.hpp"
+#include "liblogger/logger.h"
 
 namespace http {
 namespace client {
 
 /// The top-level class of the HTTP server.
-class http_client: public boost::enable_shared_from_this<http_client>, private boost::noncopyable
+class http_client
+	: public boost::enable_shared_from_this<http_client>
+	, public ::logger<logfile_base>
+	, private boost::noncopyable
 {
 public:
 	typedef boost::array<char, 128> buffer_type;
@@ -62,7 +65,6 @@ public:
 			const std::string& method,
 			const std::string& url,
 			boost::system::error_code& ec);
-	void set_logger(http::logger_ptr ptr);
 	std::string get_local_address();
 	std::string get_local_port();
 	std::string get_remote_address();
@@ -94,20 +96,12 @@ private:
 			const http::headers& headers);
 
 protected:
-	bool log_debug_message(const char *fmt, ...);
-	bool log_info_message(const char *fmt, ...);
-	bool log_warning_message(const char *fmt, ...);
-	bool log_error_message(const char *fmt, ...);
-	bool log_critical_message(const char *fmt, ...);
-
-protected:
 	bool stopped_;
 	size_t io_timeout_;
 	size_t bytes_transferred_;
 	std::string server_;
 	std::string port_;
 	std::string log_prefix_;
-	logger_ptr logger_;
 	boost::asio::io_service io_service_;
 	buffer_type buffer_;
 	http::client::response_parser response_parser_;

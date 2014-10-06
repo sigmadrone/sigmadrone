@@ -14,7 +14,6 @@ http_client::http_client(const std::string& server, const std::string& port, siz
 	, server_(server)
 	, port_(port)
 	, log_prefix_(std::string("HTTP::CLIENT") + "; ")
-	, logger_()
 	, io_service_()
 	, buffer_()
 	, endpoint_()
@@ -396,81 +395,6 @@ void http_client::read_content(http::client::response& response)
 		}
 		boost::asio::detail::throw_error(ec_, "http_client::read_content");
 	}
-}
-
-bool http_client::log_debug_message(const char *fmt, ...)
-{
-	bool result = false;
-	va_list args;
-
-	if (!logger_)
-		return result;
-	va_start(args, fmt);
-	std::string format(log_prefix_ + fmt);
-	result = logger_->log_debug_message(format.c_str(), args);
-	va_end(args);
-	return result;
-}
-
-bool http_client::log_info_message(const char *fmt, ...)
-{
-	bool result = false;
-	va_list args;
-
-	if (!logger_)
-		return result;
-	va_start(args, fmt);
-	std::string format(log_prefix_ + fmt);
-	result = logger_->log_info_message(format.c_str(), args);
-	va_end(args);
-	return result;
-}
-
-bool http_client::log_warning_message(const char *fmt, ...)
-{
-	bool result = false;
-	va_list args;
-
-	if (!logger_)
-		return result;
-	va_start(args, fmt);
-	std::string format(log_prefix_ + fmt);
-	result = logger_->log_warning_message(format.c_str(), args);
-	va_end(args);
-	return result;
-}
-
-bool http_client::log_error_message(const char *fmt, ...)
-{
-	bool result = false;
-	va_list args;
-
-	if (!logger_)
-		return result;
-	va_start(args, fmt);
-	std::string format(log_prefix_ + fmt);
-	result = logger_->log_error_message(format.c_str(), args);
-	va_end(args);
-	return result;
-}
-
-bool http_client::log_critical_message(const char *fmt, ...)
-{
-	bool result = false;
-	va_list args;
-
-	if (!logger_)
-		return result;
-	va_start(args, fmt);
-	std::string format(log_prefix_ + fmt);
-	result = logger_->log_critical_message(format.c_str(), args);
-	va_end(args);
-	return result;
-}
-
-void http_client::set_logger(http::logger_ptr ptr)
-{
-	logger_ = ptr;
 }
 
 void http_client::timeout(size_t millisec)

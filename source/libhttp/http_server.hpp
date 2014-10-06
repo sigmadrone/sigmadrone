@@ -7,13 +7,13 @@
 #include <boost/noncopyable.hpp>
 #include "request_handler.hpp"
 #include "connection_manager.hpp"
-#include "logger.hpp"
+#include "liblogger/logger.h"
 
 namespace http {
 namespace server {
 
 /// The top-level class of the HTTP server.
-class http_server: private boost::noncopyable
+class http_server: private boost::noncopyable, public ::logger<logfile_base>
 {
 public:
 	typedef http::server::connection connection_ctx;
@@ -27,18 +27,6 @@ public:
 
 	/// io_service_ accessor
 	boost::asio::io_service& io_service();
-
-	bool log_debug_message(const char *fmt, ...);
-
-	bool log_info_message(const char *fmt, ...);
-
-	bool log_warning_message(const char *fmt, ...);
-
-	bool log_error_message(const char *fmt, ...);
-
-	bool log_critical_message(const char *fmt, ...);
-
-	void set_logger(http::logger_ptr ptr);
 
 	template<typename handler_type>
 	void add_uri_handler(const std::string& uri, handler_type handler_callback)
@@ -85,8 +73,6 @@ protected:
 
 	/// The next connection to be accepted.
 	connection_ptr new_connection_;
-
-	logger_ptr logger_;
 
 	std::string log_prefix_;
 };
