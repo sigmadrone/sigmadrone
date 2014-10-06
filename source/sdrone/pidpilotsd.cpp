@@ -99,7 +99,6 @@ void PidPilot::Stop(bool detach)
 {
 	m_minThrust = m_maxThrust = 0;
 	m_motors = Vector4d();
-	IssueCommandToServo();
 	if (detach) {
 		m_runtime->DetachPlugin();
 	}

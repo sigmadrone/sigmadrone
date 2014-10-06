@@ -34,8 +34,6 @@ private:
 	~ServoDevicePlugin();
 	int Start(const SdDroneConfig* config);
 	void Stop(bool detach);
-	int TurnPowerOn();
-	int TurnPowerOff();
 
 private:
 	int ref_cnt_;

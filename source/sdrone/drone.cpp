@@ -344,8 +344,8 @@ void Drone::InitInternalPlugins()
 	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_KALMAN_FILTER);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_SERVO_PCA9685);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_NAVIGATOR);
-	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_QUADPILOT);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_PIDPILOT);
+	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_QUADPILOT);
+	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_PIDPILOT);
 	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_TRACELOG);
 }
 
@@ -652,7 +652,7 @@ int SdPluginInitialize(
 		}
 	}
 	if (0 == pluginName || 0 == (strcmp(pluginName,SD_PLUGIN_SERVO_PCA9685))){
-		ServoDevice* servoDev = new ServoDevice();
+		ServoDevicePlugin* servoDev = new ServoDevicePlugin();
 		if (0 != servoDev) {
 			servoDev->AttachToChain(droneContext,attachPlugin);
 			servoDev->Release();

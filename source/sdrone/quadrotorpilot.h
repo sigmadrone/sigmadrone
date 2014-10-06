@@ -12,7 +12,7 @@
 #include "pidcontroller.h"
 #include "firfilt.h"
 
-class ServoDevice;
+class ServoDevicePlugin;
 
 class QuadRotorPilot: public IPlugin
 {
