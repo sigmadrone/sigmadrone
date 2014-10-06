@@ -72,7 +72,7 @@ int PidPilot::Start(const SdDroneConfig* config)
 	assert(m_runtime);
 
 	m_config = config->Quad;
-	m_pid.Reset(m_config.Kp, m_config.Ki, m_config.Kd);
+	m_pid.Reset(m_config.Kp * 1000.0, m_config.Ki * 1000.0, m_config.Kd * 1000.0);
 
 	m_runtime->SetIoFilters(
 			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
