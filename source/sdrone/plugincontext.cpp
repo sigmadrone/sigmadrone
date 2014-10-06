@@ -190,6 +190,7 @@ void PluginContext::Logv(
 		return;
 	}
 	vfprintf(stdout,format,args);
+	fflush(stdout);
 }
 
 SdDeviceId PluginContext::GetPluginDeviceFilter()

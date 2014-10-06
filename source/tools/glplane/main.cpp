@@ -108,6 +108,8 @@ again:
 		char buffer[256];
 		memset(buffer, 0, sizeof(buffer));
 		if (fgets(buffer, sizeof(buffer) - 1, stdin)) {
+			if (strncmp(buffer, "\n", 1) == 0 || strncmp(buffer, "\r\n", 2) == 0)
+				goto again;
 			if (strncmp(buffer, "-->", 3) == 0) {
 				if (gDebug)
 					fputs(buffer, stdout);
