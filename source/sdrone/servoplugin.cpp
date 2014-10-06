@@ -12,7 +12,10 @@
 #include <math.h>
 #include "pca9685controller.h"
 
-ServoDevicePlugin::ServoDevicePlugin() : ref_cnt_(1), runtime_(0)
+ServoDevicePlugin::ServoDevicePlugin()
+	: ref_cnt_(1)
+	, servoctrl_(new servocontroller(16))
+	, runtime_(0)
 {
 }
 
