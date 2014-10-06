@@ -17,9 +17,8 @@ pca9685controller::pca9685controller(unsigned int channels, const std::string& d
 	, devicename_(devicename)
 {
 	fd_ = ::open(devicename.c_str(), O_RDONLY);
-	if (-1 == fd_) {
+	if (fd_ < 0)
 		throw std::runtime_error("pca9685controller failed to open device: " + devicename);
-	}
 	reset();
 	update();
 }
