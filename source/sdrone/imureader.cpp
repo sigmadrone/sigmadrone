@@ -97,7 +97,6 @@ int ImuReader::Run(
 					"/sys/bus/i2c/devices/4-0077/pressure0_input"
 			));
 			m_sampler->gyr_.set_adjustment(1.2);
-			m_sampler->gyr_.bias_update(2000);
 			m_sampler->gyr_.set_rate(droneConfig->Gyro.SamplingRate);
 			m_sampler->acc_.set_rate(droneConfig->Accel.SamplingRate);
 			m_sampler->gyr_.set_full_scale(droneConfig->Gyro.Scale);
