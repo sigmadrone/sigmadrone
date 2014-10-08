@@ -72,6 +72,19 @@ void server_app::init_servo_controller()
 	servoctrl_->update();
 }
 
+void server_app::init_sensors_sampler()
+{
+	if (args_.get_value("disable-sensors").empty()) {
+		ssampler_.reset(new sampler(
+			args_.get_value("gyr-device", "/dev/gyro0"),
+			args_.get_value("acc-device", "/dev/accel0"),
+			args_.get_value("mag-device", "/dev/mag0"),
+			args_.get_value("bar-device", "/sys/bus/i2c/devices/4-0077/pressure0_input")));
+	} else {
+		ssampler_.reset(new sampler());
+	}
+}
+
 int server_app::run(int argc, const char *argv[])
 {
 	if (args_.get_value("daemon") == "1")
@@ -79,6 +92,7 @@ int server_app::run(int argc, const char *argv[])
 	get_log_file()->log_level(args_.get_value("loglevel", "info"));
 	log_info_message("Server starting.");
 	init_servo_controller();
+	init_sensors_sampler();
 	init_user_rpcserver();
 	boost::thread rpc_thread(boost::bind(&boost::asio::io_service::run, &io_service_));
 	rpc_thread.join();

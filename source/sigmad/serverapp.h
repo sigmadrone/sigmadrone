@@ -10,6 +10,7 @@
 #include "liblogger/logfile.h"
 #include "liblogger/logger.h"
 #include "libdevice/pca9685controller.h"
+#include "libdevice/sampler.h"
 #include "userrpcserver.h"
 
 
@@ -26,12 +27,14 @@ public:
 
 public:
 	boost::scoped_ptr<servocontroller> servoctrl_;
+	boost::scoped_ptr<sampler> ssampler_;
 
 protected:
 	void signal_handler_terminate();
 	void usage();
 	void init_user_rpcserver();
 	void init_servo_controller();
+	void init_sensors_sampler();
 
 	boost::asio::io_service io_service_;
 	boost::asio::signal_set signals_;
