@@ -22,6 +22,27 @@ servomotor& servocontroller::motor(unsigned int channel)
 	return motors_[channel];
 }
 
+size_t servocontroller::channelcount() const
+{
+	return channels_;
+}
+
+void servocontroller::armmotors()
+{
+	for (size_t i = 0; i < channelcount(); i++) {
+		motor(i).reset();
+	}
+	update();
+}
+
+void servocontroller::disarmmotors() {
+	for (size_t i = 0; i < channelcount(); i++) {
+		setpulse(i,0);
+	}
+	update();
+}
+
+
 void servocontroller::setrate(unsigned int)
 {
 }

@@ -10,7 +10,19 @@ public:
 	virtual ~servocontroller();
 	servomotor& motor(unsigned int channel);
 
-	size_t channelcount() const { return channels_; }
+	size_t channelcount() const;
+
+	/**
+	 * Arms the motors by setting 1 mS pulse. Hw output must be enabled for
+	 * this call to take effect.
+	 */
+	void armmotors();
+
+	/**
+	 * Disarms the motors be setting 0 ms pulse. Hw output must be enabled for
+	 * this call to take effect
+	 */
+	void disarmmotors();
 
 	/**
 	 * Set the rate of the generated PWM pulses
