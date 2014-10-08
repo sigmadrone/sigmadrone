@@ -33,22 +33,25 @@ size_t biasimu_sensor::read(double3d_t* buffer, size_t size) const
 
 void biasimu_sensor::bias_update(size_t samples)
 {
+	size_t validsamples = 0;
 	double3d_t tmp;
 	if (!isopen())
 		return;
 	bias_ = double3d_t();
-	for (size_t i = 0; i < 32; i++) {
-		while (!imu_sensor::read(&tmp, 1))
-			;
-	}
+	for (size_t i = 0; i < 32; i++)
+		imu_sensor::read(&tmp, 1);
+	bias_.x = bias_.y = bias_.z = 0;
 	for (size_t i = 0; i < samples; i++) {
-		while (!imu_sensor::read(&tmp, 1))
-			;
-		bias_.x += tmp.x;
-		bias_.y += tmp.y;
-		bias_.z += tmp.z;
+		if (imu_sensor::read(&tmp, 1)) {
+			bias_.x += tmp.x;
+			bias_.y += tmp.y;
+			bias_.z += tmp.z;
+			validsamples++;
+		}
 	}
-	bias_.x /= samples;
-	bias_.y /= samples;
-	bias_.z /= samples;
+	if (validsamples) {
+		bias_.x /= validsamples;
+		bias_.y /= validsamples;
+		bias_.z /= validsamples;
+	}
 }

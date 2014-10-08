@@ -11,7 +11,10 @@
 #include "liblogger/logger.h"
 #include "libdevice/pca9685controller.h"
 #include "libdevice/sampler.h"
+#include "libattitude/attitudetracker.h"
+
 #include "userrpcserver.h"
+#include "attcontroller.h"
 
 
 class server_app : private boost::noncopyable, public logger<logfile>
@@ -24,10 +27,10 @@ public:
 
 public:
 	boost::scoped_ptr<user_rpcserver> user_rpcserver_;
-
-public:
+	attcontroller ctrl_thread_;
 	boost::scoped_ptr<servocontroller> servoctrl_;
 	boost::scoped_ptr<sampler> ssampler_;
+	boost::scoped_ptr<attitudetracker> attitude_;
 
 protected:
 	void signal_handler_terminate();
@@ -35,7 +38,9 @@ protected:
 	void init_user_rpcserver();
 	void init_servo_controller();
 	void init_sensors_sampler();
+	void hwctrl_thread_worker();
 
+	boost::shared_ptr<boost::thread> hwctrl_thread_;
 	boost::asio::io_service io_service_;
 	boost::asio::signal_set signals_;
 	const cmd_args& args_;
