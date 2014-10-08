@@ -55,20 +55,12 @@ int ServoDevicePlugin::Start(const SdDroneConfig* droneConfig)
 		} else  {
 			servoctrl_.reset(new pca9685controller(16));
 		}
-		printf("ServoDevice channel mask 0x%x\n",config->ChannelMask);
-		servoctrl_->enable();
 		servoctrl_->setrate(config->Rate);
-
-		printf("ServoDevice resetting all available channels...\n");
-		uint32_t mask = config->ChannelMask;
-		for (size_t i = 0; i < 16 && 0 != mask; i++) {
-			if (!!(mask & 0x1)) {
-				servoctrl_->motor(i) = servomotor(1.0, 1.32, 1.1, 2.2);
-				servoctrl_->motor(i).offset(0.0);
-			}
-			mask >>= 1;
+		for (size_t i = 0; i < servoctrl_->channelcount(); i++) {
+			servoctrl_->motor(i) = servomotor(1.0, 1.32, 1.1, 2.2);
 		}
-		servoctrl_->update();
+		servoctrl_->enable();
+		servoctrl_->armmotors();
 		printf("ServoDevice - all channels are armed and ready!\n");
 	} catch (std::exception& e) {
 		fprintf(stdout, "ServoDevicePlugin::Start error: \n\t%s\n", e.what());
@@ -89,11 +81,15 @@ int ServoDevicePlugin::Start(const SdDroneConfig* droneConfig)
 
 void ServoDevicePlugin::Stop(bool detach)
 {
-	try {
-		// disarm the motors
-		servoctrl_->disable();
-	}  catch (std::exception& e) {
-		printf("ServoDevicePlugin::Stop error: %s\n", e.what());
+	if (servoctrl_) {
+		try {
+
+			// disarm the motors
+			servoctrl_->disarmmotors();
+			servoctrl_->disable();
+		}  catch (std::exception& e) {
+			printf("ServoDevicePlugin::Stop error: %s\n", e.what());
+		}
 	}
 
 	if (detach) {
