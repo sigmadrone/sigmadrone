@@ -10,6 +10,8 @@ public:
 	virtual ~servocontroller();
 	servomotor& motor(unsigned int channel);
 
+	size_t channelcount() const { return channels_; }
+
 	/**
 	 * Set the rate of the generated PWM pulses
 	 */
