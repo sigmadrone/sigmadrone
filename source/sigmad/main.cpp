@@ -39,7 +39,8 @@ static cmd_arg_spec g_argspec2[] = {
 		{"acc-disable",		"",		"Disable reading accelerometer", CMD_ARG_BOOL},
 		{"mag-disable",		"",		"Disable reading magnetometer", CMD_ARG_BOOL},
 		{"bar-disable",		"",		"Disable reading baromerter", CMD_ARG_BOOL},
-		{"rot-matrix",		"",		"Display the rotation matrix", CMD_ARG_BOOL},
+		{"disable-sensors",	"",		"Disable sensor reading.", CMD_ARG_BOOL},
+
 };
 
 int main(int argc, const char *argv[])

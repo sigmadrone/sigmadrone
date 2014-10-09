@@ -30,7 +30,7 @@ public:
 	attcontroller ctrl_thread_;
 	boost::scoped_ptr<servocontroller> servoctrl_;
 	boost::scoped_ptr<sampler> ssampler_;
-	boost::scoped_ptr<attitudetracker> attitude_;
+	boost::scoped_ptr<attitudetracker> attitude_tracker_;
 
 protected:
 	void signal_handler_terminate();
@@ -38,6 +38,7 @@ protected:
 	void init_user_rpcserver();
 	void init_servo_controller();
 	void init_sensors_sampler();
+	void init_attitude_tracker();
 	void hwctrl_thread_worker();
 
 	boost::shared_ptr<boost::thread> hwctrl_thread_;
