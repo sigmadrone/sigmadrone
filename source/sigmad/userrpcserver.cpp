@@ -9,13 +9,16 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 {
 	add("help", &user_rpcserver::rpc_help);
 	add("spec", &user_rpcserver::rpc_spec);
-	add("stop", &user_rpcserver::rpc_stop);
+	add("quit", &user_rpcserver::rpc_quit);
 	add("myaddress", &user_rpcserver::rpc_myaddress);
 	add("servorate", &user_rpcserver::rpc_servo_rate);
 	add("servoenable", &user_rpcserver::rpc_servo_enable);
 	add("servosetoffset", &user_rpcserver::rpc_servo_setoffset);
 	add("servogetpulse", &user_rpcserver::rpc_servo_getpulse);
 	add("servogetpulsems", &user_rpcserver::rpc_servo_getpulsems);
+	add("getattitude", &user_rpcserver::rpc_getattitude);
+	add("start", &user_rpcserver::rpc_start);
+	add("stop", &user_rpcserver::rpc_stop);
 
 	add_uri_handler("/jsonrpc", boost::bind(&user_rpcserver::jsonrpc_request_handler, this, _1, _2, _3));
 	add_uri_handler("/", boost::bind(&user_rpcserver::jsonrpc_request_handler, this, _1, _2, _3));
@@ -81,7 +84,7 @@ json::value user_rpcserver::rpc_help(http::server::connection_ptr connection, js
 	return call_method_name(connection, params[0], ignored, help);
 }
 
-json::value user_rpcserver::rpc_stop(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+json::value user_rpcserver::rpc_quit(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -90,12 +93,12 @@ json::value user_rpcserver::rpc_stop(http::server::connection_ptr connection, js
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "stop\n"
-	            "\nStop server.";
+	            "quit\n"
+	            "\nQuit server.";
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	app_.stop();
-	return "Server stopping";
+	return "Quiting...";
 }
 
 
@@ -212,6 +215,72 @@ json::value user_rpcserver::rpc_servo_getpulsems(http::server::connection_ptr co
 	verify_parameters(params, types, ARRAYSIZE(types));
 	return app_.servoctrl_->getpulse_ms(params[0].get_int());
 }
+
+json::value user_rpcserver::rpc_getattitude(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "getattitude\n"
+	            "\nGet the current attitude Quaternion."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	QuaternionD att = app_.ctrl_thread_.get_attitude();
+	json::object ret;
+	ret["w"] = att.w;
+	ret["x"] = att.x;
+	ret["y"] = att.y;
+	ret["z"] = att.z;
+	return ret;
+}
+
+json::value user_rpcserver::rpc_start(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "start\n"
+	            "\nStart the controller."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	app_.ctrl_thread_.start();
+	return "Controller started.";
+}
+
+json::value user_rpcserver::rpc_stop(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "stop\n"
+	            "\nStart the controller."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	app_.ctrl_thread_.stop();
+	return "Controller stopped.";
+}
+
 
 json::value user_rpcserver::rpc_servo_rate(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
