@@ -260,6 +260,32 @@ void PluginChain::ReferencePluginList(
 	Unlock();
 }
 
+
+IPlugin* PluginChain::RefPluginByName(const std::string& pluginName)
+{
+	IPlugin* plugin = 0;
+	LockRead();
+	for (PluginMapIt it = m_chain.begin(); it != m_chain.end(); it++) {
+		if (pluginName == it->second->m_plugin->GetName()) {
+			plugin = it->second->m_plugin;
+			plugin->AddRef();
+			break;
+		}
+	}
+	Unlock();
+	return plugin;
+}
+
+bool PluginChain::IsPluginAttached(const std::string& pluginName)
+{
+	IPlugin* plugin = RefPluginByName(pluginName);
+	if (plugin) {
+		plugin->Release();
+	}
+	return !!plugin;
+}
+
+
 int PluginChain::DispatchIo(
 		PluginContext* caller,
 		SdIoPacket* iop,
@@ -291,32 +317,43 @@ int PluginChain::StopPlugins(bool detachPlugins)
 
 int PluginChain::ExecuteCommand(
 		SdCommandParams* cmdParams,
-		uint32_t dispatchFlags)
+		uint32_t dispatchFlags,
+		const std::string& targetPlugin)
 {
 	int err = SD_ESUCCESS;
 	RefedPluginListIterator it;
 	ReferencePluginList(&it,0,
 			dispatchFlags | SD_FLAG_DISPATCH_TO_ALL, 0, 0);
 	for (it.BeginIterate(); 0 != it.Get(); it.Next()) {
-		if (cmdParams->CommandCode() == SD_COMMAND_RESET ||
-			cmdParams->CommandCode() == SD_COMMAND_EXIT) {
-			printf("Stopping plugin %s @%f \n",
-					it.Get()->m_plugin->GetName(),
-					it.Get()->GetMyAltitude());
-		} else if (cmdParams->CommandCode() == SD_COMMAND_RUN) {
-			printf("Starting plugin %s @%f \n",
-				it.Get()->m_plugin->GetName(), it.Get()->GetMyAltitude());
-		}
-		it.Get()->ExecuteCommandNotify(cmdParams);
-		err = it.Get()->m_plugin->ExecuteCommand(cmdParams);
-		if (0 != err) {
-			printf("Plugin %s failed %s with \"%s\"\n", it.Get()->m_plugin->GetName(),
-					SdCommandCodeToString(cmdParams->CommandCode()), strerror(err));
+		if (0 != (err = ExecuteCommandForPlugin(cmdParams,it.Get()))) {
 			if (!(cmdParams->CommandCode() == SD_COMMAND_RESET ||
 					cmdParams->CommandCode() == SD_COMMAND_EXIT)) {
 				break;
 			}
 		}
+	}
+	return err;
+}
+
+int PluginChain::ExecuteCommandForPlugin(
+		SdCommandParams* cmdParams,
+		PluginContext* pluginCtx)
+{
+	int err = SD_ESUCCESS;
+	if (cmdParams->CommandCode() == SD_COMMAND_RESET ||
+			cmdParams->CommandCode() == SD_COMMAND_EXIT) {
+		printf("Stopping plugin %s @%f \n",
+				pluginCtx->m_plugin->GetName(),
+				pluginCtx->GetMyAltitude());
+	} else if (cmdParams->CommandCode() == SD_COMMAND_RUN) {
+		printf("Starting plugin %s @%f \n",
+				pluginCtx->m_plugin->GetName(), pluginCtx->GetMyAltitude());
+	}
+	pluginCtx->ExecuteCommandNotify(cmdParams);
+	err = pluginCtx->m_plugin->ExecuteCommand(cmdParams);
+	if (0 != err) {
+		printf("Plugin %s failed %s with \"%s\"\n", pluginCtx->m_plugin->GetName(),
+				SdCommandCodeToString(cmdParams->CommandCode()), strerror(err));
 	}
 	return err;
 }

@@ -30,7 +30,7 @@ public:
 	} data;
 
 public:
-	sampler(const std::string& gyrdev, const std::string& accdev, const std::string& magdev, const std::string& bardev);
+	sampler(const std::string& gyrdev = "", const std::string& accdev = "", const std::string& magdev = "", const std::string& bardev = "");
 	~sampler();
 	void init();
 	void update();

@@ -17,13 +17,17 @@ public:
 
 	json::value rpc_spec(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_help(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
-	json::value rpc_stop(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_quit(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_myaddress(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_enable(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_rate(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_setoffset(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_getpulse(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_getpulsems(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_getattitude(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_start(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_stop(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+
 
 protected:
 	void jsonrpc_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);

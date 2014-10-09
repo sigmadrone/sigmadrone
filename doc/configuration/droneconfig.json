@@ -60,12 +60,12 @@
 		{
 			"Description": "Controls IMU devices - gyro/accel/mag",
 			"PluginName": "sd.imureader",
-			"DlFileName": "sdplugs.so"
+			"Load": "true"
 		},
 		{
 			"Description": "Calculates gyro bias and earth G vector",
 			"PluginName": "sd.imubias",
-			"DlFileName": "sdplugs.so",
+			"Load": "true",
 			"Config": {
 				"NumSamples": 2000,
 				"Thrust": 0.5
@@ -74,14 +74,14 @@
 		{
 			"Description": "Remaps the readings from the IMU devices",
 			"PluginName": "sd.imuremap",
-			"DlFileName": "sdplugs.so",
+			"Load": "true",
 			"Config": {
 			}
 		},
 		{
 			"Description": "Performs low-pass filtering on gyro/accel/etc",
 			"PluginName": "sd.imuprefilter",
-			"DlFileName": "sdplugs.so",
+			"Load": "true",
 			"Config": {
 				"GyroLpf": [
 				 	0.0143, 0.0303, 0.0723, 0.1245, 0.1670, 0.1833,
@@ -96,22 +96,22 @@
 		{
 			"Description": "Calculates drone attitude using current IMU readings",
 			"PluginName": "sd.imufilter",
-			"DlFileName": "sdplugs.so"
+			"Load": "true"
 		},
 		{
 			"Description": "Controls the servo/pwm device",
 			"PluginName": "sd.servo_pca9685",
-			"DlFileName": "sdplugs.so"
+			"Load": "true"
 		},
 		{
 			"Description": "Populates the desired attitude Qt and velocity vector",
 			"PluginName": "sd.navigator",
-			"DlFileName": "sdplugs.so"
+			"Load": "true"
 		},
 		{
 			"Description": "Calcs motor settings; issues commands to the servo plugin",
 			"PluginName": "sd.quadpilot",
-			"DlFileName": "sdplugs.so",
+			"Load": "false",
 			"Config": {
 				"PID": {
 					"Kp": 1.0,

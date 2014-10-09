@@ -112,7 +112,6 @@ void QuadRotorPilot::Stop(bool detach)
 	 */
 	m_MinRev = m_MaxRev = 0;
 	CalcThrustFromErrAxis(Vector3d(0,0,0),0);
-	IssueCommandToServo();
 	if (detach) {
 		m_Runtime->DetachPlugin();
 	}

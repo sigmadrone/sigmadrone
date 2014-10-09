@@ -21,7 +21,7 @@ OBJECTS		= \
 	plugincontext.o\
 	main.o\
 	drone.o\
-	servodevice.o\
+	servoplugin.o\
 	quadrotorpilot.o\
 	imureader.o\
 	navigator.o\
@@ -38,6 +38,7 @@ OBJECTS		= \
 	rpcparams.o\
 	pidpilotsd.o\
 	pidtorque.o\
+	pluginregistry.o\
 	$(JSONRPC_SRCDIR)/libjsonrpc.a\
 	$(HTTPSERVER_SRCDIR)/libhttp.a\
 	$(CMDARGS_SRCDIR)/libcmdargs.a

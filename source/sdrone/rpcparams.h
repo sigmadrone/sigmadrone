@@ -10,6 +10,7 @@
 
 #include "jsonreadwrite.h"
 #include "sdroneapi.h"
+#include "pluginregistry.h"
 #include "commandargs.h"
 
 namespace RpcParams {
@@ -50,6 +51,21 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 bool BuildJsonThrustParamsFromCmdLineArgs(
 		SdJsonValue* jsonArgs,
 		const CommandLineArgs&);
+
+struct PluginBuilder{
+	PluginBuilder(const PluginInfo& pl);
+	SdJsonValue Get();
+private:
+	const PluginInfo& plugin_;
+};
+
+struct PluginParser {
+	PluginParser(const SdJsonValue& jval);
+	PluginInfo Get();
+private:
+	const SdJsonValue& value_;
+};
+
 };
 
 #endif /* RPCPARAMS_H_ */
