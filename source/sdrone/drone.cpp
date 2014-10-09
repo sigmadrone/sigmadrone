@@ -8,6 +8,7 @@
 #include "commoninc.h"
 #include <sys/stat.h>
 #include <sys/signal.h>
+#include <dlfcn.h>
 #include "drone.h"
 #include "quadrotorpilot.h"
 #include "pidpilotsd.h"
@@ -131,7 +132,7 @@ int Drone::Run(CommandLineArgs& args)
 	m_thrustValues = SdThrustValues(
 			args.GetDesiredThrust(), args.GetMinThrust(), args.GetMaxThrust());
 
-	InitInternalPlugins();
+	InitPlugins(jsonArgs);
 
 	if (0 != m_rpcDispatch) {
 		delete m_rpcDispatch;
@@ -273,6 +274,7 @@ int Drone::OnReset()
 	} else {
 		printf("Drone was successfully reset!\n");
 	}
+	LoadUnloadPlugins();
 	m_isRunning = false;
 
 	return err;
@@ -296,6 +298,7 @@ int Drone::OnRun(const IJsonValue* rpcParams)
 	if (!m_isRunning) {
 		SdIoData data(&m_droneConfig.m_config);
 		PluginCommandParams params(SD_COMMAND_RUN,data,rpcParams);
+		LoadUnloadPlugins();
 		m_droneConfig.PrintConfig();
 		if (0 == (err = m_pluginChain.ExecuteCommand(&params, 0))) {
 			m_isRunning = true;
@@ -334,19 +337,72 @@ int Drone::OnSetTargetQuaternion(const QuaternionD& targetQ)
 	return m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 }
 
-void Drone::InitInternalPlugins()
+void Drone::InitPlugins(const SdJsonValue& cmdLineArgs)
 {
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_DEVICE);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_REMAP);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_BIAS);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_LOWPASSFILTER);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_FILTER);
-	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_IMU_KALMAN_FILTER);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_SERVO_PCA9685);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_NAVIGATOR);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_QUADPILOT);
-	//SdPluginInitialize(this, PluginAttach,SD_PLUGIN_PIDPILOT);
-	SdPluginInitialize(this, PluginAttach,SD_PLUGIN_TRACELOG);
+	assert(cmdLineArgs.GetType() == SD_JSONVALUE_OBJECT);
+
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_DEVICE));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_DEVICE));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_REMAP));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_BIAS));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_LOWPASSFILTER));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_FILTER));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_KALMAN_FILTER,"",false));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_SERVO_PCA9685));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_NAVIGATOR));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_QUADPILOT,"",false));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_PIDPILOT));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_TRACELOG));
+
+	if (cmdLineArgs.AsObject()->GetMember("Plugins")->GetType() == SD_JSONVALUE_ARRAY) {
+		const SdJsonArray& plugins = cmdLineArgs.Object().Member("Plugins").Array();
+		for (size_t i = 0; i < plugins.ElementCount(); ++i) {
+			PluginInfo plugin = RpcParams::PluginParser(plugins[i]).Get();
+			m_pluginReg.AddPlugin(plugin);
+		}
+	}
+}
+
+void Drone::LoadUnloadPlugins()
+{
+	for (size_t i = 0; i < m_pluginReg.Count(); ++i) {
+		const std::string& name = m_pluginReg.Plugin(i).Name().c_str();
+		if (m_pluginReg.Plugin(i).Load() && !m_pluginChain.IsPluginAttached(name)) {
+			const std::string& soName = m_pluginReg.Plugin(i).SoName();
+			if (soName.length() > 0) {
+				void* dlHandle = dlopen(soName.c_str(),RTLD_LAZY);
+				if (dlHandle) {
+					typedef int (*SdPluginInitializeFunc)(
+							void* droneContext,
+							SdPluginAttachFunc attachPlugin,
+							const char* pluginName);
+					SdPluginInitializeFunc pluginInit = (SdPluginInitializeFunc)dlsym(
+							dlHandle,"SdPluginInitialize");
+					if (pluginInit != 0) {
+						int err = pluginInit(this,PluginAttach,name.c_str());
+						if (err != 0) {
+							printf("SdPluginInitialize failed for %s, err %d \"%s\"\n",
+									name.c_str(), err, strerror(err));
+						}
+					} else {
+						printf("ERR: dlsym(SdPluginInitialize) failed for plugin %s, %s\n",
+								name.c_str(), !!dlerror() ? dlerror() : strerror(errno));
+					}
+                    dlclose(dlHandle);
+				} else {
+					printf("ERR: Failed to open dll %s for plugin %s, %s\n",
+							soName.c_str(), name.c_str(),
+							!!dlerror() ? dlerror() : strerror(errno));
+				}
+			} else {
+				// must be an internal plugin
+				SdPluginInitialize(this,PluginAttach,name.c_str());
+			}
+		} else if (!m_pluginReg.Plugin(i).Load() && m_pluginChain.IsPluginAttached(name)) {
+			PluginCommandParams params(SD_COMMAND_EXIT,SdIoData(),0);
+			m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN,name);
+		}
+	}
 }
 
 void Drone::OnRpcCommandRun(
@@ -672,7 +728,6 @@ int SdPluginInitialize(
 			imuLpf->Release();
 		}
 	}
-#if 0
 	if (0 == pluginName || 0 == (strcmp(pluginName,SD_PLUGIN_IMU_KALMAN_FILTER))){
 		KalmanAttitudeFilter* kf = new KalmanAttitudeFilter();
 		if (0 != kf) {
@@ -680,6 +735,5 @@ int SdPluginInitialize(
 			kf->Release();
 		}
 	}
-#endif
 	return 0;
 }

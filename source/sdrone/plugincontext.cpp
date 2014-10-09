@@ -12,7 +12,6 @@
 
 static void* s_myModuleHandle = (void*)-1;
 extern char **g_Argv;
-extern CommandLineArgs g_CmdArgs;
 
 PluginContext::PluginContext(
 		IPlugin* plugin,

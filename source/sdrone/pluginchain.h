@@ -33,8 +33,13 @@ public:
 			SdIoPacket* iop,
 			uint32_t dispatchFlags
 			);
-	int ExecuteCommand(SdCommandParams*, uint32_t dispatchFlags);
-
+	int ExecuteCommand(
+			SdCommandParams*,
+			uint32_t dispatchFlags,
+			const std::string& pluginName = std::string()
+	        );
+	IPlugin* RefPluginByName(const std::string& pluginName);
+	bool IsPluginAttached(const std::string& pluginName);
 private:
 	typedef std::map<SdPluginAltitude,PluginContext*> PluginMap;
 	typedef PluginMap::iterator PluginMapIt;
@@ -73,6 +78,8 @@ private:
 			SdPluginAltitude desiredAltitude,
 			SdPluginAltitude nextHi);
 	int StopPlugins(bool detachPlugins);
+
+	int ExecuteCommandForPlugin(SdCommandParams*, PluginContext*);
 
 	static bool IsStringInList(
 			const char* str,

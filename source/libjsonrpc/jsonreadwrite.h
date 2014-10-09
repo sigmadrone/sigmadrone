@@ -127,6 +127,9 @@ public:
 	const SdJsonValue& Member(const char* name) const {
 		return *static_cast<const SdJsonValue*>(GetMember(name));
 	}
+	const SdJsonValue& operator[](const char* name) const {
+		return Member(name);
+	}
 
 private:
 
@@ -167,6 +170,9 @@ public:
 
 	const SdJsonValue& Element(size_t index) const {
 		return *static_cast<const SdJsonValue*>(GetElement(index));
+	}
+	const SdJsonValue& operator[](size_t i)const {
+		return Element(i);
 	}
 
 private:

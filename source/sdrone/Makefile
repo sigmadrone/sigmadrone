@@ -38,6 +38,7 @@ OBJECTS		= \
 	rpcparams.o\
 	pidpilotsd.o\
 	pidtorque.o\
+	pluginregistry.o\
 	$(JSONRPC_SRCDIR)/libjsonrpc.a\
 	$(HTTPSERVER_SRCDIR)/libhttp.a\
 	$(CMDARGS_SRCDIR)/libcmdargs.a
