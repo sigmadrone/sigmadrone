@@ -426,5 +426,22 @@ bool BuildJsonThrustParamsFromCmdLineArgs(
 	return ret;
 }
 
+PluginParser::PluginParser(const SdJsonValue& jval) : value_(jval) {}
 
-}; // namespace
+PluginInfo PluginParser::Get()
+{
+	std::string pluginName;
+	std::string soName;
+	bool load = true;
+	if (value_.GetType() == SD_JSONVALUE_OBJECT) {
+		const SdJsonObject& obj = value_.Object();
+		obj["PluginName"].AsStringSafe(&pluginName);
+		obj["SoFileName"].AsStringSafe(&soName);
+		obj["Load"].AsBoolSafe(&load);
+	}
+	return PluginInfo(pluginName,soName,load);
+}
+
+};
+// namespace
+

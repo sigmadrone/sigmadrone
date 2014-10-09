@@ -14,6 +14,7 @@
 #include "commandargs.h"
 #include "filelock.h"
 #include "droneconfig.h"
+#include "pluginregistry.h"
 
 class SdJsonRpcDispatcher;
 struct SdJsonRpcReply;
@@ -43,13 +44,14 @@ public:
 private:
 	Drone();
 	~Drone();
-	void InitInternalPlugins();
+	void InitPlugins(const SdJsonValue& cmdLineArgs);
 	int OnExit();
 	int OnRun(const IJsonValue* rpcParams);
 	int OnReset();
 	int OnSetThrust(const SdThrustValues&);
 	int OnSetConfig(const SdDroneConfig&, const IJsonValue* rpcParams);
 	int OnSetTargetQuaternion(const QuaternionD&);
+	void LoadUnloadPlugins();
 
 	static void OnRpcCommandRun(
 			void* Context,
@@ -126,6 +128,7 @@ private:
 	FileLock m_globalLock;
 	DroneConfig m_droneConfig;
 	SdThrustValues m_thrustValues;
+	PluginRegistry m_pluginReg;
 	bool m_isRunning;
 	static Drone* s_Only;
 };
