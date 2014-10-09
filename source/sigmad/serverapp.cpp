@@ -52,7 +52,7 @@ void server_app::init_user_rpcserver()
 	user_rpcserver_.reset(new user_rpcserver(
 			*this,
 			io_service_,
-			args_.get_value("rpcconnect", "127.0.0.1"),
+			args_.get_value("rpcconnect", "0.0.0.0"),
 			args_.get_value("rpcport", "18222")));
 	user_rpcserver_->set_log_file(logfile_);
 	log_info_message("Starting user rpc server.");

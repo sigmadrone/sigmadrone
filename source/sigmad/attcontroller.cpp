@@ -46,7 +46,7 @@ void attcontroller::worker()
 			boost::this_thread::sleep(boost::posix_time::milliseconds(2));
 			app_.ssampler_->update();
 			if (app_.ssampler_->data.gyr3d_upd_)
-				app_.attitude_tracker_->track_gyroscope(app_.ssampler_->data.gyr3d_, app_.ssampler_->data.dtime_);
+				app_.attitude_tracker_->track_gyroscope(DEG2RAD(app_.ssampler_->data.gyr3d_), app_.ssampler_->data.dtime_);
 			if (app_.ssampler_->data.acc3d_upd_)
 				app_.attitude_tracker_->track_accelerometer(app_.ssampler_->data.acc3d_);
 			if (app_.ssampler_->data.mag3d_upd_)

@@ -17,6 +17,17 @@ using namespace std;
 #include "glshape.h"
 #include "plane.h"
 #include "matrix.h"
+#include "libcmdargs/cmdargs.h"
+#include "libhttp/http_client.hpp"
+#include "libjsonspirit/json_spirit.h"
+
+namespace json_spirit {
+typedef json_spirit::mValue value;
+typedef json_spirit::mArray array;
+typedef json_spirit::mObject object;
+}
+namespace json = json_spirit;
+
 
 #define ALPHA1 0.95f
 #define ALPHA2 1.0f
@@ -26,10 +37,19 @@ using namespace std;
 
 Matrix4f P(Matrix4f::createFrustumMatrix(-SCALE, SCALE, -SCALE, SCALE, 10, 35));
 
+static cmd_arg_spec g_argspec[] = {
+		{"help",			"h",	"Display this help", CMD_ARG_BOOL},
+		{"rpcserver",		"",		"RPC server name", CMD_ARG_STRING},
+		{"rpcport",			"",		"RPC server port. Default: 18222", CMD_ARG_STRING},
+
+};
+
+
 int gDebug = 0;
 GlShape gPlane;
 GLuint gProgram;
 void IdleFunction(void);
+void RpcIdleFunction(void);
 
 Vector4f applyW(const Vector4f &v)
 {
@@ -53,8 +73,29 @@ void display(void)
 	glutSwapBuffers();
 }
 
+static std::string rpcserver;
+static std::string rpcport;
+static http::client::http_client* httpclient = NULL;
+
 int main(int argc, char *argv[])
 {
+	cmd_args args;
+
+	try {
+		args.add_specs(g_argspec, sizeof(g_argspec)/sizeof(*g_argspec));
+		args.parse_command_line(argc, (const char**)argv);
+		if (!args.get_value("help").empty()) {
+			std::cout << argv[0] << " <options>" << std::endl;
+			std::cout << args.get_help_message() << std::endl;
+		}
+		rpcserver = args.get_value("rpcserver");
+		rpcport = args.get_value("rpcport", "18222");
+	} catch (std::exception& e) {
+		std::cout << "Error: " << e.what() << std::endl;
+	}
+	if (!rpcserver.empty())
+		httpclient = new http::client::http_client(rpcserver, rpcport, 30000);
+
 	GlutProgram prog(GLUT_MULTISAMPLE | GLUT_ALPHA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA, 800, 900, 160 * WINDOW_SIZE_FACTOR, 160 * WINDOW_SIZE_FACTOR);
 	GlShaders shaders;
 	int junk = pthread_getconcurrency();
@@ -72,7 +113,7 @@ int main(int argc, char *argv[])
 	InitPlaneShape(gPlane);
 	gProgram = shaders.m_program;
 	glutDisplayFunc(display);
-	glutIdleFunc(IdleFunction);
+	glutIdleFunc(httpclient ? RpcIdleFunction : IdleFunction);
 
 	Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(0), DEG2RAD(180)));
 
@@ -85,6 +126,8 @@ int main(int argc, char *argv[])
 	cout << "It works!" << endl;
 	cout << "Program ID: " << shaders.m_program << endl;
 	glUseProgram(0);
+	if (httpclient)
+		delete httpclient;
 	return 0;
 }
 
@@ -132,3 +175,39 @@ again:
 	}
 }
 
+
+void RpcIdleFunction(void)
+{
+	QuaternionD q = QuaternionD::identity;
+	Matrix4f M;
+	http::client::response response;
+	json::object rpc_request;
+	json::array parameters;
+
+	try {
+		rpc_request["jsonrpc"] = "1.0";
+		rpc_request["id"] = "clientid";
+		rpc_request["params"] = parameters;
+		rpc_request["method"] = json::value("getattitude");
+		httpclient->request(response, "POST", "/", json::write(rpc_request));
+		json::value val;
+		if (json::read(response.content, val)) {
+			if (val.get_obj()["result"].type() == json::obj_type) {
+				json::value att = val.get_obj()["result"];
+				q.w = att.get_obj()["w"].get_real();
+				q.x = att.get_obj()["x"].get_real();
+				q.y = att.get_obj()["y"].get_real();
+				q.z = att.get_obj()["z"].get_real();
+			}
+		}
+	} catch (std::exception& e) {
+		std::cout << "Error: " << e.what() << std::endl;
+	}
+	M = q.rotMatrix4();
+	GLuint mLoc;
+	Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(0), DEG2RAD(180)) * M);
+	mLoc = glGetUniformLocation(gProgram, "M");
+	if (mLoc >= 0)
+		glUniformMatrix4fv(mLoc, 1, GL_FALSE, m.data);
+	glutPostRedisplay();
+}
