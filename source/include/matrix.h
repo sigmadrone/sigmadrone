@@ -37,15 +37,15 @@ public:
 public:
 	/*
 	 * Data must be provided in row major order,
-	 * but it will be converted to row major order.
+	 * but it will be converted to column major order.
 	 * If the data is already in column major order
 	 * set transposed to true.
 	 */
 	MatrixMN(T *a, bool transposed = false)
 	{
 		if (transposed) {
-		for (int i = 0; i < M * N; i++)
-			data[i] = a[i];
+			for (int i = 0; i < M * N; i++)
+				data[i] = a[i];
 		} else {
 			for (int i = 0; i < M; i++)
 				for (int j = 0; j < N; j++)

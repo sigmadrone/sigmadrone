@@ -6,18 +6,24 @@
 #include <boost/thread.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/filesystem.hpp>
+#include "logfile.h"
 
-template<class LOGFILE>
+template<class LOGFILE = logfile_base>
 class logger
 {
 public:
-	logger(const char* prefix, boost::shared_ptr<LOGFILE> logfile = boost::shared_ptr<LOGFILE>()) : prefix_(prefix), logfile_(logfile)
+	logger(const std::string& prefix = "", boost::shared_ptr<LOGFILE> logfile = boost::shared_ptr<LOGFILE>()) : prefix_(prefix), logfile_(logfile)
 	{
 	}
 
 	void set_log_file(boost::shared_ptr<LOGFILE> logfile)
 	{
 		logfile_ = logfile;
+	}
+
+	void set_log_prefix(const std::string& prefix)
+	{
+		prefix_ = prefix;
 	}
 
 	boost::shared_ptr<LOGFILE> get_log_file()

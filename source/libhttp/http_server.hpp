@@ -14,7 +14,7 @@ namespace http {
 namespace server {
 
 /// The top-level class of the HTTP server.
-class http_server: private boost::noncopyable, public logger<logfile>
+class http_server: private boost::noncopyable, public ::logger<logfile_base>
 {
 public:
 	typedef http::server::connection connection_ctx;
@@ -74,10 +74,6 @@ protected:
 
 	/// The next connection to be accepted.
 	connection_ptr new_connection_;
-
-//	logger_ptr logger_;
-//
-//	std::string log_prefix_;
 };
 
 } // namespace server

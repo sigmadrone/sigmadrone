@@ -1,7 +1,8 @@
 CXX	    	?= g++
 CC          	?= gcc
-INCLUDES    	= -I../../include -I../mmath
-LIBS		= -lglut -lGL -lGLEW -lX11 -lm -lrt -lpthread
+INCLUDES    	= -I../../include -I../..
+LIBS		= -lglut -lGL -lGLEW -lX11 -lm -lrt -lpthread -lcmdargs -llogger -ljsonspirit -lhttp -lcmdargs -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
+LIBS		+= -L../../libhttp -L../../libjsonspirit -L../../libcmdargs -L../../liblogger
 CFLAGS		= -g -O0 -Wall
 TARGET		= glplane
 OBJECTS		= main.o glshaders.o glutprogram.o glshape.o plane.o

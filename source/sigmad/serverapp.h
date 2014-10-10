@@ -26,6 +26,11 @@ public:
 	void stop();
 
 public:
+	/*
+	 * Log file shared among all logger derived classes,
+	 * so they all log in the same file.
+	 */
+	boost::shared_ptr<logfile> logfile_;
 	boost::scoped_ptr<user_rpcserver> user_rpcserver_;
 	attcontroller ctrl_thread_;
 	boost::scoped_ptr<servocontroller> servoctrl_;

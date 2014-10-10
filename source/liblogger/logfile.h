@@ -7,25 +7,42 @@
 #include <boost/thread/locks.hpp>
 #include <boost/filesystem.hpp>
 
-class logfile : public boost::enable_shared_from_this<logfile>
+class logfile_base : public boost::enable_shared_from_this<logfile_base>
 {
 public:
 	typedef enum {none = 0, critical, error, warning, info, debug, unknown} message_type;
 
-	logfile(const std::string& path = "default.log", size_t rotsize = default_rotsize, message_type level = none);
-	~logfile();
-	bool add_log(message_type type, const char *fmt, ...);
-	bool add_log_v(message_type type, const char *fmt, va_list args);
-	std::string get_log_filepath();
-	void set_log_filepath(const std::string& path);
-	void set_max_size(size_t rotsize);
-	int log_level(message_type level);
-	int log_level(const std::string& level);
-	int log_level();
-	void set_rotation_extension(const std::string& ext);
-	std::string get_message_type(message_type level);
+	logfile_base() {}
+	virtual ~logfile_base() {}
+	virtual bool add_log(message_type type, const char *fmt, ...) { return false; }
+	virtual bool add_log_v(message_type type, const char *fmt, va_list args) { return false; };
+	virtual std::string get_log_filepath() { return "none"; }
+	virtual void set_log_filepath(const std::string& path) {}
+	virtual void set_max_size(size_t rotsize) {}
+	virtual int log_level(message_type level) { return 0; }
+	virtual int log_level(const std::string& level) { return 0; }
+	virtual int log_level() { return 0; }
+	virtual void set_rotation_extension(const std::string& ext) { }
+	virtual std::string get_message_type(message_type level) { return "none"; }
 	static const size_t default_rotsize = 1024 * 1024 * 10;		// 10 MB
 	static const size_t default_msgcount = 100;					// check log size every default_msgcount messages
+};
+
+class logfile : public logfile_base
+{
+public:
+	logfile(const std::string& path = "default.log", size_t rotsize = default_rotsize, message_type level = none);
+	virtual ~logfile();
+	virtual bool add_log(message_type type, const char *fmt, ...);
+	virtual bool add_log_v(message_type type, const char *fmt, va_list args);
+	virtual std::string get_log_filepath();
+	virtual void set_log_filepath(const std::string& path);
+	virtual void set_max_size(size_t rotsize);
+	virtual int log_level(message_type level);
+	virtual int log_level(const std::string& level);
+	virtual int log_level();
+	virtual void set_rotation_extension(const std::string& ext);
+	virtual std::string get_message_type(message_type level);
 
 private:
 	void rotate();
@@ -41,6 +58,5 @@ private:
 	mutable boost::mutex m_;
 	std::vector<std::string> strlevels_;
 };
-
 
 #endif /* _LOGFILE_H_ */

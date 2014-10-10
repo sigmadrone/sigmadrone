@@ -18,8 +18,8 @@ namespace client {
 
 /// The top-level class of the HTTP server.
 class http_client
-	: public logger<logfile>
-	, public boost::enable_shared_from_this<http_client>
+	: public boost::enable_shared_from_this<http_client>
+	, public ::logger<logfile_base>
 	, private boost::noncopyable
 {
 public:
