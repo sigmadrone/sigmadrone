@@ -38,21 +38,6 @@ struct SdJsonRpcReply
 	std::string ErrorMessage;
 };
 
-struct SdJsonRpcMethod {
-	SdJsonRpcMethod(const std::string& methodName) {}
-	virtual ~SdJsonRpcMethod() {}
-	virtual bool Execute(
-			const SdJsonRpcRequest*,
-			SdJsonRpcReply*);
-	const std::string& Name();
-	void PrintRequestSchema();
-	void PrintReplySchema();
-private:
-	SdJsonRpcReply reply;
-	SdJsonRpcRequest request;
-	std::string methodName;
-};
-
 typedef void (*SdJsonRpcRequestCallbackT)(
 		void* Context,
 		const SdJsonRpcRequest*,
