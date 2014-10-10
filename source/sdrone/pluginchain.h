@@ -15,6 +15,15 @@
 #include <pthread.h>
 #include "plugincontext.h"
 #include "commandargs.h"
+#include <boost/shared_ptr.hpp>
+
+struct PluginChainIterator
+{
+	virtual ~PluginChainIterator() {}
+	virtual void BeginIterate() = 0;
+	virtual PluginContext* Get() = 0;
+	virtual void Next() = 0;
+};
 
 class PluginChain {
 public:
@@ -38,13 +47,14 @@ public:
 			uint32_t dispatchFlags,
 			const std::string& pluginName = std::string()
 	        );
-	IPlugin* RefPluginByName(const std::string& pluginName);
+	PluginContext* RefPluginByName(const std::string& pluginName);
 	bool IsPluginAttached(const std::string& pluginName);
+	boost::shared_ptr<PluginChainIterator> RefPlugins();
 private:
 	typedef std::map<SdPluginAltitude,PluginContext*> PluginMap;
 	typedef PluginMap::iterator PluginMapIt;
 
-	class RefedPluginListIterator
+	class RefedPluginListIterator : public PluginChainIterator
 	{
 	public:
 		RefedPluginListIterator();

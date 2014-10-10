@@ -436,10 +436,27 @@ PluginInfo PluginParser::Get()
 	if (value_.GetType() == SD_JSONVALUE_OBJECT) {
 		const SdJsonObject& obj = value_.Object();
 		obj["PluginName"].AsStringSafe(&pluginName);
-		obj["SoFileName"].AsStringSafe(&soName);
 		obj["Load"].AsBoolSafe(&load);
+		obj["SoFileName"].AsStringSafe(&soName);
 	}
-	return PluginInfo(pluginName,soName,load);
+	return PluginInfo(pluginName,soName,
+			load ? PluginInfo::state_load_pending : PluginInfo::state_unload_pending);
+}
+
+PluginBuilder::PluginBuilder(const PluginInfo& pl) : plugin_(pl)
+{
+}
+
+SdJsonValue PluginBuilder::Get(SdPluginAltitude altitude)
+{
+	SdJsonObject obj;
+	obj["PluginName"] = plugin_.Name();
+	obj["State"] = plugin_.State();
+	obj["SoFileName"] = plugin_.SoName();
+	if (altitude != SD_ALTITUDE_INVALID) {
+		obj["Altitude"] = altitude;
+	}
+	return SdJsonValue(obj);
 }
 
 };

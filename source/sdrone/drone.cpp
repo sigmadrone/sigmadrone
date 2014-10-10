@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <sys/signal.h>
 #include <dlfcn.h>
+#include <boost/shared_ptr.hpp>
 #include "drone.h"
 #include "quadrotorpilot.h"
 #include "pidpilotsd.h"
@@ -234,6 +235,27 @@ int Drone::Run(CommandLineArgs& args)
 			SdJsonValue(),
 			SdJsonValue(jarr));
 
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_LOAD_PLUGIN),
+			OnRpcCommandLoadPlugin,
+			this,
+			RpcParams::PluginBuilder(PluginInfo("sd.plug","so")).Get()
+			);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_UNLOAD_PLUGIN),
+			OnRpcCommandUnloadPlugin,
+			this,
+			SdJsonValue("sd.plug")
+			);
+	jarr.AddElement(RpcParams::PluginBuilder(PluginInfo("sd.plug","so")).Get(1000));
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_PLUGINS),
+			OnRpcCommandQueryPlugins,
+			this,
+			SdJsonValue(),
+			jarr
+			);
+
 	//
 	// Execute the command that came with the command line
 	//
@@ -274,8 +296,8 @@ int Drone::OnReset()
 	} else {
 		printf("Drone was successfully reset!\n");
 	}
-	LoadUnloadPlugins();
 	m_isRunning = false;
+	LoadUnloadPlugins();
 
 	return err;
 }
@@ -296,9 +318,9 @@ int Drone::OnRun(const IJsonValue* rpcParams)
 {
 	int err = 0;
 	if (!m_isRunning) {
+		LoadUnloadPlugins();
 		SdIoData data(&m_droneConfig.m_config);
 		PluginCommandParams params(SD_COMMAND_RUN,data,rpcParams);
-		LoadUnloadPlugins();
 		m_droneConfig.PrintConfig();
 		if (0 == (err = m_pluginChain.ExecuteCommand(&params, 0))) {
 			m_isRunning = true;
@@ -342,15 +364,14 @@ void Drone::InitPlugins(const SdJsonValue& cmdLineArgs)
 	assert(cmdLineArgs.GetType() == SD_JSONVALUE_OBJECT);
 
 	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_DEVICE));
-	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_DEVICE));
 	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_REMAP));
 	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_BIAS));
 	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_LOWPASSFILTER));
 	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_FILTER));
-	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_KALMAN_FILTER,"",false));
+	//m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_IMU_KALMAN_FILTER));
 	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_SERVO_PCA9685));
 	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_NAVIGATOR));
-	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_QUADPILOT,"",false));
+	//m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_QUADPILOT));
 	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_PIDPILOT));
 	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_TRACELOG));
 
@@ -365,11 +386,17 @@ void Drone::InitPlugins(const SdJsonValue& cmdLineArgs)
 
 void Drone::LoadUnloadPlugins()
 {
+	assert(!IsRunning()); /*should not be called when the drone is running*/
+
 	for (size_t i = 0; i < m_pluginReg.Count(); ++i) {
-		const std::string& name = m_pluginReg.Plugin(i).Name().c_str();
-		if (m_pluginReg.Plugin(i).Load() && !m_pluginChain.IsPluginAttached(name)) {
+		std::string name = m_pluginReg.Plugin(i).Name().c_str();
+		if (name == "*" || name == ".*") {
+			name = "";
+		}
+		if (m_pluginReg.Plugin(i).IsLoadPending() &&
+				!m_pluginChain.IsPluginAttached(name)) {
 			const std::string& soName = m_pluginReg.Plugin(i).SoName();
-			if (soName.length() > 0) {
+			if (soName.length() > 0 && soName != "sdroned") {
 				void* dlHandle = dlopen(soName.c_str(),RTLD_LAZY);
 				if (dlHandle) {
 					typedef int (*SdPluginInitializeFunc)(
@@ -398,10 +425,24 @@ void Drone::LoadUnloadPlugins()
 				// must be an internal plugin
 				SdPluginInitialize(this,PluginAttach,name.c_str());
 			}
-		} else if (!m_pluginReg.Plugin(i).Load() && m_pluginChain.IsPluginAttached(name)) {
+		} else if (m_pluginReg.Plugin(i).IsUnloadPending() &&
+				m_pluginChain.IsPluginAttached(name)) {
 			PluginCommandParams params(SD_COMMAND_EXIT,SdIoData(),0);
 			m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN,name);
 		}
+	}
+
+	/**
+	 * Now reset and fill the registry only with plugins that are loaded
+	 */
+	m_pluginReg.Reset();
+	boost::shared_ptr<PluginChainIterator> it = m_pluginChain.RefPlugins();
+	for (it->BeginIterate(); it->Get(); it->Next()) {
+		PluginContext* plctx = it->Get();
+		m_pluginReg.AddPlugin(PluginInfo(plctx->Plugin()->GetName(),
+				plctx->Plugin()->GetDlFileName(),
+				PluginInfo::state_loaded,
+				plctx->GetMyAltitude()));
 	}
 }
 
@@ -630,6 +671,62 @@ void Drone::OnRpcCommandGetRpcList(
 	rep->Results.SetValueAsArray(&jarr);
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandUnloadPlugin(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	Drone* _this = Only();
+	if (req->Params.GetType() == SD_JSONVALUE_STRING) {
+		_this->m_pluginReg.PluginUnloadPending(req->Params.AsString());
+		if (!_this->IsRunning()) {
+			_this->LoadUnloadPlugins();
+		}
+		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	} else {
+		rep->ErrorCode = SD_JSONRPC_ERROR_INVALID_METHOD_PARAMS;
+	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandLoadPlugin(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	Drone* _this = Only();
+	PluginInfo plugin = RpcParams::PluginParser(req->Params).Get();
+	if (plugin.Name().length() > 0) {
+		_this->m_pluginReg.AddPlugin(plugin);
+		if (!_this->IsRunning()) {
+			_this->LoadUnloadPlugins();
+		}
+		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	} else {
+		rep->ErrorCode = SD_JSONRPC_ERROR_INVALID_METHOD_PARAMS;
+	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandQueryPlugins(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	SdJsonArray jarr;
+	Drone* _this = Only();
+	for (size_t i = 0; i < _this->m_pluginReg.Count(); ++i) {
+		const PluginInfo& pluginInfo = _this->m_pluginReg.Plugin(i);
+		PluginContext* plugin = _this->m_pluginChain.RefPluginByName(pluginInfo.Name());
+		SdJsonValue val = RpcParams::PluginBuilder(pluginInfo).Get(
+				!!plugin ? plugin->GetMyAltitude() : 0);
+		jarr.AddElement(val);
+	}
+	rep->Results = SdJsonValue(jarr);
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	rep->Id = req->Id;;
 }
 
 int Drone::PluginAttach(

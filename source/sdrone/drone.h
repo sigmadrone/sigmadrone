@@ -109,6 +109,18 @@ private:
 			void* Context,
 			const SdJsonRpcRequest*,
 			SdJsonRpcReply*);
+	static void OnRpcCommandUnloadPlugin(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandLoadPlugin(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandQueryPlugins(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
 
 	static void fatal_error_signal(int sig);
 

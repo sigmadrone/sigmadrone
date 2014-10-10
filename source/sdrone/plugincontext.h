@@ -67,6 +67,7 @@ public:
 	uint32_t GetPluginIoCodeFilter();
 
 	void ExecuteCommandNotify(SdCommandParams* args);
+	IPlugin* Plugin() { return m_plugin; }
 
 private:
 	virtual ~PluginContext();

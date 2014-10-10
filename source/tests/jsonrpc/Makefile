@@ -13,6 +13,7 @@ OBJECTS		= \
 		test_jsonrpc.o \
 		rpcparams.o\
 		commandargs.o\
+		pluginregistry.o\
 		$(ROOTDIR)/libjsonrpc/libjsonrpc.a\
 		$(ROOTDIR)/libcmdargs/libcmdargs.a
 

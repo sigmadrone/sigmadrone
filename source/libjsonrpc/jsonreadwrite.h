@@ -130,6 +130,12 @@ public:
 	const SdJsonValue& operator[](const char* name) const {
 		return Member(name);
 	}
+	SdJsonValue& operator[](const char* name) {
+		if (!IsMemberPresent(name)) {
+			AddMember(name,SdJsonValue(true));
+		}
+		return *const_cast<SdJsonValue*>(&(Member(name)));
+	}
 
 private:
 

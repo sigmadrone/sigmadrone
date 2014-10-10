@@ -261,13 +261,13 @@ void PluginChain::ReferencePluginList(
 }
 
 
-IPlugin* PluginChain::RefPluginByName(const std::string& pluginName)
+PluginContext* PluginChain::RefPluginByName(const std::string& pluginName)
 {
-	IPlugin* plugin = 0;
+	PluginContext* plugin = 0;
 	LockRead();
 	for (PluginMapIt it = m_chain.begin(); it != m_chain.end(); it++) {
 		if (pluginName == it->second->m_plugin->GetName()) {
-			plugin = it->second->m_plugin;
+			plugin = it->second;
 			plugin->AddRef();
 			break;
 		}
@@ -278,7 +278,7 @@ IPlugin* PluginChain::RefPluginByName(const std::string& pluginName)
 
 bool PluginChain::IsPluginAttached(const std::string& pluginName)
 {
-	IPlugin* plugin = RefPluginByName(pluginName);
+	PluginContext* plugin = RefPluginByName(pluginName);
 	if (plugin) {
 		plugin->Release();
 	}
@@ -325,6 +325,10 @@ int PluginChain::ExecuteCommand(
 	ReferencePluginList(&it,0,
 			dispatchFlags | SD_FLAG_DISPATCH_TO_ALL, 0, 0);
 	for (it.BeginIterate(); 0 != it.Get(); it.Next()) {
+		if (targetPlugin.length() > 0 &&
+				it.Get()->Plugin()->GetName() != targetPlugin) {
+			continue;
+		}
 		if (0 != (err = ExecuteCommandForPlugin(cmdParams,it.Get()))) {
 			if (!(cmdParams->CommandCode() == SD_COMMAND_RESET ||
 					cmdParams->CommandCode() == SD_COMMAND_EXIT)) {
@@ -333,6 +337,17 @@ int PluginChain::ExecuteCommand(
 		}
 	}
 	return err;
+}
+
+boost::shared_ptr<PluginChainIterator> PluginChain::RefPlugins()
+{
+	boost::shared_ptr<PluginChainIterator> it;
+	it.reset(new RefedPluginListIterator());
+	if (it.get()) {
+		ReferencePluginList(static_cast<RefedPluginListIterator*>(it.get()),
+				0,SD_FLAG_DISPATCH_TO_ALL, 0, 0);
+	}
+	return it;
 }
 
 int PluginChain::ExecuteCommandForPlugin(

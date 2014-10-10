@@ -155,5 +155,36 @@
 { "jsonrpc": "2.0", "method": "SD_COMMAND_PING", "params": 45495487, "id": 567 }
 { "jsonrpc": "2.0", "result": 45495487, "id": 567 }
 
+{
+ "jsonrpc": "2.0", 
+ "method": "sd_load_plugin", 
+ "params": {
+	 "PluginName": "sd.imukalmanfilter",
+	 "Load": "true",
+	 "SoFileName": "kalman.so",
+	 "Description": "Kalman attitude filter"
+ },
+ "id": 1234
+}
 
+{ "jsonrpc": "2.0", "method": "sd_unload_plugin", "params": "sd.imukalmanfilter", "id": 567 }
 
+{ "jsonrpc": "2.0", "method": "sd_get_plugins", "id": 567 }
+{ "jsonrpc": "2.0", "result": [
+	{
+	 "PluginName": "sd.imukalmanfilter",
+	 "SoFileName": "kalman.so",
+	 "State": "Loaded",
+	 "DeletePending": "true",
+	 "Description": "Kalman attitude filter"
+	 "Altitude": 20000.500
+	 },
+	 {
+	 "PluginName": "sd.imudevice",
+	 "Attached": "true",
+	 "Description": "IMU device reader"
+	 "Altitude": 10000.500
+	 }, 
+	] 
+	"id": 789 
+}

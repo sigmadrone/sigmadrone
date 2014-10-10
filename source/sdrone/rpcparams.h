@@ -54,7 +54,7 @@ bool BuildJsonThrustParamsFromCmdLineArgs(
 
 struct PluginBuilder{
 	PluginBuilder(const PluginInfo& pl);
-	SdJsonValue Get();
+	SdJsonValue Get(SdPluginAltitude altitude = SD_ALTITUDE_INVALID);
 private:
 	const PluginInfo& plugin_;
 };
