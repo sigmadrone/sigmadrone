@@ -1,6 +1,7 @@
 #include "boost/bind.hpp"
 #include "serverapp.h"
 #include "userrpcserver.h"
+#include "libjsonspirit/jsonserialization.h"
 
 
 user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_service, const std::string& address, const std::string& port)
@@ -232,13 +233,7 @@ json::value user_rpcserver::rpc_getattitude(http::server::connection_ptr connect
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	QuaternionD att = app_.ctrl_thread_.get_attitude();
-	json::object ret;
-	ret["w"] = att.w;
-	ret["x"] = att.x;
-	ret["y"] = att.y;
-	ret["z"] = att.z;
-	return ret;
+	return quaternion_to_json_value(app_.ctrl_thread_.get_attitude());
 }
 
 json::value user_rpcserver::rpc_start(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)

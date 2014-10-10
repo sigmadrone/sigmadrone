@@ -20,6 +20,7 @@ using namespace std;
 #include "libcmdargs/cmdargs.h"
 #include "libhttp/http_client.hpp"
 #include "libjsonspirit/rpcclient.h"
+#include "libjsonspirit/jsonserialization.h"
 
 
 #define ALPHA1 0.95f
@@ -80,6 +81,7 @@ int main(int argc, char *argv[])
 		if (!args.get_value("help").empty()) {
 			std::cout << argv[0] << " <options>" << std::endl;
 			std::cout << args.get_help_message() << std::endl;
+			return 0;
 		}
 		rpcserver = args.get_value("rpcserver");
 		rpcport = args.get_value("rpcport", "18222");
@@ -176,10 +178,7 @@ void RpcIdleFunction(void)
 
 	try {
 		json::value val = rpcclient->call("/", "getattitude");
-		q.w = val.get_obj()["w"].get_real();
-		q.x = val.get_obj()["x"].get_real();
-		q.y = val.get_obj()["y"].get_real();
-		q.z = val.get_obj()["z"].get_real();
+		q = quaternion_from_json_value<double>(val);
 	} catch (std::exception& e) {
 		std::cout << "Error: " << e.what() << std::endl;
 	}

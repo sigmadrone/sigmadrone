@@ -9,7 +9,8 @@
 #include "daemon.h"
 
 server_app::server_app(const cmd_args& args)
-	: logger("server_app: ", boost::shared_ptr<logfile>(new logfile("server.log", 1024*1024*2, logfile::none)))
+	: logger("server_app: ")
+	, logfile_(new logfile("sigmad_server.log", 1024*1024*2, logfile::none))
 	, ctrl_thread_(*this)
 	, io_service_()
 	, signals_(io_service_)
