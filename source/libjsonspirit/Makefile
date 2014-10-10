@@ -2,7 +2,7 @@ AR  ?= $(CROSS_COMPILE)ar
 CXX ?= $(CROSS_COMPILE)g++
 CC  ?= $(CROSS_COMPILE)gcc
 LD  ?= $(CROSS_COMPILE)ld
-DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj)
+DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj ..)
 DEBUGFLAGS = -g -O0
 xCXXFLAGS = -O2 -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(CXXFLAGS)
 xLDFLAGS = $(LDFLAGS)
@@ -12,6 +12,7 @@ OBJS= \
 	obj/json_spirit_reader.o \
 	obj/json_spirit_value.o \
 	obj/json_spirit_writer.o \
+	obj/rpcclient.o \
 
 
 all: obj $(TARGET)
