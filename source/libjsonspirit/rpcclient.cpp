@@ -33,7 +33,7 @@ json::value rpc_client::call(const std::string& url, const std::string& method, 
 
 	headers.header("Connection", "keep-alive");
 	rpc_request["jsonrpc"] = "1.0";
-	rpc_request["id"] = ++serial_;
+	rpc_request["id"] = (int)++serial_;
 	rpc_request["method"] = json::value(method);
 	rpc_request["params"] = params;
 	++failures_;
