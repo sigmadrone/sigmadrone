@@ -7,18 +7,23 @@
 
 
 logfile::logfile(const std::string& path, size_t rotsize, message_type level)
-	: logfile_(boost::filesystem::system_complete(boost::filesystem::path(path)).string()),
-	  rotext_(".0"),
-	  rotsize_(rotsize),
-	  msgcount_(default_msgcount),
-	  level_(level)
+	: pfile_(NULL)
+	, logfile_(boost::filesystem::system_complete(boost::filesystem::path(path)).string())
+	, rotext_(".0")
+	, rotsize_(rotsize)
+	, msgcount_(default_msgcount)
+	, level_(level)
 {
 	init();
+	if ((pfile_ = fopen(logfile_.c_str(), "a")) == NULL)
+		throw(std::runtime_error("Failed to open log file: " + logfile_));
 }
 
 logfile::~logfile()
 {
 	add_log(logfile::info, "Destroying log file.");
+	if (pfile_)
+		fclose(pfile_);
 }
 
 void logfile::init()
@@ -57,6 +62,13 @@ int logfile::log_level()
 	return (int)level_;
 }
 
+int logfile::get_fd()
+{
+	if (!pfile_)
+		return -1;
+	return fileno(pfile_);
+}
+
 std::string logfile::get_message_type(message_type level)
 {
 	if (level >= strlevels_.size())
@@ -88,15 +100,11 @@ bool logfile::add_log(message_type type, const char *fmt, ...)
 
 bool logfile::add_log_v(message_type type, const char *fmt, va_list args)
 {
-	FILE *pfile = NULL;
 	if (type > none && type <= level_) {
 		boost::lock_guard<boost::mutex> lock(m_);
-		if ((pfile = fopen(logfile_.c_str(), "a")) == NULL)
-			return false;
-		fprintf(pfile, "%s; %s; ", get_time().c_str(), get_message_type(type).c_str());
-		vfprintf(pfile, fmt, args);
-		fprintf(pfile, "\n");
-		fclose(pfile);
+		fprintf(pfile_, "%s; %s; ", get_time().c_str(), get_message_type(type).c_str());
+		vfprintf(pfile_, fmt, args);
+		fprintf(pfile_, "\n");
 		if (--msgcount_ <= 0) {
 			msgcount_ = default_msgcount;
 			rotate();
@@ -127,12 +135,16 @@ void logfile::set_rotation_extension(const std::string& oldext)
 
 void logfile::rotate()
 {
+	boost::system::error_code ec;
 	boost::filesystem::path cur_filepath(logfile_);
 	boost::filesystem::path old_filepath(logfile_ + rotext_);
 
 	if (boost::filesystem::file_size(cur_filepath) > rotsize_) {
-		if (boost::filesystem::exists(old_filepath))
-			boost::filesystem::remove(old_filepath);
-		boost::filesystem::rename(cur_filepath, old_filepath);
+		boost::filesystem::copy_file(cur_filepath, old_filepath, boost::filesystem::copy_option::overwrite_if_exists, ec);
+		if (!ec) {
+			FILE *truncfile = fopen(logfile_.c_str(), "w");
+			if (truncfile)
+				fclose(truncfile);
+		}
 	}
 }

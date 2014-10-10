@@ -44,7 +44,6 @@ protected:
 	void init_servo_controller();
 	void init_sensors_sampler();
 	void init_attitude_tracker();
-	void hwctrl_thread_worker();
 
 	boost::shared_ptr<boost::thread> hwctrl_thread_;
 	boost::asio::io_service io_service_;

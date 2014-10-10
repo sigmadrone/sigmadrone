@@ -22,6 +22,7 @@ public:
 	virtual int log_level(message_type level) { return 0; }
 	virtual int log_level(const std::string& level) { return 0; }
 	virtual int log_level() { return 0; }
+	virtual int get_fd() { return -1; }
 	virtual void set_rotation_extension(const std::string& ext) { }
 	virtual std::string get_message_type(message_type level) { return "none"; }
 	static const size_t default_rotsize = 1024 * 1024 * 10;		// 10 MB
@@ -41,8 +42,10 @@ public:
 	virtual int log_level(message_type level);
 	virtual int log_level(const std::string& level);
 	virtual int log_level();
+	virtual int get_fd();
 	virtual void set_rotation_extension(const std::string& ext);
 	virtual std::string get_message_type(message_type level);
+
 
 private:
 	void rotate();
@@ -50,6 +53,7 @@ private:
 	void init();
 
 private:
+	FILE *pfile_;
 	std::string logfile_;
 	std::string rotext_;
 	size_t rotsize_;

@@ -10,7 +10,7 @@
 
 server_app::server_app(const cmd_args& args)
 	: logger("server_app: ")
-	, logfile_(new logfile("sigmad_server.log", 1024*1024*2, logfile::none))
+	, logfile_(new logfile("sigmad.log", 1024*1024*10, logfile::none))
 	, ctrl_thread_(*this)
 	, io_service_()
 	, signals_(io_service_)
@@ -118,9 +118,18 @@ void server_app::init_attitude_tracker()
 
 int server_app::run(int argc, const char *argv[])
 {
-	if (args_.get_value("daemon") == "1")
+	if (args_.get_value("daemon") == "1") {
 		daemon_init();
-	get_log_file()->log_level(args_.get_value("loglevel", "debug"));
+		/*
+		 * Redirect stdout and stderr to
+		 * the log file.
+		 */
+		dup2(get_log_file()->get_fd(), 1);
+		dup2(get_log_file()->get_fd(), 2);
+		setlinebuf(stdout);
+		setlinebuf(stderr);
+	}
+	get_log_file()->log_level(args_.get_value("loglevel", "info"));
 	log_info_message("Server starting.");
 	init_servo_controller();
 	init_sensors_sampler();
@@ -130,9 +139,4 @@ int server_app::run(int argc, const char *argv[])
 	rpc_thread.join();
 	log_info_message("Server stopping.");
 	return 0;
-}
-
-void server_app::hwctrl_thread_worker()
-{
-
 }
