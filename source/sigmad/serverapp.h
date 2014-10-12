@@ -32,10 +32,10 @@ public:
 	 */
 	boost::shared_ptr<logfile> logfile_;
 	boost::scoped_ptr<user_rpcserver> user_rpcserver_;
-	attcontroller ctrl_thread_;
 	boost::scoped_ptr<servocontroller> servoctrl_;
 	boost::scoped_ptr<sampler> ssampler_;
 	boost::scoped_ptr<attitudetracker> attitude_tracker_;
+	attcontroller ctrl_thread_;
 
 protected:
 	void signal_handler_terminate();

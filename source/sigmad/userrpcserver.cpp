@@ -1,4 +1,5 @@
-#include "boost/bind.hpp"
+#include <boost/bind.hpp>
+#include <boost/lexical_cast.hpp>
 #include "serverapp.h"
 #include "userrpcserver.h"
 #include "libjsonspirit/jsonserialization.h"
@@ -20,6 +21,11 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("getattitude", &user_rpcserver::rpc_getattitude);
 	add("start", &user_rpcserver::rpc_start);
 	add("stop", &user_rpcserver::rpc_stop);
+	add("thrust", &user_rpcserver::rpc_thrust);
+	add("motors", &user_rpcserver::rpc_motors);
+	add("ki", &user_rpcserver::rpc_ki);
+	add("kd", &user_rpcserver::rpc_kd);
+	add("kp", &user_rpcserver::rpc_kp);
 
 	add_uri_handler("/jsonrpc", boost::bind(&user_rpcserver::jsonrpc_request_handler, this, _1, _2, _3));
 	add_uri_handler("/", boost::bind(&user_rpcserver::jsonrpc_request_handler, this, _1, _2, _3));
@@ -298,6 +304,124 @@ json::value user_rpcserver::rpc_servo_rate(http::server::connection_ptr connecti
 	if ((params[0].type() == json::int_type))
 		app_.servoctrl_->setrate(params[0].get_int());
 	return (int)app_.servoctrl_->getrate();
+}
+
+json::value user_rpcserver::rpc_kp(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "kp\n"
+	            "\nGet/Set Kp."
+				"\nIf the new coeficient is not specified, the current Kp will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kp          (real, optional) The Kp of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == json::real_type))
+		app_.ctrl_thread_.pid_.Kp_ = params[0].get_real();
+	return app_.ctrl_thread_.pid_.Kp_;
+}
+
+json::value user_rpcserver::rpc_kd(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "kd\n"
+	            "\nGet/Set Kd."
+				"\nIf the new coeficient is not specified, the current Kd will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kd          (real, optional) The Kd of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == json::real_type))
+		app_.ctrl_thread_.pid_.Kd_ = params[0].get_real();
+	return app_.ctrl_thread_.pid_.Kd_;
+}
+
+json::value user_rpcserver::rpc_ki(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "ki\n"
+	            "\nGet/Set Ki."
+				"\nIf the new coeficient is not specified, the current Ki will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Ki          (real, optional) The Ki of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == json::real_type))
+		app_.ctrl_thread_.pid_.Ki_ = params[0].get_real();
+	return app_.ctrl_thread_.pid_.Ki_;
+}
+
+json::value user_rpcserver::rpc_motors(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "motors\n"
+	            "\nGet motors state."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	json::object ret;
+	for (size_t i = 0; i < app_.servoctrl_->channelcount(); i++) {
+		if (app_.servoctrl_->motor(0).valid()) {
+			ret[boost::lexical_cast<std::string>(i)] = app_.servoctrl_->motor(i).offset();
+		}
+	}
+	return ret;
+}
+
+
+json::value user_rpcserver::rpc_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "thrust\n"
+	            "\nGet/Set thrust."
+				"\nIf the new thrust is not specified, the current thrust will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. n          (real, optional) New thrust from 0.0 to 1.0\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == json::real_type))
+		app_.ctrl_thread_.thrust_ = params[0].get_real();
+	return app_.ctrl_thread_.thrust_;
 }
 
 void user_rpcserver::headers_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)

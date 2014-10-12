@@ -137,6 +137,7 @@ int server_app::run(int argc, const char *argv[])
 	init_user_rpcserver();
 	boost::thread rpc_thread(boost::bind(&boost::asio::io_service::run, &io_service_));
 	rpc_thread.join();
+	ctrl_thread_.stop();
 	log_info_message("Server stopping.");
 	return 0;
 }

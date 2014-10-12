@@ -19,6 +19,7 @@ OBJS		= \
 		obj/serverapp.o \
 		obj/userrpcserver.o \
 		obj/attcontroller.o \
+		obj/pidtorque.o \
 
 
 all: obj $(TARGET)

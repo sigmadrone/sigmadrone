@@ -12,6 +12,7 @@
 
 #include <boost/scoped_ptr.hpp>
 #include <boost/thread.hpp>
+#include "pidtorque.h"
 #include "matrix.h"
 
 class server_app;
@@ -32,6 +33,16 @@ protected:
 	bool exit_;
 	boost::shared_ptr<boost::thread> thread_;
 	QuaternionD attQ_;
+	QuaternionD targetQ_;
+
+public:
+	Vector3d M0_;
+	Vector3d M1_;
+	Vector3d M2_;
+	Vector3d M3_;
+	pidtorque pid_;
+	double thrust_;
+
 };
 
 
