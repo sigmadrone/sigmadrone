@@ -1,60 +1,58 @@
 #include <fstream>
 #include <cstdlib>
 #include <stdexcept>
+#include <unistd.h>
 #include "filesensor.h"
 
-file_sensor::file_sensor(const std::string& filename, unsigned int trottle, double scale)
+file_sensor::file_sensor(const std::string& filename, unsigned int rate, double scale)
 	: filename_(filename)
-	, trottle_(trottle)
+	, rate_(rate)
 	, scale_(scale)
 	, trottle_counter_(0)
 	, cachedvalue_(0)
 	, updating_(false)
+	, exit_(false)
 {
 	if (pthread_cond_init(&cond_, NULL) != 0)
 		throw std::runtime_error("pthread_cond_init failed.");
 	if (pthread_mutex_init(&mutex_, NULL) != 0)
 		throw std::runtime_error("pthread_mutex_init failed.");
-	if (pthread_attr_init(&detached_) != 0)
-		throw std::runtime_error("pthread_attr_init failed.");
-	if (pthread_attr_setdetachstate(&detached_, PTHREAD_CREATE_DETACHED) != 0)
-		throw std::runtime_error("pthread_attr_setdetachstate failed.");
-
 }
 
 file_sensor::~file_sensor()
 {
+	close();
+	pthread_cond_destroy(&cond_);
+	pthread_mutex_destroy(&mutex_);
+}
+
+void file_sensor::close()
+{
+	exit_ = true;
 	pthread_mutex_lock(&mutex_);
 	if (updating_)
 		pthread_cond_wait(&cond_, &mutex_);
 	pthread_mutex_unlock(&mutex_);
-	pthread_cond_destroy(&cond_);
-	pthread_mutex_destroy(&mutex_);
-	pthread_attr_destroy(&detached_);
+	pthread_join(thread_, NULL);
 }
 
 void file_sensor::open()
 {
+	if (updating_)
+		return;
 	std::ifstream file;
 	file.open(filename_.c_str());
 	if (!file)
-		throw std::runtime_error(std::string("Failed to open device file: ") + filename_);
+		throw std::runtime_error(std::string("file_sensor::open Failed to open device file: ") + filename_);
 	file.close();
+	updating_ = true;
 }
 
 bool file_sensor::read(double &value) const
 {
-	if (updating_ || (trottle_ && (trottle_counter_++ % trottle_))) {
-		return false;
-	}
+	if (!updating_)
+		throw std::runtime_error("file_sensor::read error: device is not open: " + filename_);
 	value = cachedvalue_;
-	trottle_counter_ = 0;
-	pthread_t thread;
-	updating_ = true;
-	if (pthread_create(&thread, &detached_, file_sensor_thread, (void*)this) != 0) {
-		updating_ = false;
-		throw std::runtime_error("pthread_create failed.");
-	}
 	return true;
 }
 
@@ -72,6 +70,19 @@ void file_sensor::update_value()
 	file >> strval;
 	file.close();
 	cachedvalue_ = strtod(strval.c_str(), NULL) * scale_;
+}
+
+void file_sensor::update_thread()
+{
+	while (!exit_) {
+		try {
+			if (rate_)
+				usleep(1000000/rate_);
+			update_value();
+		} catch (std::exception& e) {
+
+		}
+	}
 	pthread_mutex_lock(&mutex_);
 	updating_ = false;
 	pthread_cond_signal(&cond_);

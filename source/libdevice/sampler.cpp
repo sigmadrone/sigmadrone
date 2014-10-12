@@ -9,7 +9,7 @@ sampler::sampler(const std::string& gyrdev, const std::string& accdev, const std
 	: gyr_(gyrdev)
 	, acc_(accdev)
 	, mag_(magdev, 10)
-	, bar_(bardev, 10, 0.01)
+	, bar_(bardev, 50, 0.01)
 {
 	if (!gyr_.filename().empty())
 		gyr_.open();
