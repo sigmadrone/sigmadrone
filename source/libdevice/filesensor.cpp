@@ -28,16 +28,21 @@ file_sensor::~file_sensor()
 
 void file_sensor::close()
 {
-	exit_ = true;
+//	return;
 	pthread_mutex_lock(&mutex_);
-	if (updating_)
+	if (updating_) {
+		exit_ = true;
 		pthread_cond_wait(&cond_, &mutex_);
+		pthread_mutex_unlock(&mutex_);
+		pthread_join(thread_, NULL);
+		return;
+	}
 	pthread_mutex_unlock(&mutex_);
-	pthread_join(thread_, NULL);
 }
 
 void file_sensor::open()
 {
+//	return;
 	if (updating_)
 		return;
 	std::ifstream file;
@@ -45,11 +50,17 @@ void file_sensor::open()
 	if (!file)
 		throw std::runtime_error(std::string("file_sensor::open Failed to open device file: ") + filename_);
 	file.close();
+    if (pthread_create(&thread_, NULL, file_sensor_thread, (void*)this) != 0) {
+            updating_ = false;
+            throw std::runtime_error("pthread_create failed.");
+    }
 	updating_ = true;
 }
 
 bool file_sensor::read(double &value) const
 {
+//	value = 0.0;
+//	return true;
 	if (!updating_)
 		throw std::runtime_error("file_sensor::read error: device is not open: " + filename_);
 	value = cachedvalue_;
@@ -91,6 +102,6 @@ void file_sensor::update_thread()
 
 void* file_sensor::file_sensor_thread(void *pthis)
 {
-	static_cast<file_sensor*>(pthis)->update_value();
+	static_cast<file_sensor*>(pthis)->update_thread();
 	return NULL;
 }

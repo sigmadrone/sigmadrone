@@ -16,6 +16,10 @@ public:
 	servomotor(double reset, double neutral, double negative, double positive);
 
 	/**
+	 * Return the current offset
+	 */
+	double offset();
+	/**
 	 * Set the motor position offset from neutral.
 	 * @percent offset from -1.0 to +1.0
 	 */
