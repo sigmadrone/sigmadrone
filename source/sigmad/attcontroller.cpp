@@ -32,6 +32,9 @@ attcontroller::~attcontroller()
 void attcontroller::start()
 {
 	if (!thread_) {
+		thrust_ = 0.0;
+		app_.servoctrl_->armmotors();
+		app_.servoctrl_->enable();
 		exit_ = false;
 		thread_.reset(new boost::thread(boost::bind(&attcontroller::worker, this)));
 	}
@@ -40,6 +43,8 @@ void attcontroller::start()
 void attcontroller::stop()
 {
 	if (thread_) {
+		app_.servoctrl_->reset();
+		app_.servoctrl_->disable();
 		exit_ = true;
 		thread_->join();
 		thread_.reset();
@@ -71,15 +76,15 @@ void attcontroller::worker()
 			Vector3d torqueRPM = correction * 0.6 / (101.25/1000.0) / 2.0;
 
 			if (thrust_ > 0.0) {
-				app_.servoctrl_->motor(0).offset(thrust_ + Vector3d::dot(torqueRPM, M0_));
-				app_.servoctrl_->motor(1).offset(thrust_ + Vector3d::dot(torqueRPM, M1_));
-				app_.servoctrl_->motor(2).offset(thrust_ + Vector3d::dot(torqueRPM, M2_));
-				app_.servoctrl_->motor(3).offset(thrust_ + Vector3d::dot(torqueRPM, M3_));
+				app_.servoctrl_->motor(0).offset_clip(thrust_ + Vector3d::dot(torqueRPM, M0_), 0.05, 1.0);
+				app_.servoctrl_->motor(1).offset_clip(thrust_ + Vector3d::dot(torqueRPM, M1_), 0.05, 1.0);
+				app_.servoctrl_->motor(2).offset_clip(thrust_ + Vector3d::dot(torqueRPM, M2_), 0.05, 1.0);
+				app_.servoctrl_->motor(3).offset_clip(thrust_ + Vector3d::dot(torqueRPM, M3_), 0.05, 1.0);
 			} else {
-				app_.servoctrl_->motor(0).reset();
-				app_.servoctrl_->motor(1).reset();
-				app_.servoctrl_->motor(2).reset();
-				app_.servoctrl_->motor(3).reset();
+				app_.servoctrl_->motor(0).offset(0.0);
+				app_.servoctrl_->motor(1).offset(0.0);
+				app_.servoctrl_->motor(2).offset(0.0);
+				app_.servoctrl_->motor(3).offset(0.0);
 			}
 			app_.servoctrl_->update();
 		} catch (std::exception& e) {

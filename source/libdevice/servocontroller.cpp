@@ -42,6 +42,13 @@ void servocontroller::disarmmotors() {
 	update();
 }
 
+void servocontroller::reset() {
+	for (size_t i = 0; i < channelcount(); i++) {
+		if (motor(i).valid())
+			motor(i).reset();
+	}
+	update();
+}
 
 void servocontroller::setrate(unsigned int)
 {

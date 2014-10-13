@@ -42,7 +42,7 @@ void attitudetracker::track_gyroscope(const Vector3d& omega, double dtime)
 void attitudetracker::track_accelerometer(const Vector3d& g)
 {
 	Vector3d g_estimated = attitude_.conjugated().rotate(earth_g_);
-	QuaternionD q = QuaternionD::fromVectors(g_estimated, g);
+	QuaternionD q = QuaternionD::fromVectors(g_estimated, g.normalize());
 	QuaternionD deltaq = QuaternionD::nlerp(QuaternionD::identity, q, blend_g_);
 	attitude_ = attitude_ * deltaq.conjugated(); // attitude_ * deltaq * ~attitude_ * attitude_;
 	attitude_ = attitude_.normalize();

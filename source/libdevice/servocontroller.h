@@ -25,6 +25,11 @@ public:
 	void disarmmotors();
 
 	/**
+	 * Resets all valid motors
+	 */
+	void reset();
+
+	/**
 	 * Set the rate of the generated PWM pulses
 	 */
 	virtual void setrate(unsigned int rate);

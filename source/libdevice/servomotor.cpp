@@ -32,7 +32,7 @@ servomotor::servomotor(double reset, double neutral, double negative, double pos
 double servomotor::offset()
 {
 	if (pulse_ < neutral_)
-		return (neutral_ - pulse_) / (neutral_ - negative_);
+		return (pulse_ - neutral_) / (neutral_ - negative_);
 	else
 		return (pulse_ - neutral_) / (positive_ - neutral_);
 }
@@ -50,6 +50,14 @@ void servomotor::offset(double percent)
 		pulse_ = neutral_ + (positive_ - neutral_) * percent;
 }
 
+void servomotor::offset_clip(double percent, double min, double max)
+{
+	if (percent > max)
+		percent = max;
+	else if (percent < min)
+		percent = min;
+	offset(percent);
+}
 void servomotor::reset()
 {
 	pulse_ = reset_;

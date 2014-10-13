@@ -51,6 +51,9 @@ static int usage(int argc, const char *argv[])
 	fprintf(stderr, "\t--disable                Disable sensor sampling.\n");
 	fprintf(stderr, "\t--gnuplot                Read text data.\n");
 	fprintf(stderr, "\t--framesize N            Frame size.\n");
+	fprintf(stderr, "\t--hp-enable              Enable high pass filter.\n");
+	fprintf(stderr, "\t--hp-disable             Disable high pass filter.\n");
+	fprintf(stderr, "\t--set-hpmode N           Set high pass mode.\n");
 	fprintf(stderr, "\t--delay N                Add delay of N ms after every data output.\n");
 	return 0;
 }
@@ -118,6 +121,41 @@ static int axesdata_apply_commandline(int fd, int argc, const char *argv[])
 			bexit = 1;
 		}
 	}
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--hp-enable") == 0) {
+			ret = ioctl(fd, AXISDATA_IOC_HPEN, 1);
+			if (ret < 0) {
+				perror("AXISDATA_IOC_HPEN");
+				return -1;
+			}
+			bexit = 1;
+		}
+	}
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--hp-disable") == 0) {
+			ret = ioctl(fd, AXISDATA_IOC_HPEN, 0);
+			if (ret < 0) {
+				perror("AXISDATA_IOC_HPEN");
+				return -1;
+			}
+			bexit = 1;
+		}
+	}
+	for (i = 1; i < argc; i++) {
+		if (strcmp(argv[i], "--set-hpmode") == 0) {
+			if (++i < argc) {
+				arg = atol(argv[i]);
+				ret = ioctl(fd, AXISDATA_IOC_HPM, arg);
+				if (ret < 0) {
+					perror("AXISDATA_IOC_HPM");
+					return -1;
+				}
+			}
+			bexit = 1;
+		}
+	}
+
+
 	for (i = 1; i < argc; i++) {
 		if (strcmp(argv[i], "--set-rate") == 0) {
 			if (++i < argc) {
