@@ -4,11 +4,14 @@ INCLUDES    	= -I../../include -I../..
 LIBS		= -lglut -lGL -lGLEW -lX11 -lm -lrt -lpthread -lcmdargs -llogger -ljsonspirit -lhttp -lcmdargs 
 LIBS		+= -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
 LIBS		+= -L../../libhttp -L../../libjsonspirit -L../../libcmdargs -L../../liblogger
-LIBS		+= `pkg-config --libs gtk+-3.0`
+LIBS		+= `pkg-config --libs gtkmm-3.0`
 CFLAGS		= -g -O0 -Wall
-CFLAGS		+= `pkg-config --cflags gtk+-3.0`
+CFLAGS		+= `pkg-config --cflags gtkmm-3.0`
 TARGET		= flightdeck
-OBJECTS		= main.o
+OBJECTS		= \
+		main.o \
+		controlwindow.o \
+
 
 all : $(TARGET)
 
