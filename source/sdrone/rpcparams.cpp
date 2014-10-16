@@ -104,21 +104,17 @@ bool ParseJsonDroneConfig(
 	return true;
 }
 
-bool ParseJsonTargetQuaternion(
-		const IJsonValue* args, QuaternionD* targetQ)
+QuaternionD ParseJsonQuaternion(const SdJsonValue& args)
 {
-	bool ret = false;
-	if (args->GetType() == SD_JSONVALUE_ARRAY) {
-		const IJsonArray* jarr = args->AsArray();
-		if (jarr->ElementCount() == 4) {
-			targetQ->w = jarr->GetElement(0)->AsDouble();
-			targetQ->x = jarr->GetElement(1)->AsDouble();
-			targetQ->y = jarr->GetElement(2)->AsDouble();
-			targetQ->z = jarr->GetElement(3)->AsDouble();
-			ret = true;
-		}
+	QuaternionD q;
+	if (args.GetType() == SD_JSONVALUE_OBJECT) {
+		const SdJsonObject& jobj = args.Object();
+		q.w = jobj["w"].AsDouble();
+		q.x = jobj["x"].AsDouble();
+		q.y = jobj["y"].AsDouble();
+		q.z = jobj["z"].AsDouble();
 	}
-	return ret;
+	return q;
 }
 
 bool ParseJsonThrust(
@@ -150,18 +146,15 @@ bool ParseJsonThrust(
 	return ret;
 }
 
-bool BuildJsonTargetQuaternion(
-	SdJsonValue* jsonRpcParams,
+SdJsonValue BuildJsonQuaternion(
 	const QuaternionD& q)
 {
-	bool ret = true;
-	SdJsonArray jarr;
-	ret = ret && jarr.AddElement(SdJsonValue(q.w));
-	ret = ret && jarr.AddElement(SdJsonValue(q.x));
-	ret = ret && jarr.AddElement(SdJsonValue(q.y));
-	ret = ret && jarr.AddElement(SdJsonValue(q.z));
-	jsonRpcParams->SetValueAsArray(&jarr);
-	return ret;
+	SdJsonObject jobj;
+	jobj.AddMember("w",SdJsonValue(q.w));
+	jobj.AddMember("x",SdJsonValue(q.x));
+	jobj.AddMember("y",SdJsonValue(q.y));
+	jobj.AddMember("z",SdJsonValue(q.z));
+	return jobj;
 }
 
 bool BuildJsonDroneConfig(

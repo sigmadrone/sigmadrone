@@ -11,7 +11,7 @@ ImuFilterPlugin::ImuFilterPlugin()
 {
 	m_RefCnt = 1;
 	m_Runtime = 0;
-	m_SetEarthG = false;
+	m_earthG = Vector3d(0,0,1.0);
 }
 
 ImuFilterPlugin::~ImuFilterPlugin()
@@ -39,13 +39,20 @@ int ImuFilterPlugin::ExecuteCommand(
 	switch (params->CommandCode()) {
 	case SD_COMMAND_RUN:
 		m_attitude.reset_attitude();
-		m_SetEarthG = true;
 		m_Runtime->SetIoFilters(
 				SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
 				SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
 		break;
 	case SD_COMMAND_EXIT:
 		m_Runtime->DetachPlugin();
+		break;
+	case SD_COMMAND_SET_EARTH_G_VECTOR:
+		assert(params->Params().dataType == SdIoData::TYPE_VECTOR3D);
+		m_earthG = *(params->Params().asVector3d);
+		m_attitude.set_earth_g(m_earthG);
+		break;
+	case SD_COMMAND_GET_EARTH_G_VECTOR:
+		params->SetOutParams(SdIoData(&m_earthG));
 		break;
 	default:break;
 	}
@@ -93,18 +100,6 @@ int ImuFilterPlugin::IoCallback(SdIoPacket* ioPacket)
 	if (SD_DEVICEID_IMU == ioPacket->DeviceId() &&
 			SD_IOCODE_RECEIVE == ioPacket->IoCode())
 	{
-		if (m_SetEarthG) {
-			SdIoData earthG = ioPacket->GetAttribute(SDIO_ATTR_EARTH_G);
-			if (earthG.dataType == SdIoData::TYPE_VECTOR3D) {
-				m_attitude.set_earth_g(*earthG.asVector3d);
-				m_SetEarthG = false;
-			} else {
-				m_Runtime->Log(SD_LOG_LEVEL_ERROR,
-						"ImuFilterPlugin: earth G was expected!\n");
-				return EINVAL;
-			}
-		}
-
 		const SdIoData& ioData = ioPacket->GetIoData(true);
 		if (ioData.asImuData->gyro3d_upd)
 			m_attitude.track_gyroscope(DEG2RAD(ioPacket->GyroData()), ioPacket->DeltaTime());
@@ -114,11 +109,7 @@ int ImuFilterPlugin::IoCallback(SdIoPacket* ioPacket)
 			m_attitude.track_magnetometer(ioPacket->MagData());
 		const QuaternionD& attQ = m_attitude.get_attitude();
 		ioPacket->SetAttribute(SDIO_ATTR_ATTITUDE_Q,SdIoData(&attQ));
-
-		/*
-		 * Do we need this?
-		 */
-		// ioPacket->SetAttribute(SDIO_ATTR_CORR_VELOCITY, SdIoData(&(m_ImuFilter.GetVg())));
+		ioPacket->SetAttribute(SDIO_ATTR_EARTH_G,SdIoData(&m_earthG));
 	}
 	return SD_ESUCCESS;
 }

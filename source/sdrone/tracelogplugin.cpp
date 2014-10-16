@@ -162,14 +162,6 @@ int TraceLogPlugin::IoCallback(
 			ioPacket->MagData().at(1,0),
 			ioPacket->MagData().at(2,0));
 
-	ioData = ioPacket->GetAttribute(SDIO_ATTR_CORR_VELOCITY);
-	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
-		assert(ioData.asVector3d);
-		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,"--> GyroC : %1.3lf %1.3lf %1.3lf\n",
-				RAD2DEG(ioData.asVector3d->at(0,0)),
-				RAD2DEG(ioData.asVector3d->at(1,0)),
-				RAD2DEG(ioData.asVector3d->at(2,0)));
-	}
 
 	mot = ioPacket->GetAttribute(SDIO_ATTR_MOTORS).asVector4d;
 	if (0 != mot) {
@@ -196,6 +188,7 @@ int TraceLogPlugin::IoCallback(
 				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
 				ioData.asVector3d->at(2,0));
 	}
+#if 0
 	ioData = ioPacket->GetAttribute(SDIO_ATTR_ERR_P);
 	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
@@ -217,6 +210,7 @@ int TraceLogPlugin::IoCallback(
 				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
 				ioData.asVector3d->at(2,0));
 	}
+
 	ioData = ioPacket->GetAttribute(SDIO_ATTR_ERR_OMEGA);
 	if (ioData.dataType == SdIoData::TYPE_VECTOR3D) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE,
@@ -224,6 +218,7 @@ int TraceLogPlugin::IoCallback(
 				ioData.asVector3d->at(0,0),ioData.asVector3d->at(1,0),
 				ioData.asVector3d->at(2,0));
 	}
+#endif
 
 	if (m_logRotMatrix) {
 		m_runtime->Log(SD_LOG_LEVEL_VERBOSE, "%5.9lf %5.9lf %5.9lf %5.9lf \n",

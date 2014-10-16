@@ -38,7 +38,7 @@ private:
 private:
 	attitudetracker m_attitude;
 	IPluginRuntime* m_Runtime;
-	bool m_SetEarthG;
+	Vector3d m_earthG;
 	int m_RefCnt;
 };
 

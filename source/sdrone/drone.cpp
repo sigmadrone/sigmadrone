@@ -198,13 +198,12 @@ int Drone::Run(CommandLineArgs& args)
 			OnRpcCommandSetThrust,
 			this,
 			jsonArgs);
-	RpcParams::BuildJsonTargetQuaternion(&jsonArgs,QuaternionD(1.0,0,0,0));
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_GET_ATTITUDE),
 			OnRpcCommandGetAttitude,
 			this,
 			SdJsonValue(),
-			jsonArgs);
+			RpcParams::BuildJsonQuaternion(QuaternionD(1.0,0,0,0)));
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_SET_ATTITUDE),
 			OnRpcCommandSetTargetAttitude,
@@ -255,6 +254,19 @@ int Drone::Run(CommandLineArgs& args)
 			SdJsonValue(),
 			jarr
 			);
+
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_SET_EARTH_G_VECTOR),
+			OnRpcCommandSetGVector,
+			this,
+			RpcParams::BuildJsonVector3d(Vector3d(0,0,1)));
+
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_EARTH_G_VECTOR),
+			OnRpcCommandGetGVector,
+			this,
+			SdJsonValue(),
+			RpcParams::BuildJsonVector3d(Vector3d(0,0,1)));
 
 	//
 	// Execute the command that came with the command line
@@ -592,7 +604,8 @@ void Drone::OnRpcCommandSetTargetAttitude(
 {
 	QuaternionD targetQ;
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
-	if (!RpcParams::ParseJsonTargetQuaternion(&req->Params,&targetQ)) {
+	targetQ = RpcParams::ParseJsonQuaternion(&req->Params);
+	if (0 == targetQ.lengthSq()) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
 	} else {
 		int err;
@@ -617,8 +630,51 @@ void Drone::OnRpcCommandGetAttitude(
 	rep->Id = req->Id;
 	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
 		if (params.OutParams().dataType == SdIoData::TYPE_QUATERNION) {
-			RpcParams::BuildJsonTargetQuaternion(&rep->Results,
-					*params.OutParams().asQuaternion);
+			rep->Results = RpcParams::BuildJsonQuaternion(
+					*(params.OutParams().asQuaternion));
+			rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+		}
+	}
+}
+
+void Drone::OnRpcCommandSetGVector(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+
+{
+	Vector3d earthG;
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	earthG = RpcParams::ParseJsonVector3d(&req->Params);
+	if (0 == earthG.lengthSq()) {
+		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
+	} else {
+		SdIoData data(&earthG);
+		PluginCommandParams params(SD_COMMAND_SET_EARTH_G_VECTOR,data,0);
+		int err = Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
+		if (0 != err) {
+			rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+			rep->ErrorMessage = strerror(err);
+		} else {
+			rep->Results.SetValueAsInt(0);
+		}
+	}
+	rep->Id = req->Id;
+}
+
+void Drone::OnRpcCommandGetGVector(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	SdIoData data;
+	PluginCommandParams params(SD_COMMAND_GET_EARTH_G_VECTOR,data,0);
+	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+	rep->Id = req->Id;
+	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
+		if (params.OutParams().dataType == SdIoData::TYPE_VECTOR3D) {
+			rep->Results = RpcParams::BuildJsonVector3d(
+					*(params.OutParams().asVector3d));
 			rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 		}
 	}

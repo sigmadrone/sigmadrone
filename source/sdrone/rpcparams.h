@@ -24,11 +24,9 @@ bool ParseJsonImuConfig(
 bool ParseJsonThrust(
 		const IJsonValue* jsonRpcParams,
 		SdThrustValues*);
-bool ParseJsonTargetQuaternion(
-		const IJsonValue* jsonRpcParams,
-		QuaternionD*);
-bool BuildJsonTargetQuaternion(
-		SdJsonValue* jsonRpcParams,
+QuaternionD ParseJsonQuaternion(
+		const SdJsonValue& jsonRpcParams);
+SdJsonValue BuildJsonQuaternion(
 		const QuaternionD&);
 bool BuildJsonDroneConfig(
 		SdJsonValue* jsonRpcParams,
@@ -65,6 +63,36 @@ struct PluginParser {
 private:
 	const SdJsonValue& value_;
 };
+
+template <int N>
+SdJsonValue BuildJsonVector(
+	const MatrixMN<double,N,1>& vec)
+{
+	SdJsonArray jarr;
+	for (int i = 0; i < N; ++i) {
+		jarr.AddElement(SdJsonValue(vec.at(i,0)));
+	}
+	return SdJsonValue(jarr);
+}
+
+inline SdJsonValue BuildJsonVector3d(const Vector3d& v) { return BuildJsonVector(v); }
+inline SdJsonValue BuildJsonVector4d(const Vector4d& v) { return BuildJsonVector(v); }
+
+template <int N>
+MatrixMN<double,N,1> ParseJsonVector(
+		const SdJsonValue& jval)
+{
+	MatrixMN<double,N,1> v;
+	if (jval.GetType() == SD_JSONVALUE_ARRAY && jval.Array().ElementCount() == N) {
+		for (int i = 0; i < N; ++i) {
+			v.at(i,0) = jval.Array().Element(i).AsDouble();
+		}
+	}
+	return v;
+}
+
+inline Vector3d ParseJsonVector3d(const SdJsonValue& jval) { return ParseJsonVector<3>(jval);}
+inline Vector4d ParseJsonVector4d(const SdJsonValue& jval) { return ParseJsonVector<4>(jval);}
 
 };
 
