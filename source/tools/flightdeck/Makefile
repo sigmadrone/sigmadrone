@@ -10,7 +10,7 @@ CFLAGS		+= `pkg-config --cflags gtkmm-3.0`
 TARGET		= flightdeck
 OBJECTS		= \
 		main.o \
-		controlwindow.o \
+		mainwindow.o \
 
 
 all : $(TARGET)
