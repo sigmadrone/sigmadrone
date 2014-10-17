@@ -32,7 +32,7 @@ MatrixMN<T, M, N> matrix_from_json_value(const json::value& val)
 	MatrixMN<T, M, N> ret;
 	for (int i = 0; i < M; i++)
 		for (int j = 0; j < N; j++)
-			ret(i, j) = arr.at(i * M + j);
+			ret.at(i, j) = arr.at(j * M + i).get_value<T>();
 	return ret;
 }
 

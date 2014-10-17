@@ -16,8 +16,10 @@ public:
 protected:
 	//Signal handlers:
 	void on_button_quit();
+	void on_button_arm_motors();
 	void on_button_lock_motors();
 	void on_button_lock_g();
+	void on_change_thrust();
 	void on_change_g();
 	bool on_rpc_update();
 	void rpc_update_attitude();
@@ -31,6 +33,7 @@ protected:
 	Gtk::Button* button_quit_;
 	Gtk::CheckButton* button_arm_motors_;
 	Gtk::CheckButton* button_lock_motors_;
+	Gtk::SpinButton* spinbutton_thrust_;
 	Gtk::SpinButton* spinbutton_g_x_;
 	Gtk::SpinButton* spinbutton_g_y_;
 	Gtk::SpinButton* spinbutton_g_z_;

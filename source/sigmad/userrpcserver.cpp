@@ -11,18 +11,22 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 {
 	add("help", &user_rpcserver::rpc_help);
 	add("spec", &user_rpcserver::rpc_spec);
-	add("quit", &user_rpcserver::rpc_quit);
 	add("myaddress", &user_rpcserver::rpc_myaddress);
 	add("servorate", &user_rpcserver::rpc_servo_rate);
 	add("servoenable", &user_rpcserver::rpc_servo_enable);
 	add("servosetoffset", &user_rpcserver::rpc_servo_setoffset);
 	add("servogetpulse", &user_rpcserver::rpc_servo_getpulse);
 	add("servogetpulsems", &user_rpcserver::rpc_servo_getpulsems);
-	add("getattitude", &user_rpcserver::rpc_getattitude);
-	add("start", &user_rpcserver::rpc_start);
-	add("stop", &user_rpcserver::rpc_stop);
+	add("sd_exit", &user_rpcserver::rpc_exit);
+	add("sd_run", &user_rpcserver::rpc_run);
+	add("sd_reset", &user_rpcserver::rpc_reset);
+	add("sd_get_thrust", &user_rpcserver::rpc_get_thrust);
+	add("sd_set_thrust", &user_rpcserver::rpc_set_thrust);
+	add("sd_get_motors", &user_rpcserver::rpc_get_motors);
+	add("sd_get_earth_g_vector", &user_rpcserver::rpc_get_earth_g);
+	add("sd_set_earth_g_vector", &user_rpcserver::rpc_set_earth_g);
+	add("sd_get_attitude", &user_rpcserver::rpc_get_attitude);
 	add("thrust", &user_rpcserver::rpc_thrust);
-	add("motors", &user_rpcserver::rpc_motors);
 	add("ki", &user_rpcserver::rpc_ki);
 	add("kd", &user_rpcserver::rpc_kd);
 	add("kp", &user_rpcserver::rpc_kp);
@@ -91,7 +95,7 @@ json::value user_rpcserver::rpc_help(http::server::connection_ptr connection, js
 	return call_method_name(connection, params[0], ignored, help);
 }
 
-json::value user_rpcserver::rpc_quit(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+json::value user_rpcserver::rpc_exit(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -100,7 +104,7 @@ json::value user_rpcserver::rpc_quit(http::server::connection_ptr connection, js
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "quit\n"
+	            "exit\n"
 	            "\nQuit server.";
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
@@ -223,7 +227,7 @@ json::value user_rpcserver::rpc_servo_getpulsems(http::server::connection_ptr co
 	return app_.servoctrl_->getpulse_ms(params[0].get_int());
 }
 
-json::value user_rpcserver::rpc_getattitude(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+json::value user_rpcserver::rpc_get_attitude(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -232,7 +236,7 @@ json::value user_rpcserver::rpc_getattitude(http::server::connection_ptr connect
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "getattitude\n"
+	            "sd_get_attitude\n"
 	            "\nGet the current attitude Quaternion."
 				"\n"
 				"Arguments:\n"
@@ -242,7 +246,7 @@ json::value user_rpcserver::rpc_getattitude(http::server::connection_ptr connect
 	return quaternion_to_json_value(app_.ctrl_thread_.get_attitude());
 }
 
-json::value user_rpcserver::rpc_start(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+json::value user_rpcserver::rpc_get_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -251,8 +255,49 @@ json::value user_rpcserver::rpc_start(http::server::connection_ptr connection, j
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "start\n"
-	            "\nStart the controller."
+	            "sd_get_earth_g_vector\n"
+	            "\nGet the the earth G vector when the body is completely leveled."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return  matrix_to_json_value(app_.attitude_tracker_->get_earth_g());
+}
+
+json::value user_rpcserver::rpc_set_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_array_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_set_earth_g_vector\n"
+	            "\nSet the the earth G vector when the body is completely leveled."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	Vector3d earth_g = matrix_from_json_value<double, 3, 1>(params[0]);
+	app_.attitude_tracker_->set_earth_g(earth_g);
+	return  matrix_to_json_value(app_.attitude_tracker_->get_earth_g());
+}
+
+
+json::value user_rpcserver::rpc_run(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_run\n"
+	            "\nRun the controller."
 				"\n"
 				"Arguments:\n"
 				;
@@ -262,7 +307,7 @@ json::value user_rpcserver::rpc_start(http::server::connection_ptr connection, j
 	return "Controller started.";
 }
 
-json::value user_rpcserver::rpc_stop(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+json::value user_rpcserver::rpc_reset(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -271,8 +316,8 @@ json::value user_rpcserver::rpc_stop(http::server::connection_ptr connection, js
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "stop\n"
-	            "\nStart the controller."
+	            "sd_reset\n"
+	            "\nStop the controller."
 				"\n"
 				"Arguments:\n"
 				;
@@ -375,7 +420,7 @@ json::value user_rpcserver::rpc_ki(http::server::connection_ptr connection, json
 	return app_.ctrl_thread_.pid_.Ki_;
 }
 
-json::value user_rpcserver::rpc_motors(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+json::value user_rpcserver::rpc_get_motors(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -384,7 +429,7 @@ json::value user_rpcserver::rpc_motors(http::server::connection_ptr connection, 
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "motors\n"
+	            "sd_get_motors\n"
 	            "\nGet motors state."
 				"\n"
 				"Arguments:\n"
@@ -421,6 +466,48 @@ json::value user_rpcserver::rpc_thrust(http::server::connection_ptr connection, 
 	verify_parameters(params, types, ARRAYSIZE(types));
 	if ((params[0].type() == json::real_type))
 		app_.ctrl_thread_.thrust_ = params[0].get_real();
+	return app_.ctrl_thread_.thrust_;
+}
+
+json::value user_rpcserver::rpc_get_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_thrust\n"
+	            "\nGet thrust."
+				"\nReturn the current thrust"
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return app_.ctrl_thread_.thrust_;
+}
+
+json::value user_rpcserver::rpc_set_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_set_thrust\n"
+	            "\nSet thrust."
+				"\nSet the current thrust will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. n          (real) New thrust from 0.0 to 1.0\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	app_.ctrl_thread_.thrust_ = params[0].get_real();
 	return app_.ctrl_thread_.thrust_;
 }
 

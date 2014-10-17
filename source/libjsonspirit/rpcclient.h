@@ -13,6 +13,10 @@ public:
 	~rpc_client();
 	json::value call(const std::string& url, const std::string& method, const json::array& params) throw(std::exception);
 	json::value call(const std::string& url, const std::string& method) throw(std::exception);
+	json::value call(const std::string& url, const std::string& method, const json::value& val1) throw(std::exception);
+	json::value call(const std::string& url, const std::string& method, const json::value& val1, const json::value& val2) throw(std::exception);
+	json::value call(const std::string& url, const std::string& method, const json::value& val1, const json::value& val2, const json::value& val3) throw(std::exception);
+
 	size_t get_failure_count();
 
 protected:

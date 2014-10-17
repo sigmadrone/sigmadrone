@@ -44,3 +44,29 @@ json::value rpc_client::call(const std::string& url, const std::string& method, 
 		throw std::runtime_error(rpc_response.get_obj()["error"].get_obj()["message"].get_str());
 	return rpc_response.get_obj()["result"];
 }
+
+json::value rpc_client::call(const std::string& url, const std::string& method, const json::value& val1) throw(std::exception)
+{
+	json::array params;
+	params.push_back(val1);
+	return call(url, method, params);
+}
+
+json::value rpc_client::call(const std::string& url, const std::string& method, const json::value& val1, const json::value& val2) throw(std::exception)
+{
+	json::array params;
+	params.push_back(val1);
+	params.push_back(val2);
+	return call(url, method, params);
+}
+
+json::value rpc_client::call(const std::string& url, const std::string& method, const json::value& val1, const json::value& val2, const json::value& val3) throw(std::exception)
+{
+	json::array params;
+	params.push_back(val1);
+	params.push_back(val2);
+	params.push_back(val3);
+	return call(url, method, params);
+}
+
+

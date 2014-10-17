@@ -34,7 +34,7 @@ int main(int argc, char **argv)
 	Glib::RefPtr<Gtk::Builder> refBuilder = Gtk::Builder::create();
 
 	try {
-		refBuilder->add_from_file("mainwindow.xml");
+		refBuilder->add_from_file("/home/mstoilov/workspace-yocto/sigmadrone/source/tools/flightdeck/mainwindow.xml");
 	} catch (const Glib::FileError& ex) {
 		std::cerr << "FileError: " << ex.what() << std::endl;
 		return 1;
