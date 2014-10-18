@@ -177,7 +177,7 @@ void RpcIdleFunction(void)
 	Matrix4f M;
 
 	try {
-		json::value val = rpcclient->call("/", "getattitude");
+		json::value val = rpcclient->call("/", "sd_get_attitude");
 		q = quaternion_from_json_value<double>(val);
 	} catch (std::exception& e) {
 		std::cout << "Error: " << e.what() << std::endl;

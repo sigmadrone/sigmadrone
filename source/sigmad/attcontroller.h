@@ -23,6 +23,7 @@ public:
 	virtual ~attcontroller();
 	void start();
 	void stop();
+	bool is_running();
 	QuaternionD get_attitude() const;
 
 protected:

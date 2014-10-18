@@ -17,21 +17,26 @@ public:
 
 	json::value rpc_spec(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_help(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
-	json::value rpc_quit(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_exit(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_myaddress(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_enable(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_rate(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_setoffset(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_getpulse(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_getpulsems(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
-	json::value rpc_getattitude(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
-	json::value rpc_start(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
-	json::value rpc_stop(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_get_attitude(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_get_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_set_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_run(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_get_running(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_reset(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_ki(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_kd(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_kp(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
-	json::value rpc_motors(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_get_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_set_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_get_motors(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 
 protected:
 	void jsonrpc_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);

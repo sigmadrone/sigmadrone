@@ -2,7 +2,7 @@
 
 attitudetracker::attitudetracker(double blend_g, Vector3d earth_g)
 	: blend_g_(blend_g)
-	, earth_g_(earth_g.normalize())
+	, earth_g_(earth_g)
 	, attitude_(QuaternionD::identity)
 {
 
@@ -19,7 +19,7 @@ Vector3d attitudetracker::get_earth_g() const
 
 void attitudetracker::set_earth_g(Vector3d earth_g)
 {
-	earth_g_ = earth_g.normalize();
+	earth_g_ = earth_g;
 }
 
 double attitudetracker::get_nlerp_blend() const
@@ -41,7 +41,7 @@ void attitudetracker::track_gyroscope(const Vector3d& omega, double dtime)
 
 void attitudetracker::track_accelerometer(const Vector3d& g)
 {
-	Vector3d g_estimated = attitude_.conjugated().rotate(earth_g_);
+	Vector3d g_estimated = attitude_.conjugated().rotate(earth_g_.normalize());
 	QuaternionD q = QuaternionD::fromVectors(g_estimated, g.normalize());
 	QuaternionD deltaq = QuaternionD::nlerp(QuaternionD::identity, q, blend_g_);
 	attitude_ = attitude_ * deltaq.conjugated(); // attitude_ * deltaq * ~attitude_ * attitude_;

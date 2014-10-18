@@ -1,4 +1,6 @@
+#include <cstring>
 #include <iostream>
+#include <syslog.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/thread.hpp>
@@ -22,6 +24,7 @@ server_app::server_app(const cmd_args& args)
 	// provided all registration for the specified signal is made through Asio.
 	signals_.add(SIGINT);
 	signals_.add(SIGTERM);
+	signals_.add(SIGHUP);
 #if defined(SIGQUIT)
 	signals_.add(SIGQUIT);
 #endif // defined(SIGQUIT)
@@ -35,7 +38,8 @@ server_app::~server_app()
 
 void server_app::signal_handler_terminate()
 {
-	user_rpcserver_->stop();
+	user_rpcserver_->stop(100);
+	io_service_.stop();
 	log_info_message("Received terminate signal.");
 }
 
@@ -119,7 +123,18 @@ void server_app::init_attitude_tracker()
 int server_app::run(int argc, const char *argv[])
 {
 	if (args_.get_value("daemon") == "1") {
+		// Inform the io_service that we are about to become a daemon. The
+		// io_service cleans up any internal resources, such as threads, that may
+		// interfere with forking.
+		io_service_.notify_fork(boost::asio::io_service::fork_prepare);
+
 		daemon_init();
+
+		// Inform the io_service that we have finished becoming a daemon. The
+		// io_service uses this opportunity to create any internal file descriptors
+		// that need to be private to the new process.
+		io_service_.notify_fork(boost::asio::io_service::fork_child);
+
 		/*
 		 * Redirect stdout and stderr to
 		 * the log file.
