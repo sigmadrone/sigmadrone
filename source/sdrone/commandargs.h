@@ -45,9 +45,6 @@ public:
 	std::string GetImuInputFile() const {
 		return m_cmdArgs.get_value("infile");
 	}
-	std::string GetServoOutputFile() const {
-		return m_cmdArgs.get_value("outfile");
-	}
 	bool GetLogRate(double* doubleVal) const {
 		return GetValueAsDouble("lograte",doubleVal);
 	}

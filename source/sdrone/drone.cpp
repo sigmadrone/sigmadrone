@@ -268,6 +268,26 @@ int Drone::Run(CommandLineArgs& args)
 			SdJsonValue(),
 			RpcParams::BuildJsonVector3d(Vector3d(0,0,1)));
 
+	m_rpcDispatch->AddRequestCallback(
+				SdCommandCodeToString(SD_COMMAND_SET_MOTORS),
+				OnRpcCommandSetMotors,
+				this,
+				RpcParams::BuildJsonVector4d(Vector4d(0,0,0,0)));
+
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_MOTORS),
+			OnRpcCommandGetMotors,
+			this,
+			SdJsonValue(),
+			RpcParams::BuildJsonVector4d(Vector4d(0,0,0,0)));
+
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_IS_RUNNING),
+			OnRpcCommandIsRunning,
+			this,
+			SdJsonValue(),
+			SdJsonValue(false));
+
 	//
 	// Execute the command that came with the command line
 	//
@@ -474,7 +494,6 @@ void Drone::OnRpcCommandRun(
 	} else {
 		rep->Results.SetValueAsInt(0);
 	}
-	rep->Id = req->Id;
 }
 
 void Drone::OnRpcCommandExit(
@@ -489,7 +508,6 @@ void Drone::OnRpcCommandExit(
 	} else {
 		rep->Results.SetValueAsInt(0);
 	}
-	rep->Id = req->Id;
 }
 
 void Drone::OnRpcCommandReset(
@@ -504,7 +522,6 @@ void Drone::OnRpcCommandReset(
 	} else {
 		rep->Results.SetValueAsInt(0);
 	}
-	rep->Id = req->Id;
 }
 
 void Drone::OnRpcCommandGetConfig(
@@ -518,7 +535,6 @@ void Drone::OnRpcCommandGetConfig(
 	if (!RpcParams::BuildJsonDroneConfig(&rep->Results,Only()->m_droneConfig.m_config,0)) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
 	}
-	rep->Id = req->Id;
 }
 
 void Drone::OnRpcCommandPing(
@@ -538,7 +554,6 @@ void Drone::OnRpcCommandPing(
 		printf("WARN: %s\n", rep->ErrorMessage.c_str());
 		rep->ErrorCode = SD_JSONRPC_ERROR_INVALID_METHOD_PARAMS;
 	}
-	rep->Id = req->Id;
 }
 
 void Drone::OnRpcCommandSetConfig(
@@ -559,7 +574,6 @@ void Drone::OnRpcCommandSetConfig(
 		}
 		rep->Results.SetValueAsInt(0);
 	}
-	rep->Id = req->Id;
 }
 
 void Drone::OnRpcCommandSetThrust(
@@ -581,7 +595,6 @@ void Drone::OnRpcCommandSetThrust(
 			rep->Results.SetValueAsInt(0);
 		}
 	}
-	rep->Id = req->Id;
 }
 
 void Drone::OnRpcCommandGetThrust(
@@ -593,7 +606,6 @@ void Drone::OnRpcCommandGetThrust(
 	RpcParams::BuildJsonThrustParams(&rep->Results,thrust.Thrust(),
 			thrust.MinThrust(),thrust.MaxThrust());
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
-	rep->Id = req->Id;
 }
 
 void Drone::OnRpcCommandSetTargetAttitude(
@@ -616,7 +628,6 @@ void Drone::OnRpcCommandSetTargetAttitude(
 			rep->Results.SetValueAsInt(0);
 		}
 	}
-	rep->Id = req->Id;
 }
 
 void Drone::OnRpcCommandGetAttitude(
@@ -627,7 +638,6 @@ void Drone::OnRpcCommandGetAttitude(
 	SdIoData data;
 	PluginCommandParams params(SD_COMMAND_GET_ATTITUDE,data,0);
 	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
-	rep->Id = req->Id;
 	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
 		if (params.OutParams().dataType == SdIoData::TYPE_QUATERNION) {
 			rep->Results = RpcParams::BuildJsonQuaternion(
@@ -659,7 +669,6 @@ void Drone::OnRpcCommandSetGVector(
 			rep->Results.SetValueAsInt(0);
 		}
 	}
-	rep->Id = req->Id;
 }
 
 void Drone::OnRpcCommandGetGVector(
@@ -670,13 +679,50 @@ void Drone::OnRpcCommandGetGVector(
 	SdIoData data;
 	PluginCommandParams params(SD_COMMAND_GET_EARTH_G_VECTOR,data,0);
 	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
-	rep->Id = req->Id;
 	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
 		if (params.OutParams().dataType == SdIoData::TYPE_VECTOR3D) {
 			rep->Results = RpcParams::BuildJsonVector3d(
 					*(params.OutParams().asVector3d));
 			rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 		}
+	}
+}
+
+void Drone::OnRpcCommandIsRunning(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	rep->Results = SdJsonValue(Only()->IsRunning());
+}
+
+void Drone::OnRpcCommandGetMotors(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	SdIoData data;
+	Vector4d motors;
+	PluginCommandParams params(SD_COMMAND_GET_MOTORS,data,0,SdIoData(&motors));
+	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
+		rep->Results = RpcParams::BuildJsonVector4d(motors);
+		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	}
+}
+
+void Drone::OnRpcCommandSetMotors(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	Vector4d reqParams = RpcParams::ParseJsonVector4d(req->Params);
+	SdIoData data(&reqParams);
+	PluginCommandParams params(SD_COMMAND_SET_MOTORS,data,0);
+	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
+		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 	}
 }
 

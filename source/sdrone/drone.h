@@ -129,6 +129,18 @@ private:
 			void* Context,
 			const SdJsonRpcRequest*,
 			SdJsonRpcReply*);
+	static void OnRpcCommandIsRunning(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandGetMotors(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
+	static void OnRpcCommandSetMotors(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
 
 	static void fatal_error_signal(int sig);
 

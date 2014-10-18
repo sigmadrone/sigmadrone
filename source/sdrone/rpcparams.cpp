@@ -297,6 +297,7 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 
 	int32_t intVal;
 	double doubleVal;
+	std::string infile = cmdArgs.GetImuInputFile();
 	if (cmdArgs.GetMaxDps(&intVal) ||
 		cmdArgs.GetImuSamplingRage(&intVal) ||
 		cmdArgs.GetImuInputFile().length() > 0 ||
@@ -329,7 +330,6 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 		if (cmdArgs.GetAccelWatermark(&intVal)) {
 			jobjAccConfig.AddMember("Watermark",intVal);
 		}
-		std::string infile = cmdArgs.GetImuInputFile();
 		if (infile.length() > 0) {
 			jobjGyroConfig.AddMember("DeviceName",SdJsonValue(infile));
 			jobjAccConfig.AddMember("DeviceName",SdJsonValue(infile));
@@ -347,14 +347,12 @@ bool BuildJsonDroneConfigFromCmdLineArgs(
 		}
 	}
 
-	std::string outfile = cmdArgs.GetServoOutputFile();
-	if (outfile.length() > 0) {
+	if (infile.length() > 0) {
 		SdJsonObject jobjServoConfig;
 		if (jobjDroneConfig.GetMember("Servo")->GetType() == SD_JSONVALUE_OBJECT) {
 			jobjServoConfig = *(SdJsonObject*)jobjDroneConfig.GetMember("Servo")->AsObject();
 		}
-		jobjServoConfig.AddMember("DeviceName",
-				SdJsonValue(outfile));
+		jobjServoConfig.AddMember("DeviceName",SdJsonValue("replay"));
 		jobjDroneConfig.AddMember("Servo", SdJsonValue(jobjServoConfig));
 	}
 	if (cmdArgs.GetLogRate(&doubleVal)) {

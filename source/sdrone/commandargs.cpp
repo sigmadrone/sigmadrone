@@ -25,7 +25,6 @@ static cmd_arg_spec s_argSpec[] = {
 		{"lograte",     "",	 "How many times to log per second", CMD_ARG_STRING},
 		{"logfile",     "",	 "Capture daemon output to file", CMD_ARG_STRING},
 		{"infile",      "",	 "Input file for sensor readings (testing only)", CMD_ARG_STRING},
-		{"outfile",     "",	 "Output file for servo commands (testing only)", CMD_ARG_STRING},
 		{"imuangle",    "",	 "Yaw angle between sensor's and motor's axis", CMD_ARG_STRING},
 		{"Kp",          "",	 "PID controller proportional coefficient", CMD_ARG_STRING},
 		{"Ki",          "",	 "PID controller integral coefficient", CMD_ARG_STRING},

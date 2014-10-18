@@ -38,6 +38,36 @@ int ServoDevicePlugin::ExecuteCommand(
 	case SD_COMMAND_EXIT:
 		Stop(true);
 		break;
+	case SD_COMMAND_GET_MOTORS: {
+		if (params->OutParams().dataType == SdIoData::TYPE_VECTOR4D) {
+			int j = 0;
+			Vector4d& outData = *(Vector4d*)params->OutParams().asVector4d;
+			for (size_t i = 0; i < servoctrl_->channelcount() && j < 4; ++i) {
+				if (servoctrl_->motor(i).valid()) {
+					outData.at(j++,0) = servoctrl_->motor(i).offset();
+				}
+			}
+		}
+		break;
+	}
+	case SD_COMMAND_SET_MOTORS: {
+		if (params->Params().dataType == SdIoData::TYPE_VECTOR4D) {
+			try {
+				int j = 0;
+				const Vector4d& inData = *params->Params().asVector4d;
+				for (size_t i = 0; i < servoctrl_->channelcount() && j < 4; ++i) {
+					if (servoctrl_->motor(i).valid()) {
+						servoctrl_->motor(i).offset(inData.at(j++,0));
+					}
+				}
+				servoctrl_->update();
+			} catch (std::exception& e) {
+				printf("ServoDevicePlugin::SetMotors error: %s\n", e.what());
+				err = EINVAL;
+			}
+		}
+		break;
+	}
 	default:break;
 	}
 	return err;
@@ -49,7 +79,7 @@ int ServoDevicePlugin::Start(const SdDroneConfig* droneConfig)
 	int err = 0;
 
 	try {
-		if (0 != config->DeviceName.find("/dev/")){
+		if (std::string::npos == config->DeviceName.find("/dev/")){
 			fprintf(stdout,"ServoDevice is operating in text mode.\n");
 			servoctrl_.reset(new servocontroller(16));
 		} else  {

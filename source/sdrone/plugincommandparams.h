@@ -13,6 +13,9 @@ struct PluginCommandParams: public SdCommandParams
 	PluginCommandParams(SdCommandCode cmdCode, const SdIoData& data,
 			const IJsonValue* rpcParams) : m_cmdCode(cmdCode),
 					m_inParams(data), m_rpcParams(rpcParams) {}
+	PluginCommandParams(SdCommandCode cmdCode, const SdIoData& inData,
+			const IJsonValue* rpcParams, const SdIoData& outData) : m_cmdCode(cmdCode),
+				m_inParams(inData), m_outParams(outData), m_rpcParams(rpcParams) {}
 	PluginCommandParams(SdCommandCode cmdCode) : m_cmdCode(cmdCode),
 			m_inParams(nullSdIoData), m_rpcParams(0) {}
 	~PluginCommandParams() {}
