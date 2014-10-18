@@ -42,7 +42,7 @@ int ImuBias::ExecuteCommand(
 	int err = SD_ESUCCESS;
 	switch (params->CommandCode()) {
 	case SD_COMMAND_RUN:
-		err = Start(params->Params().asDroneConfig);
+		err = Start(&params->Params().asDroneConfig());
 		break;
 	case SD_COMMAND_EXIT:
 		m_Runtime->DetachPlugin();
@@ -139,8 +139,8 @@ int ImuBias::IoCallback(
 				m_GyroBias.at(0,0), m_GyroBias.at(1,0), m_GyroBias.at(2,0));
 	}
 	Vector3d gyroNoBias = ioPacket->GyroData()-m_GyroBias;
-	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(&gyroNoBias));
-	ioPacket->SetAttribute(SDIO_ATTR_EARTH_G,SdIoData(&m_EarthG));
+	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(gyroNoBias));
+	ioPacket->SetAttribute(SDIO_ATTR_EARTH_G,SdIoData(m_EarthG));
 
 	return SD_ESUCCESS;
 }

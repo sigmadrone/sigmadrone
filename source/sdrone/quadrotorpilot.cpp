@@ -49,7 +49,7 @@ int QuadRotorPilot::ExecuteCommand(
 	int err = SD_ESUCCESS;
 	switch (params->CommandCode()) {
 	case SD_COMMAND_RUN:
-		err = Start(params->Params().asDroneConfig);
+		err = Start(&params->Params().asDroneConfig());
 		break;
 	case SD_COMMAND_RESET:
 		Stop(false);
@@ -58,9 +58,9 @@ int QuadRotorPilot::ExecuteCommand(
 		Stop(true);
 		break;
 	case SD_COMMAND_SET_THRUST:
-		SetMinRev(params->Params().asThrust->MinThrust());
-		SetMaxRev(params->Params().asThrust->MaxThrust());
-		m_DesiredRev = fmax(fmin(m_MaxRev,params->Params().asThrust->Thrust()),m_MinRev);
+		SetMinRev(params->Params().asThrust().MinThrust());
+		SetMaxRev(params->Params().asThrust().MaxThrust());
+		m_DesiredRev = fmax(fmin(m_MaxRev,params->Params().asThrust().Thrust()),m_MinRev);
 		break;
 	default:break;
 	}
@@ -165,7 +165,7 @@ int QuadRotorPilot::IoCallback(
 		 *  Set the motor values in the IO structures so it can be used by the
 		 *  rest of the chain
 		 */
-		ioPacket->SetAttribute(SDIO_ATTR_MOTORS,SdIoData(&m_Motors));
+		ioPacket->SetAttribute(SDIO_ATTR_MOTORS,SdIoData(m_Motors));
 	} else {
 		assert(false);
 	}
@@ -190,7 +190,7 @@ int QuadRotorPilot::IssueCommandToServo()
 			servoData.channels[i] = m_Config.Motor[i];
 			servoData.value[i] = m_Motors.at(i,0);
 		}
-		ioPacket->SetIoData(SdIoData(&servoData),true);
+		ioPacket->SetIoData(SdIoData(servoData),true);
 		err = m_Runtime->DispatchIo(ioPacket,SD_FLAG_DISPATCH_DOWN);
 		m_Runtime->FreeIoPacket(ioPacket);
 	} else {
@@ -323,12 +323,12 @@ int QuadRotorPilot::UpdateState(
 	m_AngAccel = angAccel;
 	m_Omega = currentOmega;
 
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_PID,SdIoData(&m_ErrorAxisPid));
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_P,SdIoData(&m_ErrorP));
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_I,SdIoData(&m_ErrorI));
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_D,SdIoData(&m_ErrorD));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_PID,SdIoData(m_ErrorAxisPid));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_P,SdIoData(m_ErrorP));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_I,SdIoData(m_ErrorI));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_D,SdIoData(m_ErrorD));
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_ANGLE,SdIoData(angleDeg));
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_OMEGA,SdIoData(&omegaErrPid));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_OMEGA,SdIoData(omegaErrPid));
 
 	return retVal;
 }

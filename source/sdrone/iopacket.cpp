@@ -89,37 +89,37 @@ SdIoData IoPacket::GetAttribute(
 {
 	switch (attributeType) {
 	case SDIO_ATTR_ATTITUDE_Q:
-		return SdIoData(&m_attitudeQ);
+		return SdIoData(m_attitudeQ);
 	case SDIO_ATTR_TARGET_Q:
-		return SdIoData(&m_targetQ);
+		return SdIoData(m_targetQ);
 	case SDIO_ATTR_GYRO:
-		return SdIoData(&m_gyroDataDps);
+		return SdIoData(m_gyroDataDps);
 	case SDIO_ATTR_ACCEL:
-		return SdIoData(&m_accelData);
+		return SdIoData(m_accelData);
 	case SDIO_ATTR_MAG:
-		return SdIoData(&m_magData);
+		return SdIoData(m_magData);
 	case SDIO_ATTR_EARTH_G:
-		return SdIoData(&m_earthG);
+		return SdIoData(m_earthG);
 	case SDIO_ATTR_MOTORS:
-		return SdIoData(&m_motors);
+		return SdIoData(m_motors);
 	case SDIO_ATTR_ERR_PID:
-		return SdIoData(&m_errAxisPid);
+		return SdIoData(m_errAxisPid);
 	case SDIO_ATTR_ERR_P:
-		return SdIoData(&m_errAxisP);
+		return SdIoData(m_errAxisP);
 	case SDIO_ATTR_ERR_I:
-		return SdIoData(&m_errAxisI);
+		return SdIoData(m_errAxisI);
 	case SDIO_ATTR_ERR_D:
-		return SdIoData(&m_errAxisD);
+		return SdIoData(m_errAxisD);
 	case SDIO_ATTR_ERR_ANGLE:
 		return SdIoData(m_errAngle);
 	case SDIO_ATTR_DELTA_TIME:
 		return SdIoData(m_deltaTime);
 	case SDIO_ATTR_CORR_VELOCITY:
-		return SdIoData(&m_velocityFromAcc);
+		return SdIoData(m_velocityFromAcc);
 	case SDIO_ATTR_TIME_TO_READ_SENSORS:
 		return SdIoData(m_timeToReadSensors);
 	case SDIO_ATTR_ERR_OMEGA:
-		return SdIoData(&m_errOmega);
+		return SdIoData(m_errOmega);
 	case SDIO_ATTR_ALTITUDE:
 	case SDIO_ATTR_TEMPERATURE:
 	case SDIO_ATTR_COORDINATES:
@@ -179,11 +179,10 @@ int IoPacket::SetAttrVector3d(
 		const SdIoData& data,
 		Vector3d* v)
 {
-	if (data.dataType != SdIoData::TYPE_VECTOR3D ||
-		data.asVector3d == 0) {
+	if (data.dataType()!= SdIoData::TYPE_VECTOR3D) {
 		return EINVAL;
 	}
-	*v = *data.asVector3d;
+	*v = data.asVector3d();
 	return SD_ESUCCESS;
 }
 
@@ -191,11 +190,10 @@ int IoPacket::SetAttrVector4d(
 		const SdIoData& data,
 		Vector4d* v)
 {
-	if (data.dataType != SdIoData::TYPE_VECTOR4D ||
-		data.asVector4d == 0) {
+	if (data.dataType() != SdIoData::TYPE_VECTOR4D) {
 		return EINVAL;
 	}
-	*v = *data.asVector4d;
+	*v = data.asVector4d();
 	return SD_ESUCCESS;
 }
 
@@ -203,11 +201,10 @@ int IoPacket::SetAttrQ(
 		const SdIoData& data,
 		QuaternionD* q)
 {
-	if (data.dataType != SdIoData::TYPE_QUATERNION ||
-		0 == data.asQuaternion) {
+	if (data.dataType()!= SdIoData::TYPE_QUATERNION) {
 		return EINVAL;
 	}
-	*q = *data.asQuaternion;
+	*q = data.asQuaternion();
 	return SD_ESUCCESS;
 }
 
@@ -215,9 +212,9 @@ int IoPacket::SetAttrDouble(
 		const SdIoData& data,
 		double* d)
 {
-	if (data.dataType != SdIoData::TYPE_DOUBLE) {
+	if (data.dataType()!= SdIoData::TYPE_DOUBLE) {
 		return EINVAL;
 	}
-	*d = data.asDouble;
+	*d = data.asDouble();
 	return SD_ESUCCESS;
 }

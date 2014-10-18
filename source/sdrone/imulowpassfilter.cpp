@@ -106,12 +106,7 @@ int ImuLowPassFilter::IoCallback(
 	accelData.at(1,0) = m_AccelFilt.GetOutput()[1];
 	accelData.at(2,0) = m_AccelFilt.GetOutput()[2];
 	accelData = accelData.normalize();
-	ioPacket->SetAttribute(SDIO_ATTR_ACCEL, SdIoData(&accelData));
-#if 0
-	Vector3d gyroData = ioPacket->GyroData();
-	gyroData = m_GyroFilt.DoFilter(gyroData);
-	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(&gyroData));
-#endif
+	ioPacket->SetAttribute(SDIO_ATTR_ACCEL, SdIoData(accelData));
 	return SD_ESUCCESS;
 }
 

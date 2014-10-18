@@ -52,7 +52,7 @@ int ImuReader::ExecuteCommand(SdCommandParams* params)
 	int err = SD_ESUCCESS;
 	switch(params->CommandCode()) {
 	case SD_COMMAND_RUN:
-		err = Run(params->Params().asDroneConfig);
+		err = Run(&params->Params().asDroneConfig());
 		break;
 	case SD_COMMAND_RESET:
 		m_RunTime->StartStopIoDispatchThread(false);
@@ -222,7 +222,7 @@ int ImuReader::IoDispatchThread()
 				SdIoData(DeltaT()));
 	}
 
-	ioPacket->SetIoData(SdIoData(&imuData),true);
+	ioPacket->SetIoData(SdIoData(imuData),true);
 
 	if (m_sensorLog) {
 		fprintf(m_sensorLog, "%10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    "
@@ -231,15 +231,15 @@ int ImuReader::IoDispatchThread()
 				imuData.gyro3d.at(0, 0), imuData.gyro3d.at(1, 0), imuData.gyro3d.at(2, 0),
 				imuData.mag3d.at(0, 0), imuData.mag3d.at(1, 0), imuData.mag3d.at(2, 0),
 				pressure,
-				ioPacket->GetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS).asDouble);
+				ioPacket->GetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS).asDouble());
 		fflush(m_sensorLog);
 	}
 
 	imuData.acc3d = imuData.acc3d.normalize();
 	imuData.mag3d = imuData.mag3d.normalize();
-	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(&imuData.acc3d));
-	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(&imuData.gyro3d));
-	ioPacket->SetAttribute(SDIO_ATTR_MAG,SdIoData(&imuData.mag3d));
+	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(imuData.acc3d));
+	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(imuData.gyro3d));
+	ioPacket->SetAttribute(SDIO_ATTR_MAG,SdIoData(imuData.mag3d));
 	ret = m_RunTime->DispatchIo(ioPacket,0);
 
 	__return:

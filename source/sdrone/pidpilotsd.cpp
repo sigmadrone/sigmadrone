@@ -48,7 +48,7 @@ int PidPilot::ExecuteCommand(
 	int err = SD_ESUCCESS;
 	switch (params->CommandCode()) {
 	case SD_COMMAND_RUN:
-		err = Start(params->Params().asDroneConfig);
+		err = Start(&params->Params().asDroneConfig());
 		break;
 	case SD_COMMAND_RESET:
 		Stop(false);
@@ -57,9 +57,9 @@ int PidPilot::ExecuteCommand(
 		Stop(true);
 		break;
 	case SD_COMMAND_SET_THRUST:
-		SetMinRev(params->Params().asThrust->MinThrust());
-		SetMaxRev(params->Params().asThrust->MaxThrust());
-		m_targetThrust = fmax(fmin(m_maxThrust,params->Params().asThrust->Thrust()),m_minThrust);
+		SetMinRev(params->Params().asThrust().MinThrust());
+		SetMaxRev(params->Params().asThrust().MaxThrust());
+		m_targetThrust = fmax(fmin(m_maxThrust,params->Params().asThrust().Thrust()),m_minThrust);
 		break;
 	default:break;
 	}
@@ -149,7 +149,7 @@ int PidPilot::IoCallback(
 		 *  Set the motor values in the IO structures so it can be used by the
 		 *  rest of the chain
 		 */
-		ioPacket->SetAttribute(SDIO_ATTR_MOTORS,SdIoData(&m_motors));
+		ioPacket->SetAttribute(SDIO_ATTR_MOTORS,SdIoData(m_motors));
 	} else {
 		assert(false);
 	}
@@ -174,7 +174,7 @@ int PidPilot::IssueCommandToServo()
 			servoData.channels[i] = m_config.Motor[i];
 			servoData.value[i] = m_motors.at(i,0);
 		}
-		ioPacket->SetIoData(SdIoData(&servoData),true);
+		ioPacket->SetIoData(SdIoData(servoData),true);
 		err = m_runtime->DispatchIo(ioPacket,SD_FLAG_DISPATCH_DOWN);
 		m_runtime->FreeIoPacket(ioPacket);
 	} else {
@@ -191,7 +191,7 @@ int PidPilot::UpdateState(
 	QuaternionD attitudeQ = ioPacket->Attitude();
 	const QuaternionD targetQ = ioPacket->TargetAttitude();
 	int retVal = 0;
-	Vector3d _currentOmega = *(ioPacket->GetAttribute(SDIO_ATTR_GYRO).asVector3d);
+	Vector3d _currentOmega = ioPacket->GetAttribute(SDIO_ATTR_GYRO).asVector3d();
 
 	Vector3d torqueRPM;
 
@@ -223,8 +223,7 @@ int PidPilot::UpdateState(
 			m_motors.at(2,0),
 			m_motors.at(3,0));
 
-
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_PID,SdIoData(&torqueRPM));
+	ioPacket->SetAttribute(SDIO_ATTR_ERR_PID,SdIoData(torqueRPM));
 #if 0
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_P,SdIoData(&m_ErrorP));
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_I,SdIoData(&m_ErrorI));

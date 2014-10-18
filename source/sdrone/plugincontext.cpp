@@ -223,7 +223,7 @@ void PluginContext::FreeIoPacket(
 }
 
 void PluginContext::ExecuteCommandNotify(SdCommandParams* args) {
-	if (args->Params().dataType == SdIoData::TYPE_DRONE_CONFIG) {
-		m_logLevel = args->Params().asDroneConfig->LogLevel;
+	if (args->Params().dataType() == SdIoData::TYPE_DRONE_CONFIG) {
+		m_logLevel = args->Params().asDroneConfig().LogLevel;
 	}
 }

@@ -53,10 +53,7 @@ int Navigator::ExecuteCommand(
 		m_Runtime->DetachPlugin();
 		break;
 	case SD_COMMAND_SET_ATTITUDE:
-		m_TargetAttitude = *params->Params().asQuaternion;
-		break;
-	case SD_COMMAND_GET_ATTITUDE:
-		params->SetOutParams(SdIoData(&m_TargetAttitude));
+		m_TargetAttitude = params->Params().asQuaternion();
 		break;
 	default:break;
 	}
@@ -109,7 +106,7 @@ int Navigator::IoCallback(SdIoPacket* ioPacket)
 			//
 			// Set up the target quaternion
 			//
-			ioPacket->SetAttribute(SDIO_ATTR_TARGET_Q,SdIoData(&m_TargetAttitude));
+			ioPacket->SetAttribute(SDIO_ATTR_TARGET_Q,SdIoData(m_TargetAttitude));
 		}
 		break;
 	case SD_DEVICEID_GPS: // TODO

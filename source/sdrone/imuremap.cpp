@@ -40,7 +40,7 @@ int ImuRemap::ExecuteCommand(
 	int err = SD_ESUCCESS;
 	switch (params->CommandCode()) {
 	case SD_COMMAND_RUN:
-		err = Start(params->Params().asDroneConfig);
+		err = Start(&params->Params().asDroneConfig());
 		break;
 	case SD_COMMAND_EXIT:
 		m_Runtime->DetachPlugin();
@@ -103,9 +103,9 @@ int ImuRemap::IoCallback(
 	Vector3d accelData = m_AccelMap * ioPacket->AccelData();
 	Vector3d gyroData = m_GyroMap * ioPacket->GyroData();
 	Vector3d magData = m_MagMap * ioPacket->MagData();
-	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(&accelData));
-	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(&gyroData));
-	ioPacket->SetAttribute(SDIO_ATTR_MAG,SdIoData(&magData));
+	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(accelData));
+	ioPacket->SetAttribute(SDIO_ATTR_GYRO,SdIoData(gyroData));
+	ioPacket->SetAttribute(SDIO_ATTR_MAG,SdIoData(magData));
 	return SD_ESUCCESS;
 }
 

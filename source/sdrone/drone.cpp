@@ -351,7 +351,7 @@ int Drone::OnRun(const IJsonValue* rpcParams)
 	int err = 0;
 	if (!m_isRunning) {
 		LoadUnloadPlugins();
-		SdIoData data(&m_droneConfig.m_config);
+		SdIoData data(m_droneConfig.m_config);
 		PluginCommandParams params(SD_COMMAND_RUN,data,rpcParams);
 		m_droneConfig.PrintConfig();
 		if (0 == (err = m_pluginChain.ExecuteCommand(&params, 0))) {
@@ -365,7 +365,7 @@ int Drone::OnRun(const IJsonValue* rpcParams)
 
 int Drone::OnSetThrust(const SdThrustValues& thrustVals)
 {
-	SdIoData data(&thrustVals);
+	SdIoData data(thrustVals);
 	printf("Setting thrust %.3f, min %.3f, max %.3f\n",
 			thrustVals.Thrust(), thrustVals.MinThrust(),
 			thrustVals.MaxThrust());
@@ -378,7 +378,7 @@ int Drone::OnSetConfig(
 		const SdDroneConfig& config,
 		const IJsonValue* rpcParams)
 {
-	SdIoData data(&config);
+	SdIoData data(config);
 	PluginCommandParams params(SD_COMMAND_SET_CONFIG,data,rpcParams);
 	m_droneConfig.m_config = config;
 	return m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
@@ -386,7 +386,7 @@ int Drone::OnSetConfig(
 
 int Drone::OnSetTargetQuaternion(const QuaternionD& targetQ)
 {
-	SdIoData data(&targetQ);
+	SdIoData data(targetQ);
 	PluginCommandParams params(SD_COMMAND_SET_ATTITUDE,data,0);
 	return m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 }
@@ -635,13 +635,12 @@ void Drone::OnRpcCommandGetAttitude(
 		const SdJsonRpcRequest* req,
 		SdJsonRpcReply* rep)
 {
-	SdIoData data;
-	PluginCommandParams params(SD_COMMAND_GET_ATTITUDE,data,0);
+	PluginCommandParams params(SD_COMMAND_GET_ATTITUDE);
 	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
-		if (params.OutParams().dataType == SdIoData::TYPE_QUATERNION) {
+		if (params.OutParams().dataType() == SdIoData::TYPE_QUATERNION) {
 			rep->Results = RpcParams::BuildJsonQuaternion(
-					*(params.OutParams().asQuaternion));
+					params.OutParams().asQuaternion());
 			rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 		}
 	}
@@ -659,8 +658,7 @@ void Drone::OnRpcCommandSetGVector(
 	if (0 == earthG.lengthSq()) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
 	} else {
-		SdIoData data(&earthG);
-		PluginCommandParams params(SD_COMMAND_SET_EARTH_G_VECTOR,data,0);
+		PluginCommandParams params(SD_COMMAND_SET_EARTH_G_VECTOR,SdIoData(earthG),0);
 		int err = Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN);
 		if (0 != err) {
 			rep->ErrorCode = SD_JSONRPC_ERROR_APP;
@@ -676,13 +674,12 @@ void Drone::OnRpcCommandGetGVector(
 		const SdJsonRpcRequest* req,
 		SdJsonRpcReply* rep)
 {
-	SdIoData data;
-	PluginCommandParams params(SD_COMMAND_GET_EARTH_G_VECTOR,data,0);
+	PluginCommandParams params(SD_COMMAND_GET_EARTH_G_VECTOR);
 	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
-		if (params.OutParams().dataType == SdIoData::TYPE_VECTOR3D) {
+		if (params.OutParams().dataType()== SdIoData::TYPE_VECTOR3D) {
 			rep->Results = RpcParams::BuildJsonVector3d(
-					*(params.OutParams().asVector3d));
+					params.OutParams().asVector3d());
 			rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 		}
 	}
@@ -702,13 +699,13 @@ void Drone::OnRpcCommandGetMotors(
 		const SdJsonRpcRequest* req,
 		SdJsonRpcReply* rep)
 {
-	SdIoData data;
-	Vector4d motors;
-	PluginCommandParams params(SD_COMMAND_GET_MOTORS,data,0,SdIoData(&motors));
+	PluginCommandParams params(SD_COMMAND_GET_MOTORS);
 	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
-		rep->Results = RpcParams::BuildJsonVector4d(motors);
-		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+		if (params.OutParams().dataType() == SdIoData::TYPE_VECTOR4D) {
+			rep->Results = RpcParams::BuildJsonVector4d(params.OutParams().asVector4d());
+			rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+		}
 	}
 }
 
@@ -718,8 +715,7 @@ void Drone::OnRpcCommandSetMotors(
 		SdJsonRpcReply* rep)
 {
 	Vector4d reqParams = RpcParams::ParseJsonVector4d(req->Params);
-	SdIoData data(&reqParams);
-	PluginCommandParams params(SD_COMMAND_SET_MOTORS,data,0);
+	PluginCommandParams params(SD_COMMAND_SET_MOTORS,SdIoData(reqParams),0);
 	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;

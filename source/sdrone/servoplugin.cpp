@@ -30,7 +30,7 @@ int ServoDevicePlugin::ExecuteCommand(
 	int err = SD_ESUCCESS;
 	switch (params->CommandCode()) {
 	case SD_COMMAND_RUN:
-		err = Start(params->Params().asDroneConfig);
+		err = Start(&params->Params().asDroneConfig());
 		break;
 	case SD_COMMAND_RESET:
 		Stop(false);
@@ -39,22 +39,20 @@ int ServoDevicePlugin::ExecuteCommand(
 		Stop(true);
 		break;
 	case SD_COMMAND_GET_MOTORS: {
-		if (params->OutParams().dataType == SdIoData::TYPE_VECTOR4D) {
-			int j = 0;
-			Vector4d& outData = *(Vector4d*)params->OutParams().asVector4d;
-			for (size_t i = 0; i < servoctrl_->channelcount() && j < 4; ++i) {
-				if (servoctrl_->motor(i).valid()) {
-					outData.at(j++,0) = servoctrl_->motor(i).offset();
-				}
+		Vector4d outData;
+		for (size_t i = 0, j = 0; i < servoctrl_->channelcount() && j < 4; ++i) {
+			if (servoctrl_->motor(i).valid()) {
+				outData.at(j++,0) = servoctrl_->motor(i).offset();
 			}
 		}
+		params->SetOutParams(SdIoData(outData));
 		break;
 	}
 	case SD_COMMAND_SET_MOTORS: {
-		if (params->Params().dataType == SdIoData::TYPE_VECTOR4D) {
+		if (params->Params().dataType()== SdIoData::TYPE_VECTOR4D) {
 			try {
 				int j = 0;
-				const Vector4d& inData = *params->Params().asVector4d;
+				const Vector4d& inData = params->Params().asVector4d();
 				for (size_t i = 0; i < servoctrl_->channelcount() && j < 4; ++i) {
 					if (servoctrl_->motor(i).valid()) {
 						servoctrl_->motor(i).offset(inData.at(j++,0));
@@ -180,16 +178,15 @@ int ServoDevicePlugin::IoCallback(
 	SdIoPacket* ioPacket)
 {
 	const SdIoData& ioData = ioPacket->GetIoData(true);
-	if (ioData.dataType != SdIoData::TYPE_SERVO ||
-		0 == ioData.asServoData) {
+	if (ioData.dataType()!= SdIoData::TYPE_SERVO) {
 		return EINVAL;
 	}
-	const SdServoIoData* servoData = ioData.asServoData;
-	assert(servoData->numChannels <= sizeof(servoData->channels));
+	const SdServoIoData& servoData = ioData.asServoData();
+	assert(servoData.numChannels <= sizeof(servoData.channels));
 	try {
-		for (uint32_t i = 0; i < servoData->numChannels; i++) {
-			if (servoData->channels[i] < 16) {
-				servoctrl_->motor(servoData->channels[i]).offset(servoData->value[i]);
+		for (uint32_t i = 0; i < servoData.numChannels; i++) {
+			if (servoData.channels[i] < 16) {
+				servoctrl_->motor(servoData.channels[i]).offset(servoData.value[i]);
 			}
 		}
 		servoctrl_->update();

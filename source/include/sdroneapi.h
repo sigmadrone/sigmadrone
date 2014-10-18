@@ -348,63 +348,68 @@ private:
 	double maxThrust;
 } SdThrustValues;
 
+#include "boost/variant.hpp"
 struct SdIoData
 {
 	static const uint32_t TYPE_INVALID 		= 0;
 	static const uint32_t TYPE_INT32 		= 1;
 	static const uint32_t TYPE_DOUBLE 		= 2;
 	static const uint32_t TYPE_STRING 		= 3;
-	static const uint32_t TYPE_BLOB 		= 4;
-	static const uint32_t TYPE_FILE 		= 5;
-	static const uint32_t TYPE_VECTOR3D 	= 6;
-	static const uint32_t TYPE_VECTOR4D 	= 7;
-	static const uint32_t TYPE_QUATERNION 	= 8;
-	static const uint32_t TYPE_IMU 			= 9;
-	static const uint32_t TYPE_DRONE_CONFIG = 10;
-	static const uint32_t TYPE_SERVO 		= 11;
-	static const uint32_t TYPE_VOID_PTR 	= 12;
-	static const uint32_t TYPE_THRUST 		= 13;
+	static const uint32_t TYPE_VECTOR3D 	= 4;
+	static const uint32_t TYPE_VECTOR4D 	= 5;
+	static const uint32_t TYPE_QUATERNION 	= 6;
+	static const uint32_t TYPE_IMU 			= 7;
+	static const uint32_t TYPE_DRONE_CONFIG = 8;
+	static const uint32_t TYPE_SERVO 		= 9;
+	static const uint32_t TYPE_THRUST 		= 10;
 
-	SdIoData() { dataType = TYPE_INVALID; asDouble = 0; }
-	SdIoData(int32_t i) { dataType = TYPE_INT32; asInt32 = i; }
-	SdIoData(uint32_t i) { dataType = TYPE_INT32; asInt32 = i; }
-	SdIoData(double d) { dataType = TYPE_DOUBLE; asDouble = d; }
-	SdIoData(const char* str) { dataType = TYPE_STRING; asString = str; }
-	SdIoData(FILE* f) { dataType = TYPE_FILE; asFile = f; }
-	SdIoData(const Vector3d* v3d) { dataType = TYPE_VECTOR3D; asVector3d = v3d; }
-	SdIoData(const Vector4d* v4d) { dataType = TYPE_VECTOR4D; asVector4d = v4d; }
-	SdIoData(const QuaternionD* qt) { dataType = TYPE_QUATERNION; asQuaternion = qt; }
-	SdIoData(const SdServoIoData* siod) { dataType = TYPE_SERVO; asServoData = siod; }
-	SdIoData(const SdDroneConfig* config) {
-		dataType = TYPE_DRONE_CONFIG; asDroneConfig = config;
-	}
-	SdIoData(const SdThrustValues* thr) { dataType = TYPE_THRUST; asThrust = thr; }
-	SdIoData(const void* p, uint32_t size) {
-			dataType = TYPE_BLOB; asBlob.blob = p; asBlob.blobSize = size;
-	}
-	SdIoData(const SdImuData* imuData) { dataType = TYPE_IMU; asImuData = imuData; }
+	typedef boost::variant<int32_t,double,Vector3d,Vector4d,QuaternionD,SdDroneConfig,
+			SdServoIoData,SdThrustValues,SdImuData,std::string> Data;
 
-	uint32_t dataType; /*one of the above types*/
-	union
-	{
-		int32_t asInt32;
-		double asDouble;
-		const char* asString;
-		const void* asVoidPtr;
-		struct
-		{
-			const void* blob;
-			uint32_t blobSize;
-		} asBlob;
-		FILE* asFile;
-		const QuaternionD* asQuaternion;
-		const Vector4d* asVector4d;
-		const Vector3d* asVector3d;
-		const SdDroneConfig* asDroneConfig;
-		const SdServoIoData* asServoData;
-		const SdThrustValues* asThrust;
-		const SdImuData* asImuData;
-	};
+	SdIoData() { dataType_ = TYPE_INVALID; data_ = 0; }
+	SdIoData(int32_t i) { dataType_ = TYPE_INT32; data_ = asInt32(); }
+	SdIoData(double d) { dataType_ = TYPE_DOUBLE; data_ = d; }
+	SdIoData(const Vector3d& v3d) { dataType_ = TYPE_VECTOR3D; data_ = v3d; }
+	SdIoData(const Vector4d& v4d) { dataType_ = TYPE_VECTOR4D; data_ = v4d; }
+	SdIoData(const QuaternionD& qt) { dataType_ = TYPE_QUATERNION; data_ = qt; }
+	SdIoData(const SdServoIoData& siod) { dataType_ = TYPE_SERVO; data_ = siod; }
+	SdIoData(const SdDroneConfig& config) {
+		dataType_ = TYPE_DRONE_CONFIG; data_ = config;
+	}
+	SdIoData(const SdThrustValues& thr) { dataType_ = TYPE_THRUST; data_ = thr; }
+	SdIoData(const SdImuData& imuData) { dataType_ = TYPE_IMU; data_ = imuData; }
+
+	uint32_t dataType() const { return dataType_; }
+	int32_t asInt32() const { assert(dataType_ == TYPE_INT32); return boost::get<int32_t>(data_); }
+	double asDouble() const { assert(dataType_ == TYPE_DOUBLE);
+		return boost::get<double>(data_);
+	}
+	const QuaternionD& asQuaternion()  const {
+		assert(dataType_ == TYPE_QUATERNION); return boost::get<QuaternionD>(data_);
+	}
+	const Vector4d& asVector4d()  const {
+		assert(dataType_ == TYPE_VECTOR4D); return boost::get<Vector4d>(data_);
+	}
+	const Vector3d& asVector3d()  const {
+		assert(dataType_ == TYPE_VECTOR3D); return boost::get<Vector3d>(data_);
+	}
+	const SdDroneConfig& asDroneConfig()  const {
+		assert(dataType_ == TYPE_DRONE_CONFIG); return boost::get<SdDroneConfig>(data_);
+	}
+	const SdServoIoData& asServoData() const {
+		assert(dataType_ == TYPE_SERVO); return boost::get<SdServoIoData>(data_);
+	}
+	const SdThrustValues& asThrust() const {
+		assert(dataType_ == TYPE_THRUST); return boost::get<SdThrustValues>(data_);
+	}
+	const SdImuData& asImuData() const {
+		assert(dataType_ == TYPE_IMU); return boost::get<SdImuData>(data_);
+	}
+
+private:
+	uint32_t dataType_; /*one of the above types*/
+	Data data_;
+
 };
 
 
