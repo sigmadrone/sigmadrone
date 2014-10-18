@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 	refBuilder->get_widget_derived("mainwindow", mainwin);
 	if (mainwin) {
 		if (!rpcserver.empty()) {
-			mainwin->set_rpc_connection(rpcserver, rpcport, atol(args.get_value("update-rate", "30").c_str()));
+			mainwin->set_rpc_connection(rpcserver, rpcport, atol(args.get_value("update-rate", "10").c_str()));
 		}
 
 		//Start:

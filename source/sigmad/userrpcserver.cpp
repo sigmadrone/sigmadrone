@@ -19,6 +19,7 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("servogetpulsems", &user_rpcserver::rpc_servo_getpulsems);
 	add("sd_exit", &user_rpcserver::rpc_exit);
 	add("sd_run", &user_rpcserver::rpc_run);
+	add("sd_get_running", &user_rpcserver::rpc_get_running);
 	add("sd_reset", &user_rpcserver::rpc_reset);
 	add("sd_get_thrust", &user_rpcserver::rpc_get_thrust);
 	add("sd_set_thrust", &user_rpcserver::rpc_set_thrust);
@@ -307,6 +308,26 @@ json::value user_rpcserver::rpc_run(http::server::connection_ptr connection, jso
 	return "Controller started.";
 }
 
+json::value user_rpcserver::rpc_get_running(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_running\n"
+	            "\nCheck if the controller is running."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return app_.ctrl_thread_.is_running();
+}
+
+
 json::value user_rpcserver::rpc_reset(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
@@ -436,10 +457,10 @@ json::value user_rpcserver::rpc_get_motors(http::server::connection_ptr connecti
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	json::object ret;
+	json::array ret;
 	for (size_t i = 0; i < app_.servoctrl_->channelcount(); i++) {
 		if (app_.servoctrl_->motor(0).valid()) {
-			ret[boost::lexical_cast<std::string>(i)] = app_.servoctrl_->motor(i).offset();
+			ret.push_back(app_.servoctrl_->motor(i).offset());
 		}
 	}
 	return ret;

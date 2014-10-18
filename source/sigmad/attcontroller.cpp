@@ -51,6 +51,11 @@ void attcontroller::stop()
 	}
 }
 
+bool attcontroller::is_running()
+{
+	return (thread_) ? true : false;
+}
+
 void attcontroller::worker()
 {
 	app_.ssampler_->init();

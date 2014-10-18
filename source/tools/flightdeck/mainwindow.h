@@ -24,6 +24,9 @@ protected:
 	bool on_rpc_update();
 	void rpc_update_attitude();
 	void rpc_update_motors();
+	void rpc_update_g();
+	void rpc_update_thrust();
+	void rpc_update_armed();
 	std::string double_to_str(double val, size_t precision = 2);
 
 	sigc::connection timer_conn_;

@@ -4,6 +4,7 @@
 mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade)
 	: Gtk::Window(cobject)
 	, timer_number_(0)
+	, rpc_client_(new rpc_client("localhost", "18222"))
 	, ref_glade_(refGlade)
 	, button_quit_(NULL)
 	, button_arm_motors_(NULL)
@@ -44,10 +45,10 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	button_lock_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_lock_motors));
 	button_arm_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_arm_motors));
 	button_lock_g_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_lock_g));
-	spinbutton_g_x_->signal_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_g));
-	spinbutton_g_y_->signal_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_g));
-	spinbutton_g_z_->signal_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_g));
-	spinbutton_thrust_->signal_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_thrust));
+	spinbutton_g_x_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_g));
+	spinbutton_g_y_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_g));
+	spinbutton_g_z_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_g));
+	spinbutton_thrust_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_thrust));
 }
 
 mainwindow::~mainwindow()
@@ -74,6 +75,7 @@ void mainwindow::on_button_arm_motors()
 		} else {
 			rpc_client_->call("/", "sd_reset");
 		}
+		rpc_update_armed();
 	} catch (std::exception& e) {
 		std::cout << "on_change_g exception: " << e.what() << std::endl;
 	}
@@ -91,7 +93,7 @@ void mainwindow::on_change_thrust()
 {
 	try {
 		rpc_client_->call("/", "sd_set_thrust", spinbutton_thrust_->get_value());
-		spinbutton_thrust_->set_value(rpc_client_->call("/", "sd_get_thrust").get_real());
+		rpc_update_thrust();
 	} catch (std::exception& e) {
 		std::cout << "on_change_g exception: " << e.what() << std::endl;
 	}
@@ -103,10 +105,7 @@ void mainwindow::on_change_g()
 	try {
 		Vector3d G(spinbutton_g_x_->get_value(), spinbutton_g_y_->get_value(), spinbutton_g_z_->get_value());
 		rpc_client_->call("/", "sd_set_earth_g_vector", matrix_to_json_value(G));
-		G = matrix_from_json_value<double, 3, 1>(rpc_client_->call("/", "sd_get_earth_g_vector"));
-		spinbutton_g_x_->set_value(G.at(0, 0));
-		spinbutton_g_y_->set_value(G.at(1, 0));
-		spinbutton_g_z_->set_value(G.at(2, 0));
+		rpc_update_g();
 	} catch (std::exception& e) {
 		std::cout << "on_change_g exception: " << e.what() << std::endl;
 	}
@@ -117,14 +116,9 @@ void mainwindow::set_rpc_connection(const std::string& rpcserver, const std::str
 	try {
 		timer_conn_.disconnect();
 		rpc_client_.reset(new rpc_client(rpcserver, rpcport, 30000));
+		on_rpc_update();
 		sigc::slot<bool> my_slot = sigc::mem_fun(*this, &mainwindow::on_rpc_update);
 		timer_conn_ = Glib::signal_timeout().connect(my_slot, 1000/(updaterate + 1));
-		json::value ret =  rpc_client_->call("/", "sd_get_earth_g_vector");
-		Vector3d G = matrix_from_json_value<double, 3, 1>(ret);
-		spinbutton_g_x_->set_value(G.at(0, 0));
-		spinbutton_g_y_->set_value(G.at(1, 0));
-		spinbutton_g_z_->set_value(G.at(2, 0));
-		spinbutton_thrust_->set_value(rpc_client_->call("/", "sd_get_thrust").get_real());
 	} catch (std::exception& e) {
 		std::cout << "on_change_g exception: " << e.what() << std::endl;
 	}
@@ -144,17 +138,38 @@ void mainwindow::rpc_update_attitude()
 void mainwindow::rpc_update_motors()
 {
 	json::value val = rpc_client_->call("/", "sd_get_motors");
-	label_m1_->set_text(double_to_str(val.get_obj()["0"].get_real(), 3));
-	label_m2_->set_text(double_to_str(val.get_obj()["1"].get_real(), 3));
-	label_m3_->set_text(double_to_str(val.get_obj()["2"].get_real(), 3));
-	label_m4_->set_text(double_to_str(val.get_obj()["3"].get_real(), 3));
+	label_m1_->set_text(double_to_str(val.get_array().at(0).get_real(), 3));
+	label_m2_->set_text(double_to_str(val.get_array().at(1).get_real(), 3));
+	label_m3_->set_text(double_to_str(val.get_array().at(2).get_real(), 3));
+	label_m4_->set_text(double_to_str(val.get_array().at(3).get_real(), 3));
+}
+
+void mainwindow::rpc_update_g()
+{
+	Vector3d G = matrix_from_json_value<double, 3, 1>(rpc_client_->call("/", "sd_get_earth_g_vector"));
+	spinbutton_g_x_->set_value(G.at(0, 0));
+	spinbutton_g_y_->set_value(G.at(1, 0));
+	spinbutton_g_z_->set_value(G.at(2, 0));
+}
+
+void mainwindow::rpc_update_thrust()
+{
+	spinbutton_thrust_->set_value(rpc_client_->call("/", "sd_get_thrust").get_real());
+}
+
+void mainwindow::rpc_update_armed()
+{
+	button_arm_motors_->set_active(rpc_client_->call("/", "sd_get_running").get_bool());
 }
 
 bool mainwindow::on_rpc_update()
 {
 	try {
+		rpc_update_armed();
 		rpc_update_attitude();
 		rpc_update_motors();
+		rpc_update_g();
+		rpc_update_thrust();
 	} catch (std::exception& e) {
 		std::cout << "rpc_update_attitude exception: " << e.what() << std::endl;
 	}
