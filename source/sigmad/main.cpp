@@ -1,4 +1,6 @@
 #include <iostream>
+#include <syslog.h>
+#include <unistd.h>
 #include "cmdargs.h"
 #include "daemon.h"
 #include "signals.h"
@@ -66,4 +68,3 @@ int main(int argc, const char *argv[])
 	}
 	return 0;
 }
-
