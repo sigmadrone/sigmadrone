@@ -81,6 +81,10 @@ private:
 			void* Context,
 			const SdJsonRpcRequest*,
 			SdJsonRpcReply*);
+	static void OnRpcCommandSetSafeThrust(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
 	static void OnRpcCommandGetThrust(
 			void* Context,
 			const SdJsonRpcRequest*,
@@ -162,6 +166,7 @@ private:
 	SdThrustValues m_thrustValues;
 	PluginRegistry m_pluginReg;
 	bool m_isRunning;
+	bool m_safeThrust;
 	static Drone* s_Only;
 };
 
