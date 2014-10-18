@@ -113,7 +113,7 @@ static const char* SdCommandCodeAsStr[] = {
 		"sd_get_attitude","sd_set_altitude", "sd_get_altitude",
 		"sd_get_rpc_spec", "sd_get_rpc_list", "sd_load_plugin",
 		"sd_unload_plugin",	"sd_get_plugins", "sd_set_earth_g_vector",
-		"sd_get_earth_g_vector", "sd_is_running", "sd_get_motors",
+		"sd_get_earth_g_vector", "sd_get_running", "sd_get_motors",
 		"sd_set_motors"
 };
 
