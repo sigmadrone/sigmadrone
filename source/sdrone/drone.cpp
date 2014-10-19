@@ -590,12 +590,14 @@ void Drone::OnRpcCommandSetThrust(
 {
 	assert(context == Only());
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
-	if (req->Params.GetType() != SD_JSONVALUE_DOUBLE) {
+	if (req->Params.GetType() != SD_JSONVALUE_DOUBLE &&
+		req->Params.GetType() != SD_JSONVALUE_INT) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
 	} else {
 		int err;
 		SdThrustValues thrustValues = Only()->m_thrustValues;
-		double thrust = req->Params.AsDouble();
+		double thrust = (req->Params.GetType() == SD_JSONVALUE_DOUBLE) ?
+				req->Params.AsDouble() : req->Params.AsInt();
 		if (!Only()->m_safeThrust) {
 			thrustValues = SdThrustValues(thrust,0.0,1.0);
 		} else {

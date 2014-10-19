@@ -14,16 +14,14 @@
 struct SdJsonRpcRequest
 {
 	SdJsonRpcRequest() {
-		Id = SD_JSONRPC_INVALID_ID;
-		Params = 0;
 	}
 	SdJsonRpcRequest(
 			const std::string& method,
 			const SdJsonValue& params=s_nullJsonValue,
-			uint64_t id=0) : MethodName(method), Params(params), Id(id) {}
+			const SdJsonValue& id= SdJsonValue()) : MethodName(method), Params(params), Id(id) {}
 	std::string MethodName;
 	SdJsonValue Params;
-	uint64_t Id; // may not be initialized
+	SdJsonValue Id; // may not be initialized
 };
 
 struct SdJsonRpcReply
@@ -33,7 +31,7 @@ struct SdJsonRpcReply
 		ErrorCode = 0;
 	}
 	SdJsonValue Results;
-	uint64_t Id;
+	SdJsonValue Id;
 	int ErrorCode;
 	std::string ErrorMessage;
 };

@@ -126,8 +126,8 @@ void SdJsonRpcTransport::JsonRequestHandler(
 	http::server::reply& rep)
 {
 	rep.reset();
-	if (req.headers.find_header("Content-Type") == "application/json-rpc" &&
-		(req.method == "POST" || req.method == "GET")) {
+	//if (req.headers.find_header("Content-Type") == "application/json-rpc" &&
+	if (req.method == "POST" || req.method == "GET") {
 		int err = m_dataSink->ReceiveData(req.content,rep.content);
 		switch (err) {
 		case 0:
