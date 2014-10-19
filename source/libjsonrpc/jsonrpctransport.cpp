@@ -104,7 +104,7 @@ bool SdJsonRpcTransport::SendData(
 	if (0 == ec.value()) {
 		http::client::response rep;
 		http::headers headers;
-		headers.header("Content-Type","application/json-rpc");
+		headers.insert_header("Content-Type","application/json-rpc");
 		httpcl.request(rep,"POST","/jsonrpc",data,headers,ec);
 		if (0 == ec.value()) {
 			receivedData = rep.content;
@@ -126,7 +126,7 @@ void SdJsonRpcTransport::JsonRequestHandler(
 	http::server::reply& rep)
 {
 	rep.reset();
-	if (req.headers.header("Content-Type") == "application/json-rpc" &&
+	if (req.headers.find_header("Content-Type") == "application/json-rpc" &&
 		(req.method == "POST" || req.method == "GET")) {
 		int err = m_dataSink->ReceiveData(req.content,rep.content);
 		switch (err) {
@@ -144,5 +144,5 @@ void SdJsonRpcTransport::JsonRequestHandler(
 	} else {
 		rep.status = http::server::reply::not_implemented;
 	}
-	rep.headers.header("Content-Type", "application/json-rpc");
+	rep.headers.insert_header("Content-Type", "application/json-rpc");
 }

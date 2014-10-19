@@ -21,7 +21,7 @@ namespace http {
 class headers : public std::map<std::string, std::string>
 {
 public:
-	std::string header(const std::string& name) const
+	std::string find_header(const std::string& name) const
 	{
 		std::string ret;
 		headers::const_iterator it = find(name);
@@ -30,7 +30,7 @@ public:
 		return ret;
 	}
 
-	void header(const std::string& name, const std::string& value)
+	void insert_header(const std::string& name, const std::string& value)
 	{
 		std::pair<headers::iterator,bool> ret;
 		ret = insert(headers::value_type(name, value));
@@ -42,7 +42,7 @@ public:
 
 	size_t content_length()
 	{
-		std::string content_length = header("Content-Length");
+		std::string content_length = find_header("Content-Length");
 		if (!content_length.empty())
 			return std::strtoul(content_length.c_str(), NULL, 10);
 		return 0UL;

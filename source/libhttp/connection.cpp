@@ -110,7 +110,7 @@ void connection::schedule_reply_write()
 void connection::reply_with_error(reply::status_type status)
 {
 	reply_ = reply::stock_reply(status);
-	reply_.headers.header("Connection", "close");
+	reply_.headers.insert_header("Connection", "close");
 	schedule_reply_write();
 }
 
@@ -203,7 +203,7 @@ void connection::handle_reply_write(const boost::system::error_code& e, std::siz
 	server_.log_debug_message("  --->connection::handle_reply_write, error:  %s, bytes_transferred: %lu", e.message().c_str(), bytes_transferred);
 
 	if (!e) {
-		if (boost::iequals(reply_.headers.header("Connection"), "keep-alive")) {
+		if (boost::iequals(reply_.headers.find_header("Connection"), "keep-alive")) {
 			request_parser_.reset();
 			request_.reset();
 			reply_.reset();
@@ -211,7 +211,7 @@ void connection::handle_reply_write(const boost::system::error_code& e, std::siz
 		} else {
 			server_.log_debug_message("Closing connection to remote %s, Connection header is set to: %s",
 					remote_.c_str(),
-					reply_.headers.header("Connection").c_str());
+					reply_.headers.find_header("Connection").c_str());
 			connection_manager_.stop(shared_from_this());
 		}
 	} else if (e != boost::asio::error::operation_aborted) {

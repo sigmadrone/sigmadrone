@@ -37,7 +37,7 @@ void application::init(int argc, char *argv[])
 
 void application::headers_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
 {
-	rep.headers.header("Content-Type", "text/plain");
+	rep.headers.insert_header("Content-Type", "text/plain");
 
 	rep.content.append(req.request_line());
 	for (http::headers::const_iterator it = req.headers.begin(); it != req.headers.end(); it++) {
@@ -48,7 +48,7 @@ void application::headers_request_handler(http::server::connection& connection, 
 
 void application::echo_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
 {
-	rep.headers.header("Content-Type", "text/plain");
+	rep.headers.insert_header("Content-Type", "text/plain");
 
 	rep.content = req.content;
 	rep.status = http::server::reply::ok;
@@ -56,7 +56,7 @@ void application::echo_request_handler(http::server::connection& connection, con
 
 static void method_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
 {
-	rep.headers.header("Content-Type", "text/plain");
+	rep.headers.insert_header("Content-Type", "text/plain");
 	rep.content = req.method + "\n";
 	rep.status = http::server::reply::ok;
 }

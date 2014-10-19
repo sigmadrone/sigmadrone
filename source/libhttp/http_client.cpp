@@ -97,7 +97,7 @@ void http_client::request(http::client::response& response,
 	if (socket_.is_open()) {
 		try {
 			send_request(response, request_buffers);
-			if (!boost::iequals(response.headers.header("Connection"), "keep-alive"))
+			if (!boost::iequals(response.headers.find_header("Connection"), "keep-alive"))
 				socket_.close();
 			return;
 		} catch (boost::system::system_error& e) {
@@ -115,7 +115,7 @@ void http_client::request(http::client::response& response,
 		socket_.close();
 		async_connect_endpoint();
 		send_request(response, request_buffers);
-		if (!boost::iequals(response.headers.header("Connection"), "keep-alive"))
+		if (!boost::iequals(response.headers.find_header("Connection"), "keep-alive"))
 			socket_.close();
 	} catch (boost::system::system_error& e) {
 		boost::system::error_code ec = e.code();
@@ -275,14 +275,14 @@ std::vector<boost::asio::const_buffer> http_client::prepare_request_buffers(
 
 void http_client::add_default_headers(http::headers& headers, size_t content_size)
 {
-	if (headers.header("Host").empty())
-		headers.header("Host", server_);
-	if (headers.header("Accept").empty())
-		headers.header("Accept", "*/*");
-	if (headers.header("Content-Length").empty())
-		headers.header("Content-Length", boost::lexical_cast<std::string>(content_size));
-	if (headers.header("Connection").empty())
-		headers.header("Connection", "close");
+	if (headers.find_header("Host").empty())
+		headers.insert_header("Host", server_);
+	if (headers.find_header("Accept").empty())
+		headers.insert_header("Accept", "*/*");
+	if (headers.find_header("Content-Length").empty())
+		headers.insert_header("Content-Length", boost::lexical_cast<std::string>(content_size));
+	if (headers.find_header("Connection").empty())
+		headers.insert_header("Connection", "close");
 }
 
 void http_client::handle_async_bytestransferred_timeout(const boost::system::error_code& ec)
@@ -376,7 +376,7 @@ void http_client::read_content(http::client::response& response)
 	boost::tribool result;
 	size_t bytes_transferred = 0;
 
-	if (response.headers.header("Content-Length").empty()) {
+	if (response.headers.find_header("Content-Length").empty()) {
 		/*
 		 * There is no Content-Length header, so we will read until we get EOF (read 0 bytes)
 		 */

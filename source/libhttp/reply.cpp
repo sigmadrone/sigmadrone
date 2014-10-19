@@ -237,8 +237,8 @@ reply reply::stock_reply(reply::status_type status)
 	reply rep;
 	rep.status = status;
 	rep.content = stock_replies::to_string(status);
-	rep.headers.header("Content-Length", boost::lexical_cast<std::string>(rep.content.size()));
-	rep.headers.header("Content-Type", "text/html");
+	rep.headers.insert_header("Content-Length", boost::lexical_cast<std::string>(rep.content.size()));
+	rep.headers.insert_header("Content-Type", "text/html");
 	return rep;
 }
 

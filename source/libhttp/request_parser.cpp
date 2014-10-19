@@ -177,7 +177,7 @@ boost::tribool request_parser::consume(request& req, char input)
 	case header_value:
 		if (input == '\r') {
 			state_ = expecting_newline_2;
-			req.headers.header(last_header_name_, last_header_value_);
+			req.headers.insert_header(last_header_name_, last_header_value_);
 			return boost::indeterminate;
 		} else if (is_ctl(input)) {
 			return false;

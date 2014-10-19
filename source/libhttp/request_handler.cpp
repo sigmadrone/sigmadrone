@@ -49,15 +49,15 @@ void request_handler::handle_request_internal(http::server::connection& connecti
 	}
 	uri_handler_iterator->second->handler_callback(connection, req, rep);
 	if (rep.headers["Connection"].empty()) {
-		if (boost::iequals(req.headers.header("Connection"), "keep-alive"))
-			rep.headers.header("Connection", "keep-alive");
+		if (boost::iequals(req.headers.find_header("Connection"), "keep-alive"))
+			rep.headers.insert_header("Connection", "keep-alive");
 		else
-			rep.headers.header("Connection", "close");
+			rep.headers.insert_header("Connection", "close");
 	}
-	if (rep.headers.header("Content-Length").empty())
-		rep.headers.header("Content-Length", boost::lexical_cast<std::string>(rep.content.size()));
-	if (rep.headers.header("Content-Type").empty())
-		rep.headers.header("Content-Type", "text/plain");
+	if (rep.headers.find_header("Content-Length").empty())
+		rep.headers.insert_header("Content-Length", boost::lexical_cast<std::string>(rep.content.size()));
+	if (rep.headers.find_header("Content-Type").empty())
+		rep.headers.insert_header("Content-Type", "text/plain");
 
 }
 
