@@ -38,7 +38,7 @@ class SdJsonRpcParser: public SdJsonParser
 public:
 	SdJsonRpcParser() {}
 	virtual ~SdJsonRpcParser() {}
-	uint64_t GetRpcCallId() const;
+	SdJsonValue GetRpcCallId() const;
 	bool IsValidRpcSchema() const;
 	bool IsRequest() const;
 	bool IsReply() const;

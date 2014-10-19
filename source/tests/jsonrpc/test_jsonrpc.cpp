@@ -209,7 +209,7 @@ void TestJsonRpcBuilder()
 	params.AddMember("Flight",SdJsonValue(flight));
 	params.AddMember("SkyIsTheLimit",SdJsonValue(true));
 	params.AddMember("Grounded",SdJsonValue(false));
-	bldr.BuildRequest("run",&params,10);
+	bldr.BuildRequest("run",&params,SdJsonValue(10));
 	if (!bldr.GetJsonStream()) {
 		TEST_FAILED();
 		return;

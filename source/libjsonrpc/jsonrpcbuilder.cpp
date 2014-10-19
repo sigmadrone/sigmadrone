@@ -10,7 +10,7 @@
 #include <json-glib/json-gobject.h>
 
 
-uint32_t SdJsonRpcBuilder::s_rpcId = 0;
+uint32_t SdJsonRpcBuilder::s_rpcId = 1;
 
 SdJsonRpcBuilder::SdJsonRpcBuilder() :
 		m_jsonGenerator(0),
@@ -26,19 +26,19 @@ SdJsonRpcBuilder::~SdJsonRpcBuilder() {
 bool SdJsonRpcBuilder::BuildRequest(
 	const char* methodName,
 	const IJsonValue* params,
-	uint32_t _rpcId)
+	const SdJsonValue& _rpcId)
 {
 	SdJsonValue root;
 	SdJsonObject rootObj;
-	uint32_t rpcId = _rpcId;
+	SdJsonValue rpcId = _rpcId;
 
 	Reset();
 
 	if (0 == (m_jsonGenerator = json_generator_new())) {
 		return false;
 	}
-	if (SD_JSONRPC_INVALID_ID == rpcId) {
-		rpcId = GenerateRpcId();
+	if (rpcId.GetType() == SD_JSONVALUE_NULL) {
+		rpcId.SetValueAsInt(GenerateRpcId());
 	}
 
 	rootObj.AddMember("jsonrpc",SdJsonValue("2.0"));
@@ -46,7 +46,7 @@ bool SdJsonRpcBuilder::BuildRequest(
 	if (params && params->GetType() != SD_JSONVALUE_NULL) {
 		rootObj.AddMember("params",params);
 	}
-	rootObj.AddMember("id",SdJsonValue(rpcId));
+	rootObj.AddMember("id",rpcId);
 	root.SetValueAsObject(&rootObj);
 
 	json_generator_set_root(m_jsonGenerator,root.PeekGlibNode());
@@ -57,7 +57,7 @@ bool SdJsonRpcBuilder::BuildRequest(
 bool SdJsonRpcBuilder::BuildRequest(
 		const char* method,
 		const IJsonObject* params,
-		uint32_t rpcId)
+		const SdJsonValue& rpcId)
 {
 	SdJsonValue jval;
 	if (params) {
@@ -69,7 +69,7 @@ bool SdJsonRpcBuilder::BuildRequest(
 bool SdJsonRpcBuilder::BuildRequest(
 		const char* method,
 		const IJsonArray* params,
-		uint32_t rpcId)
+		const SdJsonValue& rpcId)
 {
 	SdJsonValue jval;
 	if (params) {
@@ -92,7 +92,7 @@ void SdJsonRpcBuilder::Reset() {
 
 bool SdJsonRpcBuilder::BuildReply(
 		const IJsonValue* result,
-		uint32_t rpcId,
+		const SdJsonValue& rpcId,
 		int error,
 		const std::string& errorMessage)
 {
@@ -119,7 +119,7 @@ bool SdJsonRpcBuilder::BuildReply(
 		errObj.AddMember("message",errorMessage);
 		rootObj.AddMember("error",SdJsonValue(errObj));
 	}
-	rootObj.AddMember("id",SdJsonValue(rpcId));
+	rootObj.AddMember("id",rpcId);
 	root.SetValueAsObject(&rootObj);
 
 	json_generator_set_root(m_jsonGenerator,root.PeekGlibNode());

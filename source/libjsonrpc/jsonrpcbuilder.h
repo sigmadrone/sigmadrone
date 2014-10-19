@@ -19,18 +19,18 @@ public:
 	bool BuildRequest(
 			const char* method,
 			const IJsonValue* params = 0,
-			uint32_t rpcId = SD_JSONRPC_INVALID_ID);
+			const SdJsonValue& rpcId = SdJsonValue());
 	bool BuildRequest(
 			const char* method,
 			const IJsonObject* params = 0,
-			uint32_t rpcId = SD_JSONRPC_INVALID_ID);
+			const SdJsonValue& rpcId = SdJsonValue());
 	bool BuildRequest(
 			const char* method,
 			const IJsonArray* params = 0,
-			uint32_t rpcId = SD_JSONRPC_INVALID_ID);
+			const SdJsonValue& rpcId = SdJsonValue());
 	bool BuildReply(
 			const IJsonValue* result,
-			uint32_t id,
+			const SdJsonValue& rpcId,
 			int error,
 			const std::string& errorMessage);
 	void Reset();

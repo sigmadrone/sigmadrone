@@ -218,13 +218,12 @@ const IJsonValue* SdJsonRpcParser::GetRpcParams() const
 	return !!RootObj() ? RootObj()->GetMember("params") : 0;
 }
 
-uint64_t SdJsonRpcParser::GetRpcCallId() const
+SdJsonValue SdJsonRpcParser::GetRpcCallId() const
 {
-	uint64_t callId = 0;
 	if (RootObj()) {
-		RootObj()->GetMember("id")->AsUintSafe(&callId);
+		return RootObj()->GetMember("id");
 	}
-	return callId;
+	return SdJsonValue();
 }
 
 const IJsonValue* SdJsonRpcParser::GetResult() const {
