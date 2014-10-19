@@ -18,18 +18,18 @@ public:
 	~SdJsonRpcBuilder();
 	bool BuildRequest(
 			const char* method,
-			const IJsonValue* params = 0,
+			const SdJsonValue* params = 0,
 			const SdJsonValue& rpcId = SdJsonValue());
 	bool BuildRequest(
 			const char* method,
-			const IJsonObject* params = 0,
+			const SdJsonObject* params = 0,
 			const SdJsonValue& rpcId = SdJsonValue());
 	bool BuildRequest(
 			const char* method,
-			const IJsonArray* params = 0,
+			const SdJsonArray* params = 0,
 			const SdJsonValue& rpcId = SdJsonValue());
 	bool BuildReply(
-			const IJsonValue* result,
+			const SdJsonValue* result,
 			const SdJsonValue& rpcId,
 			int error,
 			const std::string& errorMessage);

@@ -25,7 +25,7 @@ SdJsonRpcBuilder::~SdJsonRpcBuilder() {
 
 bool SdJsonRpcBuilder::BuildRequest(
 	const char* methodName,
-	const IJsonValue* params,
+	const SdJsonValue* params,
 	const SdJsonValue& _rpcId)
 {
 	SdJsonValue root;
@@ -44,7 +44,14 @@ bool SdJsonRpcBuilder::BuildRequest(
 	rootObj.AddMember("jsonrpc",SdJsonValue("2.0"));
 	rootObj.AddMember("method",SdJsonValue(methodName));
 	if (params && params->GetType() != SD_JSONVALUE_NULL) {
-		rootObj.AddMember("params",params);
+		if (params->GetType() != SD_JSONVALUE_OBJECT && params->GetType() != SD_JSONVALUE_ARRAY) {
+			/*
+			 * Params must be either an array or object
+			 */
+			rootObj.AddMember("params",SdJsonArray(params));
+		} else {
+			rootObj.AddMember("params",params);
+		}
 	}
 	rootObj.AddMember("id",rpcId);
 	root.SetValueAsObject(&rootObj);
@@ -56,7 +63,7 @@ bool SdJsonRpcBuilder::BuildRequest(
 
 bool SdJsonRpcBuilder::BuildRequest(
 		const char* method,
-		const IJsonObject* params,
+		const SdJsonObject* params,
 		const SdJsonValue& rpcId)
 {
 	SdJsonValue jval;
@@ -68,7 +75,7 @@ bool SdJsonRpcBuilder::BuildRequest(
 
 bool SdJsonRpcBuilder::BuildRequest(
 		const char* method,
-		const IJsonArray* params,
+		const SdJsonArray* params,
 		const SdJsonValue& rpcId)
 {
 	SdJsonValue jval;
@@ -91,7 +98,7 @@ void SdJsonRpcBuilder::Reset() {
 }
 
 bool SdJsonRpcBuilder::BuildReply(
-		const IJsonValue* result,
+		const SdJsonValue* result,
 		const SdJsonValue& rpcId,
 		int error,
 		const std::string& errorMessage)

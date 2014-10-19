@@ -617,6 +617,10 @@ SdJsonArray::SdJsonArray(const SdJsonArray& arr) : m_jarr(0) {
 	*this = arr;
 }
 
+SdJsonArray::SdJsonArray(const SdJsonValue& val) : m_jarr(0) {
+	AddElement(val);
+}
+
 SdJsonArray::~SdJsonArray() {
 	Reset();
 }

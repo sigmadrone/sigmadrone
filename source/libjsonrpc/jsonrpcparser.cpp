@@ -215,7 +215,17 @@ bool SdJsonRpcParser::IsErrorReply() const {
 
 const IJsonValue* SdJsonRpcParser::GetRpcParams() const
 {
-	return !!RootObj() ? RootObj()->GetMember("params") : 0;
+	if (!RootObj()) {
+		return 0;
+	}
+
+	const IJsonValue* params = RootObj()->GetMember("params");
+	if (params->GetType() == SD_JSONVALUE_ARRAY &&
+			params->AsArray()->ElementCount() == 1) {
+		// strip down the outer array
+		return params->AsArray()->GetElement(0);
+	}
+	return params;
 }
 
 SdJsonValue SdJsonRpcParser::GetRpcCallId() const

@@ -1,5 +1,4 @@
 /*
- * drone.cpp
  *
  *  Created on: May 19, 2013
  *      Author: svassilev
@@ -180,13 +179,12 @@ int Drone::Run(CommandLineArgs& args)
 			OnRpcCommandSetConfig,
 			this,
 			jsonArgs);
-	RpcParams::BuildJsonPingParams(&jsonArgs,0.0);
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_PING),
 			OnRpcCommandPing,
 			this,
-			jsonArgs,
-			jsonArgs);
+			SdJsonArray(SdJsonValue(0.0)),
+			SdJsonArray(SdJsonValue(0.0)));
 	RpcParams::BuildJsonThrustParams(&jsonArgs,0.0,0.0,1.0);
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_GET_THRUST),
@@ -203,7 +201,7 @@ int Drone::Run(CommandLineArgs& args)
 			SdCommandCodeToString(SD_COMMAND_SET_THRUST),
 			OnRpcCommandSetThrust,
 			this,
-			SdJsonValue(0.0));
+			SdJsonArray(SdJsonValue(0.0)));
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_GET_ATTITUDE),
 			OnRpcCommandGetAttitude,
@@ -214,7 +212,7 @@ int Drone::Run(CommandLineArgs& args)
 			SdCommandCodeToString(SD_COMMAND_SET_ATTITUDE),
 			OnRpcCommandSetTargetAttitude,
 			this,
-			jsonArgs);
+			RpcParams::BuildJsonQuaternion(QuaternionD(1.0,0,0,0)));
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_GET_ALTITUDE),
 			OnRpcCommandGetAltitude,
@@ -227,7 +225,7 @@ int Drone::Run(CommandLineArgs& args)
 			SdCommandCodeToString(SD_COMMAND_GET_RPC_SPEC),
 			OnRpcCommandGetRpcSpec,
 			this,
-			SdJsonValue("SD_COMMAND_CODE_XXX"),
+			SdJsonArray(SdJsonValue("SD_COMMAND_CODE_XXX")),
 			SdJsonValue("Spec"));
 
 
@@ -250,7 +248,7 @@ int Drone::Run(CommandLineArgs& args)
 			SdCommandCodeToString(SD_COMMAND_UNLOAD_PLUGIN),
 			OnRpcCommandUnloadPlugin,
 			this,
-			SdJsonValue("sd.plug")
+			SdJsonArray(SdJsonValue("sd.plug"))
 			);
 	jarr.AddElement(RpcParams::PluginBuilder(PluginInfo("sd.plug","so")).Get(1000));
 	m_rpcDispatch->AddRequestCallback(
@@ -779,6 +777,7 @@ void Drone::OnRpcCommandGetRpcSpec(
 	std::string methodName;
 	SdJsonValue paramsSpec;
 	SdJsonValue resultSpec;
+
 	req->Params.AsStringSafe(&methodName);
 	if (!Only()->m_rpcDispatch->GetParamsSpec(methodName,&paramsSpec) ||
 			!Only()->m_rpcDispatch->GetResultSpec(methodName,&resultSpec)) {

@@ -156,6 +156,7 @@ public:
 	SdJsonArray();
 	SdJsonArray(_JsonArray*);
 	SdJsonArray(const SdJsonArray&);
+	SdJsonArray(const SdJsonValue&);
 	~SdJsonArray();
 
 	uint32_t ElementCount() const;
