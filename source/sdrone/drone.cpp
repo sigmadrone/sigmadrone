@@ -94,7 +94,8 @@ Drone::Drone() :
 		m_rpcDispatch(0),
 		m_rpcTransport(0),
 		m_globalLock("sigmadrone",true),
-		m_isRunning(false)
+		m_isRunning(false),
+		m_safeThrust(false)
 {
 	/*
 	 * Register error signal handlers
@@ -194,10 +195,15 @@ int Drone::Run(CommandLineArgs& args)
 			SdJsonValue(),
 			jsonArgs);
 	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_SET_SAFE_THRUST),
+			OnRpcCommandSetSafeThrust,
+			this,
+			jsonArgs);
+	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_SET_THRUST),
 			OnRpcCommandSetThrust,
 			this,
-			jsonArgs);
+			SdJsonValue(0.0));
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_GET_ATTITUDE),
 			OnRpcCommandGetAttitude,
@@ -329,6 +335,7 @@ int Drone::OnReset()
 		printf("Drone was successfully reset!\n");
 	}
 	m_isRunning = false;
+	m_safeThrust = false;
 	LoadUnloadPlugins();
 
 	return err;
@@ -545,7 +552,7 @@ void Drone::OnRpcCommandPing(
 	int64_t timestamp = 0;
 	assert(context == Only());
 	if (req->Params.AsIntSafe(&timestamp)) {
-		printf("Sending ping reply %lu\n",timestamp);
+		std::cout << "Sending ping reply " << timestamp << std::endl;
 		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 		rep->Results.SetValueAsInt(timestamp);
 	} else {
@@ -581,6 +588,34 @@ void Drone::OnRpcCommandSetThrust(
 		const SdJsonRpcRequest* req,
 		SdJsonRpcReply* rep)
 {
+	assert(context == Only());
+	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+	if (req->Params.GetType() != SD_JSONVALUE_DOUBLE) {
+		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
+	} else {
+		int err;
+		SdThrustValues thrustValues = Only()->m_thrustValues;
+		double thrust = req->Params.AsDouble();
+		if (!Only()->m_safeThrust) {
+			thrustValues = SdThrustValues(thrust,0.0,1.0);
+		} else {
+			thrustValues = SdThrustValues(thrust,thrustValues.MinThrust(),
+					thrustValues.MaxThrust());
+		}
+		if (0 != (err = Only()->OnSetThrust(thrustValues))) {
+			rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+			rep->ErrorMessage = strerror(err);
+		} else {
+			rep->Results.SetValueAsInt(0);
+		}
+	}
+}
+
+void Drone::OnRpcCommandSetSafeThrust(
+		void* context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
 	SdThrustValues thrust = Only()->m_thrustValues;
 	assert(context == Only());
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
@@ -592,6 +627,7 @@ void Drone::OnRpcCommandSetThrust(
 			rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 			rep->ErrorMessage = strerror(err);
 		} else {
+			Only()->m_safeThrust = true;
 			rep->Results.SetValueAsInt(0);
 		}
 	}
@@ -607,6 +643,7 @@ void Drone::OnRpcCommandGetThrust(
 			thrust.MinThrust(),thrust.MaxThrust());
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 }
+
 
 void Drone::OnRpcCommandSetTargetAttitude(
 		void* Context,
