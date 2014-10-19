@@ -77,6 +77,7 @@ bool SdJsonRpcTransport::StartServer(
 	printf("Starting RPC server on %s:%s\n",localAddress.c_str(),portAsStr);
 	m_rpc_server.reset(new http::server::http_server(m_io_service_rpc,
 			localAddress, portAsStr));
+//	m_rpc_server->set_log_file(boost::shared_ptr<logfile>(new logfile("jsontransport.log", 1024*1024*10, logfile::debug)));
 	m_rpc_server->add_uri_handler("/jsonrpc",
 			boost::bind(&SdJsonRpcTransport::JsonRequestHandler, this, _1, _2, _3));
 
