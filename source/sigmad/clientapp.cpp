@@ -34,9 +34,9 @@ bool client_app::is_client(int argc, const char *argv[])
 
 int client_app::run(int argc, const char *argv[])
 {
-	std::string host = args_.get_value("rpcconnect", "127.0.0.1");
-	std::string port = args_.get_value("rpcport", "18222");
-	std::string url = args_.get_value("url", "/");
+	std::string host = args_.get_value("rpc-server", "127.0.0.1");
+	std::string port = args_.get_value("rpc-port", "18222");
+	std::string url = args_.get_value("rpc-uri", "/jsonrpc");
 	std::string rpcuser = args_.get_value("rpcuser", "m");
 	std::string rpcpassword = args_.get_value("rpcpassword", "x");
 

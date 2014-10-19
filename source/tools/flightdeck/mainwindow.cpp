@@ -4,6 +4,7 @@
 mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade)
 	: Gtk::Window(cobject)
 	, timer_number_(0)
+	, rpcuri_("/jsonrpc/")
 	, rpc_client_(new rpc_client("localhost", "18222"))
 	, ref_glade_(refGlade)
 	, button_quit_(NULL)
@@ -71,9 +72,9 @@ void mainwindow::on_button_arm_motors()
 		spinbutton_thrust_->set_value(0.0);
 		on_change_thrust();
 		if (button_arm_motors_->get_active()) {
-			rpc_client_->call("/", "sd_run");
+			rpc_client_->call(rpcuri_, "sd_run");
 		} else {
-			rpc_client_->call("/", "sd_reset");
+			rpc_client_->call(rpcuri_, "sd_reset");
 		}
 		rpc_update_armed();
 	} catch (std::exception& e) {
@@ -92,7 +93,7 @@ void mainwindow::on_button_lock_g()
 void mainwindow::on_change_thrust()
 {
 	try {
-		rpc_client_->call("/", "sd_set_thrust", spinbutton_thrust_->get_value());
+		rpc_client_->call(rpcuri_, "sd_set_thrust", spinbutton_thrust_->get_value());
 		rpc_update_thrust();
 	} catch (std::exception& e) {
 		std::cout << "on_change_g exception: " << e.what() << std::endl;
@@ -104,7 +105,7 @@ void mainwindow::on_change_g()
 {
 	try {
 		Vector3d G(spinbutton_g_x_->get_value(), spinbutton_g_y_->get_value(), spinbutton_g_z_->get_value());
-		rpc_client_->call("/", "sd_set_earth_g_vector", matrix_to_json_value(G));
+		rpc_client_->call(rpcuri_, "sd_set_earth_g_vector", matrix_to_json_value(G));
 		rpc_update_g();
 	} catch (std::exception& e) {
 		std::cout << "on_change_g exception: " << e.what() << std::endl;
@@ -127,7 +128,7 @@ void mainwindow::set_rpc_connection(const std::string& rpcserver, const std::str
 void mainwindow::rpc_update_attitude()
 {
 	QuaternionD q;
-	json::value val = rpc_client_->call("/", "sd_get_attitude");
+	json::value val = rpc_client_->call(rpcuri_, "sd_get_attitude");
 	q = quaternion_from_json_value<double>(val);
 	label_attitude_w_->set_text(double_to_str(q.w));
 	label_attitude_x_->set_text(double_to_str(q.x));
@@ -137,7 +138,7 @@ void mainwindow::rpc_update_attitude()
 
 void mainwindow::rpc_update_motors()
 {
-	json::value val = rpc_client_->call("/", "sd_get_motors");
+	json::value val = rpc_client_->call(rpcuri_, "sd_get_motors");
 	label_m1_->set_text(double_to_str(val.get_array().at(0).get_real(), 3));
 	label_m2_->set_text(double_to_str(val.get_array().at(1).get_real(), 3));
 	label_m3_->set_text(double_to_str(val.get_array().at(2).get_real(), 3));
@@ -146,7 +147,7 @@ void mainwindow::rpc_update_motors()
 
 void mainwindow::rpc_update_g()
 {
-	Vector3d G = matrix_from_json_value<double, 3, 1>(rpc_client_->call("/", "sd_get_earth_g_vector"));
+	Vector3d G = matrix_from_json_value<double, 3, 1>(rpc_client_->call(rpcuri_, "sd_get_earth_g_vector"));
 	spinbutton_g_x_->set_value(G.at(0, 0));
 	spinbutton_g_y_->set_value(G.at(1, 0));
 	spinbutton_g_z_->set_value(G.at(2, 0));
@@ -154,12 +155,12 @@ void mainwindow::rpc_update_g()
 
 void mainwindow::rpc_update_thrust()
 {
-	spinbutton_thrust_->set_value(rpc_client_->call("/", "sd_get_thrust").get_real());
+	spinbutton_thrust_->set_value(rpc_client_->call(rpcuri_, "sd_get_thrust").get_real());
 }
 
 void mainwindow::rpc_update_armed()
 {
-	button_arm_motors_->set_active(rpc_client_->call("/", "sd_get_running").get_bool());
+	button_arm_motors_->set_active(rpc_client_->call(rpcuri_, "sd_get_running").get_bool());
 }
 
 bool mainwindow::on_rpc_update()

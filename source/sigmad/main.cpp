@@ -15,6 +15,9 @@ static cmd_arg_spec g_argspec[] = {
 		{"pid-file",		"",		"PID file location", CMD_ARG_STRING},
 		{"servo-ctrl",		"",		"Specify which servo controller class to instantiate. Supported values: pca9685", CMD_ARG_STRING},
 		{"loglevel",		"",		"Valid loglevels: none, critical, error, info, debug. Default: info", CMD_ARG_STRING},
+		{"rpc-server",		"",		"Remote RPC server. Default: localhost", CMD_ARG_STRING},
+		{"rpc-port",		"",		"Remote RPC port. Default: 18222", CMD_ARG_STRING},
+		{"rpc-uri",			"",		"Remote RPC url. Default: /jsonrpc", CMD_ARG_STRING},
 };
 
 static cmd_arg_spec g_argspec2[] = {
