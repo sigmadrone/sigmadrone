@@ -31,6 +31,7 @@ protected:
 
 	sigc::connection timer_conn_;
 	int timer_number_;
+	std::string rpcuri_;
 	boost::scoped_ptr<rpc_client> rpc_client_;
 	Glib::RefPtr<Gtk::Builder> ref_glade_;
 	Gtk::Button* button_quit_;
