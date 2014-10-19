@@ -12,6 +12,7 @@
 
 client_app::client_app(const cmd_args& args)
 	: args_(args)
+	, logfile_(new logfile("sigmadcli.log", 1024*1024*10, logfile::none))
 {
 }
 
@@ -43,6 +44,8 @@ int client_app::run(int argc, const char *argv[])
 	try {
 		http::client::response response;
 		http::client::http_client client(host, port, 30000);
+		logfile_->log_level(args_.get_value("loglevel", "info"));
+		client.set_log_file(logfile_);
 		http::headers headers;
 		headers["Authorization"] = std::string("Basic ") + http::base64::encode(rpcuser + ":" + rpcpassword);
 		std::vector<std::string> parsed_cmd_line = parse_command_line(argc, argv);

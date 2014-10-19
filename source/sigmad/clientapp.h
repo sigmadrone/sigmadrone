@@ -22,6 +22,7 @@ public:
 
 protected:
 	const cmd_args& args_;
+	boost::shared_ptr<logfile> logfile_;
 	boost::scoped_ptr<http::client::http_client> rpc_client_;
 };
 
