@@ -65,12 +65,13 @@ bool SdJsonRpcDispatcher::SendJsonRequest(
 		std::string serializedReply;
 		bldr.BuildRequest(request.MethodName.c_str(),&request.Params,request.Id);
 		serializedRequest.assign(bldr.GetJsonStream(),bldr.GetJsonStreamSize());
-		printf("Sending JSON RPC:\n%s\n\n", serializedRequest.c_str());
+		//printf("--> %s\n", serializedRequest.c_str());
 		if (m_transport->SendData(remoteHost,remotePort,serializedRequest,
 				serializedReply)) {
 			SdJsonRpcParser parser;
 			parser.ParseBuffer(serializedReply.c_str(),
 					serializedReply.length(),0);
+			//printf("<-- %s\n\n", serializedReply.c_str());
 			if (parser.IsValidRpcSchema() && parser.IsReply()) {
 				if (reply) {
 					reply->ErrorCode = parser.GetErrorCode();
@@ -97,6 +98,7 @@ int SdJsonRpcDispatcher::ReceiveData(
 	SdJsonRpcBuilder rpcBuilder;
 	CallbackMapIt it;
 	dataOut.erase();
+	//printf("<-- %s\n",dataIn.c_str());
 	if (!parser.ParseBuffer(dataIn.c_str(),dataIn.length(),0)) {
 		return EINVAL;
 	}
@@ -108,6 +110,7 @@ int SdJsonRpcDispatcher::ReceiveData(
 	if (it == m_callbacks.end()) {
 		return EINVAL; // no callback, consider it
 	}
+
 	rpcRequest.MethodName = parser.GetRpcMethod();
 	rpcRequest.Params = parser.GetRpcParams();
 	rpcRequest.Id = parser.GetRpcCallId();
