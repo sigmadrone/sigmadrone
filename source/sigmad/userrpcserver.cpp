@@ -27,6 +27,7 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("sd_get_earth_g_vector", &user_rpcserver::rpc_get_earth_g);
 	add("sd_set_earth_g_vector", &user_rpcserver::rpc_set_earth_g);
 	add("sd_get_attitude", &user_rpcserver::rpc_get_attitude);
+	add("sd_get_accelerometer", &user_rpcserver::rpc_get_accelerometer);
 	add("thrust", &user_rpcserver::rpc_thrust);
 	add("ki", &user_rpcserver::rpc_ki);
 	add("kd", &user_rpcserver::rpc_kd);
@@ -247,6 +248,26 @@ json::value user_rpcserver::rpc_get_attitude(http::server::connection_ptr connec
 	return quaternion_to_json_value(app_.ctrl_thread_.get_attitude());
 }
 
+json::value user_rpcserver::rpc_get_accelerometer(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_accelerometer\n"
+	            "\nGet the current accelerometer reading"
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return matrix_to_json_value(app_.ssampler_->data.acc3d_.normalize());
+}
+
+
 json::value user_rpcserver::rpc_get_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
@@ -284,6 +305,7 @@ json::value user_rpcserver::rpc_set_earth_g(http::server::connection_ptr connect
 	verify_parameters(params, types, ARRAYSIZE(types));
 	Vector3d earth_g = matrix_from_json_value<double, 3, 1>(params[0]);
 	app_.attitude_tracker_->set_earth_g(earth_g);
+	app_.attitude_tracker_->reset_attitude();
 	return  matrix_to_json_value(app_.attitude_tracker_->get_earth_g());
 }
 

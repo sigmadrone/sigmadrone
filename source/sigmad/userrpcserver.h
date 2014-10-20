@@ -25,6 +25,7 @@ public:
 	json::value rpc_servo_getpulse(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_servo_getpulsems(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_get_attitude(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_get_accelerometer(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_get_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_set_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_run(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);

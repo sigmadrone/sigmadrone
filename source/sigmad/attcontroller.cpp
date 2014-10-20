@@ -16,17 +16,26 @@ attcontroller::attcontroller(server_app& app)
 	, targetQ_(QuaternionD::identity)
 	, thrust_(0.0)
 {
-	Vector3d TrustDir(0, 0, 1);
-	M0_ = Vector3d::cross(Vector3d( 1.0, -1.0, 0.0), TrustDir).normalize();
-	M1_ = Vector3d::cross(Vector3d( 1.0,  1.0, 0.0), TrustDir).normalize();
-	M2_ = Vector3d::cross(Vector3d(-1.0,  1.0, 0.0), TrustDir).normalize();
-	M3_ = Vector3d::cross(Vector3d(-1.0, -1.0, 0.0), TrustDir).normalize();
-	pid_.reset(1.9, 0.0, 0.35);
+	P0_ = Vector3d( 1.0, -1.0, 0.0);
+	P1_ = Vector3d( 1.0,  1.0, 0.0);
+	P2_ = Vector3d(-1.0,  1.0, 0.0);
+	P3_ = Vector3d(-1.0, -1.0, 0.0);
+	set_thrust_dir(Vector3d(0, 0, 1));
+	pid_.reset(1.2, 0.0, 0.40);
 }
 
 attcontroller::~attcontroller()
 {
 	stop();
+}
+
+void attcontroller::set_thrust_dir(const Vector3d& thrustdir)
+{
+	thrustdir_ = thrustdir.normalize();
+	M0_ = Vector3d::cross(P0_, thrustdir_).normalize();
+	M1_ = Vector3d::cross(P1_, thrustdir_).normalize();
+	M2_ = Vector3d::cross(P2_, thrustdir_).normalize();
+	M3_ = Vector3d::cross(P3_, thrustdir_).normalize();
 }
 
 void attcontroller::start()
@@ -36,6 +45,7 @@ void attcontroller::start()
 		app_.servoctrl_->armmotors();
 		app_.servoctrl_->enable();
 		exit_ = false;
+		app_.attitude_tracker_->reset_attitude();
 		thread_.reset(new boost::thread(boost::bind(&attcontroller::worker, this)));
 	}
 }
