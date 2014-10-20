@@ -6,7 +6,7 @@
 class attitudetracker
 {
 public:
-	attitudetracker(double blend_g = 0.00075, Vector3d earth_g = Vector3d(0, 0, 1));
+	attitudetracker(double blend_g = 0.00175, Vector3d earth_g = Vector3d(0, 0, 1));
 	~attitudetracker();
 	Vector3d get_earth_g() const;
 	void set_earth_g(Vector3d earth_g);
