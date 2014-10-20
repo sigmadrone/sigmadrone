@@ -28,7 +28,7 @@ protected:
 	void rpc_update_accelerometer();
 	void rpc_update_thrust();
 	void rpc_update_armed();
-	std::string double_to_str(double val, size_t precision = 2);
+	std::string double_to_str(double val, size_t precision = 3);
 
 	sigc::connection timer_conn_;
 	int timer_number_;

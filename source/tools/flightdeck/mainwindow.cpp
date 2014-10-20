@@ -150,10 +150,10 @@ void mainwindow::rpc_update_motors()
 {
 	try {
 		json::value val = rpc_client_->call(rpcuri_, "sd_get_motors");
-		label_m1_->set_text(double_to_str(val.get_array().at(0).get_real(), 3));
-		label_m2_->set_text(double_to_str(val.get_array().at(1).get_real(), 3));
-		label_m3_->set_text(double_to_str(val.get_array().at(2).get_real(), 3));
-		label_m4_->set_text(double_to_str(val.get_array().at(3).get_real(), 3));
+		label_m1_->set_text(double_to_str(val.get_array().at(0).get_real()));
+		label_m2_->set_text(double_to_str(val.get_array().at(1).get_real()));
+		label_m3_->set_text(double_to_str(val.get_array().at(2).get_real()));
+		label_m4_->set_text(double_to_str(val.get_array().at(3).get_real()));
 	} catch (std::exception& e) {
 		std::cout << "rpc_update_motors(sd_get_motors) exception: " << e.what() << std::endl;
 	}
@@ -175,9 +175,9 @@ void mainwindow::rpc_update_accelerometer()
 {
 	try {
 		json::value val = rpc_client_->call(rpcuri_, "sd_get_accelerometer");
-		label_accelerometer_x_->set_text(double_to_str(val.get_array().at(0).get_real(), 3));
-		label_accelerometer_y_->set_text(double_to_str(val.get_array().at(1).get_real(), 3));
-		label_accelerometer_z_->set_text(double_to_str(val.get_array().at(2).get_real(), 3));
+		label_accelerometer_x_->set_text(double_to_str(val.get_array().at(0).get_real()));
+		label_accelerometer_y_->set_text(double_to_str(val.get_array().at(1).get_real()));
+		label_accelerometer_z_->set_text(double_to_str(val.get_array().at(2).get_real()));
 	} catch (std::exception& e) {
 		std::cout << "rpc_update_accelerometer(sd_get_accelerometer) exception: " << e.what() << std::endl;
 	}
