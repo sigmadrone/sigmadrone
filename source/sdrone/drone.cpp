@@ -263,7 +263,7 @@ int Drone::Run(CommandLineArgs& args)
 			SdCommandCodeToString(SD_COMMAND_SET_EARTH_G_VECTOR),
 			OnRpcCommandSetGVector,
 			this,
-			RpcParams::BuildJsonVector3d(Vector3d(0,0,1)));
+			SdJsonArray(RpcParams::BuildJsonVector3d(Vector3d(0,0,1))));
 
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_GET_EARTH_G_VECTOR),
@@ -550,7 +550,6 @@ void Drone::OnRpcCommandPing(
 	int64_t timestamp = 0;
 	assert(context == Only());
 	if (req->Params.AsIntSafe(&timestamp)) {
-		std::cout << "Sending ping reply " << timestamp << std::endl;
 		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 		rep->Results.SetValueAsInt(timestamp);
 	} else {
