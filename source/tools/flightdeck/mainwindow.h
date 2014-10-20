@@ -25,6 +25,7 @@ protected:
 	void rpc_update_attitude();
 	void rpc_update_motors();
 	void rpc_update_g();
+	void rpc_update_accelerometer();
 	void rpc_update_thrust();
 	void rpc_update_armed();
 	std::string double_to_str(double val, size_t precision = 2);
@@ -50,6 +51,10 @@ protected:
 	Gtk::Label *label_attitude_x_;
 	Gtk::Label *label_attitude_y_;
 	Gtk::Label *label_attitude_z_;
+	Gtk::Label *label_accelerometer_x_;
+	Gtk::Label *label_accelerometer_y_;
+	Gtk::Label *label_accelerometer_z_;
+
 };
 
 #endif //MAINWINDOW_H

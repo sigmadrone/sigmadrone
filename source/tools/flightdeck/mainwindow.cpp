@@ -23,7 +23,9 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	, label_attitude_x_(NULL)
 	, label_attitude_y_(NULL)
 	, label_attitude_z_(NULL)
-
+	, label_accelerometer_x_(NULL)
+	, label_accelerometer_y_(NULL)
+	, label_accelerometer_z_(NULL)
 {
 	//Get the Glade-instantiated Button, and connect a signal handler:
 	ref_glade_->get_widget("button_quit", button_quit_);
@@ -42,6 +44,10 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	ref_glade_->get_widget("label_attitude_x", label_attitude_x_);
 	ref_glade_->get_widget("label_attitude_y", label_attitude_y_);
 	ref_glade_->get_widget("label_attitude_z", label_attitude_z_);
+	ref_glade_->get_widget("label_accelerometer_x", label_accelerometer_x_);
+	ref_glade_->get_widget("label_accelerometer_y", label_accelerometer_y_);
+	ref_glade_->get_widget("label_accelerometer_z", label_accelerometer_z_);
+
 	button_quit_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_quit));
 	button_lock_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_lock_motors));
 	button_arm_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_arm_motors));
@@ -165,6 +171,18 @@ void mainwindow::rpc_update_g()
 	}
 }
 
+void mainwindow::rpc_update_accelerometer()
+{
+	try {
+		json::value val = rpc_client_->call(rpcuri_, "sd_get_accelerometer");
+		label_accelerometer_x_->set_text(double_to_str(val.get_array().at(0).get_real(), 3));
+		label_accelerometer_y_->set_text(double_to_str(val.get_array().at(1).get_real(), 3));
+		label_accelerometer_z_->set_text(double_to_str(val.get_array().at(2).get_real(), 3));
+	} catch (std::exception& e) {
+		std::cout << "rpc_update_accelerometer(sd_get_accelerometer) exception: " << e.what() << std::endl;
+	}
+}
+
 void mainwindow::rpc_update_thrust()
 {
 	try {
@@ -189,6 +207,7 @@ bool mainwindow::on_rpc_update()
 	try {
 		rpc_update_armed();
 		rpc_update_attitude();
+		rpc_update_accelerometer();
 		rpc_update_motors();
 		rpc_update_g();
 		rpc_update_thrust();
