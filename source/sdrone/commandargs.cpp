@@ -74,7 +74,20 @@ SdCommandCode CommandLineArgs::_GetCommand(std::vector<std::string>* rpcParams) 
 			if (*(m_argv[i]) != '-') {
 				if (FromCommanddLineArgToSdCommand(command = m_argv[i]) != SD_COMMAND_NONE) {
 					if (0 != rpcParams) {
-						while (++i < m_argc && *(m_argv[i]) != '-') {
+						while (++i < m_argc) {
+							bool add = true;
+							std::string param = m_argv[i];
+							if (param[0] == '-') {
+								add = false;
+								if (param.length() >= 2 && param[1] >= '0' && param[1] <= '9') {
+									add = true;
+								} else if (param.length() >= 2 && param[1] == '.') {
+									add = true;
+								}
+							}
+							if (!add) {
+								break;
+							}
 							rpcParams->push_back(m_argv[i]);
 						}
 					}
