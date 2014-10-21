@@ -61,6 +61,15 @@ int ImuReader::ExecuteCommand(SdCommandParams* params)
 		m_RunTime->StartStopIoDispatchThread(false);
 		m_RunTime->DetachPlugin();
 		break;
+	case SD_COMMAND_GET_ACCELEROMETER:
+		if (m_fileSampler) {
+			params->SetOutParams(SdIoData(m_fileSampler->data.acc3d_));
+		} else if (m_sampler) {
+			params->SetOutParams(SdIoData(m_sampler->data.acc3d_));
+		} else {
+			params->SetOutParams(SdIoData(Vector3d(0,0,1)));
+		}
+		break;
 	default:break;
 	}
 	return err;

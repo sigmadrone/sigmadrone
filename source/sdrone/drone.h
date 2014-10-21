@@ -145,6 +145,10 @@ private:
 			void* Context,
 			const SdJsonRpcRequest*,
 			SdJsonRpcReply*);
+	static void OnRpcCommandGetAccelerometer(
+			void* Context,
+			const SdJsonRpcRequest*,
+			SdJsonRpcReply*);
 
 	static void fatal_error_signal(int sig);
 

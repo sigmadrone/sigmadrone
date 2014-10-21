@@ -279,6 +279,13 @@ int Drone::Run(CommandLineArgs& args)
 			RpcParams::BuildJsonVector3d(Vector3d(0,0,1)));
 
 	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_ACCELEROMETER),
+			OnRpcCommandGetAccelerometer,
+			this,
+			SdJsonValue(),
+			RpcParams::BuildJsonVector3d(Vector3d(0,0,1)));
+
+	m_rpcDispatch->AddRequestCallback(
 				SdCommandCodeToString(SD_COMMAND_SET_MOTORS),
 				OnRpcCommandSetMotors,
 				this,
@@ -721,6 +728,22 @@ void Drone::OnRpcCommandGetGVector(
 		SdJsonRpcReply* rep)
 {
 	PluginCommandParams params(SD_COMMAND_GET_EARTH_G_VECTOR);
+	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
+	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
+		if (params.OutParams().dataType()== SdIoData::TYPE_VECTOR3D) {
+			rep->Results = RpcParams::BuildJsonVector3d(
+					params.OutParams().asVector3d());
+			rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
+		}
+	}
+}
+
+void Drone::OnRpcCommandGetAccelerometer(
+		void* Context,
+		const SdJsonRpcRequest* req,
+		SdJsonRpcReply* rep)
+{
+	PluginCommandParams params(SD_COMMAND_GET_ACCELEROMETER);
 	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
 		if (params.OutParams().dataType()== SdIoData::TYPE_VECTOR3D) {
