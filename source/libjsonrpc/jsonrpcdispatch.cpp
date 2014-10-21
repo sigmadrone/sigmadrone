@@ -118,13 +118,13 @@ int SdJsonRpcDispatcher::ReceiveData(
 
 	rpcReply.Id = parser.GetRpcCallId();
 	it->second.Callback(it->second.Context,&rpcRequest,&rpcReply);
-
 	if (!rpcBuilder.BuildReply(&rpcReply.Results,rpcReply.Id,
 			rpcReply.ErrorCode,rpcReply.ErrorMessage)) {
 		return ENOMEM;
 	}
 	dataOut.assign(rpcBuilder.GetJsonStream(),
 			rpcBuilder.GetJsonStreamSize());
+	//printf("--> %s\n",dataOut.c_str());
 	return 0;
 }
 

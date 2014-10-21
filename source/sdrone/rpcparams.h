@@ -22,7 +22,7 @@ bool ParseJsonImuConfig(
 		const IJsonObject* jsonImuObj,
 		SdImuDeviceConfig*);
 bool ParseJsonThrust(
-		const IJsonValue* jsonRpcParams,
+		const SdJsonValue& jsonRpcParams,
 		SdThrustValues*);
 QuaternionD ParseJsonQuaternion(
 		const SdJsonValue& jsonRpcParams);

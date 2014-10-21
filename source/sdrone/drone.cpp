@@ -631,7 +631,7 @@ void Drone::OnRpcCommandSetSafeThrust(
 	SdThrustValues thrust = Only()->m_thrustValues;
 	assert(context == Only());
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
-	if (!RpcParams::ParseJsonThrust(&req->Params, &thrust)) {
+	if (!RpcParams::ParseJsonThrust(req->Params, &thrust)) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_PARSE;
 	} else {
 		int err;

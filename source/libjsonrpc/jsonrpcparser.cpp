@@ -185,9 +185,10 @@ void SdJsonParser::PrintJsonArray(const IJsonArray* jarr)
 
 bool SdJsonRpcParser::IsValidRpcSchema() const
 {
-	if (RootObj() && RootObj()->IsMemberPresent("jsonrpc")) {
-		return RootObj()->GetMember("jsonrpc")->AsString() == "2.0" &&
-				(IsRequest() || IsReply());
+	if (RootObj() && RootObj()->IsMemberPresent("jsonrpc") && (
+			RootObj()->GetMember("jsonrpc")->AsString() == "1.0" ||
+			RootObj()->GetMember("jsonrpc")->AsString() == "2.0")) {
+		return  IsRequest() || IsReply();
 	}
 	return false;
 }
@@ -213,17 +214,22 @@ bool SdJsonRpcParser::IsErrorReply() const {
 	return RootObj() && RootObj()->IsMemberPresent("error");
 }
 
-const IJsonValue* SdJsonRpcParser::GetRpcParams() const
+SdJsonValue SdJsonRpcParser::GetRpcParams() const
 {
 	if (!RootObj()) {
-		return 0;
+		return SdJsonValue();
 	}
 
-	const IJsonValue* params = RootObj()->GetMember("params");
-	if (params->GetType() == SD_JSONVALUE_ARRAY &&
-			params->AsArray()->ElementCount() == 1) {
-		// strip down the outer array
-		return params->AsArray()->GetElement(0);
+	const SdJsonValue& params = ((const SdJsonObject*)RootObj())->Member("params");
+	if (params.GetType() == SD_JSONVALUE_ARRAY) {
+		if (params.Array().ElementCount() == 0) {
+			// strip down the outer array
+			return SdJsonValue();
+		}
+		if (params.Array().ElementCount() == 1) {
+			// strip down the outer array
+			return params.Array().Element(0);
+		}
 	}
 	return params;
 }

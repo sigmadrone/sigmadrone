@@ -42,6 +42,10 @@ bool ParseJsonDroneConfig(
 	const IJsonArray* arr = 0;
 	const IJsonObject* params = 0;
 
+	if (jsonRpcParams->GetType() == SD_JSONVALUE_NULL) {
+		return true;
+	}
+
 	if (jsonRpcParams->GetType() != SD_JSONVALUE_OBJECT) {
 		return false;
 	}
@@ -118,14 +122,14 @@ QuaternionD ParseJsonQuaternion(const SdJsonValue& args)
 }
 
 bool ParseJsonThrust(
-		const IJsonValue* rpcParams,
+		const SdJsonValue& rpcParams,
 		SdThrustValues* thrustVals)
 {
-	if (rpcParams->GetType() != SD_JSONVALUE_OBJECT) {
+	if (rpcParams.GetType() != SD_JSONVALUE_OBJECT) {
 		return false;
 	}
 	bool ret = false;
-	const IJsonObject* jobj = rpcParams->AsObject();
+	const IJsonObject* jobj = rpcParams.AsObject();
 	double thr, min, max;
 	if (jobj->GetMember("Thrust")->AsDoubleSafe(&thr)) {
 		ret = true;

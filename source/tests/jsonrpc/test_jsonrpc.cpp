@@ -76,7 +76,8 @@ void TestParseJsonRpcFile(const std::string& fileName)
 
 
 	SdDroneConfig config;
-	if (!RpcParams::ParseJsonDroneConfig(parser.GetRpcParams(),&config)) {
+	SdJsonValue params = parser.GetRpcParams();
+	if (!RpcParams::ParseJsonDroneConfig(&params,&config)) {
 		TEST_FAILED();
 		return;
 	}
@@ -215,7 +216,7 @@ void TestJsonRpcBuilder()
 		return;
 	}
 	parser.ParseBuffer(bldr.GetJsonStream(),bldr.GetJsonStreamSize(),0);
-	const IJsonObject* parsedParams = parser.GetRpcParams()->AsObject();
+	const IJsonObject* parsedParams = parser.GetRpcParams().AsObject();
 	if (parsedParams->GetMember("SkyIsTheLimit")->AsBool() !=
 			params.GetMember("SkyIsTheLimit")->AsBool()) {
 		TEST_FAILED();
@@ -247,7 +248,7 @@ void TestJsonRpcBuilder()
 		return;
 	}
 
-	SdJsonValueSpec spec(*(SdJsonValue*)parser.GetRpcParams());
+	SdJsonValueSpec spec(parser.GetRpcParams());
 	std::string str = SdJsonValueToText(spec.Get());
 	cout << str <<"\n";
 

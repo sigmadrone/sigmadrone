@@ -44,7 +44,7 @@ public:
 	bool IsReply() const;
 	bool IsErrorReply() const;
 	std::string GetRpcMethod() const;
-	const IJsonValue* GetRpcParams() const;
+	SdJsonValue GetRpcParams() const;
 	const IJsonValue* GetResult() const;
 	const IJsonObject* GetError() const;
 	int GetErrorCode() const;
