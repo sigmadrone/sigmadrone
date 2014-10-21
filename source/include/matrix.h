@@ -603,6 +603,14 @@ public:
 		return ret;
 	}
 
+	MatrixMN<T, M, N> operator-() const
+	{
+		MatrixMN<T, M, N> ret;
+		for (int i = 0; i < N * M; i++)
+			ret.data[i] = -data[i];
+		return ret;
+	}
+
 	MatrixMN<T, M, N> operator-(T rhs) const
 	{
 		MatrixMN<T, M, N> ret;
@@ -765,7 +773,7 @@ public:
 	{
 	}
 
-	Quaternion(T _w, const MatrixMN<T, 3, 1>& v)
+	Quaternion(const MatrixMN<T, 3, 1>& v, T _w = 0)
 			: w(_w), x(v.at(0,0)), y(v.at(1,0)), z(v.at(2,0))
 	{
 	}

@@ -112,7 +112,7 @@ public:
 		gyroData = gyroData - m_Err;
 
 		/* calculate quaternion derivative */
-		QuaternionD qDot(0,gyroData);
+		QuaternionD qDot(gyroData, 0);
 		qDot = (qDot * m_GyroQ) * 0.5;
 
 		/* integrate the derivative to yield quaternion*/
