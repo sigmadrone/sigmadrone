@@ -19,6 +19,10 @@ public:
 	void set_attitude(const QuaternionD& attitude);
 	void reset_attitude();
 
+public:
+	Vector3d earth_m_;
+	QuaternionD g2m_q_;
+
 protected:
 	/*
 	 * This is the blend parameter for the Quaternion::nlerp
