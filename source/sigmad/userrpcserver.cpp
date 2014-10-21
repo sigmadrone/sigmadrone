@@ -28,6 +28,7 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("sd_set_earth_g_vector", &user_rpcserver::rpc_set_earth_g);
 	add("sd_get_attitude", &user_rpcserver::rpc_get_attitude);
 	add("sd_get_accelerometer", &user_rpcserver::rpc_get_accelerometer);
+	add("sd_get_magnetometer", &user_rpcserver::rpc_get_magnetometer);
 	add("thrust", &user_rpcserver::rpc_thrust);
 	add("ki", &user_rpcserver::rpc_ki);
 	add("kd", &user_rpcserver::rpc_kd);
@@ -265,6 +266,25 @@ json::value user_rpcserver::rpc_get_accelerometer(http::server::connection_ptr c
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	return matrix_to_json_value(app_.ssampler_->data.acc3d_.normalize());
+}
+
+json::value user_rpcserver::rpc_get_magnetometer(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_magnetometer\n"
+	            "\nGet the current magnetometer reading"
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return matrix_to_json_value(app_.ssampler_->data.mag3d_.normalize());
 }
 
 
