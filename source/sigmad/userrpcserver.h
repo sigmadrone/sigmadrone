@@ -39,6 +39,7 @@ public:
 	json::value rpc_get_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_set_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_get_motors(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_get_g2m(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 
 protected:
 	void jsonrpc_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);

@@ -2,7 +2,7 @@ SUBDIRS += axesdata
 SUBDIRS += alldata
 SUBDIRS += servo
 SUBDIRS += attitudefilter
-SUBDIRS += flightdeck
+
 
 all:
 	@for dir in $(SUBDIRS); do \

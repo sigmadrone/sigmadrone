@@ -773,7 +773,7 @@ public:
 	{
 	}
 
-	Quaternion(T _w, const MatrixMN<T, 3, 1>& v)
+	Quaternion(const MatrixMN<T, 3, 1>& v, T _w = 0)
 			: w(_w), x(v.at(0,0)), y(v.at(1,0)), z(v.at(2,0))
 	{
 	}

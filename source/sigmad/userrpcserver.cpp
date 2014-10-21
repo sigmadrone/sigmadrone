@@ -29,6 +29,7 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("sd_get_attitude", &user_rpcserver::rpc_get_attitude);
 	add("sd_get_accelerometer", &user_rpcserver::rpc_get_accelerometer);
 	add("sd_get_magnetometer", &user_rpcserver::rpc_get_magnetometer);
+	add("sd_get_g2m", &user_rpcserver::rpc_get_g2m);
 	add("thrust", &user_rpcserver::rpc_thrust);
 	add("ki", &user_rpcserver::rpc_ki);
 	add("kd", &user_rpcserver::rpc_kd);
@@ -284,9 +285,28 @@ json::value user_rpcserver::rpc_get_magnetometer(http::server::connection_ptr co
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return matrix_to_json_value(app_.ssampler_->data.mag3d_.normalize());
+	Vector3d magfield(app_.ssampler_->data.mag3d_.at(0, 0), app_.ssampler_->data.mag3d_.at(1, 0));
+	return matrix_to_json_value(app_.attitude_tracker_->earth_m_);
 }
 
+json::value user_rpcserver::rpc_get_g2m(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_g2m\n"
+	            "\nGet the angle between G and M of the Earth."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return RAD2DEG(app_.attitude_tracker_->g2m_q_.angle());
+}
 
 json::value user_rpcserver::rpc_get_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {

@@ -63,11 +63,36 @@ void attitudetracker::track_accelerometer(const Vector3d& g)
 #endif
 }
 
-void attitudetracker::track_magnetometer(const Vector3d& m)
+void attitudetracker::track_magnetometer(const Vector3d& magnetic_field)
 {
+	Vector3d g_estimated = attitude_.rotate(earth_g_.normalize());
+	QuaternionD earth_plane_q(g_estimated);
+
 	/*
-	 * TBD
+	 * Magnetic field as Quaternion
 	 */
+	QuaternionD magnetic_field_q(magnetic_field.normalize());
+	QuaternionD magnetic_field_proj_q = (magnetic_field_q + earth_plane_q * magnetic_field_q * earth_plane_q) * 1.0 / 2.0;
+	earth_m_ = Vector3d(magnetic_field_proj_q.x, magnetic_field_proj_q.y, magnetic_field_proj_q.z).normalize();
+
+	g2m_q_ = QuaternionD::fromVectors(g_estimated, magnetic_field.normalize());
+
+#if 0
+	/*
+	 * Earth plane represented by its normal vector
+	 */
+	QuaternionD earth_plane_q(attitude_.rotate(earth_g_.normalize()));
+
+	/*
+	 * Magnetic field as Quaternion
+	 */
+	QuaternionD magnetic_field_q(magnetic_field.normalize());
+	QuaternionD magnetic_field_estimated_q = QuaternionD(attitude_.rotate(Vector3d(0.06, -0.194, -0.978).normalize()));
+	QuaternionD magnetic_field_proj_q = (magnetic_field_q + earth_plane_q * magnetic_field_q * earth_plane_q) * 1.0 / 2.0;
+	QuaternionD magnetic_field_estimated_proj_q = (magnetic_field_estimated_q + earth_plane_q * magnetic_field_estimated_q * earth_plane_q) * 1.0 / 2.0;
+	Vector3d m_estimated(magnetic_field_estimated_proj_q.x, magnetic_field_estimated_proj_q.y, magnetic_field_estimated_proj_q.z);
+	Vector3d m(magnetic_field_proj_q.x, magnetic_field_proj_q.y, magnetic_field_proj_q.z);
+#endif
 }
 
 QuaternionD attitudetracker::get_attitude() const
