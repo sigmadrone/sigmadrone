@@ -603,6 +603,14 @@ public:
 		return ret;
 	}
 
+	MatrixMN<T, M, N> operator-() const
+	{
+		MatrixMN<T, M, N> ret;
+		for (int i = 0; i < N * M; i++)
+			ret.data[i] = -data[i];
+		return ret;
+	}
+
 	MatrixMN<T, M, N> operator-(T rhs) const
 	{
 		MatrixMN<T, M, N> ret;
