@@ -187,11 +187,17 @@ int Drone::Run(CommandLineArgs& args)
 			SdJsonArray(SdJsonValue(0.0)));
 	RpcParams::BuildJsonThrustParams(&jsonArgs,0.0,0.0,1.0);
 	m_rpcDispatch->AddRequestCallback(
-			SdCommandCodeToString(SD_COMMAND_GET_THRUST),
+			SdCommandCodeToString(SD_COMMAND_GET_SAFE_THRUST),
 			OnRpcCommandGetThrust,
 			this,
 			SdJsonValue(),
 			jsonArgs);
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_GET_THRUST),
+			OnRpcCommandGetThrust,
+			this,
+			SdJsonValue(),
+			SdJsonValue(0.0));
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_SET_SAFE_THRUST),
 			OnRpcCommandSetSafeThrust,
@@ -638,8 +644,12 @@ void Drone::OnRpcCommandGetThrust(
 		SdJsonRpcReply* rep)
 {
 	const SdThrustValues& thrust = Only()->m_thrustValues;
-	RpcParams::BuildJsonThrustParams(&rep->Results,thrust.Thrust(),
-			thrust.MinThrust(),thrust.MaxThrust());
+	if (req->MethodName == SdCommandCodeToString(SD_COMMAND_GET_THRUST)) {
+		rep->Results = SdJsonValue(thrust.Thrust());
+	} else {
+		RpcParams::BuildJsonThrustParams(&rep->Results,thrust.Thrust(),
+				thrust.MinThrust(),thrust.MaxThrust());
+	}
 	rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
 }
 
