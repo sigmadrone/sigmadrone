@@ -336,6 +336,9 @@ int PluginChain::ExecuteCommand(
 			}
 		}
 	}
+	if (err == SD_ESTOP_DISPATCH) {
+		err = SD_ESUCCESS;
+	}
 	return err;
 }
 

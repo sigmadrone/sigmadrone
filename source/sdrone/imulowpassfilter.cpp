@@ -56,6 +56,9 @@ int ImuLowPassFilter::ExecuteCommand(
 	case SD_COMMAND_EXIT:
 		m_Runtime->DetachPlugin();
 		break;
+	case SD_COMMAND_GET_ACCELEROMETER:
+		params->SetOutParams(SdIoData(m_filteredAccel3d));
+		return SD_ESTOP_DISPATCH;
 	default:break;
 	}
 	return SD_ESUCCESS;
@@ -105,7 +108,7 @@ int ImuLowPassFilter::IoCallback(
 	accelData.at(0,0) = m_AccelFilt.GetOutput()[0];
 	accelData.at(1,0) = m_AccelFilt.GetOutput()[1];
 	accelData.at(2,0) = m_AccelFilt.GetOutput()[2];
-	accelData = accelData.normalize();
+	m_filteredAccel3d = accelData = accelData.normalize();
 	ioPacket->SetAttribute(SDIO_ATTR_ACCEL, SdIoData(accelData));
 	return SD_ESUCCESS;
 }

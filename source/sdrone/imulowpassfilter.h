@@ -40,6 +40,7 @@ private:
 	LpPreFilter3d m_GyroFilt;
 	FirFilter<double,38,3> m_AccelFilt;
 	IPluginRuntime* m_Runtime;
+	Vector3d m_filteredAccel3d;
 	int m_RefCnt;
 };
 
