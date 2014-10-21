@@ -3,6 +3,8 @@ SUBDIRS += jsonrpc
 SUBDIRS += httpserver
 SUBDIRS += httpclient
 SUBDIRS += base64
+SUBDIRS += quaternion
+SUBDIRS += matrix
 
 all:
 	@for dir in $(SUBDIRS); do \
