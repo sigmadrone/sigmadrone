@@ -1142,16 +1142,32 @@ public:
 		return std::acos(std::pow(dot(u, v),2.0)*2.0 - 1.0);
 	}
 
-	static Quaternion<T> nlerp(const Quaternion<T>& i, const Quaternion<T>& f, float blend)
+	static Quaternion<T> nlerp(const Quaternion<T>& i, const Quaternion<T>& f, float alpha)
 	{
 		Quaternion<T> result;
 
 		if(dot(i, f) < 0.0f) {
-			result = i * (1.0f - blend) - f * blend;
+			result = i * (1.0f - alpha) - f * alpha;
 		} else {
-			result = i * (1.0f - blend) + f * blend;
+			result = i * (1.0f - alpha) + f * alpha;
 		}
 		return result.normalize();
+	}
+
+	static Quaternion<T> slerp(const Quaternion<T>& v0, const Quaternion<T>& v1, float alpha)
+	{
+	    float dot = Quaternion<T>::dot(v0, v1);
+	    const float DOT_THRESHOLD = 0.9995f;
+
+	    if (dot > DOT_THRESHOLD)
+	        return nlerp(v0, v1, alpha);
+
+	    /* clamp dot between -1.0 and 1.0 */
+	    dot = std::min(std::max(dot, -1.0f), 1.0f);
+	    float theta_0 = acosf(dot);
+	    float theta = theta_0 * alpha;
+	    Quaternion<T> v2 = (v1 - v0 * dot).normalize();
+	    return v0*cos(theta) + v2*sin(theta);
 	}
 
 	static MatrixMN<T,3,1> angularVelocity(Quaternion<T> i, Quaternion<T> f, float dT)
@@ -1183,7 +1199,7 @@ public:
 	{
 		std::stringstream oss;
 		oss.setf(std::ios::fixed, std::ios::floatfield);
-		oss.precision(2);
+		oss.precision(3);
 		oss << "( " << w << " + " << x << "i + "<< y << "j + "<< z << "k )";
 		return oss.str();
 	}

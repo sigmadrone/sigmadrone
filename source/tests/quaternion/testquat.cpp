@@ -30,6 +30,27 @@ void test_quaternion_transforms()
 
 }
 
+void test_quaternion_nlerp()
+{
+	cout << "\nQuaternion nlerp test\n" << std::endl;
+
+	QuaternionD q1 = QuaternionD::identity;
+	QuaternionD q2 = QuaternionD::fromAxisRot(Vector3d(0,0,1),M_PI/2);
+//	QuaternionD dq = slerp(q1, q2, 1.0);
+
+	cout << "q1:                 " << q1 << std::endl;
+	cout << "q2:                 " << q2 << std::endl << std::endl;
+
+	cout << "slerp(q1,q2,0.33):  " << QuaternionD::slerp(q1,q2,0.33) << std::endl;
+	cout << "slerp(q1,q2,0.66):  " << QuaternionD::slerp(q1,q2,0.66) << std::endl;
+	cout << "slerp(q1,q2,1.0):   " << QuaternionD::slerp(q1,q2,1.0) << std::endl << std::endl;
+
+	cout << "nlerp(q1,q2,0.33):  " << QuaternionD::nlerp(q1,q2,0.33) << std::endl;
+	cout << "nlerp(q1,q2,0.66):  " << QuaternionD::nlerp(q1,q2,0.66) << std::endl;
+	cout << "nlerp(q1,q2,1.0):   " << QuaternionD::nlerp(q1,q2,1.0) << std::endl << std::endl;
+
+}
+
 int main(int argc, char *argv[])
 {
 	Vector3f Xi(1.00,    0.00,    0.00);
@@ -96,6 +117,6 @@ int main(int argc, char *argv[])
 
 
 	test_quaternion_transforms();
-
+	test_quaternion_nlerp();
 	return 0;
 }
