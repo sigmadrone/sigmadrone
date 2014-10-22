@@ -10,6 +10,8 @@ public:
 	~attitudetracker();
 	Vector3d get_earth_g() const;
 	void set_earth_g(Vector3d earth_g);
+	Vector3d get_earth_m() const;
+	void set_earth_m(Vector3d earth_m);
 	double get_nlerp_blend() const;
 	void set_nlerp_blend(double blend_g);
 	void track_gyroscope(const Vector3d& omega, double dtime);
@@ -20,6 +22,9 @@ public:
 	void reset_attitude();
 
 public:
+	/*
+	 * The earth M vector reading while in initial position.
+	 */
 	Vector3d earth_m_;
 	QuaternionD g2m_q_;
 
@@ -32,7 +37,7 @@ protected:
 	double blend_g_;
 
 	/*
-	 * The earth G vector.
+	 * The earth G vector reading while in leveled position.
 	 */
 	Vector3d earth_g_;
 

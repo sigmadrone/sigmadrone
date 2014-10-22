@@ -24,6 +24,16 @@ void attitudetracker::set_earth_g(Vector3d earth_g)
 	earth_g_ = earth_g;
 }
 
+Vector3d attitudetracker::get_earth_m() const
+{
+	return earth_m_;
+}
+
+void attitudetracker::set_earth_m(Vector3d earth_m)
+{
+	earth_m_ = earth_m;
+}
+
 double attitudetracker::get_nlerp_blend() const
 {
 	return blend_g_;
@@ -63,19 +73,23 @@ void attitudetracker::track_accelerometer(const Vector3d& g)
 #endif
 }
 
-void attitudetracker::track_magnetometer(const Vector3d& magnetic_field)
+void attitudetracker::track_magnetometer(const Vector3d& m)
 {
-	Vector3d g_estimated = attitude_.rotate(earth_g_.normalize());
-	QuaternionD earth_plane_q(g_estimated);
+	g2m_q_ = QuaternionD::fromVectors(attitude_.rotate(earth_g_.normalize()), m.normalize());
 
-	/*
-	 * Magnetic field as Quaternion
-	 */
-	QuaternionD magnetic_field_q(magnetic_field.normalize());
-	QuaternionD magnetic_field_proj_q = (magnetic_field_q + earth_plane_q * magnetic_field_q * earth_plane_q) * 1.0 / 2.0;
-	earth_m_ = Vector3d(magnetic_field_proj_q.x, magnetic_field_proj_q.y, magnetic_field_proj_q.z).normalize();
+	Vector3d m_estimated = attitude_.rotate(earth_m_.normalize());
+	QuaternionD q = QuaternionD::fromVectors(m_estimated, m.normalize());
+	QuaternionD deltaq = QuaternionD::nlerp(QuaternionD::identity, q, blend_g_/2.0);
 
-	g2m_q_ = QuaternionD::fromVectors(g_estimated, magnetic_field.normalize());
+#if 1
+	QuaternionD g_estimated(attitude_.rotate(earth_g_.normalize()), 0.0);
+	QuaternionD qin(deltaq.axis(), 0.0);
+	QuaternionD qper = (qin - g_estimated * qin * g_estimated) * 1.0 / 2.0;
+	deltaq = QuaternionD::fromAxisRot(qper.axis(), deltaq.angle());
+#endif
+
+	attitude_ = (deltaq.normalize() * attitude_).normalize();
+
 
 #if 0
 	/*

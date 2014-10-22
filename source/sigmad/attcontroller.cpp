@@ -69,6 +69,15 @@ bool attcontroller::is_running()
 void attcontroller::worker()
 {
 	app_.ssampler_->init();
+	/*
+	 * Initialize the initial Magnetometer position.
+	 */
+	for (int i = 0; i < 20; i++) {
+		app_.ssampler_->update();
+		if (app_.ssampler_->data.mag3d_upd_) {
+			app_.attitude_tracker_->set_earth_m(app_.ssampler_->data.mag3d_);
+		}
+	}
 	while (!exit_) {
 		try {
 			boost::this_thread::sleep(boost::posix_time::milliseconds(2));
