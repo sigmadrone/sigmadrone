@@ -15,8 +15,10 @@ void printQ(float X, float Y, float Z)
 void test_quaternion_transforms()
 {
 	cout << "Quaternion Transforms from: http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/" << std::endl << std::endl;
-	QuaternionD q = QuaternionD(Vector3d(0,0,1));
-	QuaternionD Pin = QuaternionD(Vector3d(2, 3, 4));
+	Vector3d N(0,0,1);
+	Vector3d Vin(2, 3, 4);
+	QuaternionD q = QuaternionD(N);
+	QuaternionD Pin = QuaternionD(Vin);
 	cout << "q:                                   " << q << std::endl;
 	cout << "Pin:                                 " << Pin << std::endl;
 
@@ -25,9 +27,12 @@ void test_quaternion_transforms()
 	 */
 	cout << "Parallel component of plane       :  " << (Pin + q * Pin * q) * 1.0 / 2.0 << std::endl;
 	cout << "Perpendicular component of plane  :  " << (Pin - q * Pin * q) * 1.0 / 2.0 << std::endl;
-	cout << "Reflection in plane               :  " << (q * Pin * q) << std::endl;
+	cout << "Reflection in plane               :  " << (q * Pin * q) << std::endl << std::endl;
 
-
+	cout << "(V) Parallel component of plane       :  " << Vector3d::parallel(N, Vin).transpose();
+	cout << "(V) Perpendicular component of plane  :  " << Vector3d::perpendicular(N, Vin).transpose();
+	cout << "(V) Reflection in plane               :  " << Vector3d::reflection(N, Vin).transpose();
+	std::cout << std::endl;
 }
 
 void test_quaternion_nlerp()

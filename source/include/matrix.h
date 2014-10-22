@@ -25,6 +25,9 @@ namespace MATRIX_NAMESPACE
 
 const double EPSILON = 4.37114e-05;
 
+template<typename T>
+class Quaternion;
+
 template <typename T, int M, int N>
 class MatrixMN
 {
@@ -740,6 +743,30 @@ public:
 		for (int i = 0; i < M; i++)
 			ret += u.at(i, 0) * v.at(i, 0);
 		return ret;
+	}
+
+	static MatrixMN<T, 3, 1> parallel(const MatrixMN<T, 3, 1>& n, const MatrixMN<T, 3, 1>& v)
+	{
+		Quaternion<T> qn(0, n.at(0, 0), n.at(1, 0), n.at(2, 0));
+		Quaternion<T> qv(0, v.at(0, 0), v.at(1, 0), v.at(2, 0));
+		Quaternion<T> qr = (qv + qn * qv * qn) * 1.0 / 2.0;
+		return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
+	}
+
+	static MatrixMN<T, 3, 1> perpendicular(const MatrixMN<T, 3, 1>& n, const MatrixMN<T, 3, 1>& v)
+	{
+		Quaternion<T> qn(0, n.at(0, 0), n.at(1, 0), n.at(2, 0));
+		Quaternion<T> qv(0, v.at(0, 0), v.at(1, 0), v.at(2, 0));
+		Quaternion<T> qr = (qv - qn * qv * qn) * 1.0 / 2.0;
+		return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
+	}
+
+	static MatrixMN<T, 3, 1> reflection(const MatrixMN<T, 3, 1>& n, const MatrixMN<T, 3, 1>& v)
+	{
+		Quaternion<T> qn(0, n.at(0, 0), n.at(1, 0), n.at(2, 0));
+		Quaternion<T> qv(0, v.at(0, 0), v.at(1, 0), v.at(2, 0));
+		Quaternion<T> qr = (qn * qv * qn);
+		return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
 	}
 
 	static MatrixMN<T, 3, 1> projection(const MatrixMN<T, 3, 1>& u, const MatrixMN<T, 3, 1>& v)
