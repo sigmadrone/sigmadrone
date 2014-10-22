@@ -15,10 +15,10 @@ void printQ(float X, float Y, float Z)
 void test_quaternion_transforms()
 {
 	cout << "Quaternion Transforms from: http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/" << std::endl << std::endl;
-	QuaternionD q = QuaternionD(0, 0, 0, 1);
-	QuaternionD Pin = QuaternionD(0, 2, 3, 4);
-	cout << "q:    " << q << std::endl;
-	cout << "Pin:  " << Pin << std::endl;
+	QuaternionD q = QuaternionD(Vector3d(0,0,1));
+	QuaternionD Pin = QuaternionD(Vector3d(2, 3, 4));
+	cout << "q:                                   " << q << std::endl;
+	cout << "Pin:                                 " << Pin << std::endl;
 
 	/*
 	 * The plane is defined by its normal vector represented as Quaternion 'q'
