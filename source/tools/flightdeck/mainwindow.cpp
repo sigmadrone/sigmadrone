@@ -63,6 +63,10 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	spinbutton_g_x_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_g));
 	spinbutton_g_y_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_g));
 	spinbutton_g_z_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_g));
+	spinbutton_m1_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust));
+	spinbutton_m2_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust));
+	spinbutton_m3_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust));
+	spinbutton_m4_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust));
 	spinbutton_thrust_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_thrust));
 }
 
@@ -126,7 +130,7 @@ void mainwindow::on_change_g()
 	}
 }
 
-void mainwindow::on_change_motors()
+void mainwindow::on_change_correction_thrust()
 {
 	try {
 		Vector4d motors(
@@ -134,10 +138,10 @@ void mainwindow::on_change_motors()
 				spinbutton_m2_->get_value(),
 				spinbutton_m3_->get_value(),
 				spinbutton_m4_->get_value());
-		rpc_client_->call(rpcuri_, "sd_set_correction_thurst", matrix_to_json_value(motors));
+		rpc_client_->call(rpcuri_, "sd_set_correction_thrust", matrix_to_json_value(motors));
 		rpc_update_correction_thurst();
 	} catch (std::exception& e) {
-		std::cout << "on_change_motors (sd_set_correction_thurst) exception: " << e.what() << std::endl;
+		std::cout << "on_change_correction_thrust (sd_set_correction_thrust) exception: " << e.what() << std::endl;
 	}
 }
 

@@ -21,7 +21,7 @@ protected:
 	void on_button_lock_g();
 	void on_change_thrust();
 	void on_change_g();
-	void on_change_motors();
+	void on_change_correction_thrust();
 	bool on_rpc_update();
 	void rpc_update_attitude();
 	void rpc_update_motors();

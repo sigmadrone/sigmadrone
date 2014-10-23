@@ -374,7 +374,7 @@ json::value user_rpcserver::rpc_set_correction_thrust(http::server::connection_p
 
 json::value user_rpcserver::rpc_get_correction_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_array_type};
+	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
