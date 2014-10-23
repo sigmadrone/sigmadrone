@@ -503,12 +503,12 @@ public:
 		}
 	}
 
-	T& at(int row, int col)
+	T& at(int row, int col = 0)
 	{
 		return data[col * M + row];
 	}
 
-	const T& at(int row, int col) const
+	const T& at(int row, int col = 0) const
 	{
 		return data[col * M + row];
 	}
