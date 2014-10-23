@@ -9,7 +9,8 @@
 
 KalmanAttitudeFilter::KalmanAttitudeFilter() :
 	m_State(),
-	m_AttQ(1,0,0,0)
+	m_AttQ(1,0,0,0),
+	m_EarthG(0.0,0.0,1.0)
 {
 	m_RefCnt = 1;
 	m_Runtime = 0;
@@ -45,6 +46,16 @@ int KalmanAttitudeFilter::ExecuteCommand(
 		break;
 	case SD_COMMAND_EXIT:
 		m_Runtime->DetachPlugin();
+		break;
+	case SD_COMMAND_SET_EARTH_G_VECTOR:
+		assert(params->Params().dataType()== SdIoData::TYPE_VECTOR3D);
+		m_EarthG = params->Params().asVector3d();
+		break;
+	case SD_COMMAND_GET_EARTH_G_VECTOR:
+		params->SetOutParams(SdIoData(m_EarthG));
+		break;
+	case SD_COMMAND_GET_ATTITUDE:
+		params->SetOutParams(SdIoData(m_AttQ));
 		break;
 	default:break;
 	}
@@ -120,9 +131,7 @@ int KalmanAttitudeFilter::IoCallback(SdIoPacket* ioPacket)
 	m_AttQ.z = 0;
 	m_AttQ = m_AttQ.normalize();
 
-	gyroEst = RAD2DEG(gyroEst);
 	ioPacket->SetAttribute(SDIO_ATTR_ATTITUDE_Q,SdIoData(m_AttQ));
-	ioPacket->SetAttribute(SDIO_ATTR_CORR_VELOCITY,SdIoData(gyroEst));
 	return SD_ESUCCESS;
 }
 

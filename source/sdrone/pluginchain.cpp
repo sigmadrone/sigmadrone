@@ -369,7 +369,7 @@ int PluginChain::ExecuteCommandForPlugin(
 	}
 	pluginCtx->ExecuteCommandNotify(cmdParams);
 	err = pluginCtx->m_plugin->ExecuteCommand(cmdParams);
-	if (0 != err) {
+	if (0 != err && SD_ESTOP_DISPATCH != err) {
 		printf("Plugin %s failed %s with \"%s\"\n", pluginCtx->m_plugin->GetName(),
 				SdCommandCodeToString(cmdParams->CommandCode()), strerror(err));
 	}

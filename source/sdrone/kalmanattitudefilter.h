@@ -56,6 +56,7 @@ private:
 	IPluginRuntime* m_Runtime;
 	KalmanState m_State;
 	QuaternionD m_AttQ;
+	Vector3d m_EarthG;
 	int m_RefCnt;
 };
 
