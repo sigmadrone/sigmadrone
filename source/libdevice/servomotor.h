@@ -29,7 +29,7 @@ public:
 	 * Set the motor position offset from neutral.
 	 * @percent offset will be clipped within min to max range.
 	 */
-	void offset_clip(double percent, double min, double max);
+	void offset_clamp(double percent, double min, double max);
 
 	/**
 	 * Reset the motor.

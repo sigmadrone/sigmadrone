@@ -14,6 +14,10 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	, spinbutton_g_x_(NULL)
 	, spinbutton_g_y_(NULL)
 	, spinbutton_g_z_(NULL)
+	, spinbutton_m1_(NULL)
+	, spinbutton_m2_(NULL)
+	, spinbutton_m3_(NULL)
+	, spinbutton_m4_(NULL)
 	, button_lock_g_(NULL)
 	, label_m1_(NULL)
 	, label_m2_(NULL)
@@ -35,6 +39,10 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	ref_glade_->get_widget("spinbutton_g_x", spinbutton_g_x_);
 	ref_glade_->get_widget("spinbutton_g_y", spinbutton_g_y_);
 	ref_glade_->get_widget("spinbutton_g_z", spinbutton_g_z_);
+	ref_glade_->get_widget("spinbutton_m1", spinbutton_m1_);
+	ref_glade_->get_widget("spinbutton_m2", spinbutton_m2_);
+	ref_glade_->get_widget("spinbutton_m3", spinbutton_m3_);
+	ref_glade_->get_widget("spinbutton_m4", spinbutton_m4_);
 	ref_glade_->get_widget("checkbutton_lock_g", button_lock_g_);
 	ref_glade_->get_widget("label_m1", label_m1_);
 	ref_glade_->get_widget("label_m2", label_m2_);
@@ -114,7 +122,22 @@ void mainwindow::on_change_g()
 		rpc_client_->call(rpcuri_, "sd_set_earth_g_vector", matrix_to_json_value(G));
 		rpc_update_g();
 	} catch (std::exception& e) {
-		std::cout << "on_change_g exception: " << e.what() << std::endl;
+		std::cout << "on_change_g exception (sd_set_earth_g_vector): " << e.what() << std::endl;
+	}
+}
+
+void mainwindow::on_change_motors()
+{
+	try {
+		Vector4d motors(
+				spinbutton_m1_->get_value(),
+				spinbutton_m2_->get_value(),
+				spinbutton_m3_->get_value(),
+				spinbutton_m4_->get_value());
+		rpc_client_->call(rpcuri_, "sd_set_correction_thurst", matrix_to_json_value(motors));
+		rpc_update_correction_thurst();
+	} catch (std::exception& e) {
+		std::cout << "on_change_motors (sd_set_correction_thurst) exception: " << e.what() << std::endl;
 	}
 }
 
@@ -158,6 +181,20 @@ void mainwindow::rpc_update_motors()
 		std::cout << "rpc_update_motors(sd_get_motors) exception: " << e.what() << std::endl;
 	}
 }
+
+void mainwindow::rpc_update_correction_thurst()
+{
+	try {
+		json::value val = rpc_client_->call(rpcuri_, "sd_get_correction_thrust");
+		spinbutton_m1_->set_value(val.get_array().at(0).get_real());
+		spinbutton_m2_->set_value(val.get_array().at(1).get_real());
+		spinbutton_m3_->set_value(val.get_array().at(2).get_real());
+		spinbutton_m4_->set_value(val.get_array().at(3).get_real());
+	} catch (std::exception& e) {
+		std::cout << "rpc_update_correction_thurst(sd_get_correction_thrust) exception: " << e.what() << std::endl;
+	}
+}
+
 
 void mainwindow::rpc_update_g()
 {

@@ -21,10 +21,12 @@ protected:
 	void on_button_lock_g();
 	void on_change_thrust();
 	void on_change_g();
+	void on_change_motors();
 	bool on_rpc_update();
 	void rpc_update_attitude();
 	void rpc_update_motors();
 	void rpc_update_g();
+	void rpc_update_correction_thurst();
 	void rpc_update_accelerometer();
 	void rpc_update_thrust();
 	void rpc_update_armed();
@@ -42,6 +44,10 @@ protected:
 	Gtk::SpinButton* spinbutton_g_x_;
 	Gtk::SpinButton* spinbutton_g_y_;
 	Gtk::SpinButton* spinbutton_g_z_;
+	Gtk::SpinButton* spinbutton_m1_;
+	Gtk::SpinButton* spinbutton_m2_;
+	Gtk::SpinButton* spinbutton_m3_;
+	Gtk::SpinButton* spinbutton_m4_;
 	Gtk::CheckButton* button_lock_g_;
 	Gtk::Label *label_m1_;
 	Gtk::Label *label_m2_;

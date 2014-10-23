@@ -50,7 +50,7 @@ void servomotor::offset(double percent)
 		pulse_ = neutral_ + (positive_ - neutral_) * percent;
 }
 
-void servomotor::offset_clip(double percent, double min, double max)
+void servomotor::offset_clamp(double percent, double min, double max)
 {
 	if (percent > max)
 		percent = max;

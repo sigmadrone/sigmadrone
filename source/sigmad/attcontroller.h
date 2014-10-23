@@ -26,6 +26,8 @@ public:
 	bool is_running();
 	QuaternionD get_attitude() const;
 	void set_thrust_dir(const Vector3d& thrustdir);
+	void set_correction_thrust(const Vector4d& ct);
+	Vector4d get_correction_thrust();
 
 protected:
 	void worker();
@@ -47,6 +49,7 @@ public:
 	Vector3d P2_;
 	Vector3d P3_;
 	Vector3d thrustdir_;
+	Vector4d ct_;
 	pidtorque pid_;
 	double thrust_;
 

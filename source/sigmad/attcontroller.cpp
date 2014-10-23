@@ -38,6 +38,16 @@ void attcontroller::set_thrust_dir(const Vector3d& thrustdir)
 	M3_ = Vector3d::cross(P3_, thrustdir_).normalize();
 }
 
+void attcontroller::set_correction_thrust(const Vector4d& ct)
+{
+	ct_ = ct;
+}
+
+Vector4d attcontroller::get_correction_thrust()
+{
+	return ct_;
+}
+
 void attcontroller::start()
 {
 	if (!thread_) {
@@ -100,10 +110,10 @@ void attcontroller::worker()
 			Vector3d torqueRPM = correction * 0.6 / (101.25/1000.0) / 2.0;
 
 			if (thrust_ > 0.0) {
-				app_.servoctrl_->motor(0).offset_clip(thrust_ + Vector3d::dot(torqueRPM, M0_), 0.05, 1.0);
-				app_.servoctrl_->motor(1).offset_clip(thrust_ + Vector3d::dot(torqueRPM, M1_), 0.05, 1.0);
-				app_.servoctrl_->motor(2).offset_clip(thrust_ + Vector3d::dot(torqueRPM, M2_), 0.05, 1.0);
-				app_.servoctrl_->motor(3).offset_clip(thrust_ + Vector3d::dot(torqueRPM, M3_), 0.05, 1.0);
+				app_.servoctrl_->motor(0).offset_clamp(thrust_ + ct_.at(0) + Vector3d::dot(torqueRPM, M0_), 0.05, 1.0);
+				app_.servoctrl_->motor(1).offset_clamp(thrust_ + ct_.at(1) + Vector3d::dot(torqueRPM, M1_), 0.05, 1.0);
+				app_.servoctrl_->motor(2).offset_clamp(thrust_ + ct_.at(2) + Vector3d::dot(torqueRPM, M2_), 0.05, 1.0);
+				app_.servoctrl_->motor(3).offset_clamp(thrust_ + ct_.at(3) + Vector3d::dot(torqueRPM, M3_), 0.05, 1.0);
 			} else {
 				app_.servoctrl_->motor(0).offset(0.0);
 				app_.servoctrl_->motor(1).offset(0.0);

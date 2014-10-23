@@ -29,6 +29,8 @@ public:
 	json::value rpc_get_magnetometer(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_get_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_set_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_get_correction_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
+	json::value rpc_set_correction_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_run(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_get_running(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
 	json::value rpc_reset(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode = execute);
