@@ -39,6 +39,7 @@ OBJECTS		= \
 	pidpilotsd.o\
 	pidtorque.o\
 	pluginregistry.o\
+	thrustcorrectionplugin.o\
 	$(JSONRPC_SRCDIR)/libjsonrpc.a\
 	$(HTTPSERVER_SRCDIR)/libhttp.a\
 	$(CMDARGS_SRCDIR)/libcmdargs.a

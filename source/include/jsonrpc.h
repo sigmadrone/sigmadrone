@@ -106,7 +106,8 @@ typedef enum _SdCommandCode {
 	SD_COMMAND_SET_MOTORS,
 	SD_COMMAND_SET_SAFE_THRUST,
 	SD_COMMAND_GET_SAFE_THRUST,
-	SD_COMMAND_GET_ACCELEROMETER
+	SD_COMMAND_GET_ACCELEROMETER,
+	SD_COMMAND_SET_CORRECTION_THRUST
 } SdCommandCode;
 
 static const char* SdCommandCodeAsStr[] = {
@@ -118,7 +119,7 @@ static const char* SdCommandCodeAsStr[] = {
 		"sd_unload_plugin",	"sd_get_plugins", "sd_set_earth_g_vector",
 		"sd_get_earth_g_vector", "sd_get_running", "sd_get_motors",
 		"sd_set_motors", "sd_set_safe_thrust", "sd_get_safe_thrust",
-		"sd_get_accelerometer"
+		"sd_get_accelerometer", "sd_set_correction_thrust"
 };
 
 __inline SdCommandCode SdStringToCommandCode(const char* _str) {

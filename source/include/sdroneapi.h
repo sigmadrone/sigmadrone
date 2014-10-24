@@ -279,6 +279,7 @@ typedef uint64_t SdDeviceId;
 #define SD_PLUGIN_NAVIGATOR "sd.navigator"
 #define SD_PLUGIN_SERVO_PCA9685 "sd.servo_pca9685"
 #define SD_PLUGIN_TRACELOG "sd.tracelog"
+#define SD_PLUGIN_THRUST_CORRECT "sd.thrustcorrect"
 
 #define SD_PLUGIN_VERSION "SigmaDronePlugin"
 

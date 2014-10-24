@@ -27,6 +27,7 @@
 #include "plugincommandparams.h"
 #include "rpcparams.h"
 #include "jsonrpcparser.h"
+#include "thrustcorrectionplugin.h"
 
 Drone* Drone::s_Only = 0;
 
@@ -286,10 +287,15 @@ int Drone::Run(CommandLineArgs& args)
 			RpcParams::BuildJsonVector3d(Vector3d(0,0,1)));
 
 	m_rpcDispatch->AddRequestCallback(
-				SdCommandCodeToString(SD_COMMAND_SET_MOTORS),
-				OnRpcCommandSetMotors,
-				this,
-				RpcParams::BuildJsonVector4d(Vector4d(0,0,0,0)));
+			SdCommandCodeToString(SD_COMMAND_SET_MOTORS),
+			OnRpcCommandSetMotors,
+			this,
+			RpcParams::BuildJsonVector4d(Vector4d(0,0,0,0)));
+	m_rpcDispatch->AddRequestCallback(
+			SdCommandCodeToString(SD_COMMAND_SET_CORRECTION_THRUST),
+			OnRpcCommandSetMotors,
+			this,
+			RpcParams::BuildJsonVector4d(Vector4d(0,0,0,0)));
 
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_GET_MOTORS),
@@ -424,6 +430,7 @@ void Drone::InitPlugins(const SdJsonValue& cmdLineArgs)
 	//m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_QUADPILOT));
 	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_PIDPILOT));
 	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_TRACELOG));
+	m_pluginReg.AddPlugin(PluginInfo(SD_PLUGIN_THRUST_CORRECT));
 
 	if (cmdLineArgs.AsObject()->GetMember("Plugins")->GetType() == SD_JSONVALUE_ARRAY) {
 		const SdJsonArray& plugins = cmdLineArgs.Object().Member("Plugins").Array();
@@ -784,7 +791,8 @@ void Drone::OnRpcCommandSetMotors(
 		SdJsonRpcReply* rep)
 {
 	Vector4d reqParams = RpcParams::ParseJsonVector4d(req->Params);
-	PluginCommandParams params(SD_COMMAND_SET_MOTORS,SdIoData(reqParams),0);
+	PluginCommandParams params(SdStringToCommandCode(req->MethodName.c_str()),
+			SdIoData(reqParams),0);
 	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
 		rep->ErrorCode = SD_JSONRPC_ERROR_SUCCESS;
@@ -998,6 +1006,13 @@ int SdPluginInitialize(
 		if (0 != kf) {
 			kf->AttachToChain(droneContext,attachPlugin);
 			kf->Release();
+		}
+	}
+	if (0 == pluginName || 0 == (strcmp(pluginName,SD_PLUGIN_THRUST_CORRECT))){
+		ThrustCorrectionPlugin* tc = new ThrustCorrectionPlugin();
+		if (0 != tc) {
+			tc->AttachToChain(droneContext,attachPlugin);
+			tc->Release();
 		}
 	}
 	return 0;
