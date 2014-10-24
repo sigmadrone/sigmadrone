@@ -44,10 +44,17 @@ public:
 	Vector3d M1_;
 	Vector3d M2_;
 	Vector3d M3_;
+
+	/* Motor positions */
 	Vector3d P0_;
 	Vector3d P1_;
 	Vector3d P2_;
 	Vector3d P3_;
+
+	/* Motor rotation direction and the torque generated around Z axis
+	 * resulting from that rotation.
+	 */
+	Vector4d rot_;
 	Vector3d thrustdir_;
 	Vector4d ct_;
 	pidtorque pid_;

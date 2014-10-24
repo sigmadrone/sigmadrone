@@ -731,6 +731,16 @@ public:
 		return ret;
 	}
 
+	MatrixMN<T, 3, 1> projection(const MatrixMN<T, 3, 1>& u) const
+	{
+		return (*this) * dot(u, (*this)) / lengthSq();
+	}
+
+	MatrixMN<T, 3, 1> perpendicular(const MatrixMN<T, 3, 1>& u) const
+	{
+		return u - projection(u);
+	}
+
 	static MatrixMN<T, 3, 1> cross(const MatrixMN<T, 3, 1>& u, const MatrixMN<T, 3, 1>& v)
 	{
 		return MatrixMN<T, 3, 1>(u.at(1,0) * v.at(2,0) - v.at(1,0) * u.at(2,0), u.at(2,0) * v.at(0,0) -
@@ -745,6 +755,9 @@ public:
 		return ret;
 	}
 
+	/*
+	 * n denotes the normal vector to a plane
+	 */
 	static MatrixMN<T, 3, 1> parallel(const MatrixMN<T, 3, 1>& n, const MatrixMN<T, 3, 1>& v)
 	{
 		Quaternion<T> qn(0, n.at(0, 0), n.at(1, 0), n.at(2, 0));
@@ -753,6 +766,9 @@ public:
 		return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
 	}
 
+	/*
+	 * n denotes the normal vector to a plane
+	 */
 	static MatrixMN<T, 3, 1> perpendicular(const MatrixMN<T, 3, 1>& n, const MatrixMN<T, 3, 1>& v)
 	{
 		Quaternion<T> qn(0, n.at(0, 0), n.at(1, 0), n.at(2, 0));
@@ -761,17 +777,15 @@ public:
 		return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
 	}
 
+	/*
+	 * n denotes the normal vector to a plane
+	 */
 	static MatrixMN<T, 3, 1> reflection(const MatrixMN<T, 3, 1>& n, const MatrixMN<T, 3, 1>& v)
 	{
 		Quaternion<T> qn(0, n.at(0, 0), n.at(1, 0), n.at(2, 0));
 		Quaternion<T> qv(0, v.at(0, 0), v.at(1, 0), v.at(2, 0));
 		Quaternion<T> qr = (qn * qv * qn);
 		return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
-	}
-
-	static MatrixMN<T, 3, 1> projection(const MatrixMN<T, 3, 1>& u, const MatrixMN<T, 3, 1>& v)
-	{
-		return v * dot(u, v) / v.lengthSq();
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const MatrixMN<T, M, N>& m)
@@ -1146,7 +1160,7 @@ public:
 	 * composite_rotation = swing * twist (this has singularity in case of
 	 * swing rotation close to 180 degrees).
 	 */
-	static void swing_twist_decomposition(
+	static void decomposeSwingTwist(
 			const Quaternion<T>& rotation,
 			const MatrixMN<T, 3, 1>& direction,
 			Quaternion<T>& swing,
@@ -1155,7 +1169,7 @@ public:
 		MatrixMN<T, 3, 1> rotation_axis(rotation.x, rotation.y, rotation.z);
 		// return projection v1 on to v2 (parallel component)
 		// here can be optimized if direction is unit
-		MatrixMN<T, 3, 1> proj = MatrixMN<T, 3, 1>::projection(rotation_axis, direction);
+		MatrixMN<T, 3, 1> proj = direction.projection(rotation_axis);
 		twist = Quaternion<T>(rotation.w, proj.at(0, 0), proj.at(1, 0), proj.at(2, 0));
 		twist.normalize();
 		swing = rotation * twist.conjugated();

@@ -17,8 +17,15 @@ public:
 	void track_gyroscope(const Vector3d& omega, double dtime);
 	void track_accelerometer(const Vector3d& g);
 	void track_magnetometer(const Vector3d& m);
+	/*
+	 * Return our attitude in the world coordinate system
+	 */
 	QuaternionD get_attitude() const;
-	void set_attitude(const QuaternionD& attitude);
+
+	/*
+	 * Return the world attitude in our coordinate system
+	 */
+	QuaternionD get_world_attitude() const;
 	void reset_attitude();
 
 public:
@@ -42,9 +49,10 @@ protected:
 	Vector3d earth_g_;
 
 	/*
-	 * Current attitude.
+	 * Current attitude of the world. We assume that
+	 * the world is rotating in our coordinate system.
 	 */
-	QuaternionD attitude_;
+	QuaternionD world_attitude_;
 };
 
 #endif

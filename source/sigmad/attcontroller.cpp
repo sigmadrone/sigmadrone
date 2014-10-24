@@ -14,6 +14,7 @@ attcontroller::attcontroller(server_app& app)
 	, exit_(false)
 	, attQ_(QuaternionD::identity)
 	, targetQ_(QuaternionD::identity)
+	, rot_(-1, 1, -1, 1)
 	, thrust_(0.0)
 {
 	P0_ = Vector3d( 1.0, -1.0, 0.0);
@@ -101,7 +102,7 @@ void attcontroller::worker()
 			attQ_ = app_.attitude_tracker_->get_attitude();
 
 			pid_.set_target(targetQ_);
-			Vector3d correction = pid_.get_torque(attQ_, DEG2RAD(app_.ssampler_->data.gyr3d_), app_.ssampler_->data.dtime_);
+			Vector3d correction = pid_.get_xy_torque(attQ_, DEG2RAD(app_.ssampler_->data.gyr3d_), app_.ssampler_->data.dtime_);
 
 			//  From the motor trust measurement:
 			//  0.6 --> 450g * 22.5cm
@@ -109,11 +110,21 @@ void attcontroller::worker()
 			//  0.6 --> 0.10125 kg.m
 			Vector3d torqueRPM = correction * 0.6 / (101.25/1000.0) / 2.0;
 
+			/*
+			 * Assume the generated torque is 50g x 22.5cm when the motor thrust is at 0.6
+			 */
+			double ztorqueRPM = Vector3d::dot(correction, Vector3d(0, 0, 1)) * 0.6 / ((50.0/1000.0) * (22.5/100.0)) / 2;
+
+			/*
+			 * limit the  ztorqueRPM to 50% of the thrust
+			 */
+			ztorqueRPM = std::min(std::max(ztorqueRPM, -10.0/100.0 * thrust_), 10.0/100.0 * thrust_);
+
 			if (thrust_ > 0.0) {
-				app_.servoctrl_->motor(0).offset_clamp(thrust_ + ct_.at(0) + Vector3d::dot(torqueRPM, M0_), 0.05, 1.0);
-				app_.servoctrl_->motor(1).offset_clamp(thrust_ + ct_.at(1) + Vector3d::dot(torqueRPM, M1_), 0.05, 1.0);
-				app_.servoctrl_->motor(2).offset_clamp(thrust_ + ct_.at(2) + Vector3d::dot(torqueRPM, M2_), 0.05, 1.0);
-				app_.servoctrl_->motor(3).offset_clamp(thrust_ + ct_.at(3) + Vector3d::dot(torqueRPM, M3_), 0.05, 1.0);
+				app_.servoctrl_->motor(0).offset_clamp(thrust_ + ct_.at(0) + Vector3d::dot(torqueRPM, M0_) + ztorqueRPM * rot_.at(0), 0.05, 1.0);
+				app_.servoctrl_->motor(1).offset_clamp(thrust_ + ct_.at(1) + Vector3d::dot(torqueRPM, M1_) + ztorqueRPM * rot_.at(1), 0.05, 1.0);
+				app_.servoctrl_->motor(2).offset_clamp(thrust_ + ct_.at(2) + Vector3d::dot(torqueRPM, M2_) + ztorqueRPM * rot_.at(2), 0.05, 1.0);
+				app_.servoctrl_->motor(3).offset_clamp(thrust_ + ct_.at(3) + Vector3d::dot(torqueRPM, M3_) + ztorqueRPM * rot_.at(3), 0.05, 1.0);
 			} else {
 				app_.servoctrl_->motor(0).offset(0.0);
 				app_.servoctrl_->motor(1).offset(0.0);

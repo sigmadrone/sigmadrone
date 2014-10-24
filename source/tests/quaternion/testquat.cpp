@@ -32,6 +32,11 @@ void test_quaternion_transforms()
 	cout << "(V) Parallel component of plane       :  " << Vector3d::parallel(N, Vin).transpose();
 	cout << "(V) Perpendicular component of plane  :  " << Vector3d::perpendicular(N, Vin).transpose();
 	cout << "(V) Reflection in plane               :  " << Vector3d::reflection(N, Vin).transpose();
+
+	cout << std::endl;
+	cout << "(V) Projection to vector              :  " << N.projection(Vin).transpose();
+	cout << "(V) Perpendicular to vector           :  " << N.perpendicular(Vin).transpose();
+
 	std::cout << std::endl;
 }
 

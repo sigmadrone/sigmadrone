@@ -12,7 +12,8 @@ public:
 	~pidtorque();
 
 	void set_target(const QuaternionD &setQ);
-	Vector3d get_torque(const QuaternionD &inQ, const Vector3d& Omega, double dT);
+	Vector3d get_xy_torque(const QuaternionD &inQ, const Vector3d& Omega, double dT);
+	Vector3d get_z_torque(const QuaternionD &inQ, const Vector3d& Omega, double dT);
 	void reset(double Kp, double Ki, double Kd);
 
 public:
