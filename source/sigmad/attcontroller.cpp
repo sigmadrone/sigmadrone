@@ -121,10 +121,10 @@ void attcontroller::worker()
 			ztorqueRPM = std::min(std::max(ztorqueRPM, -10.0/100.0 * thrust_), 10.0/100.0 * thrust_);
 
 			if (thrust_ > 0.0) {
-				app_.servoctrl_->motor(0).offset_clamp(thrust_ + ct_.at(0) + Vector3d::dot(torqueRPM, M0_) + ztorqueRPM * rot_.at(0), 0.05, 1.0);
-				app_.servoctrl_->motor(1).offset_clamp(thrust_ + ct_.at(1) + Vector3d::dot(torqueRPM, M1_) + ztorqueRPM * rot_.at(1), 0.05, 1.0);
-				app_.servoctrl_->motor(2).offset_clamp(thrust_ + ct_.at(2) + Vector3d::dot(torqueRPM, M2_) + ztorqueRPM * rot_.at(2), 0.05, 1.0);
-				app_.servoctrl_->motor(3).offset_clamp(thrust_ + ct_.at(3) + Vector3d::dot(torqueRPM, M3_) + ztorqueRPM * rot_.at(3), 0.05, 1.0);
+				app_.servoctrl_->motor(0).offset_clamp(thrust_ + ct_.at(0) + Vector3d::dot(torqueRPM, M0_) + ztorqueRPM * rot_.at(0) * 0, 0.05, 1.0);
+				app_.servoctrl_->motor(1).offset_clamp(thrust_ + ct_.at(1) + Vector3d::dot(torqueRPM, M1_) + ztorqueRPM * rot_.at(1) * 0, 0.05, 1.0);
+				app_.servoctrl_->motor(2).offset_clamp(thrust_ + ct_.at(2) + Vector3d::dot(torqueRPM, M2_) + ztorqueRPM * rot_.at(2) * 0, 0.05, 1.0);
+				app_.servoctrl_->motor(3).offset_clamp(thrust_ + ct_.at(3) + Vector3d::dot(torqueRPM, M3_) + ztorqueRPM * rot_.at(3) * 0, 0.05, 1.0);
 			} else {
 				app_.servoctrl_->motor(0).offset(0.0);
 				app_.servoctrl_->motor(1).offset(0.0);
