@@ -22,7 +22,7 @@
 .gitignore
 
 # log files
-*.log
+*.log*
 
 # project files
 .cproject
@@ -48,4 +48,17 @@ source/jsonrpc/obj/
 source/tests/base64/base64
 source/tests/httpclient/test_httpclient
 source/tests/httpserver/test_httpserver
+source/libattitude/obj/
+source/libcmdargs/obj/
+source/libdevice/obj/
+source/libhttp/obj/
+source/libjsonrpc/obj/
+source/libjsonspirit/obj/
+source/liblogger/obj/
+source/sensordata.dat_bak
+source/sigmad/obj/
+source/sigmad/sigmad
+source/tests/matrix/testmatrix
+source/tests/quaternion/testquat
+source/tools/flightdeck/flightdeck
 
