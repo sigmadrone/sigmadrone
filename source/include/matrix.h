@@ -1160,7 +1160,7 @@ public:
 	 * composite_rotation = swing * twist (this has singularity in case of
 	 * swing rotation close to 180 degrees).
 	 */
-	static void decomposeSwingTwist(
+	static void decomposeTwistSwing(
 			const Quaternion<T>& rotation,
 			const MatrixMN<T, 3, 1>& direction,
 			Quaternion<T>& swing,
@@ -1170,9 +1170,20 @@ public:
 		// return projection v1 on to v2 (parallel component)
 		// here can be optimized if direction is unit
 		MatrixMN<T, 3, 1> proj = direction.projection(rotation_axis);
-		twist = Quaternion<T>(rotation.w, proj.at(0, 0), proj.at(1, 0), proj.at(2, 0));
-		twist.normalize();
+		twist = Quaternion<T>(rotation.w, proj.at(0, 0), proj.at(1, 0), proj.at(2, 0)).normalize();
 		swing = rotation * twist.conjugated();
+	}
+
+	static void decomposeSwingTwist(
+			const Quaternion<T>& rotation,
+			const MatrixMN<T, 3, 1>& direction,
+			Quaternion<T>& swing,
+			Quaternion<T>& twist)
+	{
+		MatrixMN<T, 3, 1> rotation_axis(rotation.x, rotation.y, rotation.z);
+		MatrixMN<T, 3, 1> perp = direction.perpendicular(rotation_axis);
+		swing = Quaternion<T>(rotation.w, perp.at(0, 0), perp.at(1, 0), perp.at(2, 0)).normalize();
+		twist = rotation * swing.conjugated();
 	}
 
 	/*
