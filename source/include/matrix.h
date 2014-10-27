@@ -920,10 +920,10 @@ public:
 
 	Quaternion<T> operator~() const
 	{
-		return conjugated();
+		return conjugate();
 	}
 
-	Quaternion<T> conjugated() const
+	Quaternion<T> conjugate() const
 	{
 		return Quaternion<T>(w, -x, -y, -z);
 	}
@@ -1171,7 +1171,7 @@ public:
 		// here can be optimized if direction is unit
 		MatrixMN<T, 3, 1> proj = direction.projection(rotation_axis);
 		twist = Quaternion<T>(rotation.w, proj.at(0, 0), proj.at(1, 0), proj.at(2, 0)).normalize();
-		swing = rotation * twist.conjugated();
+		swing = rotation * twist.conjugate();
 	}
 
 	static void decomposeSwingTwist(
@@ -1183,7 +1183,7 @@ public:
 		MatrixMN<T, 3, 1> rotation_axis(rotation.x, rotation.y, rotation.z);
 		MatrixMN<T, 3, 1> perp = direction.perpendicular(rotation_axis);
 		swing = Quaternion<T>(rotation.w, perp.at(0, 0), perp.at(1, 0), perp.at(2, 0)).normalize();
-		twist = rotation * swing.conjugated();
+		twist = rotation * swing.conjugate();
 	}
 
 	/*
