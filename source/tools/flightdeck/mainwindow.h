@@ -60,6 +60,7 @@ protected:
 	Gtk::Label *label_accelerometer_x_;
 	Gtk::Label *label_accelerometer_y_;
 	Gtk::Label *label_accelerometer_z_;
+	Gtk::Label *label_accelerometer_length_;
 
 };
 
