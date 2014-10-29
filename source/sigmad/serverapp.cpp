@@ -117,9 +117,7 @@ void server_app::init_sensors_sampler()
 
 void server_app::init_attitude_tracker()
 {
-	attitude_tracker_.reset(new attitudetracker(atof(args_.get_value("nlerp-blend", "0.00150").c_str())));
-
-//	attitude_tracker_.reset(new attitude(64));
+	attitude_tracker_.reset(new attitudetracker(atof(args_.get_value("acc-period", "3.5").c_str())));
 }
 
 int server_app::run(int argc, const char *argv[])

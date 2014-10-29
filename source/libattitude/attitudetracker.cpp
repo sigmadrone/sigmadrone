@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-attitudetracker::attitudetracker(Vector3d earth_g, double accelerometer_correction_period)
+attitudetracker::attitudetracker(double accelerometer_correction_period, Vector3d earth_g)
 	: accelerometer_correction_period_(accelerometer_correction_period)
 	, earth_g_(earth_g)
 	, attitude_(QuaternionD::identity)

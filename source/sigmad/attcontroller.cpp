@@ -22,7 +22,7 @@ attcontroller::attcontroller(server_app& app)
 	P2_ = Vector3d(-1.0,  1.0, 0.0);
 	P3_ = Vector3d(-1.0, -1.0, 0.0);
 	set_thrust_dir(Vector3d(0, 0, 1));
-	pid_.reset(1.2, 0.0, 0.40);
+	pid_.reset(1.7, 0.0, 0.35);
 }
 
 attcontroller::~attcontroller()
@@ -81,7 +81,6 @@ void attcontroller::worker()
 	app_.ssampler_->init();
 	while (!exit_) {
 		try {
-			boost::this_thread::sleep(boost::posix_time::milliseconds(4));
 			app_.ssampler_->update();
 			if (app_.ssampler_->data.gyr3d_upd_)
 				app_.attitude_tracker_->track_gyroscope(DEG2RAD(app_.ssampler_->data.gyr3d_), app_.ssampler_->data.dtime_gyr_);
