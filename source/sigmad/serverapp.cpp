@@ -88,7 +88,7 @@ void server_app::init_sensors_sampler()
 {
 	if (args_.get_value("disable-sensors").empty()) {
 		ssampler_.reset(new sampler(
-			args_.get_value("gyr-device", "/dev/gyro0"),
+			args_.get_value("gyr-device", args_.get_value("gyr-disable").empty() ? "/dev/gyro0" : ""),
 			args_.get_value("acc-device", args_.get_value("acc-disable").empty() ? "/dev/accel0" : ""),
 			args_.get_value("mag-device", args_.get_value("mag-disable").empty() ? "/dev/mag0" : ""),
 			args_.get_value("bar-device", args_.get_value("bar-disable").empty() ?"/sys/bus/i2c/devices/4-0077/pressure0_input" : "")));
@@ -117,7 +117,9 @@ void server_app::init_sensors_sampler()
 
 void server_app::init_attitude_tracker()
 {
-	attitude_tracker_.reset(new attitudetracker(atof(args_.get_value("nlerp-blend", "0.1").c_str())));
+	attitude_tracker_.reset(new attitudetracker(atof(args_.get_value("nlerp-blend", "0.00150").c_str())));
+
+//	attitude_tracker_.reset(new attitude(64));
 }
 
 int server_app::run(int argc, const char *argv[])

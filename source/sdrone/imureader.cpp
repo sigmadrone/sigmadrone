@@ -226,7 +226,7 @@ int ImuReader::IoDispatchThread()
 		imuData.mag3d = m_sampler->data.mag3d_;
 		pressure = m_sampler->data.bar1d_;
 		ioPacket->SetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS,
-				SdIoData(m_sampler->data.dtime_));
+				SdIoData(m_sampler->data.dtime_gyr_));
 		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
 				SdIoData(DeltaT()));
 	}

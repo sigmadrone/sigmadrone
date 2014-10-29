@@ -109,6 +109,12 @@ int main(int argc, char *argv[])
 	Vector3f Gi(-0.02,   -0.01,    1.00);
 	Quaternion<float> Q(0.96, -0.26, 0.10, -0.07);
 
+	for (int i = 0; i <= 24; i++) {
+		double angle = 2 * M_PI * i /24.0;
+		std::cout << "Rotation around Z, angle: " << RAD2DEG(angle) << ", Q: " << QuaternionD::fromAxisRot(Vector3d(0, 0, 1), angle).normalize() << std::endl;
+	}
+	std::cout << std::endl << std::endl;
+
 	Gn = Gn.normalize();
 
 	cout << "X: " << X.transpose();

@@ -106,10 +106,10 @@ int ImuFilterPlugin::IoCallback(SdIoPacket* ioPacket)
 			m_attitude.track_gyroscope(DEG2RAD(ioPacket->GyroData()), ioPacket->DeltaTime());
 		}
 		if (ioData.asImuData().acc3d_upd) {
-			m_attitude.track_accelerometer(ioPacket->AccelData());
+			m_attitude.track_accelerometer(ioPacket->AccelData(), ioPacket->DeltaTime());
 		}
 		if (ioData.asImuData().mag3d_upd) {
-			m_attitude.track_magnetometer(ioPacket->MagData());
+			m_attitude.track_magnetometer(ioPacket->MagData(), ioPacket->DeltaTime());
 		}
 		ioPacket->SetAttribute(SDIO_ATTR_ATTITUDE_Q,SdIoData(m_attitude.get_attitude()));
 		ioPacket->SetAttribute(SDIO_ATTR_EARTH_G,SdIoData(m_attitude.get_earth_g()));

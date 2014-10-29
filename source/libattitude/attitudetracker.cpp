@@ -1,10 +1,11 @@
 #include "attitudetracker.h"
 
+#include <iostream>
 
-attitudetracker::attitudetracker(double blend_g, Vector3d earth_g)
-	: blend_g_(blend_g)
+attitudetracker::attitudetracker(Vector3d earth_g, double accelerometer_correction_period)
+	: accelerometer_correction_period_(accelerometer_correction_period)
 	, earth_g_(earth_g)
-	, world_attitude_(QuaternionD::identity)
+	, attitude_(QuaternionD::identity)
 {
 
 }
@@ -33,52 +34,61 @@ void attitudetracker::set_earth_m(Vector3d earth_m)
 	earth_m_ = earth_m;
 }
 
-double attitudetracker::get_nlerp_blend() const
-{
-	return blend_g_;
-}
-
-void attitudetracker::set_nlerp_blend(double blend_g)
-{
-	blend_g_ = blend_g;
-}
-
 void attitudetracker::track_gyroscope(const Vector3d& omega, double dtime)
 {
-	QuaternionD deltaq = QuaternionD::fromAngularVelocity(-omega, dtime);
-	world_attitude_ = (deltaq * world_attitude_).normalize();
+	QuaternionD deltaq = QuaternionD::fromAngularVelocity(omega, dtime);
+	attitude_ = (attitude_ * deltaq).normalize();
 }
 
-void attitudetracker::track_accelerometer(const Vector3d& g)
+void attitudetracker::track_accelerometer(const Vector3d& g, double dtime)
 {
-	Vector3d g_estimated = world_attitude_.rotate(earth_g_.normalize());
-	QuaternionD q = QuaternionD::fromVectors(g_estimated, g.normalize());
-	QuaternionD deltaq = QuaternionD::nlerp(QuaternionD::identity, q, blend_g_);
-	world_attitude_ = (deltaq * world_attitude_).normalize();
+	/*
+	 * if the length of the g is not close to 1,
+	 * don't use it.
+	 *
+	 */
+	if (g.length() < 0.85 || g.length() > 1.15)
+		return;
+	/*
+	 * Estimate after rotating the initial vector with the
+	 * world attitude quaternion.
+	 */
+	Vector3d g_estimated = get_world_attitude().rotate(earth_g_);
+
+	/*
+	 * Calculate the rotation between the estimated vector
+	 * ant the one received by the sensor.
+	 */
+	QuaternionD q = QuaternionD::fromVectors(g_estimated, g);
+
+	/*
+	 * Generate angular velocity to adjust our attitude in the
+	 * direction of the sensor reading.
+	 */
+	Vector3d w = QuaternionD::angularVelocity(QuaternionD::identity, q, accelerometer_correction_period_);
+	if (w.length() == 0.0)
+		return;
+	QuaternionD deltaq = QuaternionD::fromAngularVelocity(-w, dtime);
+	attitude_ = (attitude_ * deltaq).normalize();
 }
 
-void attitudetracker::track_magnetometer(const Vector3d& m)
+void attitudetracker::track_magnetometer(const Vector3d& m, double dtime)
 {
-	g2m_q_ = QuaternionD::fromVectors(world_attitude_.rotate(earth_g_.normalize()), m.normalize());
 
-	Vector3d m_estimated = world_attitude_.rotate(get_earth_m().normalize());
-	QuaternionD q = QuaternionD::fromVectors(m_estimated, m.normalize());
-	QuaternionD deltaq = QuaternionD::nlerp(QuaternionD::identity, q, blend_g_/3.0);
-//	attitude_ = (deltaq.normalize() * attitude_).normalize();
 }
 
 QuaternionD attitudetracker::get_attitude() const
 {
-	return world_attitude_.conjugated();
+	return attitude_;
 }
 
 QuaternionD attitudetracker::get_world_attitude() const
 {
-	return world_attitude_.conjugated();
+	return attitude_.conjugate();
 }
 
 
 void attitudetracker::reset_attitude()
 {
-	world_attitude_ = QuaternionD::identity;
+	attitude_ = QuaternionD::identity;
 }
