@@ -30,6 +30,7 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	, label_accelerometer_x_(NULL)
 	, label_accelerometer_y_(NULL)
 	, label_accelerometer_z_(NULL)
+	, label_accelerometer_length_(NULL)
 {
 	//Get the Glade-instantiated Button, and connect a signal handler:
 	ref_glade_->get_widget("button_quit", button_quit_);
@@ -55,6 +56,8 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	ref_glade_->get_widget("label_accelerometer_x", label_accelerometer_x_);
 	ref_glade_->get_widget("label_accelerometer_y", label_accelerometer_y_);
 	ref_glade_->get_widget("label_accelerometer_z", label_accelerometer_z_);
+	ref_glade_->get_widget("label_accelerometer_length", label_accelerometer_length_);
+
 
 	button_quit_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_quit));
 	button_lock_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_lock_motors));
@@ -216,9 +219,11 @@ void mainwindow::rpc_update_accelerometer()
 {
 	try {
 		json::value val = rpc_client_->call(rpcuri_, "sd_get_accelerometer");
+		Vector3d G = matrix_from_json_value<double, 3, 1>(val);
 		label_accelerometer_x_->set_text(double_to_str(val.get_array().at(0).get_real()));
 		label_accelerometer_y_->set_text(double_to_str(val.get_array().at(1).get_real()));
 		label_accelerometer_z_->set_text(double_to_str(val.get_array().at(2).get_real()));
+		label_accelerometer_length_->set_text(double_to_str(G.length()));
 	} catch (std::exception& e) {
 		std::cout << "rpc_update_accelerometer(sd_get_accelerometer) exception: " << e.what() << std::endl;
 	}

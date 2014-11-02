@@ -20,13 +20,32 @@ public:
 		Vector3d acc3d_;
 		Vector3d mag3d_;
 		double bar1d_;
-		double dtime_;
-		double time_;
+		double dtime_gyr_;
+		double time_gyr_;
+		double dtime_acc_;
+		double time_acc_;
+		double dtime_mag_;
+		double time_mag_;
+		double dtime_bar_;
+		double time_bar_;
 		bool gyr3d_upd_;
 		bool acc3d_upd_;
 		bool mag3d_upd_;
 		bool bar1d_upd_;
-		data() : bar1d_(0), dtime_(0), time_(0), gyr3d_upd_(false), acc3d_upd_(false), mag3d_upd_(false), bar1d_upd_(false) {}
+		data()
+		: bar1d_(0)
+		, dtime_gyr_(0)
+		, time_gyr_(0)
+		, dtime_acc_(0)
+		, time_acc_(0)
+		, dtime_mag_(0)
+		, time_mag_(0)
+		, dtime_bar_(0)
+		, time_bar_(0)
+		, gyr3d_upd_(false)
+		, acc3d_upd_(false)
+		, mag3d_upd_(false)
+		, bar1d_upd_(false) {}
 	} data;
 
 public:
@@ -37,7 +56,11 @@ public:
 
 protected:
 	void update_sensors();
-	void update_time();
+	void update_time_gyr();
+	void update_time_acc();
+	void update_time_bar();
+	void update_time_mag();
+	double get_clock_time();
 };
 
 #endif

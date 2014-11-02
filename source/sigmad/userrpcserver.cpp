@@ -23,6 +23,7 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("sd_reset", &user_rpcserver::rpc_reset);
 	add("sd_get_thrust", &user_rpcserver::rpc_get_thrust);
 	add("sd_set_thrust", &user_rpcserver::rpc_set_thrust);
+	add("sd_set_accelerometer_correction_period", &user_rpcserver::rpc_set_accelerometer_correction_period);
 	add("sd_get_motors", &user_rpcserver::rpc_get_motors);
 	add("sd_get_earth_g_vector", &user_rpcserver::rpc_get_earth_g);
 	add("sd_set_earth_g_vector", &user_rpcserver::rpc_set_earth_g);
@@ -31,7 +32,6 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("sd_get_attitude", &user_rpcserver::rpc_get_attitude);
 	add("sd_get_accelerometer", &user_rpcserver::rpc_get_accelerometer);
 	add("sd_get_magnetometer", &user_rpcserver::rpc_get_magnetometer);
-	add("sd_get_g2m", &user_rpcserver::rpc_get_g2m);
 	add("thrust", &user_rpcserver::rpc_thrust);
 	add("ki", &user_rpcserver::rpc_ki);
 	add("kd", &user_rpcserver::rpc_kd);
@@ -268,7 +268,7 @@ json::value user_rpcserver::rpc_get_accelerometer(http::server::connection_ptr c
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return matrix_to_json_value(app_.ssampler_->data.acc3d_.normalize());
+	return matrix_to_json_value(app_.ssampler_->data.acc3d_);
 }
 
 json::value user_rpcserver::rpc_get_magnetometer(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
@@ -289,25 +289,6 @@ json::value user_rpcserver::rpc_get_magnetometer(http::server::connection_ptr co
 	verify_parameters(params, types, ARRAYSIZE(types));
 	Vector3d magfield(app_.ssampler_->data.mag3d_.at(0, 0), app_.ssampler_->data.mag3d_.at(1, 0));
 	return matrix_to_json_value(app_.attitude_tracker_->earth_m_);
-}
-
-json::value user_rpcserver::rpc_get_g2m(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
-{
-	static unsigned int types[] = {rpc_null_type};
-	if (mode != execute) {
-		if (mode == spec)
-			return create_json_spec(types, ARRAYSIZE(types));
-		if (mode == helpspec)
-			return create_json_helpspec(types, ARRAYSIZE(types));
-		return
-	            "sd_get_g2m\n"
-	            "\nGet the angle between G and M of the Earth."
-				"\n"
-				"Arguments:\n"
-				;
-	}
-	verify_parameters(params, types, ARRAYSIZE(types));
-	return RAD2DEG(app_.attitude_tracker_->g2m_q_.angle());
 }
 
 json::value user_rpcserver::rpc_get_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
@@ -347,7 +328,6 @@ json::value user_rpcserver::rpc_set_earth_g(http::server::connection_ptr connect
 	verify_parameters(params, types, ARRAYSIZE(types));
 	Vector3d earth_g = matrix_from_json_value<double, 3, 1>(params[0]);
 	app_.attitude_tracker_->set_earth_g(earth_g);
-	app_.attitude_tracker_->reset_attitude();
 	return  matrix_to_json_value(app_.attitude_tracker_->get_earth_g());
 }
 
@@ -612,6 +592,32 @@ json::value user_rpcserver::rpc_get_thrust(http::server::connection_ptr connecti
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	return app_.ctrl_thread_.thrust_;
+}
+
+json::value user_rpcserver::rpc_set_accelerometer_correction_period(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_set_accelerometer_correction_period\n"
+				"\nSet the correction period for the accelerometer."
+				"\nThe attitude tracker will try to correct the attitude error for the"
+				"\nspecified period. Shorter period means the error will be corrected"
+				"\nfaster, but this will introduce noise from the accelerometer sensor."
+				"\nLonger periods will suppress the noise, but it will take longer time"
+				"\nto correct the error."
+				"\n"
+				"Arguments:\n"
+				"1. n          (real) correction period\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	app_.attitude_tracker_->accelerometer_correction_period_ = params[0].get_real();
+	return params[0].get_real();
 }
 
 json::value user_rpcserver::rpc_set_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)

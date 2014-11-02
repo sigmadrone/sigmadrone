@@ -68,7 +68,8 @@ Vector3d pidtorque::get_z_torque(const QuaternionD &inQ, const Vector3d& Omega, 
 	integral_error_ = integral_error_ - integral_error_ * 0.000001;
 	if (integral_error_.length() * Ki > 30.0/1000.0)
 		integral_error_ = integral_error_ * 0.85;
-	differentialError = (error - error_)/dT;
+	if (dT > 0.0001)
+		differentialError = (error - error_)/dT;
 	torq = error.normalize() * pow(err, 1.00) * Kp +
 			differentialError * Kd +
 			integral_error_.normalize() * pow(integral_error_.length(), 1.3) * Ki * 0.0;

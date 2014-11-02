@@ -22,7 +22,7 @@ attcontroller::attcontroller(server_app& app)
 	P2_ = Vector3d(-1.0,  1.0, 0.0);
 	P3_ = Vector3d(-1.0, -1.0, 0.0);
 	set_thrust_dir(Vector3d(0, 0, 1));
-	pid_.reset(1.2, 0.0, 0.40);
+	pid_.reset(1.7, 0.0, 0.35);
 }
 
 attcontroller::~attcontroller()
@@ -56,7 +56,6 @@ void attcontroller::start()
 		app_.servoctrl_->armmotors();
 		app_.servoctrl_->enable();
 		exit_ = false;
-		app_.attitude_tracker_->reset_attitude();
 		thread_.reset(new boost::thread(boost::bind(&attcontroller::worker, this)));
 	}
 }
@@ -80,29 +79,19 @@ bool attcontroller::is_running()
 void attcontroller::worker()
 {
 	app_.ssampler_->init();
-	/*
-	 * Initialize the initial Magnetometer position.
-	 */
-	for (int i = 0; i < 20; i++) {
-		app_.ssampler_->update();
-		if (app_.ssampler_->data.mag3d_upd_) {
-			app_.attitude_tracker_->set_earth_m(app_.ssampler_->data.mag3d_);
-		}
-	}
 	while (!exit_) {
 		try {
-			boost::this_thread::sleep(boost::posix_time::milliseconds(2));
 			app_.ssampler_->update();
 			if (app_.ssampler_->data.gyr3d_upd_)
-				app_.attitude_tracker_->track_gyroscope(DEG2RAD(app_.ssampler_->data.gyr3d_), app_.ssampler_->data.dtime_);
+				app_.attitude_tracker_->track_gyroscope(DEG2RAD(app_.ssampler_->data.gyr3d_), app_.ssampler_->data.dtime_gyr_);
 			if (app_.ssampler_->data.acc3d_upd_)
-				app_.attitude_tracker_->track_accelerometer(app_.ssampler_->data.acc3d_);
+				app_.attitude_tracker_->track_accelerometer(app_.ssampler_->data.acc3d_, app_.ssampler_->data.dtime_acc_);
 			if (app_.ssampler_->data.mag3d_upd_)
-				app_.attitude_tracker_->track_magnetometer(app_.ssampler_->data.mag3d_);
+				app_.attitude_tracker_->track_magnetometer(app_.ssampler_->data.mag3d_, app_.ssampler_->data.dtime_mag_);
 			attQ_ = app_.attitude_tracker_->get_attitude();
 
 			pid_.set_target(targetQ_);
-			Vector3d correction = pid_.get_xy_torque(attQ_, DEG2RAD(app_.ssampler_->data.gyr3d_), app_.ssampler_->data.dtime_);
+			Vector3d correction = pid_.get_xy_torque(attQ_, DEG2RAD(app_.ssampler_->data.gyr3d_), app_.ssampler_->data.dtime_gyr_);
 
 			//  From the motor trust measurement:
 			//  0.6 --> 450g * 22.5cm

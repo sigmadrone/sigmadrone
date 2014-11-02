@@ -38,7 +38,7 @@ static cmd_arg_spec g_argspec2[] = {
 		{"mag-scale",		"",		"Set magnetometer full scale. Supported scales (Gauss): 1300, 1900, 2500, 4000, 4700, 5600, 8100. Default: 1300", CMD_ARG_STRING},
 		{"gyr-adjustment",	"",		"Set adjustment factor of the gyroscope readings. The sensor reading is multiplied by this factor. Default: 1.0", CMD_ARG_STRING},
 		{"bias-samples",	"",		"The number of samples to be used to calculate sensors bias", CMD_ARG_STRING},
-		{"nlerp-blend",		"",		"The g_blend used in attitude tracker.", CMD_ARG_STRING},
+		{"acc-preiod",		"",		"The accelerometer period used in attitude tracker.", CMD_ARG_STRING},
 		{"fps",				"",		"Frames per second. How often to output. Default: 1000", CMD_ARG_STRING},
 		{"gyr-disable",		"",		"Disable reading gyroscope", CMD_ARG_BOOL},
 		{"acc-disable",		"",		"Disable reading accelerometer", CMD_ARG_BOOL},

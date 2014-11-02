@@ -12,6 +12,40 @@ void printQ(float X, float Y, float Z)
 	cout << X << ", "<< Y << ", "<< Z << ": " << Quaternion<float>::fromEulerAngles(X, Y, Z) << endl;
 }
 
+void test_quaternion_decompostion_twist_swing()
+{
+	QuaternionD swing, twist;
+	QuaternionD swing_z = QuaternionD::fromAxisRot(Vector3d(1, 0, 0), M_PI/2).normalize();
+	QuaternionD twist_z = QuaternionD::fromAxisRot(Vector3d(0, 0, 1), M_PI/4).normalize();
+	QuaternionD::decomposeTwistSwing(swing_z * twist_z, Vector3d(0,0,1), swing, twist);
+
+	cout << "swing_z:             " << swing_z << std::endl;
+	cout << "twist_z:             " << twist_z << std::endl;
+	cout << "swing_z * twist_z:   " << swing_z * twist_z << std::endl;
+	cout << "twist:               " << twist.normalize() << std::endl;
+	cout << "swing:               " << swing.normalize() << std::endl;
+	cout << "swing * twist:       " << swing.normalize() * twist.normalize() << std::endl;
+	cout << std::endl;
+}
+
+
+void test_quaternion_decompostion_swing_twist()
+{
+	QuaternionD swing, twist;
+	QuaternionD swing_z = QuaternionD::fromAxisRot(Vector3d(1, 0, 0), M_PI).normalize();
+	QuaternionD twist_z = QuaternionD::fromAxisRot(Vector3d(0, 0, 1), M_PI).normalize();
+	QuaternionD::decomposeSwingTwist(twist_z * swing_z, Vector3d(0,0,1), swing, twist);
+
+	cout << "swing_z:             " << swing_z << std::endl;
+	cout << "twist_z:             " << twist_z << std::endl;
+	cout << "twist_z * swing_z:   " << twist_z * swing_z << std::endl;
+	cout << "twist:               " << twist.normalize() << std::endl;
+	cout << "swing:               " << swing.normalize() << std::endl;
+	cout << "twist * swing:       " << twist.normalize() * swing.normalize() << std::endl;
+	cout << std::endl;
+}
+
+
 void test_quaternion_transforms()
 {
 	cout << "Quaternion Transforms from: http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/" << std::endl << std::endl;
@@ -75,6 +109,12 @@ int main(int argc, char *argv[])
 	Vector3f Gi(-0.02,   -0.01,    1.00);
 	Quaternion<float> Q(0.96, -0.26, 0.10, -0.07);
 
+	for (int i = 0; i <= 24; i++) {
+		double angle = 2 * M_PI * i /24.0;
+		std::cout << "Rotation around Z, angle: " << RAD2DEG(angle) << ", Q: " << QuaternionD::fromAxisRot(Vector3d(0, 0, 1), angle).normalize() << std::endl;
+	}
+	std::cout << std::endl << std::endl;
+
 	Gn = Gn.normalize();
 
 	cout << "X: " << X.transpose();
@@ -128,5 +168,8 @@ int main(int argc, char *argv[])
 
 	test_quaternion_transforms();
 	test_quaternion_nlerp();
+	test_quaternion_decompostion_twist_swing();
+	test_quaternion_decompostion_swing_twist();
+
 	return 0;
 }

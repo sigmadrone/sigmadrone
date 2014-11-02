@@ -90,10 +90,10 @@ int main(int argc, const char *argv[])
 		while (true) {
 			sensorsamples.update();
 			if (args.get_value("gyr-notrack").empty())
-				attitude.track_gyroscope(DEG2RAD(sensorsamples.data.gyr3d_), sensorsamples.data.dtime_);
+				attitude.track_gyroscope(DEG2RAD(sensorsamples.data.gyr3d_), sensorsamples.data.dtime_gyr_);
 			if (args.get_value("acc-notrack").empty() && sensorsamples.data.acc3d_upd_)
-				attitude.track_accelerometer(sensorsamples.data.acc3d_.normalize());
-			fperiod += sensorsamples.data.dtime_;
+				attitude.track_accelerometer(sensorsamples.data.acc3d_.normalize(), sensorsamples.data.dtime_acc_);
+			fperiod += sensorsamples.data.dtime_gyr_;
 			if (fperiod < 1.0/(atof(args.get_value("fps", "1000").c_str()) + 1))
 				continue;
 			fperiod = 0.0;
@@ -106,7 +106,7 @@ int main(int argc, const char *argv[])
 						sensorsamples.data.gyr3d_.at(0, 0), sensorsamples.data.gyr3d_.at(1, 0), sensorsamples.data.gyr3d_.at(2, 0),
 						sensorsamples.data.mag3d_.at(0, 0), sensorsamples.data.mag3d_.at(1, 0), sensorsamples.data.mag3d_.at(2, 0),
 						sensorsamples.data.bar1d_,
-						sensorsamples.data.dtime_);
+						sensorsamples.data.dtime_gyr_);
 			}
 			fflush(stdout);
 		}
