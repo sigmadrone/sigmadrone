@@ -91,7 +91,6 @@ private:
 	double m_targetThrust;
 	int m_refCnt;
 
-
 	PidTorque m_pid;
 	Vector3d m_torqueCorrection;
 	Vector3d m_M0, m_M1, m_M2, m_M3;

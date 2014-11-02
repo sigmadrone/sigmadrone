@@ -7,6 +7,11 @@
 
 #include "matrix.h"
 
+template<typename T, int N>
+struct Vector{
+	typedef MatrixMN<T, N, 1> type;
+};
+
 template <typename T, const size_t N, const size_t DIM>
 class FirFilter
 {
@@ -49,6 +54,17 @@ public:
 		AdvancePtr();  /*prepare for the next input sample*/
 		return m_Output;
 	}
+
+	typename Vector<T,DIM>::type
+	DoFilter(const typename Vector<T,DIM>::type& in)
+	{
+		typename Vector<T,DIM>::type out;
+		DoFilter((const T*)in.data);
+		for (size_t i = 0; i < DIM; ++i) {
+			out.at(i,0) = m_Output[i];
+		}
+		return out;
+	}
 	const T* /*[N]*/ GetCoeff() const { return m_Coeff; }
 	const T* /*[DIM]*/ GetOutput() const { return m_Output; }
 
@@ -63,7 +79,11 @@ private:
 	size_t m_Ptr;
 };
 
-typedef FirFilter<double,11,3> FirFilter3d;
+template<const size_t N>
+struct FirFilter3d {
+  typedef FirFilter<double, N, 3> type;
+};
+
 
 /*
  * class LpPreFilter3d

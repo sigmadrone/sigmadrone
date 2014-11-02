@@ -37,11 +37,12 @@ private:
 	~ImuLowPassFilter();
 
 private:
-	LpPreFilter3d m_GyroFilt;
-	FirFilter<double,38,3> m_AccelFilt;
-	IPluginRuntime* m_Runtime;
-	Vector3d m_filteredAccel3d;
-	int m_RefCnt;
+	LpPreFilter3d gyrofilt_;
+	FirFilter3d<38>::type accelfilt_38_;
+	FirFilter3d<199>::type accelfilt_200_;
+	IPluginRuntime* runtime_;
+	Vector3d filtered_accel3d_;
+	int ref_cnt_;
 };
 
 #endif /* IMULPF_H */

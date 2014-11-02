@@ -42,6 +42,9 @@ int ThrustCorrectionPlugin::ExecuteCommand(
 		m_thrustCorrection = params->Params().asVector4d();
 		std::cout << "Correction thrust:\n" << m_thrustCorrection;
 		break;
+	case SD_COMMAND_GET_CORRECTION_THRUST:
+		params->SetOutParams(SdIoData(m_thrustCorrection));
+		break;
 	default:break;
 	}
 	return err;

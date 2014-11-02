@@ -85,7 +85,7 @@ int ServoDevicePlugin::Start(const SdDroneConfig* droneConfig)
 		}
 		servoctrl_->setrate(config->Rate);
 		for (size_t i = 0; i < servoctrl_->channelcount(); i++) {
-			servoctrl_->motor(i) = servomotor(1.0, 1.3, 1.1, 2.2);
+			servoctrl_->motor(i) = servomotor(1.0, 1.25, 1.1, 2.2);
 		}
 		servoctrl_->enable();
 		servoctrl_->armmotors();

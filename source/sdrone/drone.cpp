@@ -303,6 +303,12 @@ int Drone::Run(CommandLineArgs& args)
 			this,
 			SdJsonValue(),
 			RpcParams::BuildJsonVector4d(Vector4d(0,0,0,0)));
+	m_rpcDispatch->AddRequestCallback(
+				SdCommandCodeToString(SD_COMMAND_GET_CORRECTION_THRUST),
+				OnRpcCommandGetMotors,
+				this,
+				SdJsonValue(),
+				RpcParams::BuildJsonVector4d(Vector4d(0,0,0,0)));
 
 	m_rpcDispatch->AddRequestCallback(
 			SdCommandCodeToString(SD_COMMAND_IS_RUNNING),
@@ -775,7 +781,7 @@ void Drone::OnRpcCommandGetMotors(
 		const SdJsonRpcRequest* req,
 		SdJsonRpcReply* rep)
 {
-	PluginCommandParams params(SD_COMMAND_GET_MOTORS);
+	PluginCommandParams params(SdStringToCommandCode(req->MethodName.c_str()));
 	rep->ErrorCode = SD_JSONRPC_ERROR_APP;
 	if (0 == Only()->m_pluginChain.ExecuteCommand(&params,SD_FLAG_DISPATCH_DOWN)) {
 		if (params.OutParams().dataType() == SdIoData::TYPE_VECTOR4D) {

@@ -16,16 +16,41 @@ static double s_OneHzCutoffFiveHzPass[] =
 		0.0165, 0.0155, 0.0145, 0.0133, 0.0122, 0.0110, 0.0099, 0.0087, 0.0076, 0.0065, 0.0055, 0.0136
 };
 
-ImuLowPassFilter::ImuLowPassFilter() :
-		m_AccelFilt(s_OneHzCutoffFiveHzPass)
+static double s_FiveHzCutoff200[] =
 {
-	m_Runtime = 0;
-	m_RefCnt = 1;
+		0.0004, 0.0004, 0.0004, 0.0004, 0.0004, 0.0005, 0.0005, 0.0005, 0.0005, 0.0006,
+		0.0006, 0.0006, 0.0007, 0.0007, 0.0008, 0.0008, 0.0009, 0.0009, 0.0010, 0.0010,
+		0.0011, 0.0012, 0.0013, 0.0013, 0.0014, 0.0015, 0.0016, 0.0017, 0.0018, 0.0019,
+		0.0020, 0.0021, 0.0022, 0.0023, 0.0025, 0.0026, 0.0027, 0.0028, 0.0030, 0.0031,
+		0.0032, 0.0034, 0.0035, 0.0037, 0.0038, 0.0040, 0.0041, 0.0043, 0.0044, 0.0046,
+		0.0047, 0.0049, 0.0051, 0.0052, 0.0054, 0.0056, 0.0057, 0.0059, 0.0060, 0.0062,
+		0.0064, 0.0065, 0.0067, 0.0068, 0.0070, 0.0072, 0.0073, 0.0075, 0.0076, 0.0078,
+		0.0079, 0.0081, 0.0082, 0.0083, 0.0085, 0.0086, 0.0087, 0.0088, 0.0090, 0.0091,
+		0.0092, 0.0093, 0.0094, 0.0095, 0.0096, 0.0097, 0.0097, 0.0098, 0.0099, 0.0099,
+		0.0100, 0.0101, 0.0101, 0.0101, 0.0102, 0.0102, 0.0102, 0.0103, 0.0103, 0.0103,
+		0.0103, 0.0103, 0.0103, 0.0102, 0.0102, 0.0102, 0.0101, 0.0101, 0.0101, 0.0100,
+		0.0099, 0.0099, 0.0098, 0.0097, 0.0097, 0.0096, 0.0095, 0.0094, 0.0093, 0.0092,
+		0.0091, 0.0090, 0.0088, 0.0087, 0.0086, 0.0085, 0.0083, 0.0082, 0.0081, 0.0079,
+		0.0078, 0.0076, 0.0075, 0.0073, 0.0072, 0.0070, 0.0068, 0.0067, 0.0065, 0.0064,
+		0.0062, 0.0060, 0.0059, 0.0057, 0.0056, 0.0054, 0.0052, 0.0051, 0.0049, 0.0047,
+		0.0046, 0.0044, 0.0043, 0.0041, 0.0040, 0.0038, 0.0037, 0.0035, 0.0034, 0.0032,
+		0.0031, 0.0030, 0.0028, 0.0027, 0.0026, 0.0025, 0.0023, 0.0022, 0.0021, 0.0020,
+		0.0019, 0.0018, 0.0017, 0.0016, 0.0015, 0.0014, 0.0013, 0.0013, 0.0012, 0.0011,
+		0.0010, 0.0010, 0.0009, 0.0009, 0.0008, 0.0008, 0.0007, 0.0007, 0.0006, 0.0006,
+		0.0006, 0.0005, 0.0005, 0.0005, 0.0005, 0.0004, 0.0004, 0.0004, 0.0004, 0.0004
+};
+
+ImuLowPassFilter::ImuLowPassFilter() :
+		accelfilt_38_(s_OneHzCutoffFiveHzPass),
+		accelfilt_200_(s_FiveHzCutoff200)
+{
+	runtime_ = 0;
+	ref_cnt_ = 1;
 }
 
 ImuLowPassFilter::~ImuLowPassFilter()
 {
-	assert(0 == m_RefCnt);
+	assert(0 == ref_cnt_);
 }
 
 int ImuLowPassFilter::AttachToChain(
@@ -38,7 +63,7 @@ int ImuLowPassFilter::AttachToChain(
 			SD_ALTITUDE_GROUP_LOWER_FILTER,
 			0,
 			0,
-			&m_Runtime);
+			&runtime_);
 	return err;
 }
 
@@ -47,17 +72,18 @@ int ImuLowPassFilter::ExecuteCommand(
 {
 	switch (params->CommandCode()) {
 	case SD_COMMAND_RUN:
-		m_Runtime->SetIoFilters(
+		runtime_->SetIoFilters(
 				SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
 				SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
-		m_AccelFilt.Reset();
-		m_GyroFilt.Reset();
+		accelfilt_38_.Reset();
+		accelfilt_200_.Reset();
+		gyrofilt_.Reset();
 		break;
 	case SD_COMMAND_EXIT:
-		m_Runtime->DetachPlugin();
+		runtime_->DetachPlugin();
 		break;
 	case SD_COMMAND_GET_ACCELEROMETER:
-		params->SetOutParams(SdIoData(m_filteredAccel3d));
+		params->SetOutParams(SdIoData(filtered_accel3d_));
 		return SD_ESTOP_DISPATCH;
 	default:break;
 	}
@@ -66,12 +92,12 @@ int ImuLowPassFilter::ExecuteCommand(
 
 int ImuLowPassFilter::AddRef()
 {
-	return __sync_fetch_and_add(&m_RefCnt,1);
+	return __sync_fetch_and_add(&ref_cnt_,1);
 }
 
 int ImuLowPassFilter::Release()
 {
-	int refCnt = __sync_sub_and_fetch(&m_RefCnt,1);
+	int refCnt = __sync_sub_and_fetch(&ref_cnt_,1);
 	if (0 == refCnt) {
 		delete this;
 	}
@@ -102,14 +128,10 @@ const char* ImuLowPassFilter::GetDlFileName()
 int ImuLowPassFilter::IoCallback(
 	SdIoPacket* ioPacket)
 {
-	Vector3d accelData = ioPacket->AccelData();
-	double arr[3] = {accelData.at(0,0),accelData.at(1,0),accelData.at(2,0)};
-	m_AccelFilt.DoFilter(arr);
-	accelData.at(0,0) = m_AccelFilt.GetOutput()[0];
-	accelData.at(1,0) = m_AccelFilt.GetOutput()[1];
-	accelData.at(2,0) = m_AccelFilt.GetOutput()[2];
-	m_filteredAccel3d = accelData = accelData.normalize();
-	ioPacket->SetAttribute(SDIO_ATTR_ACCEL, SdIoData(accelData));
+	filtered_accel3d_= accelfilt_200_.DoFilter(ioPacket->AccelData());
+	ioPacket->SetAttribute(SDIO_ATTR_ACCEL, SdIoData(filtered_accel3d_));
+	//Vector3d filteredGyro=gyrofilt_.DoFilter(ioPacket->GyroData());
+	//ioPacket->SetAttribute(SDIO_ATTR_GYRO, SdIoData(filteredGyro));
 	return SD_ESUCCESS;
 }
 

@@ -84,11 +84,11 @@ int ImuReader::Run(
 		/*
 		 * Operating in text mode
 		 */
-		m_fileSampler.reset(new file_sampler(droneConfig->Accel.DeviceName.c_str(), true));
+		m_fileSampler.reset(new file_sampler(droneConfig->Accel.DeviceName.c_str(), false));
 		try {
 			m_fileSampler.reset(new file_sampler(
 					droneConfig->Accel.DeviceName.c_str(),
-					true));
+					false));
 		} catch (std::exception& e) {
 			fprintf(stdout, "Error: %s\n", e.what());
 			err = EINVAL;

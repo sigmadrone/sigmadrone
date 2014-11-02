@@ -95,7 +95,6 @@ const char* ImuFilterPlugin::GetDlFileName()
 	return g_Argv[0];
 }
 
-
 int ImuFilterPlugin::IoCallback(SdIoPacket* ioPacket)
 {
 	if (SD_DEVICEID_IMU == ioPacket->DeviceId() &&
