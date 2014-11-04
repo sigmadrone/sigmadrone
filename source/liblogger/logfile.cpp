@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <ctime>
 
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/convenience.hpp"
+#define BOOST_NO_CXX11_SCOPED_ENUMS
+#include <boost/filesystem.hpp>
 #include "logfile.h"
 
 
