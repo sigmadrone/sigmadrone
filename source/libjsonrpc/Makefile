@@ -59,7 +59,7 @@ obj/%.o: %.c
 
 obj/%.o: %.cpp
 #.cpp.o: 
-	$(CXX) -c $(CFLAGS) $(INCLUDES) -MMD -MF $(@:%.o=%.d) -o $@ $<
+	$(CXX) -std=c++11 -c $(CFLAGS) $(INCLUDES) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	-e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \

@@ -21,16 +21,16 @@ all : $(TARGET)
 	$(CC) -c $< $(CFLAGS) $(INCLUDES)
 
 .cxx.o: 
-	$(CXX) -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -std=c++11 -c $< $(CFLAGS) $(INCLUDES)
 
 .cpp.o: 
-	$(CXX) -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -std=c++11 -c $< $(CFLAGS) $(INCLUDES)
 
 %.o: $(SDRONE_SRCDIR)/%.cpp
-	$(CXX) $(CFLAGS) -o $*.o -c $(SDRONE_SRCDIR)/$*.cpp
+	$(CXX) -std=c++11 $(CFLAGS) -o $*.o -c $(SDRONE_SRCDIR)/$*.cpp
 
 $(TARGET) : $(OBJECTS)
-	$(CXX) $^ -o $(TARGET) $(LIBS)
+	$(CXX) -std=c++11 $^ -o $(TARGET) $(LIBS)
 
 clean:
 	rm -f *.o *~ $(TARGET)

@@ -333,8 +333,8 @@ typedef struct _SdImuData {
 } SdImuData;
 
 typedef struct _SdThrustValues {
-	static const double MIN = 0.0;
-	static const double MAX = 1.0;
+	static constexpr double MIN = 0.0;
+	static constexpr double MAX = 1.0;
 	_SdThrustValues(double thr=MIN, double minThr=MIN, double maxThr=MIN) {
 		minThrust = fmin(fmax(MIN, minThr), maxThr);
 		maxThrust = fmax(fmin(MAX, maxThr), minThrust);

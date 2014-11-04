@@ -4,9 +4,11 @@
 #include <string>
 #include <cstdarg>
 #include <stdexcept>
+#include <array>
 #include <boost/asio.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/array.hpp>
 #include "headers.hpp"
 #include "response.hpp"
 #include "response_parser.hpp"

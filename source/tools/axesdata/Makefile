@@ -16,10 +16,10 @@ all : $(TARGET)
 	$(CC) -c $< $(CFLAGS) $(INCLUDES)
 
 .cxx.o: 
-	$(CXX) -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -std=c++11 -c $< $(CFLAGS) $(INCLUDES)
 
 $(TARGET) : $(OBJECTS)
-	$(CXX) $^ -o $(TARGET) $(LIBS)
+	$(CXX) -std=c++11 $^ -o $(TARGET) $(LIBS)
 
 clean:
 	rm -f *.o *~ $(TARGET)
