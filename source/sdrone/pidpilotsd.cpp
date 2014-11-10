@@ -74,6 +74,8 @@ int PidPilot::Start(const SdDroneConfig* config)
 	m_config = config->Quad;
 	m_pid.Reset(m_config.Kp * 1000.0, m_config.Ki * 1000.0, m_config.Kd * 1000.0);
 
+	m_runtime->StartStopIoDispatchThread(true);
+
 	m_runtime->SetIoFilters(
 			SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
 			SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
@@ -97,6 +99,7 @@ int PidPilot::Release()
 
 void PidPilot::Stop(bool detach)
 {
+	m_runtime->StartStopIoDispatchThread(false);
 	m_minThrust = m_maxThrust = 0;
 	m_motors = Vector4d();
 	if (detach) {
@@ -130,20 +133,11 @@ int PidPilot::IoCallback(
 {
 	int err = 0;
 	if (SD_IOCODE_RECEIVE == ioPacket->IoCode()) {
-
 		/*
 		 * Check whether the IO carries all the necessary info for the pilot
 		 */
 		UpdateState(ioPacket);
 
-		/**
-		 * Issue commands to the servos. Since the servos are controlled by
-		 * different device, we must issue new SdIoPacket "down" to the servo
-		 * device. We do not want to stop the current packet as there may
-		 * be another plugin on top that performs different functions, aka
-		 * logging, etc.
-		 */
-		err = IssueCommandToServo();
 
 		/*
 		 *  Set the motor values in the IO structures so it can be used by the
@@ -156,12 +150,13 @@ int PidPilot::IoCallback(
 	return err;
 }
 
-int PidPilot::IssueCommandToServo()
+int PidPilot::IssueCommandToServo(const Vector4d& motors)
 {
-	//
-	// Since the servos are controlled by different device, we must issue new
-	// SdIoPacket "down" to the servo device.
-	//
+	/**
+	 * Issue commands to the servos. Since the servos are controlled by
+	 * different device, we must issue new SdIoPacket "down" to the servo
+	 * device.
+	 */
 	int err = ENOMEM;
 	SdServoIoData servoData;
 	SdIoPacket* ioPacket = m_runtime->AllocIoPacket(
@@ -172,7 +167,7 @@ int PidPilot::IssueCommandToServo()
 		servoData.numChannels = 4;
 		for (size_t i = 0; i < ARRAYSIZE(m_config.Motor); i++) {
 			servoData.channels[i] = m_config.Motor[i];
-			servoData.value[i] = m_motors.at(i,0);
+			servoData.value[i] = motors.at(i,0);
 		}
 		ioPacket->SetIoData(SdIoData(servoData),true);
 		err = m_runtime->DispatchIo(ioPacket,SD_FLAG_DISPATCH_DOWN);
@@ -184,6 +179,17 @@ int PidPilot::IssueCommandToServo()
 	return err;
 }
 
+int PidPilot::IoDispatchThread()
+{
+	Vector4d motors = m_motors;
+	while (motors.at(0,0) != m_motors.at(0,0) ||
+			motors.at(1,0) != m_motors.at(1,0) ||
+			motors.at(2,0) != m_motors.at(2,0) ||
+			motors.at(3,0) != m_motors.at(3,0))  {
+		motors = m_motors;
+	}
+	return IssueCommandToServo(motors);
+}
 
 int PidPilot::UpdateState(
 	SdIoPacket* ioPacket)
@@ -224,13 +230,7 @@ int PidPilot::UpdateState(
 			m_motors.at(3,0));
 
 	ioPacket->SetAttribute(SDIO_ATTR_ERR_PID,SdIoData(torqueRPM));
-#if 0
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_P,SdIoData(&m_ErrorP));
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_I,SdIoData(&m_ErrorI));
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_D,SdIoData(&m_ErrorD));
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_OMEGA,SdIoData(&omegaErrPid));
-	ioPacket->SetAttribute(SDIO_ATTR_ERR_ANGLE,SdIoData(RAD2DEG(m_ErrorAngle)));
-#endif
+
 	return retVal;
 }
 

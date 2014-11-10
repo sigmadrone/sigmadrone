@@ -20,11 +20,11 @@ void DroneConfig::Init(SdDroneType droneType)
 		m_config.Accel.MaxReading = 32768;
 		m_config.Accel.Watermark = 2;
 		m_config.Gyro.DeviceName = "/dev/gyro0";
-		m_config.Gyro.SamplingRate = 380;
+		m_config.Gyro.SamplingRate = 760;
 		m_config.Gyro.Scale = 2000;
 		m_config.Gyro.MaxReading = 32768;
 		m_config.Gyro.NumBiasSamples = 4000;
-		m_config.Gyro.Watermark = 2;
+		m_config.Gyro.Watermark = 1;
 		m_config.Mag.DeviceName = "/dev/mag0";
 		m_config.Mag.Scale = 1300;
 		m_config.Servo.DeviceName = "/dev/pwm0";
@@ -41,9 +41,14 @@ void DroneConfig::Init(SdDroneType droneType)
 		 * Kp = 1.0 <-> 1.3
 		 * Ki = 1.2, with leak rate dT
 		 * Kd = 0.3 <-> 0.45
+		 *
+		 * PID coefficients for small props on DJI F450
+		 * Kp = 1.0 <-> 1.3
+		 * Ki = 0 - still not a measurable impact of Ki
+		 * Kd = 0.35
 		 */
-		m_config.Quad.Kp = 1.0;
-		m_config.Quad.Ki = 1.2;
+		m_config.Quad.Kp = 1.2;
+		m_config.Quad.Ki = 0;
 		m_config.Quad.Kd = 0.35;
 		m_config.LogLevel = SD_LOG_LEVEL_VERBOSE;
 		m_config.LogRate = 1;

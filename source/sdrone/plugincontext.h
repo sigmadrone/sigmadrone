@@ -85,7 +85,7 @@ private:
 	uint32_t m_ioFilter;
 	pthread_t m_dispatchThread;
 	int m_refCnt;
-	bool m_doDispatchIo;
+	volatile bool m_doDispatchIo;
 	int m_logLevel;
 };
 

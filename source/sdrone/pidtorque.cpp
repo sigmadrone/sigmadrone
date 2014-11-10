@@ -2,7 +2,7 @@
 #include "pidtorque.h"
 
 PidTorque::PidTorque() :
-	m_setQ(1), m_oldQ(1)
+	m_setQ(1), m_oldQ(1), m_pidController(0.0,0.0,0.0)
 {
 	Reset(0.0, 0.0, 0.0);
 }
@@ -17,6 +17,7 @@ void PidTorque::Reset(double Kp, double Ki, double Kd)
 	m_Kp = Kp / 1000.0 * 22.5 / 100.0 / (3.1415/2);
 	m_Ki = Ki / 1000.0 * 22.5 / 100.0 / (3.1415/2);
 	m_Kd = Kd / 1000.0 * 22.5 / 100.0 / (3.1415/2);
+	m_pidController.Reset(m_Kp,0,m_Kd,0);
 	m_integralError = Vector3d();
 	m_lastError = Vector3d();
 }
@@ -53,6 +54,8 @@ Vector3d PidTorque::GetTorque(const QuaternionD &inQ, const Vector3d& Omega, dou
 	torq = error.normalize() * pow(err, 1.00) * m_Kp +
 			differentialError * m_Kd +
 			m_integralError.normalize() * pow(m_integralError.length(), 1.3) * m_Ki * 0.0;
+
+	torq = m_pidController.GetPid(error,dT);
 
 //	torq = error.normalize() * err * m_Kp;
 //	torq = m_integralError.normalize() * pow(m_integralError.length(), 1.3) * m_Ki;

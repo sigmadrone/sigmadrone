@@ -35,7 +35,7 @@ public:
 	 */
 	int IoCallback(SdIoPacket* ioPacket);
 
-	int IoDispatchThread() { assert(false); return EINVAL; }
+	int IoDispatchThread();
 
 private:
 	virtual ~PidPilot();
@@ -50,7 +50,7 @@ private:
 	int UpdateState(
 			SdIoPacket*
 			);
-	int IssueCommandToServo();
+	int IssueCommandToServo(const Vector4d& motors);
 
 	static double GetTorqueScale(
 			double errAngle
@@ -94,6 +94,7 @@ private:
 	PidTorque m_pid;
 	Vector3d m_torqueCorrection;
 	Vector3d m_M0, m_M1, m_M2, m_M3;
+	deltatime m_dt;
 };
 
 

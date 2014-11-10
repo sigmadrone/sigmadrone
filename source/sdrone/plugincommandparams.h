@@ -29,7 +29,7 @@ struct PluginCommandParams: public SdCommandParams
 
 private:
 	SdCommandCode m_cmdCode;
-	const SdIoData& m_inParams;
+	SdIoData m_inParams;
 	SdIoData m_outParams;
 	const IJsonValue* m_rpcParams;
 

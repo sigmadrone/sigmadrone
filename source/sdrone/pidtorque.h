@@ -1,6 +1,7 @@
 
 #include <sys/time.h>
 #include "matrix.h"
+#include "pidcontroller.h"
 
 #ifndef _PIDTORQUE_H_
 #define _PIDTORQUE_H_
@@ -22,6 +23,7 @@ public:
 	Vector3d m_integralError;
 	timespec m_lastTime;
 	double m_Kp, m_Ki, m_Kd;
+	PidController3d m_pidController;
 };
 
 

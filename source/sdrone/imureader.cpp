@@ -13,7 +13,6 @@ ImuReader::ImuReader()
 {
 	m_sensorLog = 0;
 	m_RunTime = 0;
-	clock_gettime(CLOCK_REALTIME, &m_lastTime);
 	m_refCnt = 1;
 	m_counter = 0;
 }
@@ -56,10 +55,12 @@ int ImuReader::ExecuteCommand(SdCommandParams* params)
 		break;
 	case SD_COMMAND_RESET:
 		m_RunTime->StartStopIoDispatchThread(false);
+		fflush(m_sensorLog);
 		break;
 	case SD_COMMAND_EXIT:
 		m_RunTime->StartStopIoDispatchThread(false);
 		m_RunTime->DetachPlugin();
+		fflush(m_sensorLog);
 		break;
 	case SD_COMMAND_GET_ACCELEROMETER:
 		if (m_fileSampler) {
@@ -122,7 +123,7 @@ int ImuReader::Run(
 			goto __return;
 		}
 	}
-	DeltaT();
+	m_dt.get();
 
 	/*
 	 * Since this is a device plugin, that needs to read data,
@@ -132,17 +133,6 @@ int ImuReader::Run(
 
 __return:
 	return err;
-}
-
-double ImuReader::DeltaT()
-{
-	timespec now;
-	double dT;
-	clock_gettime(CLOCK_REALTIME, &now);
-	dT = (now.tv_sec - m_lastTime.tv_sec) +
-			(now.tv_nsec - m_lastTime.tv_nsec)/1000000000.0;
-	m_lastTime = now;
-	return dT; // sec
 }
 
 int ImuReader::AddRef()
@@ -212,10 +202,12 @@ int ImuReader::IoDispatchThread()
 		imuData.gyro3d = m_fileSampler->data.gyr3d_;
 		imuData.mag3d = m_fileSampler->data.mag3d_;
 		pressure = m_fileSampler->data.bar1d_;
+
 		ioPacket->SetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS,
 				SdIoData(m_fileSampler->data.dtime_));
 		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
 				SdIoData(m_fileSampler->data.dtime_));
+
 	} else {
 		m_sampler->update();
 		imuData.mag3d_upd = m_sampler->data.mag3d_upd_;
@@ -225,13 +217,12 @@ int ImuReader::IoDispatchThread()
 		imuData.gyro3d = m_sampler->data.gyr3d_;
 		imuData.mag3d = m_sampler->data.mag3d_;
 		pressure = m_sampler->data.bar1d_;
+
 		ioPacket->SetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS,
 				SdIoData(m_sampler->data.dtime_gyr_));
 		ioPacket->SetAttribute(SDIO_ATTR_DELTA_TIME,
-				SdIoData(DeltaT()));
+				SdIoData(m_dt.get()));
 	}
-
-	ioPacket->SetIoData(SdIoData(imuData),true);
 
 	if (m_sensorLog) {
 		fprintf(m_sensorLog, "%10.2lf %10.2lf %10.2lf    %10.2lf %10.2lf %10.2lf    "
@@ -240,10 +231,13 @@ int ImuReader::IoDispatchThread()
 				imuData.gyro3d.at(0, 0), imuData.gyro3d.at(1, 0), imuData.gyro3d.at(2, 0),
 				imuData.mag3d.at(0, 0), imuData.mag3d.at(1, 0), imuData.mag3d.at(2, 0),
 				pressure,
-				ioPacket->GetAttribute(SDIO_ATTR_TIME_TO_READ_SENSORS).asDouble());
-		fflush(m_sensorLog);
+				m_sampler->data.dtime_gyr_);
+		if (!(m_counter%10000)) {
+			fflush(m_sensorLog);
+		}
 	}
 
+	ioPacket->SetIoData(SdIoData(imuData),true);
 	imuData.acc3d = imuData.acc3d.normalize();
 	imuData.mag3d = imuData.mag3d.normalize();
 	ioPacket->SetAttribute(SDIO_ATTR_ACCEL,SdIoData(imuData.acc3d));
@@ -252,6 +246,7 @@ int ImuReader::IoDispatchThread()
 	ret = m_RunTime->DispatchIo(ioPacket,0);
 
 	__return:
+
 	m_RunTime->FreeIoPacket(ioPacket);
 
 	return ret;

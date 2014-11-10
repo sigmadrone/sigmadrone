@@ -36,7 +36,6 @@ public:
 	int ExecuteCommand(SdCommandParams*);
 
 private:
-	double DeltaT();
 	void CloseSensorLog();
 	~ImuReader();
 
@@ -44,7 +43,7 @@ private:
 	IPluginRuntime* m_RunTime;
 	int m_refCnt;
 	FILE* m_sensorLog;
-	timespec m_lastTime;
+	deltatime m_dt;
 	uint32_t m_counter;
 	boost::scoped_ptr<file_sampler> m_fileSampler;
 	boost::scoped_ptr<sampler> m_sampler;
