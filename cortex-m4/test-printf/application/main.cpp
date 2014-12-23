@@ -77,6 +77,10 @@ void init_lcd()
 	BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)"Hello world!", CENTER_MODE);
 
 	trace_printf("LCD %d by %d pixels\n", BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
+
+	vTaskDelay(2000 / portTICK_RATE_MS);
+
+	BSP_LCD_Clear(LCD_COLOR_WHITE);
 }
 
 void main_task(void *pvParameters)
@@ -88,6 +92,7 @@ void main_task(void *pvParameters)
 
 
 	// Infinite loop
+	char disp[128] = {0};
 	while (1) {
 		BSP_GYRO_GetXYZ(data);
 		data[0] = data[0] / 250.0f;
@@ -95,6 +100,13 @@ void main_task(void *pvParameters)
 		data[2] = data[2] / 250.0f;
 
 		trace_printf("GYRO ID: 0x%x, data: %f, %f, %f\n", BSP_GYRO_ReadID(), data[0], data[1], data[2]);
+
+		sprintf(disp,"GYRO X: %3.4f", data[0]);
+		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"GYRO Y: %3.4f", data[1]);
+		BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"GYRO Z: %3.4f", data[2]);
+		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*)disp, LEFT_MODE);
 
 		vTaskDelay(250 / portTICK_RATE_MS);
 		try {
