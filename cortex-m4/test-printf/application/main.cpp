@@ -17,6 +17,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "stm32f429i_discovery_gyroscope.h"
+#include "stm32f429i_discovery_lcd.h"
 
 void* __dso_handle = 0;
 
@@ -31,10 +32,60 @@ extern "C" void EXTI0_IRQHandler(void)
 	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
 }
 
+void secondary_task(void *pvParameters)
+{
+	// Infinite loop
+	trace_printf("Secondary task...\n");
+	while (1) {
+		vTaskDelay(250 / portTICK_RATE_MS);
+	}
+}
+
+void HAL_Delay(__IO uint32_t delay)
+{
+	vTaskDelay(delay / portTICK_RATE_MS);
+}
+
+#define LCD_FRAME_BUFFER_LAYER0                  0xC0130000
+#define LCD_FRAME_BUFFER_LAYER1                  0xC0000000
+#define CONVERTED_FRAME_BUFFER                   0xC0260000
+
+void init_lcd()
+{
+	/*##-1- Initialize the LCD #################################################*/
+	/* Initialize the LCD */
+	BSP_LCD_Init();
+
+	/* Initialise the LCD Layers */
+	BSP_LCD_LayerDefaultInit(1, LCD_FRAME_BUFFER);
+
+	/* Set LCD Foreground Layer  */
+	BSP_LCD_SelectLayer(1);
+
+	BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
+
+	/* Clear the LCD */
+	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+	BSP_LCD_Clear(LCD_COLOR_WHITE);
+
+	/* Set the LCD Text Color */
+	BSP_LCD_SetTextColor(LCD_COLOR_DARKBLUE);
+
+	/* Display LCD messages */
+	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)"STM32F429I BSP", CENTER_MODE);
+
+	BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)"Hello world!", CENTER_MODE);
+
+	trace_printf("LCD %d by %d pixels\n", BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
+}
+
 void main_task(void *pvParameters)
 {
+	init_lcd();
+
 	float data[3];
 	BSP_GYRO_Init();
+
 
 	// Infinite loop
 	while (1) {
@@ -76,7 +127,7 @@ int main(int argc, char* argv[])
 		);
 
 	xTaskCreate(
-		main_task, /* Function pointer */
+		secondary_task, /* Function pointer */
 		"Task2", /* Task name - for debugging only*/
 		configMINIMAL_STACK_SIZE, /* Stack depth in words */
 		(void*) NULL, /* Pointer to tasks arguments (parameter) */
@@ -85,7 +136,7 @@ int main(int argc, char* argv[])
 		);
 
 	xTaskCreate(
-		main_task, /* Function pointer */
+		secondary_task, /* Function pointer */
 		"Task3", /* Task name - for debugging only*/
 		configMINIMAL_STACK_SIZE, /* Stack depth in words */
 		(void*) NULL, /* Pointer to tasks arguments (parameter) */
