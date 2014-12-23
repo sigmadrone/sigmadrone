@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <stdexcept>
 
-#include "../application/digitalin.h"
-#include "../application/digitalout.h"
+#include "digitalin.h"
+#include "digitalout.h"
 #include "diag/Trace.h"
 #include "stm32f4xx_hal.h"
 #include "FreeRTOS.h"
@@ -50,6 +50,7 @@ void main_task(void *pvParameters)
 
 int main(int argc, char* argv[])
 {
+	char buffer[512];
 	uint32_t freq = HAL_RCC_GetSysClockFreq();
 
 	button.callback(&led2, &DigitalOut::toggle);
@@ -81,6 +82,9 @@ int main(int argc, char* argv[])
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/
 		NULL /* Task handle */
 		);
+
+	vTaskList(buffer);
+	trace_printf("Tasks: \n%s\n\n", buffer);
 
 	vTaskStartScheduler();
 
