@@ -15,6 +15,10 @@ NEWLIB_SRC_CXX = $(wildcard system/newlib/*.cxx)
 FREERTOS_SRC_C = $(wildcard freertos/*.c)
 APP_SRC_C = $(wildcard application/*.c)
 APP_SRC_CPP = $(wildcard application/*.cpp)
+BSP_SRC_C = $(wildcard BSP/STM32F429I-Discovery/*.c)
+FONTS_SRC_C = $(wildcard BSP/Fonts/*.c)
+L3GD20_SRC_C = $(wildcard BSP/Components/l3gd20/*.c)
+STMPE811_SRC_C = $(wildcard BSP/Components/stmpe811/*.c)
 
 
 CIMSIS_OBJ_C   := $(CIMSIS_SRC_C:.c=.o)
@@ -26,6 +30,10 @@ APP_OBJ_CPP    := $(APP_SRC_CPP:.cpp=.o)
 NEWLIB_OBJ_C   := $(NEWLIB_SRC_C:.c=.o)
 FREERTOS_OBJ_C := $(FREERTOS_SRC_C:.c=.o)
 NEWLIB_OBJ_CXX := $(NEWLIB_SRC_CXX:.cxx=.o)
+BSP_OBJ_C      := $(BSP_SRC_C:.c=.o)
+L3GD20_OBJ_C   := $(L3GD20_SRC_C:.c=.o)
+STMPE811_OBJ_C := $(STMPE811_SRC_C:.c=.o)
+FONTS_OBJ_C    := $(FONTS_SRC_C:.c=.o)
 
 
 OBJECTS        :=   $(CIMSIS_OBJ_C) \
@@ -37,6 +45,11 @@ OBJECTS        :=   $(CIMSIS_OBJ_C) \
 					$(APP_OBJ_C) \
 					$(APP_OBJ_CPP) \
 					$(FREERTOS_OBJ_C) \
+					$(BSP_OBJ_C) \
+					$(L3GD20_OBJ_C) \
+					$(STMPE811_OBJ_C) \
+					
+
 					
 DEPS           := $(OBJECTS:.o=.d)
 
@@ -50,6 +63,10 @@ INCLUDES = \
 	-I freertos \
 	-I freertos/include \
 	-I application \
+	-I BSP/STM32F429I-Discovery \
+	-I BSP/Components \
+	-I BSP/Components/Common \
+	-I BSP/Components/l3gd20 \
 
 
 ############################################################################### 
@@ -67,9 +84,10 @@ OBJDUMP = $(PREFIX)objdump
 CPU = -mcpu=cortex-m4 -mthumb -mfpu=fpv4-sp-d16 -mfloat-abi=$(FLOAT_ABI)
 CFLAGS = $(CPU) -c -g -O0 -Wall
 CFLAGS += -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections
+CFLAGS += -D__FPU_PRESENT -D__FPU_USED
 CFLAGS += -DDEBUG -DTRACE 
-CFLAGS += -DOS_USE_TRACE_ITM
-#CFLAGS += -DOS_USE_TRACE_SEMIHOSTING_DEBUG
+# CFLAGS += -DOS_USE_TRACE_ITM
+CFLAGS += -DOS_USE_TRACE_SEMIHOSTING_DEBUG
 CFLAGS += -DSTM32F429xx -DHSE_VALUE=8000000
 
 CC_FLAGS = $(CFLAGS)

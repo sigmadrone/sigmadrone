@@ -16,11 +16,12 @@
 #include "stm32f4xx_hal.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "stm32f429i_discovery_gyroscope.h"
 
 void* __dso_handle = 0;
 
-DigitalOut led1(LED1);
-DigitalOut led2(LED2);
+DigitalOut led1(USER_LED1);
+DigitalOut led2(USER_LED2);
 DigitalIn button(USER_BUTTON, DigitalIn::PullDown, DigitalIn::InterruptRising);
 
 extern "C" void EXTI0_IRQHandler(void)
@@ -32,16 +33,23 @@ extern "C" void EXTI0_IRQHandler(void)
 
 void main_task(void *pvParameters)
 {
-	uint32_t freq = HAL_RCC_GetSysClockFreq();
+	float data[3];
+	BSP_GYRO_Init();
 
 	// Infinite loop
 	while (1) {
-		trace_printf("main_task:, freq: %d, f=%f\n", freq, 0.75);
-		vTaskDelay(1000 / portTICK_RATE_MS);
+		BSP_GYRO_GetXYZ(data);
+		data[0] = data[0] / 250.0f;
+		data[1] = data[1] / 250.0f;
+		data[2] = data[2] / 250.0f;
+
+		trace_printf("GYRO ID: 0x%x, data: %f, %f, %f\n", BSP_GYRO_ReadID(), data[0], data[1], data[2]);
+
+		vTaskDelay(250 / portTICK_RATE_MS);
 		try {
 			throw (std::runtime_error("timeout"));
 		} catch (std::exception& e) {
-			trace_printf("main_task:, exception: %s, f=%f\n", e.what(), 0.75);
+//			trace_printf("main_task:, exception: %s, f=%f\n", e.what(), 0.75);
 		}
 		led1.toggle();
 	}
@@ -54,6 +62,8 @@ int main(int argc, char* argv[])
 	uint32_t freq = HAL_RCC_GetSysClockFreq();
 
 	button.callback(&led2, &DigitalOut::toggle);
+
+	trace_printf("Starting main_task:, CPU freq: %d, f=%f\n", freq, 0.75);
 
 	  /* Create tasks */
 	xTaskCreate(
