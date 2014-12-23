@@ -19,6 +19,7 @@ BSP_SRC_C = $(wildcard BSP/STM32F429I-Discovery/*.c)
 FONTS_SRC_C = $(wildcard BSP/Fonts/*.c)
 L3GD20_SRC_C = $(wildcard BSP/Components/l3gd20/*.c)
 STMPE811_SRC_C = $(wildcard BSP/Components/stmpe811/*.c)
+ILI9341_SRC_C = $(wildcard BSP/Components/ili9341/*.c)
 
 
 CIMSIS_OBJ_C   := $(CIMSIS_SRC_C:.c=.o)
@@ -33,6 +34,7 @@ NEWLIB_OBJ_CXX := $(NEWLIB_SRC_CXX:.cxx=.o)
 BSP_OBJ_C      := $(BSP_SRC_C:.c=.o)
 L3GD20_OBJ_C   := $(L3GD20_SRC_C:.c=.o)
 STMPE811_OBJ_C := $(STMPE811_SRC_C:.c=.o)
+ILI9341_OBJ_C  := $(ILI9341_SRC_C:.c=.o)
 FONTS_OBJ_C    := $(FONTS_SRC_C:.c=.o)
 
 
@@ -48,6 +50,7 @@ OBJECTS        :=   $(CIMSIS_OBJ_C) \
 					$(BSP_OBJ_C) \
 					$(L3GD20_OBJ_C) \
 					$(STMPE811_OBJ_C) \
+					$(ILI9341_OBJ_C)
 					
 
 					
