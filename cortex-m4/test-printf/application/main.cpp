@@ -18,6 +18,7 @@
 #include "task.h"
 #include "stm32f429i_discovery_gyroscope.h"
 #include "stm32f429i_discovery_lcd.h"
+#include "spimaster.h"
 
 void* __dso_handle = 0;
 
@@ -85,11 +86,22 @@ void init_lcd()
 
 void main_task(void *pvParameters)
 {
+//	SPIMaster spi5(SPI5, 0x2000,
+//	{
+//		{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
+//		{PF_8, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_MISO_PIN */
+//		{PF_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},			/* DISCOVERY_SPIx_MOSI_PIN */
+////		{PA_1, GPIO_MODE_INPUT, GPIO_NOPULL, GPIO_SPEED_FAST, 0},						/* INT1 */
+////		{PA_2, GPIO_MODE_INPUT, GPIO_NOPULL, GPIO_SPEED_FAST, 0},						/* INT2 */
+//	},
+//	{
+//		{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* GYRO_CS_PIN */
+//	});
 	init_lcd();
 
-	float data[3];
+	float data[3] = {0, 0, 0};
+	uint8_t id = 0;
 	BSP_GYRO_Init();
-
 
 	// Infinite loop
 	char disp[128] = {0};
@@ -99,6 +111,7 @@ void main_task(void *pvParameters)
 		data[1] = data[1] / 250.0f;
 		data[2] = data[2] / 250.0f;
 
+//		spi5.read(0, 0x0F, &id, 1);
 		trace_printf("GYRO ID: 0x%x, data: %f, %f, %f\n", BSP_GYRO_ReadID(), data[0], data[1], data[2]);
 
 		sprintf(disp,"GYRO X: %3.4f", data[0]);

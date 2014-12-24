@@ -35,6 +35,7 @@ GPIOPin::GPIOPin(
 		: gpio_port_((GPIO_TypeDef *) (GPIOA_BASE + 0x0400 * STM_PORT(pn)))
 		, pinnum_(STM_PIN(pn))
 {
+	Pin = 1 << pinnum_;
 	Mode = mode;
 	Pull = pull;
 	Speed = speed;
@@ -57,6 +58,8 @@ void GPIOPin::init()
 		__GPIOD_CLK_ENABLE();
 	else if (gpio_port_ == GPIOE)
 		__GPIOE_CLK_ENABLE();
+	else if (gpio_port_ == GPIOF)
+		__GPIOF_CLK_ENABLE();
 	else if (gpio_port_ == GPIOG)
 		__GPIOG_CLK_ENABLE();
 	else if (gpio_port_ == GPIOH)
