@@ -77,32 +77,98 @@ void SPIMaster::spi_chip_select(uint8_t chip, bool select)
 /* Multiple byte read/write command */
 #define MULTIPLEBYTE_CMD           ((uint8_t)0x40)
 
-void SPIMaster::read(uint8_t cs, uint8_t ReadAddr, uint8_t* pBuffer, uint8_t NumByteToRead)
+void SPIMaster::read(uint8_t cs, uint8_t addr, uint8_t* buffer, uint16_t nbytes)
 {
+	uint8_t dummybuffer[64];
+
+	memset(dummybuffer, 0, sizeof(dummybuffer));
 	/*
 	 * This should be moved out of here
 	 */
-	if (NumByteToRead > 0x01) {
-		ReadAddr |= (uint8_t) (READWRITE_CMD | MULTIPLEBYTE_CMD);
+	if (nbytes > 0x01) {
+		addr |= (uint8_t) (READWRITE_CMD | MULTIPLEBYTE_CMD);
 	} else {
-		ReadAddr |= (uint8_t) READWRITE_CMD;
+		addr |= (uint8_t) READWRITE_CMD;
 	}
-
 
 	/* Set chip select Low at the start of the transmission */
 	spi_chip_select(cs, true);
 
 	/* Send the Address of the indexed register */
-	spi_write_read(ReadAddr);
+	if (HAL_SPI_TransmitReceive(&handle_, (uint8_t*) &addr, (uint8_t*) dummybuffer, 1, timeout_) != HAL_OK) {
+		throw std::runtime_error("SPI timeout");
+	}
 
-	/* Receive the data that will be read from the device (MSB First) */
-	while (NumByteToRead > 0x00) {
-		/* Send dummy byte (0x00) to generate the SPI clock to Gyroscope (Slave device) */
-		*pBuffer = spi_write_read();
-		NumByteToRead--;
-		pBuffer++;
+	/* Read the data from the device */
+	while (nbytes > 0) {
+		uint32_t rxbytes = (nbytes > sizeof(dummybuffer)) ? sizeof(dummybuffer) : nbytes;
+		if (HAL_SPI_TransmitReceive(&handle_, (uint8_t*) dummybuffer, (uint8_t*) buffer, rxbytes, timeout_) != HAL_OK) {
+			throw std::runtime_error("SPI timeout");
+		}
+		buffer += rxbytes;
+		nbytes -= rxbytes;
 	}
 
 	/* Set chip select High at the end of the transmission */
 	spi_chip_select(cs, false);
 }
+
+void SPIMaster::write(uint8_t cs, uint8_t addr, uint8_t* buffer, uint16_t nbytes)
+{
+	uint8_t dummybuffer[64];
+
+	memset(dummybuffer, 0, sizeof(dummybuffer));
+
+	/* Configure the MS bit:
+	 - When 0, the address will remain unchanged in multiple read/write commands.
+	 - When 1, the address will be auto incremented in multiple read/write commands.
+	 */
+	if (nbytes > 0x01) {
+		addr |= (uint8_t) MULTIPLEBYTE_CMD;
+	}
+	/* Set chip select Low at the start of the transmission */
+	spi_chip_select(cs, true);
+
+	/* Send the Address of the indexed register */
+	if (HAL_SPI_TransmitReceive(&handle_, (uint8_t*) &addr, (uint8_t*) dummybuffer, 1, timeout_) != HAL_OK) {
+		throw std::runtime_error("SPI timeout");
+	}
+
+	/* Send the data that will be written into the device */
+	while (nbytes > 0) {
+		uint32_t txbytes = (nbytes > sizeof(dummybuffer)) ? sizeof(dummybuffer) : nbytes;
+		if (HAL_SPI_TransmitReceive(&handle_, (uint8_t*) buffer, (uint8_t*) dummybuffer, txbytes, timeout_) != HAL_OK) {
+			throw std::runtime_error("SPI timeout");
+		}
+		buffer += txbytes;
+		nbytes -= txbytes;
+	}
+
+	/* Set chip select High at the end of the transmission */
+	spi_chip_select(cs, false);
+}
+
+uint8_t SPIMaster::read_reg8(uint8_t cs, uint8_t reg)
+{
+	uint8_t ret;
+	read(cs, reg, (uint8_t*)&ret, sizeof(ret));
+	return ret;
+}
+
+uint16_t SPIMaster::read_reg16(uint8_t cs, uint8_t reg)
+{
+	uint16_t ret;
+	read(cs, reg, (uint8_t*)&ret, sizeof(ret));
+	return ret;
+}
+
+void SPIMaster::write_reg8(uint8_t cs, uint8_t reg, uint8_t val)
+{
+	write(cs, reg, (uint8_t*)&val, sizeof(val));
+}
+
+void SPIMaster::write_reg16(uint8_t cs, uint8_t reg, uint16_t val)
+{
+	write(cs, reg, (uint8_t*)&val, sizeof(val));
+}
+

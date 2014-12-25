@@ -16,9 +16,9 @@
 #include "stm32f4xx_hal.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "stm32f429i_discovery_gyroscope.h"
 #include "stm32f429i_discovery_lcd.h"
 #include "spimaster.h"
+#include "l3gd20_device.h"
 
 void* __dso_handle = 0;
 
@@ -86,39 +86,40 @@ void init_lcd()
 
 void main_task(void *pvParameters)
 {
-//	SPIMaster spi5(SPI5, 0x2000,
-//	{
-//		{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
-//		{PF_8, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_MISO_PIN */
-//		{PF_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},			/* DISCOVERY_SPIx_MOSI_PIN */
-////		{PA_1, GPIO_MODE_INPUT, GPIO_NOPULL, GPIO_SPEED_FAST, 0},						/* INT1 */
-////		{PA_2, GPIO_MODE_INPUT, GPIO_NOPULL, GPIO_SPEED_FAST, 0},						/* INT2 */
-//	},
-//	{
-//		{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* GYRO_CS_PIN */
-//	});
+	SPIMaster spi5(SPI5, 0x2000, {
+				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
+				{PF_8, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_MISO_PIN */
+				{PF_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},			/* DISCOVERY_SPIx_MOSI_PIN */
+				{PA_1, GPIO_MODE_INPUT, GPIO_NOPULL, GPIO_SPEED_FAST, 0},						/* INT1 */
+				{PA_2, GPIO_MODE_INPUT, GPIO_NOPULL, GPIO_SPEED_FAST, 0},						/* INT2 */
+			}, {
+				{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* GYRO_CS_PIN */
+			});
+	L3GD20 gyro(spi5, 0);
+	float data[3] = {0, 0, 0};
+	AxesRaw_t raw;
 	init_lcd();
 
-	float data[3] = {0, 0, 0};
-	uint8_t id = 0;
-	BSP_GYRO_Init();
+	gyro.SetMode(L3GD20_NORMAL);
+	gyro.SetODR(L3GD20_ODR_190Hz_BW_50);
+	gyro.SetFullScale(L3GD20_FULLSCALE_500);
+	gyro.SetBDU(MEMS_ENABLE);
+	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
 
 	// Infinite loop
 	char disp[128] = {0};
 	while (1) {
-		BSP_GYRO_GetXYZ(data);
-		data[0] = data[0] / 250.0f;
-		data[1] = data[1] / 250.0f;
-		data[2] = data[2] / 250.0f;
+		gyro.GetAngRateRaw(&raw);
+		data[0] = raw.AXIS_X * 500.0 / 32768.0;
+		data[1] = raw.AXIS_Y * 500.0 / 32768.0;
+		data[2] = raw.AXIS_Z * 500.0 / 32768.0;
+		trace_printf("GYRO ID: 0x%x, data: %f, %f, %f\n", gyro.GetDeviceID(), data[0], data[1], data[2]);
 
-//		spi5.read(0, 0x0F, &id, 1);
-		trace_printf("GYRO ID: 0x%x, data: %f, %f, %f\n", BSP_GYRO_ReadID(), data[0], data[1], data[2]);
-
-		sprintf(disp,"GYRO X: %3.4f", data[0]);
+		sprintf(disp,"GYRO X: %6.2f", data[0]);
 		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"GYRO Y: %3.4f", data[1]);
+		sprintf(disp,"GYRO Y: %6.2f", data[1]);
 		BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"GYRO Z: %3.4f", data[2]);
+		sprintf(disp,"GYRO Z: %6.2f", data[2]);
 		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*)disp, LEFT_MODE);
 
 		vTaskDelay(250 / portTICK_RATE_MS);

@@ -48,27 +48,30 @@ GPIOPin::~GPIOPin()
 
 void GPIOPin::init()
 {
-	if (gpio_port_ == GPIOA)
-		__GPIOA_CLK_ENABLE();
-	else if (gpio_port_ == GPIOB)
-		__GPIOB_CLK_ENABLE();
-	else if (gpio_port_ == GPIOC)
-		__GPIOC_CLK_ENABLE();
-	else if (gpio_port_ == GPIOD)
-		__GPIOD_CLK_ENABLE();
-	else if (gpio_port_ == GPIOE)
-		__GPIOE_CLK_ENABLE();
-	else if (gpio_port_ == GPIOF)
-		__GPIOF_CLK_ENABLE();
-	else if (gpio_port_ == GPIOG)
-		__GPIOG_CLK_ENABLE();
-	else if (gpio_port_ == GPIOH)
-		__GPIOH_CLK_ENABLE();
-	else if (gpio_port_ == GPIOI)
-		__GPIOI_CLK_ENABLE();
-	else if (gpio_port_ == GPIOJ)
-		__GPIOJ_CLK_ENABLE();
-	else if (gpio_port_ == GPIOK)
-		__GPIOK_CLK_ENABLE();
+	unsigned long portnum = (((unsigned long)gpio_port_) - GPIOA_BASE) / 0x0400;
+	switch (portnum) {
+		case 0:	__GPIOA_CLK_ENABLE(); break;
+		case 1:	__GPIOB_CLK_ENABLE(); break;
+		case 2:	__GPIOC_CLK_ENABLE(); break;
+		case 3:	__GPIOD_CLK_ENABLE(); break;
+#ifdef __GPIOE_CLK_ENABLE
+		case 4:	__GPIOE_CLK_ENABLE(); break;
+#endif
+#ifdef __GPIOF_CLK_ENABLE
+		case 5:	__GPIOF_CLK_ENABLE(); break;
+#endif
+#ifdef __GPIOG_CLK_ENABLE
+		case 6:	__GPIOG_CLK_ENABLE(); break;
+#endif
+#ifdef __GPIOH_CLK_ENABLE
+		case 7:	__GPIOH_CLK_ENABLE(); break;
+#endif
+#ifdef __GPIOJ_CLK_ENABLE
+		case 8:	__GPIOJ_CLK_ENABLE(); break;
+#endif
+#ifdef __GPIOK_CLK_ENABLE
+		case 9:	__GPIOK_CLK_ENABLE(); break;
+#endif
+	}
 	HAL_GPIO_Init(gpio_port_, (GPIO_InitTypeDef*)this);
 }

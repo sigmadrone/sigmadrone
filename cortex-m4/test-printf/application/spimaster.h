@@ -21,12 +21,12 @@ public:
 	SPIMaster(SPI_TypeDef* spi_device = SPI5, uint32_t timeout = 0x1000, const std::vector<GPIOPin>& data_pins = {}, const std::vector<GPIOPin>& cs_pins = {});
 	virtual ~SPIMaster();
 
-	void read(uint8_t cs, uint8_t reg, uint8_t* buffer, uint8_t nbytes);
-	uint8_t read8(uint8_t cs, uint8_t reg);
-	uint16_t read16(uint8_t cs, uint8_t reg);
-	void write(uint8_t cs, uint8_t RegAddr, uint8_t* buffer, uint8_t nbytes);
-	void write8(uint8_t cs, uint8_t reg, uint8_t val);
-	void write16(uint8_t cs, uint8_t reg, uint16_t val);
+	void read(uint8_t cs, uint8_t reg, uint8_t* buffer, uint16_t nbytes);
+	void write(uint8_t cs, uint8_t reg, uint8_t* buffer, uint16_t nbytes);
+	uint8_t read_reg8(uint8_t cs, uint8_t reg);
+	uint16_t read_reg16(uint8_t cs, uint8_t reg);
+	void write_reg8(uint8_t cs, uint8_t reg, uint8_t val);
+	void write_reg16(uint8_t cs, uint8_t reg, uint16_t val);
 
 protected:
 	uint8_t spi_write_read(uint8_t Byte = 0x0);
