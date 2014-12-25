@@ -101,19 +101,24 @@ void main_task(void *pvParameters)
 	init_lcd();
 
 	gyro.SetMode(L3GD20_NORMAL);
-	gyro.SetODR(L3GD20_ODR_190Hz_BW_50);
+	gyro.SetODR(L3GD20_ODR_95Hz_BW_25);
 	gyro.SetFullScale(L3GD20_FULLSCALE_500);
 	gyro.SetBDU(MEMS_ENABLE);
+	gyro.FIFOModeEnable(L3GD20_FIFO_STREAM_MODE);
 	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
 
 	// Infinite loop
 	char disp[128] = {0};
 	while (1) {
-		gyro.GetAngRateRaw(&raw);
-		data[0] = raw.AXIS_X * 500.0 / 32768.0;
-		data[1] = raw.AXIS_Y * 500.0 / 32768.0;
-		data[2] = raw.AXIS_Z * 500.0 / 32768.0;
-		trace_printf("GYRO ID: 0x%x, data: %f, %f, %f\n", gyro.GetDeviceID(), data[0], data[1], data[2]);
+		uint8_t count = gyro.GetFifoSourceReg() & 0x1F;
+		data[0] = data[1] = data[2] = 0.0;
+		for (uint8_t i = 0; i < count; i++) {
+			gyro.GetAngRateRaw(&raw);
+			data[0] += raw.AXIS_X * 500.0 / 32768.0 / count;
+			data[1] += raw.AXIS_Y * 500.0 / 32768.0 / count;
+			data[2] += raw.AXIS_Z * 500.0 / 32768.0 / count;
+		}
+		trace_printf("FIFO samples: %d, data: %f, %f, %f\n", count, data[0], data[1], data[2]);
 
 		sprintf(disp,"GYRO X: %6.2f", data[0]);
 		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
@@ -126,7 +131,7 @@ void main_task(void *pvParameters)
 		try {
 			throw (std::runtime_error("timeout"));
 		} catch (std::exception& e) {
-//			trace_printf("main_task:, exception: %s, f=%f\n", e.what(), 0.75);
+
 		}
 		led1.toggle();
 	}
