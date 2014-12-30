@@ -16,6 +16,7 @@
 #include "stm32f4xx_hal.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
 #include "stm32f429i_discovery_lcd.h"
 #include "spimaster.h"
 #include "l3gd20_device.h"
@@ -25,12 +26,35 @@ void* __dso_handle = 0;
 DigitalOut led1(USER_LED1);
 DigitalOut led2(USER_LED2);
 DigitalIn button(USER_BUTTON, DigitalIn::PullDown, DigitalIn::InterruptRising);
+DigitalIn wtm(PA_2, DigitalIn::PullNone, DigitalIn::InterruptRisingFalling);
+TaskHandle_t hMain;
+QueueHandle_t hGyroQueue;
 
 extern "C" void EXTI0_IRQHandler(void)
 {
 	uint32_t mask = portDISABLE_INTERRUPTS();
 	DigitalIn::vector_handler(0);
 	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
+}
+
+extern "C" void EXTI2_IRQHandler(void)
+{
+//	uint32_t mask = portDISABLE_INTERRUPTS();
+	DigitalIn::vector_handler(2);
+	HAL_NVIC_ClearPendingIRQ(EXTI2_IRQn);
+//	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
+}
+
+void wtm_isr()
+{
+	led2 = wtm;
+	if (wtm) {
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		uint32_t msg = 1;
+		xQueueSendFromISR(hGyroQueue, &msg, &xHigherPriorityTaskWoken);
+//		xTaskResumeFromISR(hMain);
+//		trace_printf("WTM isr...\n");
+	}
 }
 
 void secondary_task(void *pvParameters)
@@ -99,13 +123,19 @@ void main_task(void *pvParameters)
 	float data[3] = {0, 0, 0};
 	AxesRaw_t raw;
 	init_lcd();
+	wtm.callback(wtm_isr);
+
+	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 
 	gyro.SetMode(L3GD20_NORMAL);
 	gyro.SetODR(L3GD20_ODR_95Hz_BW_25);
 	gyro.SetFullScale(L3GD20_FULLSCALE_500);
 	gyro.SetBDU(MEMS_ENABLE);
+	gyro.SetWaterMark(14);
 	gyro.FIFOModeEnable(L3GD20_FIFO_STREAM_MODE);
+	gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
 	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
+
 
 	// Infinite loop
 	char disp[128] = {0};
@@ -118,7 +148,7 @@ void main_task(void *pvParameters)
 			data[1] += raw.AXIS_Y * 500.0 / 32768.0 / count;
 			data[2] += raw.AXIS_Z * 500.0 / 32768.0 / count;
 		}
-		trace_printf("FIFO samples: %d, data: %f, %f, %f\n", count, data[0], data[1], data[2]);
+//		trace_printf("FIFO samples: %d, data: %f, %f, %f\n", count, data[0], data[1], data[2]);
 
 		sprintf(disp,"GYRO X: %6.2f", data[0]);
 		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
@@ -126,14 +156,23 @@ void main_task(void *pvParameters)
 		BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
 		sprintf(disp,"GYRO Z: %6.2f", data[2]);
 		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"SAMPLES: %d           ", count);
+		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"QUEUE: %lu           ", uxQueueMessagesWaiting(hGyroQueue));
+		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*)disp, LEFT_MODE);
+		led1.toggle();
 
-		vTaskDelay(250 / portTICK_RATE_MS);
-		try {
-			throw (std::runtime_error("timeout"));
-		} catch (std::exception& e) {
+//		count = gyro.GetFifoSourceReg() & 0x1F;
+//		for (uint8_t i = 0; i < count; i++)
+//			gyro.GetAngRateRaw(&raw);
+
+		//vTaskDelay(150 / portTICK_RATE_MS);
+//		vTaskSuspend(NULL);
+		uint32_t msg;
+		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
 
 		}
-		led1.toggle();
+
 	}
 }
 
@@ -154,7 +193,7 @@ int main(int argc, char* argv[])
 		configMINIMAL_STACK_SIZE, /* Stack depth in words */
 		(void*) NULL, /* Pointer to tasks arguments (parameter) */
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/
-		NULL /* Task handle */
+		&hMain /* Task handle */
 		);
 
 	xTaskCreate(

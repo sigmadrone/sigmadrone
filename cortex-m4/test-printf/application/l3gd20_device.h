@@ -354,8 +354,10 @@ public:
 
 
 	/*********************Generic*********************/
-	void ReadReg8(u8_t Reg, u8_t* Data);
-	void WriteReg8(u8_t WriteAddr, u8_t Data);
+	void ReadReg8(u8_t reg, u8_t* data);
+	void WriteReg8(u8_t reg, u8_t data);
+	void ReadData(u8_t reg, u8_t* data, u16_t nbytes);
+	void WriteData(u8_t reg, u8_t *data, u16_t nbytes);
 
 };
 

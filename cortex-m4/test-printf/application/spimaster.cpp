@@ -72,24 +72,11 @@ void SPIMaster::spi_chip_select(uint8_t chip, bool select)
 	}
 }
 
-/* Read/Write command */
-#define READWRITE_CMD              ((uint8_t)0x80)
-/* Multiple byte read/write command */
-#define MULTIPLEBYTE_CMD           ((uint8_t)0x40)
-
 void SPIMaster::read(uint8_t cs, uint8_t addr, uint8_t* buffer, uint16_t nbytes)
 {
 	uint8_t dummybuffer[64];
 
 	memset(dummybuffer, 0, sizeof(dummybuffer));
-	/*
-	 * This should be moved out of here
-	 */
-	if (nbytes > 0x01) {
-		addr |= (uint8_t) (READWRITE_CMD | MULTIPLEBYTE_CMD);
-	} else {
-		addr |= (uint8_t) READWRITE_CMD;
-	}
 
 	/* Set chip select Low at the start of the transmission */
 	spi_chip_select(cs, true);
@@ -119,13 +106,6 @@ void SPIMaster::write(uint8_t cs, uint8_t addr, uint8_t* buffer, uint16_t nbytes
 
 	memset(dummybuffer, 0, sizeof(dummybuffer));
 
-	/* Configure the MS bit:
-	 - When 0, the address will remain unchanged in multiple read/write commands.
-	 - When 1, the address will be auto incremented in multiple read/write commands.
-	 */
-	if (nbytes > 0x01) {
-		addr |= (uint8_t) MULTIPLEBYTE_CMD;
-	}
 	/* Set chip select Low at the start of the transmission */
 	spi_chip_select(cs, true);
 

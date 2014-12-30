@@ -51,23 +51,23 @@ DigitalIn::DigitalIn(PinName pin, PullMode pmode, InterruptMode imode)
 		g_interrupt[pin_] = this;
 		switch (pin_) {
 		case 0:
-			HAL_NVIC_SetPriority(EXTI0_IRQn, 2, 0);
+			HAL_NVIC_SetPriority(EXTI0_IRQn, 40, 0);
 			HAL_NVIC_EnableIRQ(EXTI0_IRQn);
 			break;
 		case 1:
-			HAL_NVIC_SetPriority(EXTI1_IRQn, 2, 0);
+			HAL_NVIC_SetPriority(EXTI1_IRQn, 40, 0);
 			HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 			break;
 		case 2:
-			HAL_NVIC_SetPriority(EXTI2_IRQn, 2, 0);
+			HAL_NVIC_SetPriority(EXTI2_IRQn, 40, 0);
 			HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 			break;
 		case 3:
-			HAL_NVIC_SetPriority(EXTI3_IRQn, 2, 0);
+			HAL_NVIC_SetPriority(EXTI3_IRQn, 40, 0);
 			HAL_NVIC_EnableIRQ(EXTI3_IRQn);
 			break;
 		case 4:
-			HAL_NVIC_SetPriority(EXTI4_IRQn, 2, 0);
+			HAL_NVIC_SetPriority(EXTI4_IRQn, 40, 0);
 			HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 			break;
 		case 5:
@@ -75,7 +75,7 @@ DigitalIn::DigitalIn(PinName pin, PullMode pmode, InterruptMode imode)
 		case 7:
 		case 8:
 		case 9:
-			HAL_NVIC_SetPriority(EXTI9_5_IRQn, 2, 0);
+			HAL_NVIC_SetPriority(EXTI9_5_IRQn, 40, 0);
 			HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 			break;
 		case 10:
@@ -84,7 +84,7 @@ DigitalIn::DigitalIn(PinName pin, PullMode pmode, InterruptMode imode)
 		case 13:
 		case 14:
 		case 15:
-			HAL_NVIC_SetPriority(EXTI15_10_IRQn, 2, 0);
+			HAL_NVIC_SetPriority(EXTI15_10_IRQn, 40, 0);
 			HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 			break;
 		}

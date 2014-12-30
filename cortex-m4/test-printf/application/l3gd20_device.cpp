@@ -26,10 +26,42 @@
 #include "l3gd20_device.h"
 #include <stdexcept>
 
+/* Read/Write command */
+#define READWRITE_CMD              ((uint8_t)0x80)
+/* Multiple byte read/write command */
+#define MULTIPLEBYTE_CMD           ((uint8_t)0x40)
+
+
 L3GD20::L3GD20(SPIMaster& spi, u8_t cs)
 	: spi_(spi)
 	, cs_(cs)
 {
+}
+
+void L3GD20::ReadData(u8_t reg, u8_t* data, u16_t nbytes)
+{
+	/* Configure the MS bit:
+	 - When 0, the address will remain unchanged in multiple read/write commands.
+	 - When 1, the address will be auto incremented in multiple read/write commands.
+	 */
+	if (nbytes > 0x01) {
+		reg |= (uint8_t) (READWRITE_CMD | MULTIPLEBYTE_CMD);
+	} else {
+		reg |= (uint8_t) READWRITE_CMD;
+	}
+	spi_.read(cs_, reg, data, nbytes);
+}
+
+void L3GD20::WriteData(u8_t reg, u8_t *data, u16_t nbytes)
+{
+	/* Configure the MS bit:
+	 - When 0, the address will remain unchanged in multiple read/write commands.
+	 - When 1, the address will be auto incremented in multiple read/write commands.
+	 */
+	if (nbytes > 0x01) {
+		reg |= (uint8_t) MULTIPLEBYTE_CMD;
+	}
+	spi_.write(cs_, reg, data, nbytes);
 }
 
 /*******************************************************************************
@@ -40,9 +72,9 @@ L3GD20::L3GD20(SPIMaster& spi, u8_t cs)
 * Output			: Data REad
 * Return			: None
 *******************************************************************************/
-void L3GD20::ReadReg8(u8_t Reg, u8_t* Data)
+void L3GD20::ReadReg8(u8_t reg, u8_t* data)
 {
-	spi_.read(cs_, Reg, Data, 1);
+	ReadData(reg, data, 1);
 }
 
 /*******************************************************************************
@@ -53,9 +85,9 @@ void L3GD20::ReadReg8(u8_t Reg, u8_t* Data)
 * Output			: None
 * Return			: None
 *******************************************************************************/
-void L3GD20::WriteReg8(u8_t Reg, u8_t Data)
+void L3GD20::WriteReg8(u8_t reg, u8_t data)
 {
-	spi_.write(cs_, Reg, &Data, 1);
+	spi_.write(cs_, reg, &data, 1);
 }
 
 
