@@ -21,7 +21,7 @@ LSM303D::LSM303D(SPIMaster& spi, u8_t cs, const std::vector<GPIOPin>& pins)
 {
 	for (auto& pin : pins_)
 		pin.init();
-	configure();
+//	configure();
 }
 
 LSM303D::~LSM303D()
@@ -477,14 +477,14 @@ void LSM303D::SetThreshold(u8_t ths)
  *******************************************************************************/
 void LSM303D::GetSatusReg(u8_t* val)
 {
-	ReadReg8(STATUS_REG_A, val);
+	ReadReg8(LSM303D_STATUS_REG_A, val);
 }
 
 /*******************************************************************************
  * Function Name  : GetSatusBIT
  * Description    : Read the status register BIT
- * Input          : STATUS_REG_ZYXOR, STATUS_REG_ZOR, STATUS_REG_YOR, STATUS_REG_XOR,
- STATUS_REG_ZYXDA, STATUS_REG_ZDA, STATUS_REG_YDA, STATUS_REG_XDA, DATAREADY_BIT
+ * Input          : LSM303D_STATUS_REG_ZYXOR, LSM303D_STATUS_REG_ZOR, LSM303D_STATUS_REG_YOR, LSM303D_STATUS_REG_XOR,
+ LSM303D_STATUS_REG_ZYXDA, LSM303D_STATUS_REG_ZDA, LSM303D_STATUS_REG_YDA, LSM303D_STATUS_REG_XDA, DATAREADY_BIT
  * Output         : status register BIT
  * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
  *******************************************************************************/
@@ -492,25 +492,25 @@ bool LSM303D::GetSatusBit(u8_t statusBIT)
 {
 	u8_t value;
 
-	ReadReg8(STATUS_REG_A, &value);
+	ReadReg8(LSM303D_STATUS_REG_A, &value);
 
 	switch (statusBIT) {
-	case STATUS_REG_ZYXOR:
-		return (value &= STATUS_REG_ZYXOR);
-	case STATUS_REG_ZOR:
-		return (value &= STATUS_REG_ZOR);
-	case STATUS_REG_YOR:
-		return (value &= STATUS_REG_YOR);
-	case STATUS_REG_XOR:
-		return (value &= STATUS_REG_XOR);
-	case STATUS_REG_ZYXDA:
-		return (value &= STATUS_REG_ZYXDA);
-	case STATUS_REG_ZDA:
-		return (value &= STATUS_REG_ZDA);
-	case STATUS_REG_YDA:
-		return (value &= STATUS_REG_YDA);
-	case STATUS_REG_XDA:
-		return (value &= STATUS_REG_XDA);
+	case LSM303D_STATUS_REG_ZYXOR:
+		return (value &= LSM303D_STATUS_REG_ZYXOR);
+	case LSM303D_STATUS_REG_ZOR:
+		return (value &= LSM303D_STATUS_REG_ZOR);
+	case LSM303D_STATUS_REG_YOR:
+		return (value &= LSM303D_STATUS_REG_YOR);
+	case LSM303D_STATUS_REG_XOR:
+		return (value &= LSM303D_STATUS_REG_XOR);
+	case LSM303D_STATUS_REG_ZYXDA:
+		return (value &= LSM303D_STATUS_REG_ZYXDA);
+	case LSM303D_STATUS_REG_ZDA:
+		return (value &= LSM303D_STATUS_REG_ZDA);
+	case LSM303D_STATUS_REG_YDA:
+		return (value &= LSM303D_STATUS_REG_YDA);
+	case LSM303D_STATUS_REG_XDA:
+		return (value &= LSM303D_STATUS_REG_XDA);
 	default:
 		throw std::range_error("lsm303dlhc::GetSatusBit statusBIT is invalid");
 	}

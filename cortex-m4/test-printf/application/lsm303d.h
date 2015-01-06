@@ -25,15 +25,6 @@ typedef u8_t IntConf_t;
 #define ValBit(VAR,Place)         (VAR & (1<<Place))
 #define BIT(x) ( (x) )
 
-//typedef enum {
-//	MEMS_SUCCESS		=		0x01,
-//	MEMS_ERROR			=		0x00
-//} status_t;
-
-typedef enum {
-	MEMS_ENABLE			=		0x01,
-	MEMS_DISABLE		=		0x00
-} State_t;
 
 typedef enum {
 	ODR_POWERDOWN		=		0x00,
@@ -342,22 +333,22 @@ NO_CLICK                        =               0x00
 
 
 //STATUS_REG_AXIES ACC
-#define STATUS_REG_A            0x27
-#define STATUS_REG_ZYXOR        0x80       /* 1	:	new data set has over written the previous one
+#define LSM303D_STATUS_REG_A            0x27
+#define LSM303D_STATUS_REG_ZYXOR        0x80       /* 1	:	new data set has over written the previous one
                                               0	:	no overrun has occurred (default) */
-#define STATUS_REG_ZOR          0x40       /* 0	:	no overrun has occurred (default)
+#define LSM303D_STATUS_REG_ZOR          0x40       /* 0	:	no overrun has occurred (default)
                                               1	:	new Z-axis data has over written the previous one */
-#define STATUS_REG_YOR          0x20       /* 0	:	no overrun has occurred (default)
+#define LSM303D_STATUS_REG_YOR          0x20       /* 0	:	no overrun has occurred (default)
                                               1	:	new Y-axis data has over written the previous one */
-#define STATUS_REG_XOR          0x10       /* 0	:	no overrun has occurred (default)
+#define LSM303D_STATUS_REG_XOR          0x10       /* 0	:	no overrun has occurred (default)
                                               1	:	new X-axis data has over written the previous one */
-#define STATUS_REG_ZYXDA        0x08       /* 0	:	a new set of data is not yet avvious one
+#define LSM303D_STATUS_REG_ZYXDA        0x08       /* 0	:	a new set of data is not yet avvious one
                                               1	:	a new set of data is available */
-#define STATUS_REG_ZDA          0x04       /* 0	:	a new data for the Z-Axis is not availvious one
+#define LSM303D_STATUS_REG_ZDA          0x04       /* 0	:	a new data for the Z-Axis is not availvious one
                                               1	:	a new data for the Z-Axis is available */
-#define STATUS_REG_YDA          0x02       /* 0	:	a new data for the Y-Axis is not available
+#define LSM303D_STATUS_REG_YDA          0x02       /* 0	:	a new data for the Y-Axis is not available
                                               1	:	a new data for the Y-Axis is available */
-#define STATUS_REG_XDA          0x01       /* 0	:	a new data for the X-Axis is not available */
+#define LSM303D_STATUS_REG_XDA          0x01       /* 0	:	a new data for the X-Axis is not available */
 
 
 //OUTPUT REGISTER ACC
@@ -409,8 +400,14 @@ protected:
 public:
 	AccAxesRaw_t raw;
 
+	typedef enum {
+		MEMS_ENABLE			=		0x01,
+		MEMS_DISABLE		=		0x00
+	} State_t;
+
+
 public:
-	LSM303D(SPIMaster& spi, u8_t cs, const std::vector<GPIOPin>& pins);
+	LSM303D(SPIMaster& spi, u8_t cs, const std::vector<GPIOPin>& pins = {});
 	~LSM303D();
 	void update_data();
 	void configure();

@@ -16,8 +16,10 @@ SPIMaster::SPIMaster(SPI_TypeDef* spi_device, uint32_t timeout, const std::vecto
 {
 	for (auto& data_pin : data_pins_)
 		data_pin.init();
-	for (auto& cs_pin : cs_pins_)
+	for (auto& cs_pin : cs_pins_) {
 		cs_pin.init();
+		HAL_GPIO_WritePin(cs_pin.gpio_port_, cs_pin.Pin, GPIO_PIN_SET);
+	}
 	memset(&handle_, 0, sizeof(handle_));
 
 	/* SPI configuration -----------------------------------------------------*/

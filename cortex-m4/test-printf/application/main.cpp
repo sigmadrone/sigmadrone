@@ -20,6 +20,7 @@
 #include "stm32f429i_discovery_lcd.h"
 #include "spimaster.h"
 #include "l3gd20_device.h"
+#include "lsm303d.h"
 
 void* __dso_handle = 0;
 
@@ -118,10 +119,13 @@ void main_task(void *pvParameters)
 				{PA_2, GPIO_MODE_INPUT, GPIO_NOPULL, GPIO_SPEED_FAST, 0},						/* INT2 */
 			}, {
 				{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* GYRO_CS_PIN */
+				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
 			});
 	L3GD20 gyro(spi5, 0);
+	LSM303D accel(spi5, 1);
 	float data[3] = {0, 0, 0};
 	AxesRaw_t raw;
+	AccAxesRaw_t accraw;
 	init_lcd();
 	wtm.callback(wtm_isr);
 
@@ -130,12 +134,14 @@ void main_task(void *pvParameters)
 	gyro.SetMode(L3GD20_NORMAL);
 	gyro.SetODR(L3GD20_ODR_95Hz_BW_25);
 	gyro.SetFullScale(L3GD20_FULLSCALE_500);
-	gyro.SetBDU(MEMS_ENABLE);
+	gyro.SetBDU(L3GD20::MEMS_ENABLE);
 	gyro.SetWaterMark(14);
 	gyro.FIFOModeEnable(L3GD20_FIFO_STREAM_MODE);
 	gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
 	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
 
+//	accel.SetODR(ODR_100Hz);
+//	accel.SetAxis(X_ENABLE | Y_ENABLE | Z_ENABLE);
 
 	// Infinite loop
 	char disp[128] = {0};
@@ -149,6 +155,10 @@ void main_task(void *pvParameters)
 			data[2] += raw.AXIS_Z * 500.0 / 32768.0 / count;
 		}
 //		trace_printf("FIFO samples: %d, data: %f, %f, %f\n", count, data[0], data[1], data[2]);
+//		u8_t id = 0;
+//		accel.ReadReg8(WHO_AM_I, &id);
+//		accel.GetAccAxesRaw(&accraw);
+//		trace_printf("Accelerometer ID: 0x%x, raw: %d %d %d\n", id, accraw.AXIS_X, accraw.AXIS_Y, accraw.AXIS_Z);
 
 		sprintf(disp,"GYRO X: %6.2f", data[0]);
 		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);

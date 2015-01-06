@@ -52,10 +52,6 @@ typedef enum {
   MEMS_ERROR				=		0x00	
 } status_t;
 
-typedef enum {
-  MEMS_ENABLE				=		0x01,
-  MEMS_DISABLE				=		0x00	
-} State_t;
 
 typedef struct {
   i16_t AXIS_X;
@@ -296,7 +292,7 @@ typedef enum {
                                                         // 1	:	a new data for the Z-Axis is available
 #define L3GD20_STATUS_REG_YDA                          0x01    // 0	:	a new data for the Y-Axis is not available
                                                         // 1	:	a new data for the Y-Axis is available
-#define STATUS_REG_XDA                                 0x00    // 0	:	a new data for the X-Axis is not available
+#define L3GD20_STATUS_REG_XDA                          0x00    // 0	:	a new data for the X-Axis is not available
 
 #define L3GD20_DATAREADY_BIT                           L3GD20_STATUS_REG_ZYXDA
 
@@ -311,6 +307,12 @@ class L3GD20 {
 private:
 	SPIMaster& spi_;
 	u8_t cs_;
+
+public:
+	typedef enum {
+	  MEMS_ENABLE				=		0x01,
+	  MEMS_DISABLE				=		0x00
+	} State_t;
 
 public:
 	L3GD20(SPIMaster& spi, u8_t cs);
