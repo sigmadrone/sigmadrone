@@ -124,19 +124,19 @@ void main_task(void *pvParameters)
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi5, 1);
 	float data[3] = {0, 0, 0};
-	AxesRaw_t raw;
-	AccAxesRaw_t accraw;
+	L3GD20::AxesRaw_t raw;
+	LSM303D::AxesRaw_t accraw;
 	init_lcd();
 	wtm.callback(wtm_isr);
 
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 
-	gyro.SetMode(L3GD20_NORMAL);
-	gyro.SetODR(L3GD20_ODR_95Hz_BW_25);
-	gyro.SetFullScale(L3GD20_FULLSCALE_500);
+	gyro.SetMode(L3GD20::L3GD20_NORMAL);
+	gyro.SetODR(L3GD20::L3GD20_ODR_95Hz_BW_25);
+	gyro.SetFullScale(L3GD20::L3GD20_FULLSCALE_500);
 	gyro.SetBDU(L3GD20::MEMS_ENABLE);
 	gyro.SetWaterMark(14);
-	gyro.FIFOModeEnable(L3GD20_FIFO_STREAM_MODE);
+	gyro.FIFOModeEnable(L3GD20::L3GD20_FIFO_STREAM_MODE);
 	gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
 	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
 

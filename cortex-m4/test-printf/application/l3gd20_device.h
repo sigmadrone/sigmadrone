@@ -42,130 +42,12 @@ typedef u8_t L3GD20_Int2PinConf_t;
 typedef u8_t L3GD20_Int1Conf_t;
 typedef u8_t L3GD20_Axis_t;
 
-/* Exported common structure --------------------------------------------------------*/
-
-#ifndef __SHARED__TYPES
-#define __SHARED__TYPES
-
-typedef enum {
-  MEMS_SUCCESS				=		0x01,
-  MEMS_ERROR				=		0x00	
-} status_t;
-
-
-typedef struct {
-  i16_t AXIS_X;
-  i16_t AXIS_Y;
-  i16_t AXIS_Z;
-} AxesRaw_t;
-
-#endif /*__SHARED__TYPES*/
-
-typedef enum {  
-  L3GD20_ODR_95Hz_BW_12_5              =               0x00,
-  L3GD20_ODR_95Hz_BW_25                =               0x01,
-  L3GD20_ODR_190Hz_BW_12_5             =               0x04,
-  L3GD20_ODR_190Hz_BW_25               =               0x05,
-  L3GD20_ODR_190Hz_BW_50               =               0x06,
-  L3GD20_ODR_190Hz_BW_70               =               0x07,
-  L3GD20_ODR_380Hz_BW_20               =               0x08,
-  L3GD20_ODR_380Hz_BW_25               =               0x09,
-  L3GD20_ODR_380Hz_BW_50               =               0x0A,
-  L3GD20_ODR_380Hz_BW_110              =               0x0B,
-  L3GD20_ODR_760Hz_BW_30               =               0x0C,
-  L3GD20_ODR_760Hz_BW_35               =               0x0D,
-  L3GD20_ODR_760Hz_BW_50               =               0x0E,
-  L3GD20_ODR_760Hz_BW_110              =               0x0F
-} L3GD20_ODR_t;
-
-typedef enum {
-  L3GD20_POWER_DOWN                    =               0x00,
-  L3GD20_SLEEP 				           =               0x01,
-  L3GD20_NORMAL	                       =               0x02
-} L3GD20_Mode_t;
-
-typedef enum {
-  L3GD20_HPM_NORMAL_MODE_RES           =               0x00,
-  L3GD20_HPM_REF_SIGNAL                =               0x01,
-  L3GD20_HPM_NORMAL_MODE               =               0x02,
-  L3GD20_HPM_AUTORESET_INT             =               0x03
-} L3GD20_HPFMode_t;
-
-typedef enum {
-  L3GD20_HPFCF_0                       =               0x00,
-  L3GD20_HPFCF_1                       =               0x01,
-  L3GD20_HPFCF_2                       = 	           0x02,
-  L3GD20_HPFCF_3                       =               0x03,
-  L3GD20_HPFCF_4                       =               0x04,
-  L3GD20_HPFCF_5                       =               0x05,
-  L3GD20_HPFCF_6                       =               0x06,
-  L3GD20_HPFCF_7                       =               0x07,
-  L3GD20_HPFCF_8                       =               0x08,
-  L3GD20_HPFCF_9                       =               0x09
-} L3GD20_HPFCutOffFreq_t;
-
-typedef enum {
-  L3GD20_PUSH_PULL                     =                0x00,
-  L3GD20_OPEN_DRAIN                    =                0x01  
-} L3GD20_IntPinMode_t;
-
-typedef enum {
-  L3GD20_FULLSCALE_250                 =                0x00,
-  L3GD20_FULLSCALE_500                 =                0x01,
-  L3GD20_FULLSCALE_2000                =                0x02
-} L3GD20_Fullscale_t;
-
-typedef enum {
-  L3GD20_BLE_LSB                       =                0x00,
-  L3GD20_BLE_MSB                       =                0x01
-} L3GD20_Endianess_t;
-
-typedef enum {
-  L3GD20_SPI_4_WIRE                    =                0x00,
-  L3GD20_SPI_3_WIRE                    =                0x01
-} L3GD20_SPIMode_t;
-
-typedef enum {
-  L3GD20_FIFO_DISABLE                  =                0x05,
-  L3GD20_FIFO_BYPASS_MODE              =                0x00,
-  L3GD20_FIFO_MODE                     =                0x01,
-  L3GD20_FIFO_STREAM_MODE              =                0x02,
-  L3GD20_FIFO_STREAM_TO_FIFO_MODE      =                0x03,
-  L3GD20_FIFO_BYPASS_TO_STREAM_MODE    =                0x04
-} L3GD20_FifoMode_t;
-
-typedef enum {
-  L3GD20_NONE                          =                0x00,
-  L3GD20_HPF                           =                0x01,
-  L3GD20_LPF2                          =                0x02,
-  L3GD20_HPFLPF2                       =                0x03
-} L3GD20_HPF_LPF2_Enable;
-
-typedef enum {
-  L3GD20_THS_X                         =                0x00,
-  L3GD20_THS_Y                         =                0x01,  
-  L3GD20_THS_Z                         =                0x02
-} L3GD20_IntThsAxis;
-
-/* Exported macro ------------------------------------------------------------*/
-
-#ifndef __SHARED__MACROS
-
-#define __SHARED__MACROS
+#ifndef ValBit
 #define ValBit(VAR,Place)         (VAR & (1<<Place))
+#endif
+#ifndef BIT
 #define BIT(x) ( (x) )
-
-#endif /*__SHARED__MACROS*/
-
-/* Exported constants --------------------------------------------------------*/
-
-#ifndef __SHARED__CONSTANTS
-#define __SHARED__CONSTANTS
-
-#define MEMS_SET                                        0x01
-#define MEMS_RESET                                      0x00
-
-#endif /*__SHARED__CONSTANTS*/
+#endif
 
 /**************CONTROL REGISTERS*****************/
 
@@ -278,21 +160,21 @@ typedef enum {
 #define L3GD20_OUT_Z_L                                 0x2C
 #define L3GD20_OUT_Z_H                                 0x2D
 #define L3GD20_STATUS_REG                              0x27
-#define L3GD20_STATUS_REG_ZYXOR                        0x07    // 1	:	new data set has over written the previous one
-							// 0	:	no overrun has occurred (default)	
-#define L3GD20_STATUS_REG_ZOR                          0x06    // 0	:	no overrun has occurred (default)
-							// 1	:	new Z-axis data has over written the previous one
-#define L3GD20_STATUS_REG_YOR                          0x05    // 0	:	no overrun has occurred (default)
-							// 1	:	new Y-axis data has over written the previous one
-#define L3GD20_STATUS_REG_XOR                          0x04    // 0	:	no overrun has occurred (default)
-							// 1	:	new X-axis data has over written the previous one
-#define L3GD20_STATUS_REG_ZYXDA                        0x03    // 0	:	a new set of data is not yet avvious one
-                                                        // 1	:	a new set of data is available 
-#define L3GD20_STATUS_REG_ZDA                          0x02    // 0	:	a new data for the Z-Axis is not availvious one
-                                                        // 1	:	a new data for the Z-Axis is available
-#define L3GD20_STATUS_REG_YDA                          0x01    // 0	:	a new data for the Y-Axis is not available
-                                                        // 1	:	a new data for the Y-Axis is available
-#define L3GD20_STATUS_REG_XDA                          0x00    // 0	:	a new data for the X-Axis is not available
+#define L3GD20_STATUS_REG_ZYXOR                        0x07		// 1	:	new data set has over written the previous one
+																// 0	:	no overrun has occurred (default)
+#define L3GD20_STATUS_REG_ZOR                          0x06		// 0	:	no overrun has occurred (default)
+																// 1	:	new Z-axis data has over written the previous one
+#define L3GD20_STATUS_REG_YOR                          0x05		// 0	:	no overrun has occurred (default)
+																// 1	:	new Y-axis data has over written the previous one
+#define L3GD20_STATUS_REG_XOR                          0x04		// 0	:	no overrun has occurred (default)
+																// 1	:	new X-axis data has over written the previous one
+#define L3GD20_STATUS_REG_ZYXDA                        0x03		// 0	:	a new set of data is not yet avvious one
+                                                        		// 1	:	a new set of data is available
+#define L3GD20_STATUS_REG_ZDA                          0x02		// 0	:	a new data for the Z-Axis is not availvious one
+                                                        		// 1	:	a new data for the Z-Axis is available
+#define L3GD20_STATUS_REG_YDA                          0x01		// 0	:	a new data for the Y-Axis is not available
+																// 1	:	a new data for the Y-Axis is available
+#define L3GD20_STATUS_REG_XDA                          0x00		// 0	:	a new data for the X-Axis is not available
 
 #define L3GD20_DATAREADY_BIT                           L3GD20_STATUS_REG_ZYXDA
 
@@ -310,9 +192,106 @@ private:
 
 public:
 	typedef enum {
-	  MEMS_ENABLE				=		0x01,
-	  MEMS_DISABLE				=		0x00
+		MEMS_SET            = 0x01,
+		MEMS_RESET          = 0x00
+	} Reset_t;
+
+	typedef enum {
+		MEMS_ENABLE         = 0x01,
+		MEMS_DISABLE        = 0x00
 	} State_t;
+
+	typedef enum {
+	  L3GD20_ODR_95Hz_BW_12_5              =               0x00,
+	  L3GD20_ODR_95Hz_BW_25                =               0x01,
+	  L3GD20_ODR_190Hz_BW_12_5             =               0x04,
+	  L3GD20_ODR_190Hz_BW_25               =               0x05,
+	  L3GD20_ODR_190Hz_BW_50               =               0x06,
+	  L3GD20_ODR_190Hz_BW_70               =               0x07,
+	  L3GD20_ODR_380Hz_BW_20               =               0x08,
+	  L3GD20_ODR_380Hz_BW_25               =               0x09,
+	  L3GD20_ODR_380Hz_BW_50               =               0x0A,
+	  L3GD20_ODR_380Hz_BW_110              =               0x0B,
+	  L3GD20_ODR_760Hz_BW_30               =               0x0C,
+	  L3GD20_ODR_760Hz_BW_35               =               0x0D,
+	  L3GD20_ODR_760Hz_BW_50               =               0x0E,
+	  L3GD20_ODR_760Hz_BW_110              =               0x0F
+	} L3GD20_ODR_t;
+
+	typedef enum {
+	  L3GD20_POWER_DOWN                    =               0x00,
+	  L3GD20_SLEEP 				           =               0x01,
+	  L3GD20_NORMAL	                       =               0x02
+	} L3GD20_Mode_t;
+
+	typedef enum {
+	  L3GD20_HPM_NORMAL_MODE_RES           =               0x00,
+	  L3GD20_HPM_REF_SIGNAL                =               0x01,
+	  L3GD20_HPM_NORMAL_MODE               =               0x02,
+	  L3GD20_HPM_AUTORESET_INT             =               0x03
+	} L3GD20_HPFMode_t;
+
+	typedef enum {
+	  L3GD20_HPFCF_0                       =               0x00,
+	  L3GD20_HPFCF_1                       =               0x01,
+	  L3GD20_HPFCF_2                       = 	           0x02,
+	  L3GD20_HPFCF_3                       =               0x03,
+	  L3GD20_HPFCF_4                       =               0x04,
+	  L3GD20_HPFCF_5                       =               0x05,
+	  L3GD20_HPFCF_6                       =               0x06,
+	  L3GD20_HPFCF_7                       =               0x07,
+	  L3GD20_HPFCF_8                       =               0x08,
+	  L3GD20_HPFCF_9                       =               0x09
+	} L3GD20_HPFCutOffFreq_t;
+
+	typedef enum {
+	  L3GD20_PUSH_PULL                     =                0x00,
+	  L3GD20_OPEN_DRAIN                    =                0x01
+	} L3GD20_IntPinMode_t;
+
+	typedef enum {
+	  L3GD20_FULLSCALE_250                 =                0x00,
+	  L3GD20_FULLSCALE_500                 =                0x01,
+	  L3GD20_FULLSCALE_2000                =                0x02
+	} L3GD20_Fullscale_t;
+
+	typedef enum {
+	  L3GD20_BLE_LSB                       =                0x00,
+	  L3GD20_BLE_MSB                       =                0x01
+	} L3GD20_Endianess_t;
+
+	typedef enum {
+	  L3GD20_SPI_4_WIRE                    =                0x00,
+	  L3GD20_SPI_3_WIRE                    =                0x01
+	} L3GD20_SPIMode_t;
+
+	typedef enum {
+	  L3GD20_FIFO_DISABLE                  =                0x05,
+	  L3GD20_FIFO_BYPASS_MODE              =                0x00,
+	  L3GD20_FIFO_MODE                     =                0x01,
+	  L3GD20_FIFO_STREAM_MODE              =                0x02,
+	  L3GD20_FIFO_STREAM_TO_FIFO_MODE      =                0x03,
+	  L3GD20_FIFO_BYPASS_TO_STREAM_MODE    =                0x04
+	} L3GD20_FifoMode_t;
+
+	typedef enum {
+	  L3GD20_NONE                          =                0x00,
+	  L3GD20_HPF                           =                0x01,
+	  L3GD20_LPF2                          =                0x02,
+	  L3GD20_HPFLPF2                       =                0x03
+	} L3GD20_HPF_LPF2_Enable;
+
+	typedef enum {
+	  L3GD20_THS_X                         =                0x00,
+	  L3GD20_THS_Y                         =                0x01,
+	  L3GD20_THS_Z                         =                0x02
+	} L3GD20_IntThsAxis;
+
+	typedef struct {
+		i16_t AXIS_X;
+		i16_t AXIS_Y;
+		i16_t AXIS_Z;
+	} AxesRaw_t;
 
 public:
 	L3GD20(SPIMaster& spi, u8_t cs);
@@ -360,7 +339,6 @@ public:
 	void WriteReg8(u8_t reg, u8_t data);
 	void ReadData(u8_t reg, u8_t* data, u16_t nbytes);
 	void WriteData(u8_t reg, u8_t *data, u16_t nbytes);
-
 };
 
 #endif /* __L3GD20_DEVICE_H */

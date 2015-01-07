@@ -9,6 +9,9 @@
 #include <stdio.h>
 #include "lsm303d.h"
 
+
+
+
 /* Read/Write command */
 #define READWRITE_CMD              ((uint8_t)0x80)
 /* Multiple byte read/write command */
@@ -31,7 +34,7 @@ LSM303D::~LSM303D()
 
 void LSM303D::update_data()
 {
-	AccAxesRaw_t temp;
+	AxesRaw_t temp;
 	int32_t x = 0, y = 0, z = 0;
 	int32_t samples = GetFifoSourceFSS();
 
@@ -56,12 +59,13 @@ void LSM303D::configure()
 {
 	SetODR_M(ODR_100Hz_M);
 	SetTemperature(MEMS_ENABLE);
-	SetGainMag(GAIN_230_M);
+	SetFullScaleMag(FULLSCALE_2_GA);
 	SetModeMag(CONTINUOUS_MODE);
 
 	SetODR(ODR_50Hz);
 	SetAxis(X_ENABLE | Y_ENABLE | Z_ENABLE);
 	SetFullScale(FULLSCALE_2);
+	FIFOModeSet(FIFO_BYPASS_MODE);
 	SetBDU(MEMS_ENABLE);
 
 	SetHPFMode(HPM_NORMAL_MODE);
@@ -126,10 +130,10 @@ void LSM303D::SetODR(ODR_t ov)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG1, &value);
+	ReadReg8(LSM303D_CTRL_REG1, &value);
 	value &= 0x0f;
 	value |= ov << 4;
-	WriteReg8(CTRL_REG1, value);
+	WriteReg8(LSM303D_CTRL_REG1, value);
 }
 
 /*******************************************************************************
@@ -143,10 +147,10 @@ void LSM303D::SetODR_M(ODR_M_t ov)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG5, &value);
+	ReadReg8(LSM303D_CTRL_REG5, &value);
 	value &= 0xE3;
-	value |= ov << M_ODR;
-	WriteReg8(CTRL_REG5, value);
+	value |= ov << LSM303D_M_ODR;
+	WriteReg8(LSM303D_CTRL_REG5, value);
 }
 
 /*******************************************************************************
@@ -160,31 +164,20 @@ void LSM303D::SetTemperature(State_t state)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG5, &value);
+	ReadReg8(LSM303D_CTRL_REG5, &value);
 	value &= 0x7F;
-	value |= state << TEMP_EN;
-	WriteReg8(CTRL_REG5, value);
+	value |= state << LSM303D_TEMP_EN;
+	WriteReg8(LSM303D_CTRL_REG5, value);
 }
 
 void LSM303D::SetMagneticResolution(Resolution_t resolution)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG5, &value);
+	ReadReg8(LSM303D_CTRL_REG5, &value);
 	value &= 0x9F;
-	value |= resolution << M_RES;
-	WriteReg8(CTRL_REG5, value);
-}
-
-/*******************************************************************************
- * Function Name  : SetGainMag
- * Description    : Sets LSM303DLHC Magnetometer Gain
- * Input          : GAIN_1100_M or GAIN_855_M or GAIN_670_M or GAIN_450_M....
- * Output         : None
- * Return         : None
- *******************************************************************************/
-void LSM303D::SetGainMag(GAIN_M_t Gain)
-{
+	value |= resolution << LSM303D_M_RES;
+	WriteReg8(LSM303D_CTRL_REG5, value);
 }
 
 /*******************************************************************************
@@ -198,10 +191,10 @@ void LSM303D::SetModeMag(Mode_M_t Mode)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG7, &value);
+	ReadReg8(LSM303D_CTRL_REG7, &value);
 	value &= 0xF4;
-	value |= Mode << MD;
-	WriteReg8(CTRL_REG7, value);
+	value |= Mode << LSM303D_MD;
+	WriteReg8(LSM303D_CTRL_REG7, value);
 }
 
 /*******************************************************************************
@@ -215,8 +208,8 @@ void LSM303D::GetTempRaw(i16_t* val)
 {
 	u8_t valueH, valueL;
 
-	ReadReg8(TEMP_OUT_H_M, &valueH);
-	ReadReg8(TEMP_OUT_L_M, &valueL);
+	ReadReg8(LSM303D_TEMP_OUT_H_M, &valueH);
+	ReadReg8(LSM303D_TEMP_OUT_L_M, &valueL);
 	*val = ((i16_t) (valueH) << 8) | ((i16_t) (valueL));
 }
 
@@ -232,10 +225,10 @@ void LSM303D::SetAxis(Axis_t axis)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG1, &value);
+	ReadReg8(LSM303D_CTRL_REG1, &value);
 	value &= 0xF8;
 	value |= (0x07 & axis);
-	WriteReg8(CTRL_REG1, value);
+	WriteReg8(LSM303D_CTRL_REG1, value);
 }
 
 /*******************************************************************************
@@ -249,10 +242,25 @@ void LSM303D::SetFullScale(Fullscale_t fs)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG2, &value);
+	ReadReg8(LSM303D_CTRL_REG2, &value);
 	value &= 0xC3;
-	value |= (fs << AFS);
-	WriteReg8(CTRL_REG2, value);
+	value |= (fs << LSM303D_AFS);
+	WriteReg8(LSM303D_CTRL_REG2, value);
+}
+
+/*******************************************************************************
+ * Function Name  : SetFullScaleMag
+ * Description    : Sets the Magnetic LSM303DLHC FullScale
+ * Input          : FULLSCALE_2_GA/FULLSCALE_4_GA/FULLSCALE_8_GA/FULLSCALE_12_GA
+ * Output         : None
+ * Return         : None
+ *******************************************************************************/
+void LSM303D::SetFullScaleMag(FullscaleMag_t fs)
+{
+	u8_t value = 0;
+
+	value |= (fs << LSM303D_MFS) & 0x60;
+	WriteReg8(LSM303D_CTRL_REG6, value);
 }
 
 /*******************************************************************************
@@ -266,10 +274,10 @@ void LSM303D::SetBDU(State_t bdu)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG1, &value);
+	ReadReg8(LSM303D_CTRL_REG1, &value);
 	value &= 0xF7;
-	value |= (bdu << BDU);
-	WriteReg8(CTRL_REG1, value);
+	value |= (bdu << LSM303D_BDU);
+	WriteReg8(LSM303D_CTRL_REG1, value);
 }
 
 /*******************************************************************************
@@ -283,10 +291,10 @@ void LSM303D::SetSelfTest(SelfTest_t st)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG2, &value);
+	ReadReg8(LSM303D_CTRL_REG2, &value);
 	value &= 0xF9;
-	value |= (st << AST);
-	WriteReg8(CTRL_REG2, value);
+	value |= (st << LSM303D_AST);
+	WriteReg8(LSM303D_CTRL_REG2, value);
 }
 
 /*******************************************************************************
@@ -300,10 +308,10 @@ void LSM303D::SetHPFMode(HPFMode_t hpm)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG7, &value);
+	ReadReg8(LSM303D_CTRL_REG7, &value);
 	value &= 0x3F;
-	value |= (hpm << AHPM);
-	WriteReg8(CTRL_REG7, value);
+	value |= (hpm << LSM303D_AHPM);
+	WriteReg8(LSM303D_CTRL_REG7, value);
 }
 
 /*******************************************************************************
@@ -348,10 +356,10 @@ void LSM303D::SetInt1Pin(IntPinConf_t pinConf)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG3, &value);
+	ReadReg8(LSM303D_CTRL_REG3, &value);
 	value &= 0x00;
 	value |= pinConf;
-	WriteReg8(CTRL_REG3, value);
+	WriteReg8(LSM303D_CTRL_REG3, value);
 }
 
 /*******************************************************************************
@@ -374,10 +382,10 @@ void LSM303D::SetInt2Pin(IntPinConf_t pinConf)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG4, &value);
+	ReadReg8(LSM303D_CTRL_REG4, &value);
 	value &= 0x00;
 	value |= pinConf;
-	WriteReg8(CTRL_REG4, value);
+	WriteReg8(LSM303D_CTRL_REG4, value);
 }
 
 /*******************************************************************************
@@ -391,10 +399,10 @@ void LSM303D::Int1LatchEnable(State_t latch)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG5, &value);
+	ReadReg8(LSM303D_CTRL_REG5, &value);
 	value &= 0xFE;
-	value |= latch << LIR1;
-	WriteReg8(CTRL_REG5, value);
+	value |= latch << LSM303D_LIR1;
+	WriteReg8(LSM303D_CTRL_REG5, value);
 }
 
 /*******************************************************************************
@@ -408,10 +416,10 @@ void LSM303D::Int2LatchEnable(State_t latch)
 {
 	u8_t value;
 
-	ReadReg8(CTRL_REG5, &value);
+	ReadReg8(LSM303D_CTRL_REG5, &value);
 	value &= 0xFD;
-	value |= latch << LIR2;
-	WriteReg8(CTRL_REG5, value);
+	value |= latch << LSM303D_LIR2;
+	WriteReg8(LSM303D_CTRL_REG5, value);
 }
 
 void LSM303D::SetIGConfiguration(IntConf_t ic)
@@ -421,10 +429,10 @@ void LSM303D::SetIGConfiguration(IntConf_t ic)
 void LSM303D::FIFOModeEnable(State_t enable)
 {
 	u8_t value;
-	ReadReg8(CTRL_REG0, &value);
+	ReadReg8(LSM303D_CTRL_REG0, &value);
 	value &= 0xBF;
 	value |= enable;
-	WriteReg8(CTRL_REG0, value);
+	WriteReg8(LSM303D_CTRL_REG0, value);
 }
 
 /*******************************************************************************
@@ -443,10 +451,10 @@ void LSM303D::FIFOModeSet(FifoMode_t fm)
 	} else {
 		FIFOModeEnable(MEMS_ENABLE);
 	}
-	ReadReg8(FIFO_CTRL_REG_A, &value);
+	ReadReg8(LSM303D_FIFO_CTRL_REG_A, &value);
 	value &= 0x1f;
-	value |= (fm << FM);                     //fifo mode configuration
-	WriteReg8(FIFO_CTRL_REG_A, value);
+	value |= (fm << LSM303D_FM);
+	WriteReg8(LSM303D_FIFO_CTRL_REG_A, value);
 }
 
 /*******************************************************************************
@@ -462,10 +470,10 @@ void LSM303D::SetThreshold(u8_t ths)
 
 	if (ths > 31)
 		throw std::range_error("lsm303dlhc::SetWaterMark ths is invalid");
-	ReadReg8(FIFO_CTRL_REG_A, &value);
+	ReadReg8(LSM303D_FIFO_CTRL_REG_A, &value);
 	value &= 0xE0;
 	value |= ths;
-	WriteReg8(FIFO_CTRL_REG_A, value);
+	WriteReg8(LSM303D_FIFO_CTRL_REG_A, value);
 }
 
 /*******************************************************************************
@@ -524,21 +532,21 @@ bool LSM303D::GetSatusBit(u8_t statusBIT)
  * Output         : None
  * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
  *******************************************************************************/
-void LSM303D::GetAccAxesRaw(AccAxesRaw_t* buff)
+void LSM303D::GetAccAxesRaw(AxesRaw_t* buff)
 {
 	u8_t valueL;
 	u8_t valueH;
 
-	ReadReg8(OUT_X_L_A, &valueL);
-	ReadReg8(OUT_X_H_A, &valueH);
+	ReadReg8(LSM303D_OUT_X_L_A, &valueL);
+	ReadReg8(LSM303D_OUT_X_H_A, &valueH);
 	buff->AXIS_X = (i16_t) ((valueH << 8) | valueL) / 16;
 
-	ReadReg8(OUT_Y_L_A, &valueL);
-	ReadReg8(OUT_Y_H_A, &valueH);
+	ReadReg8(LSM303D_OUT_Y_L_A, &valueL);
+	ReadReg8(LSM303D_OUT_Y_H_A, &valueH);
 	buff->AXIS_Y = (i16_t) ((valueH << 8) | valueL) / 16;
 
-	ReadReg8(OUT_Z_L_A, &valueL);
-	ReadReg8(OUT_Z_H_A, &valueH);
+	ReadReg8(LSM303D_OUT_Z_L_A, &valueL);
+	ReadReg8(LSM303D_OUT_Z_H_A, &valueH);
 	buff->AXIS_Z = (i16_t) ((valueH << 8) | valueL) / 16;
 }
 
@@ -554,16 +562,16 @@ void LSM303D::GetMagAxesRaw(MagAxesRaw_t* buff)
 	u8_t valueL;
 	u8_t valueH;
 
-	ReadReg8(OUT_X_L_M, &valueL);
-	ReadReg8(OUT_X_H_M, &valueH);
+	ReadReg8(LSM303D_OUT_X_L_M, &valueL);
+	ReadReg8(LSM303D_OUT_X_H_M, &valueH);
 	buff->AXIS_X = (i16_t) ((valueH << 8) | valueL) / 16;
 
-	ReadReg8(OUT_Y_L_M, &valueL);
-	ReadReg8(OUT_Y_H_M, &valueH);
+	ReadReg8(LSM303D_OUT_Y_L_M, &valueL);
+	ReadReg8(LSM303D_OUT_Y_H_M, &valueH);
 	buff->AXIS_Y = (i16_t) ((valueH << 8) | valueL) / 16;
 
-	ReadReg8(OUT_Z_L_M, &valueL);
-	ReadReg8(OUT_Z_H_M, &valueH);
+	ReadReg8(LSM303D_OUT_Z_L_M, &valueL);
+	ReadReg8(LSM303D_OUT_Z_H_M, &valueH);
 	buff->AXIS_Z = (i16_t) ((valueH << 8) | valueL) / 16;
 }
 
@@ -577,7 +585,7 @@ void LSM303D::GetMagAxesRaw(MagAxesRaw_t* buff)
  *******************************************************************************/
 void LSM303D::GetFifoSourceReg(u8_t* val)
 {
-	ReadReg8(FIFO_SRC_REG_A, val);
+	ReadReg8(LSM303D_FIFO_SRC_REG_A, val);
 }
 
 /*******************************************************************************
@@ -591,16 +599,16 @@ bool LSM303D::GetFifoSourceBit(u8_t statusBIT)
 {
 	u8_t value;
 
-	ReadReg8(FIFO_SRC_REG_A, &value);
+	ReadReg8(LSM303D_FIFO_SRC_REG_A, &value);
 
-	if (statusBIT == FIFO_SRC_FTH) {
-		return (value &= FIFO_SRC_FTH);
+	if (statusBIT == LSM303D_FIFO_SRC_FTH) {
+		return (value &= LSM303D_FIFO_SRC_FTH);
 	}
-	if (statusBIT == FIFO_SRC_OVRUN) {
-		return (value &= FIFO_SRC_OVRUN);
+	if (statusBIT == LSM303D_FIFO_SRC_OVRUN) {
+		return (value &= LSM303D_FIFO_SRC_OVRUN);
 	}
-	if (statusBIT == FIFO_SRC_EMPTY) {
-		return (value &= FIFO_SRC_EMPTY);
+	if (statusBIT == LSM303D_FIFO_SRC_EMPTY) {
+		return (value &= LSM303D_FIFO_SRC_EMPTY);
 	}
 	throw std::range_error("lsm303dlhc::GetFifoSourceBit statusBIT is invalid");
 	return false;
@@ -617,7 +625,7 @@ u8_t LSM303D::GetFifoSourceFSS()
 {
 	u8_t value;
 
-	ReadReg8(FIFO_SRC_REG_A, &value);
+	ReadReg8(LSM303D_FIFO_SRC_REG_A, &value);
 	value &= 0x1F;
 	return value;
 }
