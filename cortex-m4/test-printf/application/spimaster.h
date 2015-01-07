@@ -14,7 +14,6 @@
 #include "stm32f429xx.h"
 #include "gpiopin.h"
 
-
 class SPIMaster
 {
 public:

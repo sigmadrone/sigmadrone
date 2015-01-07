@@ -94,6 +94,7 @@ void init_lcd()
 	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
 	BSP_LCD_Clear(LCD_COLOR_WHITE);
 
+
 	/* Set the LCD Text Color */
 	BSP_LCD_SetTextColor(LCD_COLOR_DARKBLUE);
 
@@ -111,6 +112,16 @@ void init_lcd()
 
 void main_task(void *pvParameters)
 {
+	__GPIOE_CLK_ENABLE();
+	SPIMaster spi4(SPI4, 0x2000, {
+				{PE_2, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPIx_SCK_PIN */
+				{PE_5, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPIx_MISO_PIN */
+				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},			/* DISCOVERY_SPIx_MOSI_PIN */
+			}, {
+				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
+			});
+
+
 	SPIMaster spi5(SPI5, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
 				{PF_8, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_MISO_PIN */
@@ -122,13 +133,14 @@ void main_task(void *pvParameters)
 				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
 			});
 	L3GD20 gyro(spi5, 0);
-	LSM303D accel(spi5, 1);
+	u8_t id = 0;
 	float data[3] = {0, 0, 0};
 	L3GD20::AxesRaw_t raw;
 	LSM303D::AxesRaw_t accraw;
-	init_lcd();
-	wtm.callback(wtm_isr);
+	LSM303D accel(spi4, 0);
 
+	wtm.callback(wtm_isr);
+	init_lcd();
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 
 	gyro.SetMode(L3GD20::L3GD20_NORMAL);
@@ -140,8 +152,8 @@ void main_task(void *pvParameters)
 	gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
 	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
 
-//	accel.SetODR(ODR_100Hz);
-//	accel.SetAxis(X_ENABLE | Y_ENABLE | Z_ENABLE);
+	accel.SetODR(LSM303D::ODR_100Hz);
+	accel.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
 
 	// Infinite loop
 	char disp[128] = {0};
@@ -155,10 +167,9 @@ void main_task(void *pvParameters)
 			data[2] += raw.AXIS_Z * 500.0 / 32768.0 / count;
 		}
 //		trace_printf("FIFO samples: %d, data: %f, %f, %f\n", count, data[0], data[1], data[2]);
-//		u8_t id = 0;
-//		accel.ReadReg8(WHO_AM_I, &id);
-//		accel.GetAccAxesRaw(&accraw);
-//		trace_printf("Accelerometer ID: 0x%x, raw: %d %d %d\n", id, accraw.AXIS_X, accraw.AXIS_Y, accraw.AXIS_Z);
+		accel.ReadReg8(LSM303D_WHO_AM_I, &id);
+		accel.GetAccAxesRaw(&accraw);
+		trace_printf("Accelerometer ID: 0x%x, raw: %d %d %d\n", id, accraw.AXIS_X, accraw.AXIS_Y, accraw.AXIS_Z);
 
 		sprintf(disp,"GYRO X: %6.2f", data[0]);
 		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);

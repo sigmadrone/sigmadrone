@@ -8,6 +8,7 @@
 #include <cstring>
 #include <stdexcept>
 #include "spimaster.h"
+#include "stm32f429i_discovery.h"
 
 SPIMaster::SPIMaster(SPI_TypeDef* spi_device, uint32_t timeout, const std::vector<GPIOPin>& data_pins, const std::vector<GPIOPin>& cs_pins)
 	: timeout_(timeout)
@@ -46,7 +47,18 @@ SPIMaster::SPIMaster(SPI_TypeDef* spi_device, uint32_t timeout, const std::vecto
 	handle_.Init.TIMode = SPI_TIMODE_DISABLED;
 	handle_.Init.Mode = SPI_MODE_MASTER;
 
-//	SPIx_MspInit (&SpiHandle);
+	if (spi_device == SPI1)
+		__SPI1_CLK_ENABLE();
+	else if (spi_device == SPI2)
+		__SPI2_CLK_ENABLE();
+	else if (spi_device == SPI3)
+		__SPI3_CLK_ENABLE();
+	else if (spi_device == SPI4)
+		__SPI4_CLK_ENABLE();
+	else if (spi_device == SPI5)
+		__SPI5_CLK_ENABLE();
+	else if (spi_device == SPI6)
+		__SPI6_CLK_ENABLE();
 	HAL_SPI_Init(&handle_);
 }
 
