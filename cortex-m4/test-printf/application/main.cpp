@@ -132,7 +132,6 @@ void main_task(void *pvParameters)
 				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
 			});
 	L3GD20 gyro(spi5, 0);
-	LSM303D::AxesRaw_t accraw;
 	LSM303D accel(spi4, 0);
 
 	wtm.callback(wtm_isr);
@@ -148,18 +147,20 @@ void main_task(void *pvParameters)
 	gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
 	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
 
-	accel.SetODR(LSM303D::ODR_100Hz);
+	accel.SetODR(LSM303D::ODR_800Hz);
+	accel.SetFullScale(LSM303D::FULLSCALE_8);
 	accel.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
+	accel.FIFOModeSet(LSM303D::FIFO_STREAM_MODE);
 
 	// Infinite loop
 	char disp[128] = {0};
 	while (1) {
 		L3GD20::AxesDPS_t rate;
+		LSM303D::AxesAcc_t g;
 		uint8_t count = gyro.GetFifoSourceReg() & 0x1F;
 		gyro.GetFifoAngRateDPS(&rate);
-//		trace_printf("FIFO samples: %d, data: %f, %f, %f\n", count, data[0], data[1], data[2]);
-		accel.GetAccAxesRaw(&accraw);
-		trace_printf("Accelerometer ID: 0x%x, raw: %d %d %d\n", accel.ReadReg8(LSM303D_WHO_AM_I), accraw.AXIS_X, accraw.AXIS_Y, accraw.AXIS_Z);
+		accel.GetFifoAcc(&g);
+//		trace_printf("Accelerometer ID: 0x%x, g: %3.2f %3.2f %3.2f\n", accel.ReadReg8(LSM303D_WHO_AM_I), g.AXIS_X, g.AXIS_Y, g.AXIS_Z);
 
 		sprintf(disp,"GYRO X: %6.2f", rate.AXIS_X);
 		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
@@ -170,7 +171,17 @@ void main_task(void *pvParameters)
 		sprintf(disp,"SAMPLES: %d           ", count);
 		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*)disp, LEFT_MODE);
 		sprintf(disp,"QUEUE: %lu           ", uxQueueMessagesWaiting(hGyroQueue));
-		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*)disp, LEFT_MODE);
+//		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*)disp, LEFT_MODE);
+
+
+		sprintf(disp,"ACCL X: %6.2f", g.AXIS_X);
+		BSP_LCD_DisplayStringAt(0, 110, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"ACCL Y: %6.2f", g.AXIS_Y);
+		BSP_LCD_DisplayStringAt(0, 130, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"ACCL Z: %6.2f", g.AXIS_Z);
+		BSP_LCD_DisplayStringAt(0, 150, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"SAMPLES: %d           ", accel.GetFifoSourceFSS());
+		BSP_LCD_DisplayStringAt(0, 170, (uint8_t*)disp, LEFT_MODE);
 		led1.toggle();
 
 		uint32_t msg;

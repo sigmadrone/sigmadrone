@@ -392,9 +392,9 @@ public:
 	} AxesRaw_t;
 
 	typedef struct {
-		i16_t AXIS_X;
-		i16_t AXIS_Y;
-		i16_t AXIS_Z;
+		float AXIS_X;
+		float AXIS_Y;
+		float AXIS_Z;
 	} AxesAcc_t;
 
 public:

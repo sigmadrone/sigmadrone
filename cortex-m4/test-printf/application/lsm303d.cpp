@@ -456,7 +456,7 @@ void LSM303D::FIFOModeEnable(State_t enable)
 	u8_t value;
 	ReadReg8(LSM303D_CTRL_REG0, &value);
 	value &= 0xBF;
-	value |= enable;
+	value |= enable << LSM303D_FIFO_EN;
 	WriteReg8(LSM303D_CTRL_REG0, value);
 }
 
@@ -564,15 +564,15 @@ void LSM303D::GetAccAxesRaw(AxesRaw_t* buff)
 
 	ReadReg8(LSM303D_OUT_X_L_A, &valueL);
 	ReadReg8(LSM303D_OUT_X_H_A, &valueH);
-	buff->AXIS_X = (i16_t) ((valueH << 8) | valueL) / 16;
+	buff->AXIS_X = (i16_t) ((valueH << 8) | valueL);
 
 	ReadReg8(LSM303D_OUT_Y_L_A, &valueL);
 	ReadReg8(LSM303D_OUT_Y_H_A, &valueH);
-	buff->AXIS_Y = (i16_t) ((valueH << 8) | valueL) / 16;
+	buff->AXIS_Y = (i16_t) ((valueH << 8) | valueL);
 
 	ReadReg8(LSM303D_OUT_Z_L_A, &valueL);
 	ReadReg8(LSM303D_OUT_Z_H_A, &valueH);
-	buff->AXIS_Z = (i16_t) ((valueH << 8) | valueL) / 16;
+	buff->AXIS_Z = (i16_t) ((valueH << 8) | valueL);
 }
 
 void LSM303D::GetAcc(AxesAcc_t* buff)
