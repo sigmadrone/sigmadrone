@@ -114,6 +114,13 @@ void LSM303D::ReadReg8(u8_t reg, u8_t* data)
 	ReadData(reg, data, 1);
 }
 
+u8_t LSM303D::ReadReg8(u8_t reg)
+{
+	u8_t ret = 0;
+	ReadData(reg, &ret, 1);
+	return ret;
+}
+
 void LSM303D::WriteReg8(u8_t reg, u8_t data)
 {
 	spi_.write(cs_, reg, &data, 1);
@@ -246,6 +253,24 @@ void LSM303D::SetFullScale(Fullscale_t fs)
 	value &= 0xC3;
 	value |= (fs << LSM303D_AFS);
 	WriteReg8(LSM303D_CTRL_REG2, value);
+}
+
+float LSM303D::GetFullScale()
+{
+	u8_t value;
+
+	ReadReg8(LSM303D_CTRL_REG2, &value);
+	value >>= LSM303D_AFS;
+	value &= 0x07;
+	if (value == 0)
+		return 2.0;
+	else if (value == 1)
+		return 4.0;
+	else if (value == 2)
+		return 6.0;
+	else if (value == 3)
+		return 8.0;
+	return 16.0;
 }
 
 /*******************************************************************************
@@ -550,6 +575,31 @@ void LSM303D::GetAccAxesRaw(AxesRaw_t* buff)
 	buff->AXIS_Z = (i16_t) ((valueH << 8) | valueL) / 16;
 }
 
+void LSM303D::GetAcc(AxesAcc_t* buff)
+{
+	AxesRaw_t raw = {0, 0, 0};
+	float fullscale = GetFullScale();
+	GetAccAxesRaw(&raw);
+	buff->AXIS_X = raw.AXIS_X * fullscale / 32768.0;
+	buff->AXIS_Y = raw.AXIS_Y * fullscale / 32768.0;
+	buff->AXIS_Z = raw.AXIS_Z * fullscale / 32768.0;
+}
+
+void LSM303D::GetFifoAcc(AxesAcc_t* buff)
+{
+	AxesRaw_t raw = {0, 0, 0};
+	uint8_t count = GetFifoSourceFSS();
+	float scale = GetFullScale() / 32768.0 / ((float)count);
+
+	buff->AXIS_X = buff->AXIS_Y = buff->AXIS_Z = 0.0;
+	for (uint8_t i = 0; i < count; i++) {
+		GetAccAxesRaw(&raw);
+		buff->AXIS_X += raw.AXIS_X * scale;
+		buff->AXIS_Y += raw.AXIS_Y * scale;
+		buff->AXIS_Z += raw.AXIS_Z * scale;
+	}
+}
+
 /*******************************************************************************
  * Function Name  : GetMagAxesRaw
  * Description    : Read the Magnetometer Values Output Registers
@@ -557,7 +607,7 @@ void LSM303D::GetAccAxesRaw(AxesRaw_t* buff)
  * Output         : None
  * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
  *******************************************************************************/
-void LSM303D::GetMagAxesRaw(MagAxesRaw_t* buff)
+void LSM303D::GetMagAxesRaw(AxesRaw_t* buff)
 {
 	u8_t valueL;
 	u8_t valueH;

@@ -395,7 +395,7 @@ public:
 		i16_t AXIS_X;
 		i16_t AXIS_Y;
 		i16_t AXIS_Z;
-	}MagAxesRaw_t;
+	} AxesAcc_t;
 
 public:
 	AxesRaw_t raw;
@@ -412,6 +412,7 @@ public:
 	void SetMagneticResolution(Resolution_t resolution);
 	void SetAxis(Axis_t axis);
 	void SetFullScale(Fullscale_t fs);
+	float GetFullScale();
 	void SetBDU(State_t bdu);
 	void SetSelfTest(SelfTest_t st);
 	void SetTemperature(State_t state);
@@ -447,11 +448,11 @@ public:
 	void SetODR_M(ODR_M_t ov);
 	void SetModeMag(Mode_M_t Mode);
 	void SetFullScaleMag(FullscaleMag_t fs);
-	void GetMagAxesRaw(MagAxesRaw_t* buff);
+	void GetMagAxesRaw(AxesRaw_t* buff);
+	void GetAcc(AxesAcc_t* buff);
+	void GetFifoAcc(AxesAcc_t* buff);
 
-	void ReadReg8(u8_t deviceAddr, u8_t Reg, u8_t* Data);
-	void WriteReg8(u8_t deviceAddress, u8_t WriteAddr, u8_t Data);
-
+	u8_t ReadReg8(u8_t reg);
 	void ReadReg8(u8_t reg, u8_t* data);
 	void WriteReg8(u8_t reg, u8_t data);
 	void ReadData(u8_t reg, u8_t* data, u16_t nbytes);

@@ -10,7 +10,7 @@
 #include "spimaster.h"
 #include "stm32f429i_discovery.h"
 
-SPIMaster::SPIMaster(SPI_TypeDef* spi_device, uint32_t timeout, const std::vector<GPIOPin>& data_pins, const std::vector<GPIOPin>& cs_pins)
+SPIMaster::SPIMaster(SPI_TypeDef* spi_device, uint32_t clk_prescale, uint32_t timeout, const std::vector<GPIOPin>& data_pins, const std::vector<GPIOPin>& cs_pins)
 	: timeout_(timeout)
 	, data_pins_(data_pins)
 	, cs_pins_(cs_pins)
@@ -25,13 +25,11 @@ SPIMaster::SPIMaster(SPI_TypeDef* spi_device, uint32_t timeout, const std::vecto
 
 	/* SPI configuration -----------------------------------------------------*/
 	handle_.Instance = spi_device;
-	/* SPI baudrate is set to 5.6 MHz (PCLK2/SPI_BaudRatePrescaler = 90/16 = 5.625 MHz)
-	 to verify these constraints:
-	 - ILI9341 LCD SPI interface max baudrate is 10MHz for write and 6.66MHz for read
-	 - l3gd20 SPI interface max baudrate is 10MHz for write/read
-	 - PCLK2 frequency is set to 90 MHz
+	/*
+	 * if PCLK2 frequency is set to 90 MHz and clk_prescale = SPI_BAUDRATEPRESCALER_16
+	 * SPI baudrate is set to 5.6 MHz (PCLK2/SPI_BaudRatePrescaler = 90/16 = 5.625 MHz)
 	 */
-	handle_.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+	handle_.Init.BaudRatePrescaler = clk_prescale;
 
 	/* On STM32F429I-Discovery, LCD ID cannot be read then keep a common configuration */
 	/* for LCD and GYRO (SPI_DIRECTION_2LINES) */

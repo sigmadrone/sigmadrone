@@ -112,8 +112,7 @@ void init_lcd()
 
 void main_task(void *pvParameters)
 {
-	__GPIOE_CLK_ENABLE();
-	SPIMaster spi4(SPI4, 0x2000, {
+	SPIMaster spi4(SPI4, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PE_2, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPIx_SCK_PIN */
 				{PE_5, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPIx_MISO_PIN */
 				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},			/* DISCOVERY_SPIx_MOSI_PIN */
@@ -122,7 +121,7 @@ void main_task(void *pvParameters)
 			});
 
 
-	SPIMaster spi5(SPI5, 0x2000, {
+	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
 				{PF_8, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_MISO_PIN */
 				{PF_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},			/* DISCOVERY_SPIx_MOSI_PIN */
@@ -133,9 +132,6 @@ void main_task(void *pvParameters)
 				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
 			});
 	L3GD20 gyro(spi5, 0);
-	u8_t id = 0;
-	float data[3] = {0, 0, 0};
-	L3GD20::AxesRaw_t raw;
 	LSM303D::AxesRaw_t accraw;
 	LSM303D accel(spi4, 0);
 
@@ -143,12 +139,12 @@ void main_task(void *pvParameters)
 	init_lcd();
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 
-	gyro.SetMode(L3GD20::L3GD20_NORMAL);
-	gyro.SetODR(L3GD20::L3GD20_ODR_95Hz_BW_25);
-	gyro.SetFullScale(L3GD20::L3GD20_FULLSCALE_500);
+	gyro.SetMode(L3GD20::NORMAL);
+	gyro.SetODR(L3GD20::ODR_95Hz_BW_25);
+	gyro.SetFullScale(L3GD20::FULLSCALE_500);
 	gyro.SetBDU(L3GD20::MEMS_ENABLE);
 	gyro.SetWaterMark(14);
-	gyro.FIFOModeEnable(L3GD20::L3GD20_FIFO_STREAM_MODE);
+	gyro.FIFOModeEnable(L3GD20::FIFO_STREAM_MODE);
 	gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
 	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
 
@@ -158,24 +154,18 @@ void main_task(void *pvParameters)
 	// Infinite loop
 	char disp[128] = {0};
 	while (1) {
+		L3GD20::AxesDPS_t rate;
 		uint8_t count = gyro.GetFifoSourceReg() & 0x1F;
-		data[0] = data[1] = data[2] = 0.0;
-		for (uint8_t i = 0; i < count; i++) {
-			gyro.GetAngRateRaw(&raw);
-			data[0] += raw.AXIS_X * 500.0 / 32768.0 / count;
-			data[1] += raw.AXIS_Y * 500.0 / 32768.0 / count;
-			data[2] += raw.AXIS_Z * 500.0 / 32768.0 / count;
-		}
+		gyro.GetFifoAngRateDPS(&rate);
 //		trace_printf("FIFO samples: %d, data: %f, %f, %f\n", count, data[0], data[1], data[2]);
-		accel.ReadReg8(LSM303D_WHO_AM_I, &id);
 		accel.GetAccAxesRaw(&accraw);
-		trace_printf("Accelerometer ID: 0x%x, raw: %d %d %d\n", id, accraw.AXIS_X, accraw.AXIS_Y, accraw.AXIS_Z);
+		trace_printf("Accelerometer ID: 0x%x, raw: %d %d %d\n", accel.ReadReg8(LSM303D_WHO_AM_I), accraw.AXIS_X, accraw.AXIS_Y, accraw.AXIS_Z);
 
-		sprintf(disp,"GYRO X: %6.2f", data[0]);
+		sprintf(disp,"GYRO X: %6.2f", rate.AXIS_X);
 		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"GYRO Y: %6.2f", data[1]);
+		sprintf(disp,"GYRO Y: %6.2f", rate.AXIS_Y);
 		BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"GYRO Z: %6.2f", data[2]);
+		sprintf(disp,"GYRO Z: %6.2f", rate.AXIS_Z);
 		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*)disp, LEFT_MODE);
 		sprintf(disp,"SAMPLES: %d           ", count);
 		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*)disp, LEFT_MODE);
@@ -183,12 +173,6 @@ void main_task(void *pvParameters)
 		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*)disp, LEFT_MODE);
 		led1.toggle();
 
-//		count = gyro.GetFifoSourceReg() & 0x1F;
-//		for (uint8_t i = 0; i < count; i++)
-//			gyro.GetAngRateRaw(&raw);
-
-		//vTaskDelay(150 / portTICK_RATE_MS);
-//		vTaskSuspend(NULL);
 		uint32_t msg;
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
 

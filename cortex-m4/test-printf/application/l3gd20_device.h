@@ -202,90 +202,90 @@ public:
 	} State_t;
 
 	typedef enum {
-	  L3GD20_ODR_95Hz_BW_12_5              =               0x00,
-	  L3GD20_ODR_95Hz_BW_25                =               0x01,
-	  L3GD20_ODR_190Hz_BW_12_5             =               0x04,
-	  L3GD20_ODR_190Hz_BW_25               =               0x05,
-	  L3GD20_ODR_190Hz_BW_50               =               0x06,
-	  L3GD20_ODR_190Hz_BW_70               =               0x07,
-	  L3GD20_ODR_380Hz_BW_20               =               0x08,
-	  L3GD20_ODR_380Hz_BW_25               =               0x09,
-	  L3GD20_ODR_380Hz_BW_50               =               0x0A,
-	  L3GD20_ODR_380Hz_BW_110              =               0x0B,
-	  L3GD20_ODR_760Hz_BW_30               =               0x0C,
-	  L3GD20_ODR_760Hz_BW_35               =               0x0D,
-	  L3GD20_ODR_760Hz_BW_50               =               0x0E,
-	  L3GD20_ODR_760Hz_BW_110              =               0x0F
-	} L3GD20_ODR_t;
+		ODR_95Hz_BW_12_5              =               0x00,
+		ODR_95Hz_BW_25                =               0x01,
+		ODR_190Hz_BW_12_5             =               0x04,
+		ODR_190Hz_BW_25               =               0x05,
+		ODR_190Hz_BW_50               =               0x06,
+		ODR_190Hz_BW_70               =               0x07,
+		ODR_380Hz_BW_20               =               0x08,
+		ODR_380Hz_BW_25               =               0x09,
+		ODR_380Hz_BW_50               =               0x0A,
+		ODR_380Hz_BW_110              =               0x0B,
+		ODR_760Hz_BW_30               =               0x0C,
+		ODR_760Hz_BW_35               =               0x0D,
+		ODR_760Hz_BW_50               =               0x0E,
+		ODR_760Hz_BW_110              =               0x0F
+	} ODR_t;
 
 	typedef enum {
-	  L3GD20_POWER_DOWN                    =               0x00,
-	  L3GD20_SLEEP 				           =               0x01,
-	  L3GD20_NORMAL	                       =               0x02
-	} L3GD20_Mode_t;
+		POWER_DOWN                    =               0x00,
+		SLEEP                         =               0x01,
+		NORMAL                        =               0x02
+	} Mode_t;
 
 	typedef enum {
-	  L3GD20_HPM_NORMAL_MODE_RES           =               0x00,
-	  L3GD20_HPM_REF_SIGNAL                =               0x01,
-	  L3GD20_HPM_NORMAL_MODE               =               0x02,
-	  L3GD20_HPM_AUTORESET_INT             =               0x03
-	} L3GD20_HPFMode_t;
+		HPM_NORMAL_MODE_RES           =               0x00,
+		HPM_REF_SIGNAL                =               0x01,
+		HPM_NORMAL_MODE               =               0x02,
+		HPM_AUTORESET_INT             =               0x03
+	} HPFMode_t;
 
 	typedef enum {
-	  L3GD20_HPFCF_0                       =               0x00,
-	  L3GD20_HPFCF_1                       =               0x01,
-	  L3GD20_HPFCF_2                       = 	           0x02,
-	  L3GD20_HPFCF_3                       =               0x03,
-	  L3GD20_HPFCF_4                       =               0x04,
-	  L3GD20_HPFCF_5                       =               0x05,
-	  L3GD20_HPFCF_6                       =               0x06,
-	  L3GD20_HPFCF_7                       =               0x07,
-	  L3GD20_HPFCF_8                       =               0x08,
-	  L3GD20_HPFCF_9                       =               0x09
-	} L3GD20_HPFCutOffFreq_t;
+		HPFCF_0                       =               0x00,
+		HPFCF_1                       =               0x01,
+		HPFCF_2                       = 	          0x02,
+		HPFCF_3                       =               0x03,
+		HPFCF_4                       =               0x04,
+		HPFCF_5                       =               0x05,
+		HPFCF_6                       =               0x06,
+		HPFCF_7                       =               0x07,
+		HPFCF_8                       =               0x08,
+		HPFCF_9                       =               0x09
+	} HPFCutOffFreq_t;
 
 	typedef enum {
-	  L3GD20_PUSH_PULL                     =                0x00,
-	  L3GD20_OPEN_DRAIN                    =                0x01
-	} L3GD20_IntPinMode_t;
+		PUSH_PULL                     =                0x00,
+		OPEN_DRAIN                    =                0x01
+	} IntPinMode_t;
 
 	typedef enum {
-	  L3GD20_FULLSCALE_250                 =                0x00,
-	  L3GD20_FULLSCALE_500                 =                0x01,
-	  L3GD20_FULLSCALE_2000                =                0x02
-	} L3GD20_Fullscale_t;
+		FULLSCALE_250                 =                0x00,
+		FULLSCALE_500                 =                0x01,
+		FULLSCALE_2000                =                0x02
+	} Fullscale_t;
 
 	typedef enum {
-	  L3GD20_BLE_LSB                       =                0x00,
-	  L3GD20_BLE_MSB                       =                0x01
-	} L3GD20_Endianess_t;
+		BLE_LSB                       =                0x00,
+		BLE_MSB                       =                0x01
+	} Endianess_t;
 
 	typedef enum {
-	  L3GD20_SPI_4_WIRE                    =                0x00,
-	  L3GD20_SPI_3_WIRE                    =                0x01
-	} L3GD20_SPIMode_t;
+		SPI_4_WIRE                    =                0x00,
+		SPI_3_WIRE                    =                0x01
+	} SPIMode_t;
 
 	typedef enum {
-	  L3GD20_FIFO_DISABLE                  =                0x05,
-	  L3GD20_FIFO_BYPASS_MODE              =                0x00,
-	  L3GD20_FIFO_MODE                     =                0x01,
-	  L3GD20_FIFO_STREAM_MODE              =                0x02,
-	  L3GD20_FIFO_STREAM_TO_FIFO_MODE      =                0x03,
-	  L3GD20_FIFO_BYPASS_TO_STREAM_MODE    =                0x04
-	} L3GD20_FifoMode_t;
+		FIFO_DISABLE                  =                0x05,
+		FIFO_BYPASS_MODE              =                0x00,
+		FIFO_MODE                     =                0x01,
+		FIFO_STREAM_MODE              =                0x02,
+		FIFO_STREAM_TO_FIFO_MODE      =                0x03,
+		FIFO_BYPASS_TO_STREAM_MODE    =                0x04
+	} FifoMode_t;
 
 	typedef enum {
-	  L3GD20_NONE                          =                0x00,
-	  L3GD20_HPF                           =                0x01,
-	  L3GD20_LPF2                          =                0x02,
-	  L3GD20_HPFLPF2                       =                0x03
-	} L3GD20_HPF_LPF2_Enable;
+		HPF_NONE                      =                0x00,
+		HPF                           =                0x01,
+		LPF2                          =                0x02,
+		HPFLPF2                       =                0x03
+	} HPF_LPF2_Enable;
 
 	typedef enum {
-	  L3GD20_THS_X                         =                0x00,
-	  L3GD20_THS_Y                         =                0x01,
-	  L3GD20_THS_Z                         =                0x02
-	} L3GD20_IntThsAxis;
+		THS_X                         =                0x00,
+		THS_Y                         =                0x01,
+		THS_Z                         =                0x02
+	} IntThsAxis;
 
 	typedef struct {
 		i16_t AXIS_X;
@@ -293,48 +293,58 @@ public:
 		i16_t AXIS_Z;
 	} AxesRaw_t;
 
+	typedef struct {
+		float AXIS_X;
+		float AXIS_Y;
+		float AXIS_Z;
+	} AxesDPS_t;
+
 public:
 	L3GD20(SPIMaster& spi, u8_t cs);
 
 	/**********Sensor Configuration Functions***********/
-	void SetODR(L3GD20_ODR_t ov);
-	void SetMode(L3GD20_Mode_t md);
+	void SetODR(ODR_t ov);
+	void SetMode(Mode_t md);
 	void SetAxis(L3GD20_Axis_t axis);
-	void SetFullScale(L3GD20_Fullscale_t fs);
+	void SetFullScale(Fullscale_t fs);
+	float GetFullScale();
 	void SetBDU(State_t bdu);
-	void SetBLE(L3GD20_Endianess_t ble);
-	void SetSPIInterface(L3GD20_SPIMode_t spi);
+	void SetBLE(Endianess_t ble);
+	void SetSPIInterface(SPIMode_t spi);
 
 	/***************Filtering Functions****************/
-	void SetHPFMode(L3GD20_HPFMode_t hpf);
-	void SetHPFCutOFF(L3GD20_HPFCutOffFreq_t hpf);
+	void SetHPFMode(HPFMode_t hpf);
+	void SetHPFCutOFF(HPFCutOffFreq_t hpf);
 	void HPFEnable(State_t hpf);
-	void SetOutputDataAndFifoFilters(L3GD20_HPF_LPF2_Enable hpf);
-	void SetInt1Filters(L3GD20_HPF_LPF2_Enable hpf);
+	void SetOutputDataAndFifoFilters(HPF_LPF2_Enable hpf);
+	void SetInt1Filters(HPF_LPF2_Enable hpf);
 
 	/***************Interrupt Functions****************/
-	void SetIntPinMode(L3GD20_IntPinMode_t pm);
+	void SetIntPinMode(IntPinMode_t pm);
 	void SetInt1Pin(L3GD20_Int1PinConf_t pinConf);
 	void SetInt2Pin(L3GD20_Int2PinConf_t pinConf);
 	void Int1LatchEnable(State_t latch);
 	void ResetInt1Latch(void);
 	void SetIntConfiguration(L3GD20_Int1Conf_t ic);
-	void SetInt1Threshold(L3GD20_IntThsAxis axis, u16_t ths);
+	void SetInt1Threshold(IntThsAxis axis, u16_t ths);
 	void SetInt1Duration(L3GD20_Int1Conf_t id);
 
 	/*****************FIFO Functions******************/
-	void FIFOModeEnable(L3GD20_FifoMode_t fm);
+	void FIFOModeEnable(FifoMode_t fm);
 	void SetWaterMark(u8_t wtm);
 
 	/****************Reading Functions*****************/
 	u8_t GetSatusReg();
 	void GetAngRateRaw(AxesRaw_t* buff);
+	void GetAngRateDPS(AxesDPS_t* buff);
+	void GetFifoAngRateDPS(AxesDPS_t* buff);
 	u8_t GetFifoSourceReg();
 	u8_t GetInt1Src();
 	u8_t GetDeviceID();
 
 
 	/*********************Generic*********************/
+	u8_t ReadReg8(u8_t reg);
 	void ReadReg8(u8_t reg, u8_t* data);
 	void WriteReg8(u8_t reg, u8_t data);
 	void ReadData(u8_t reg, u8_t* data, u16_t nbytes);

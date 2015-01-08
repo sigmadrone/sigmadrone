@@ -77,6 +77,13 @@ void L3GD20::ReadReg8(u8_t reg, u8_t* data)
 	ReadData(reg, data, 1);
 }
 
+u8_t L3GD20::ReadReg8(u8_t reg)
+{
+	u8_t ret = 0;
+	ReadData(reg, &ret, 1);
+	return ret;
+}
+
 /*******************************************************************************
 * Function Name		: L3GD20_WriteReg
 * Description		: Generic Writing function. It must be fullfilled with either
@@ -98,7 +105,7 @@ void L3GD20::WriteReg8(u8_t reg, u8_t data)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::SetODR(L3GD20_ODR_t ov)
+void L3GD20::SetODR(ODR_t ov)
 {
 	u8_t value;
 
@@ -116,31 +123,31 @@ void L3GD20::SetODR(L3GD20_ODR_t ov)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::SetMode(L3GD20_Mode_t md)
+void L3GD20::SetMode(Mode_t md)
 {
 	u8_t value;
 
 	ReadReg8(L3GD20_CTRL_REG1, &value);
 	switch (md) {
 
-	case L3GD20_POWER_DOWN:
+	case POWER_DOWN:
 		value &= 0xF7;
 		value |= (MEMS_RESET << L3GD20_PD);
 		break;
 
-	case L3GD20_NORMAL:
+	case NORMAL:
 		value &= 0xF7;
 		value |= (MEMS_SET << L3GD20_PD);
 		break;
 
-	case L3GD20_SLEEP:
+	case SLEEP:
 		value &= 0xF0;
 		value |= ((MEMS_SET << L3GD20_PD) | (MEMS_RESET << L3GD20_ZEN) | (MEMS_RESET << L3GD20_YEN)
 				| (MEMS_RESET << L3GD20_XEN));
 		break;
 
 	default:
-		throw std::invalid_argument("L3GD20::SetMode(L3GD20_Mode_t md), invalid md");
+		throw std::invalid_argument("L3GD20::SetMode(Mode_t md), invalid md");
 	}
 	WriteReg8(L3GD20_CTRL_REG1, value);
 }
@@ -171,7 +178,7 @@ void L3GD20::SetAxis(L3GD20_Axis_t axis)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::SetFullScale(L3GD20_Fullscale_t fs)
+void L3GD20::SetFullScale(Fullscale_t fs)
 {
 	u8_t value;
 
@@ -181,6 +188,19 @@ void L3GD20::SetFullScale(L3GD20_Fullscale_t fs)
 	WriteReg8(L3GD20_CTRL_REG4, value);
 }
 
+float L3GD20::GetFullScale()
+{
+	u8_t value;
+
+	ReadReg8(L3GD20_CTRL_REG4, &value);
+	value &= 0x30;
+	value = (value >> L3GD20_FS);
+	if (value == 0)
+		return 250.0;
+	else if (value == 1)
+		return 500.0;
+	return 2000.0;
+}
 
 /*******************************************************************************
 * Function Name  : L3GD20_SetBDU
@@ -207,7 +227,7 @@ void L3GD20::SetBDU(State_t bdu)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::SetBLE(L3GD20_Endianess_t ble)
+void L3GD20::SetBLE(Endianess_t ble)
 {
 	u8_t value;
 
@@ -243,7 +263,7 @@ void L3GD20::HPFEnable(State_t hpf)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::SetHPFMode(L3GD20_HPFMode_t hpf)
+void L3GD20::SetHPFMode(HPFMode_t hpf)
 {
 	u8_t value;
 
@@ -261,7 +281,7 @@ void L3GD20::SetHPFMode(L3GD20_HPFMode_t hpf)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::SetHPFCutOFF(L3GD20_HPFCutOffFreq_t hpf)
+void L3GD20::SetHPFCutOFF(HPFCutOffFreq_t hpf)
 {
 	u8_t value;
 
@@ -279,7 +299,7 @@ void L3GD20::SetHPFCutOFF(L3GD20_HPFCutOffFreq_t hpf)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::SetIntPinMode(L3GD20_IntPinMode_t pm)
+void L3GD20::SetIntPinMode(IntPinMode_t pm)
 {
 	u8_t value;
 
@@ -386,13 +406,13 @@ void L3GD20::SetIntConfiguration(L3GD20_Int1Conf_t ic)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::SetInt1Threshold(L3GD20_IntThsAxis axis, u16_t ths)
+void L3GD20::SetInt1Threshold(IntThsAxis axis, u16_t ths)
 {
 	u8_t value;
 
 	switch (axis) {
 
-	case L3GD20_THS_X:
+	case THS_X:
 		//write the threshold LSB
 		value = (u8_t) (ths & 0x00ff);
 		WriteReg8(L3GD20_INT1_THS_XL, value);
@@ -401,7 +421,7 @@ void L3GD20::SetInt1Threshold(L3GD20_IntThsAxis axis, u16_t ths)
 		WriteReg8(L3GD20_INT1_THS_XH, value);
 		break;
 
-	case L3GD20_THS_Y:
+	case THS_Y:
 		//write the threshold LSB
 		value = (u8_t) (ths & 0x00ff);
 		WriteReg8(L3GD20_INT1_THS_YL, value);
@@ -410,7 +430,7 @@ void L3GD20::SetInt1Threshold(L3GD20_IntThsAxis axis, u16_t ths)
 		WriteReg8(L3GD20_INT1_THS_YH, value);
 		break;
 
-	case L3GD20_THS_Z:
+	case THS_Z:
 		//write the threshold LSB
 		value = (u8_t) (ths & 0x00ff);
 		WriteReg8(L3GD20_INT1_THS_ZL, value);
@@ -444,11 +464,11 @@ void L3GD20::SetInt1Duration(L3GD20_Int1Conf_t id) {
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::FIFOModeEnable(L3GD20_FifoMode_t fm)
+void L3GD20::FIFOModeEnable(FifoMode_t fm)
 {
 	u8_t value;
 
-	if (fm == L3GD20_FIFO_DISABLE) {
+	if (fm == FIFO_DISABLE) {
 
 		ReadReg8(L3GD20_CTRL_REG5, &value);
 		value &= 0xBF;
@@ -526,6 +546,30 @@ void L3GD20::GetAngRateRaw(AxesRaw_t* buff)
 	buff->AXIS_Z = (i16_t) ((valueH << 8) | valueL);
 }
 
+void L3GD20::GetAngRateDPS(AxesDPS_t* buff)
+{
+	AxesRaw_t raw = {0, 0, 0};
+	float fullscale = GetFullScale();
+	GetAngRateRaw(&raw);
+	buff->AXIS_X = raw.AXIS_X * fullscale / 32768.0;
+	buff->AXIS_Y = raw.AXIS_Y * fullscale / 32768.0;
+	buff->AXIS_Z = raw.AXIS_Z * fullscale / 32768.0;
+}
+
+void L3GD20::GetFifoAngRateDPS(AxesDPS_t* buff)
+{
+	AxesRaw_t raw = {0, 0, 0};
+	uint8_t count = GetFifoSourceReg() & 0x1F;
+	float scale = GetFullScale() / 32768.0 / ((float)count);
+
+	buff->AXIS_X = buff->AXIS_Y = buff->AXIS_Z = 0.0;
+	for (uint8_t i = 0; i < count; i++) {
+		GetAngRateRaw(&raw);
+		buff->AXIS_X += raw.AXIS_X * scale;
+		buff->AXIS_Y += raw.AXIS_Y * scale;
+		buff->AXIS_Z += raw.AXIS_Z * scale;
+	}
+}
 
 /*******************************************************************************
 * Function Name  : L3GD20_GetInt1Src
@@ -578,7 +622,7 @@ u8_t L3GD20::GetFifoSourceReg()
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::SetOutputDataAndFifoFilters(L3GD20_HPF_LPF2_Enable hpf)
+void L3GD20::SetOutputDataAndFifoFilters(HPF_LPF2_Enable hpf)
 {
 	u8_t value;
 
@@ -587,22 +631,22 @@ void L3GD20::SetOutputDataAndFifoFilters(L3GD20_HPF_LPF2_Enable hpf)
 
 	switch (hpf) {
 
-	case L3GD20_NONE:
+	case HPF_NONE:
 		value &= 0xfc;
 		value |= 0x00; //hpen = x, Out_sel_1 = 0, Out_sel_0 = 0
 		break;
 
-	case L3GD20_HPF:
+	case HPF:
 		value &= 0xfc;
 		value |= 0x01; //hpen = x, Out_sel_1 = 0, Out_sel_0 = 1
 		break;
 
-	case L3GD20_LPF2:
+	case LPF2:
 		value &= 0xed;
 		value |= 0x02; //hpen = 0, Out_sel_1 = 1, Out_sel_0 = x
 		break;
 
-	case L3GD20_HPFLPF2:
+	case HPFLPF2:
 		value &= 0xed;
 		value |= 0x12; //hpen = 1, Out_sel_1 = 1, Out_sel_0 = x
 		break;
@@ -620,7 +664,7 @@ void L3GD20::SetOutputDataAndFifoFilters(L3GD20_HPF_LPF2_Enable hpf)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::SetInt1Filters(L3GD20_HPF_LPF2_Enable hpf)
+void L3GD20::SetInt1Filters(HPF_LPF2_Enable hpf)
 {
 	u8_t value;
 
@@ -629,22 +673,22 @@ void L3GD20::SetInt1Filters(L3GD20_HPF_LPF2_Enable hpf)
 
 	switch (hpf) {
 
-	case L3GD20_NONE:
+	case HPF_NONE:
 		value &= 0xf3;
 		value |= 0x00 << L3GD20_INT1_SEL0; //hpen = x, Int1_sel_1 = 0, Int1_sel_0 = 0
 		break;
 
-	case L3GD20_HPF:
+	case HPF:
 		value &= 0xf3;
 		value |= 0x01 << L3GD20_INT1_SEL0; //hpen = x, Int1_sel_1 = 0, Int1_sel_0 = 1
 		break;
 
-	case L3GD20_LPF2:
+	case LPF2:
 		value &= 0xe7;
 		value |= 0x02 << L3GD20_INT1_SEL0; //hpen = 0, Int1_sel_1 = 1, Int1_sel_0 = x
 		break;
 
-	case L3GD20_HPFLPF2:
+	case HPFLPF2:
 		value &= 0xe7;
 		value |= 0x01 << L3GD20_HPEN;
 		value |= 0x02 << L3GD20_INT1_SEL0; //hpen = 1, Int1_sel_1 = 1, Int1_sel_0 = x
@@ -662,7 +706,7 @@ void L3GD20::SetInt1Filters(L3GD20_HPF_LPF2_Enable hpf)
 * Output         : None
 * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
 *******************************************************************************/
-void L3GD20::SetSPIInterface(L3GD20_SPIMode_t spi)
+void L3GD20::SetSPIInterface(SPIMode_t spi)
 {
 	u8_t value;
 

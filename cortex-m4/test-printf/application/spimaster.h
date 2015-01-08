@@ -17,7 +17,7 @@
 class SPIMaster
 {
 public:
-	SPIMaster(SPI_TypeDef* spi_device = SPI5, uint32_t timeout = 0x1000, const std::vector<GPIOPin>& data_pins = {}, const std::vector<GPIOPin>& cs_pins = {});
+	SPIMaster(SPI_TypeDef* spi_device = SPI5, uint32_t clk_prescale = SPI_BAUDRATEPRESCALER_16, uint32_t timeout = 0x1000, const std::vector<GPIOPin>& data_pins = {}, const std::vector<GPIOPin>& cs_pins = {});
 	virtual ~SPIMaster();
 
 	void read(uint8_t cs, uint8_t reg, uint8_t* buffer, uint16_t nbytes);
