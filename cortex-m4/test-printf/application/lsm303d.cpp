@@ -139,7 +139,7 @@ void LSM303D::SetODR(ODR_t ov)
 
 	ReadReg8(LSM303D_CTRL_REG1, &value);
 	value &= 0x0f;
-	value |= ov << 4;
+	value |= ov << LSM303D_ODR_BIT;
 	WriteReg8(LSM303D_CTRL_REG1, value);
 }
 

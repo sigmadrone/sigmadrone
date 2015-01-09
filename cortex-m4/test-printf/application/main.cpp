@@ -105,7 +105,7 @@ void init_lcd()
 
 	trace_printf("LCD %d by %d pixels\n", BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
 
-	vTaskDelay(2000 / portTICK_RATE_MS);
+	vTaskDelay(200 / portTICK_RATE_MS);
 
 	BSP_LCD_Clear(LCD_COLOR_WHITE);
 }
@@ -147,20 +147,24 @@ void main_task(void *pvParameters)
 	gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
 	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
 
-	accel.SetODR(LSM303D::ODR_800Hz);
+	accel.SetODR(LSM303D::ODR_100Hz);
 	accel.SetFullScale(LSM303D::FULLSCALE_8);
 	accel.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
 	accel.FIFOModeSet(LSM303D::FIFO_STREAM_MODE);
 
 	// Infinite loop
+	TickType_t ticks = 0, oldticks = 0;
 	char disp[128] = {0};
 	while (1) {
 		L3GD20::AxesDPS_t rate;
 		LSM303D::AxesAcc_t g;
-		uint8_t count = gyro.GetFifoSourceReg() & 0x1F;
+		uint8_t gyr_samples = gyro.GetFifoSourceReg() & 0x1F;
+		uint8_t acc_samples = accel.GetFifoSourceFSS();
 		gyro.GetFifoAngRateDPS(&rate);
 		accel.GetFifoAcc(&g);
 //		trace_printf("Accelerometer ID: 0x%x, g: %3.2f %3.2f %3.2f\n", accel.ReadReg8(LSM303D_WHO_AM_I), g.AXIS_X, g.AXIS_Y, g.AXIS_Z);
+		ticks = xTaskGetTickCount() - oldticks;
+		oldticks = xTaskGetTickCount();
 
 		sprintf(disp,"GYRO X: %6.2f", rate.AXIS_X);
 		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
@@ -168,11 +172,10 @@ void main_task(void *pvParameters)
 		BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
 		sprintf(disp,"GYRO Z: %6.2f", rate.AXIS_Z);
 		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"SAMPLES: %d           ", count);
+		sprintf(disp,"SAMPLES: %d           ", gyr_samples);
 		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*)disp, LEFT_MODE);
 		sprintf(disp,"QUEUE: %lu           ", uxQueueMessagesWaiting(hGyroQueue));
 //		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*)disp, LEFT_MODE);
-
 
 		sprintf(disp,"ACCL X: %6.2f", g.AXIS_X);
 		BSP_LCD_DisplayStringAt(0, 110, (uint8_t*)disp, LEFT_MODE);
@@ -180,8 +183,11 @@ void main_task(void *pvParameters)
 		BSP_LCD_DisplayStringAt(0, 130, (uint8_t*)disp, LEFT_MODE);
 		sprintf(disp,"ACCL Z: %6.2f", g.AXIS_Z);
 		BSP_LCD_DisplayStringAt(0, 150, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"SAMPLES: %d           ", accel.GetFifoSourceFSS());
+		sprintf(disp,"SAMPLES: %d           ", acc_samples);
 		BSP_LCD_DisplayStringAt(0, 170, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"UPDATE: %d ms          ", (int)(ticks * portTICK_PERIOD_MS));
+		BSP_LCD_DisplayStringAt(0, 190, (uint8_t*)disp, LEFT_MODE);
+
 		led1.toggle();
 
 		uint32_t msg;
