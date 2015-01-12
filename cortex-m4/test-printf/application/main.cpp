@@ -19,7 +19,7 @@
 #include "queue.h"
 #include "stm32f429i_discovery_lcd.h"
 #include "spimaster.h"
-#include "l3gd20_device.h"
+#include "l3gd20.h"
 #include "lsm303d.h"
 
 void* __dso_handle = 0;

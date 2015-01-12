@@ -9,9 +9,6 @@
 #include <stdio.h>
 #include "lsm303d.h"
 
-
-
-
 /* Read/Write command */
 #define READWRITE_CMD              ((uint8_t)0x80)
 /* Multiple byte read/write command */

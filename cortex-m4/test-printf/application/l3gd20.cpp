@@ -1,29 +1,4 @@
-/******************** (C) COPYRIGHT 2011 STMicroelectronics ********************
-* File Name          : L3GD20.c
-* Author             : MSH Application Team
-* Author             : Andrea Labombarda
-* Version            : $Revision:$
-* Date               : $Date:$
-* Description        : L3GD20 driver file
-*                      
-* HISTORY:
-* Date               |	Modification                    |	Author
-* 25/01/2012         |	Initial Revision                |	Andrea Labombarda
-* 27/08/2012		 |  Modified to support multiple drivers in the same program                |	Antonio Micali
-********************************************************************************
-* THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
-* WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
-* AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
-* INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
-* CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
-* INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
-*
-* THIS SOFTWARE IS SPECIFICALLY DESIGNED FOR EXCLUSIVE USE WITH ST PARTS.
-*
-*******************************************************************************/
-
-/* Includes ------------------------------------------------------------------*/
-#include "l3gd20_device.h"
+#include "l3gd20.h"
 #include <stdexcept>
 
 /* Read/Write command */
