@@ -160,7 +160,7 @@ void main_task(void *pvParameters)
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 
 	gyro.SetMode(L3GD20::NORMAL);
-	gyro.SetODR(L3GD20::ODR_190Hz_BW_70);
+	gyro.SetODR(L3GD20::ODR_190Hz_BW_12_5);
 	gyro.SetFullScale(L3GD20::FULLSCALE_500);
 	gyro.SetBDU(L3GD20::MEMS_ENABLE);
 	gyro.SetWaterMark(gyr_wtm);
@@ -177,16 +177,19 @@ void main_task(void *pvParameters)
 	accel.SetInt2Pin(LSM303D_INT2_OVERRUN_ENABLE|LSM303D_INT2_FTH_ENABLE);
 	accel.SetInt2Pin(0);
 
+	vTaskDelay(1000 / portTICK_RATE_MS);
 	// Infinite loop
 	TickType_t ticks = 0, oldticks = 0;
 	Vector3d gyr_bias;
 	char disp[128] = {0};
 
-	sprintf(disp,"Calibrating Gyro...");
+	sprintf(disp,"Calibrating...");
 	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
 
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < 51; i++) {
 		gyro.GetFifoAngRateDPS(&gyr_axes);
+		if (i == 0)
+			continue;
 		gyr_bias.at(0) += gyr_axes.AXIS_X;
 		gyr_bias.at(1) += gyr_axes.AXIS_Y;
 		gyr_bias.at(2) += gyr_axes.AXIS_Z;
