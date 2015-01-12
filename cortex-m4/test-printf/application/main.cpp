@@ -160,7 +160,7 @@ void main_task(void *pvParameters)
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 
 	gyro.SetMode(L3GD20::NORMAL);
-	gyro.SetODR(L3GD20::ODR_190Hz_BW_12_5);
+	gyro.SetODR(L3GD20::ODR_190Hz_BW_25);
 	gyro.SetFullScale(L3GD20::FULLSCALE_500);
 	gyro.SetBDU(L3GD20::MEMS_ENABLE);
 	gyro.SetWaterMark(gyr_wtm);
@@ -186,20 +186,22 @@ void main_task(void *pvParameters)
 	sprintf(disp,"Calibrating...");
 	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
 
-	for (int i = 0; i < 51; i++) {
+	gyro.GetFifoAngRateDPS(&gyr_axes); // Drain the fifo
+	for (int i = 0; i < 50; i++) {
+		uint32_t msg;
+		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
+		}
 		gyro.GetFifoAngRateDPS(&gyr_axes);
-		if (i == 0)
-			continue;
 		gyr_bias.at(0) += gyr_axes.AXIS_X;
 		gyr_bias.at(1) += gyr_axes.AXIS_Y;
 		gyr_bias.at(2) += gyr_axes.AXIS_Z;
 		led1.toggle();
-		uint32_t msg;
-		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
-		}
 	}
 	gyr_bias = gyr_bias / 50.0;
 	while (1) {
+		uint32_t msg;
+		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
+		}
 		uint8_t gyr_samples = gyro.GetFifoSourceReg() & 0x1F;
 		uint8_t acc_samples = accel.GetFifoSourceFSS();
 		if (gyr_samples >= gyr_wtm)
@@ -246,12 +248,6 @@ void main_task(void *pvParameters)
 		sprintf(disp,"UPDATE: %d ms          ", (int)(ticks * portTICK_PERIOD_MS));
 		BSP_LCD_DisplayStringAt(0, 290, (uint8_t*)disp, LEFT_MODE);
 		led1.toggle();
-
-		uint32_t msg;
-		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
-
-		}
-
 	}
 }
 
