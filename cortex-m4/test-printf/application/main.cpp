@@ -26,8 +26,9 @@ void* __dso_handle = 0;
 
 DigitalOut led1(USER_LED1);
 DigitalOut led2(USER_LED2);
+DigitalIn gyro_int2(PA_2, DigitalIn::PullUp, DigitalIn::InterruptRising);
+DigitalIn acc_int2(PB_4, DigitalIn::PullUp, DigitalIn::InterruptRising);
 DigitalIn button(USER_BUTTON, DigitalIn::PullDown, DigitalIn::InterruptRising);
-DigitalIn wtm(PA_2, DigitalIn::PullNone, DigitalIn::InterruptRisingFalling);
 TaskHandle_t hMain;
 QueueHandle_t hGyroQueue;
 
@@ -40,21 +41,34 @@ extern "C" void EXTI0_IRQHandler(void)
 
 extern "C" void EXTI2_IRQHandler(void)
 {
-//	uint32_t mask = portDISABLE_INTERRUPTS();
+	uint32_t mask = portDISABLE_INTERRUPTS();
 	DigitalIn::vector_handler(2);
-	HAL_NVIC_ClearPendingIRQ(EXTI2_IRQn);
-//	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
+	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
 }
 
-void wtm_isr()
+extern "C" void EXTI4_IRQHandler(void)
 {
-	led2 = wtm;
-	if (wtm) {
+	uint32_t mask = portDISABLE_INTERRUPTS();
+	DigitalIn::vector_handler(4);
+	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
+}
+
+void gyro_isr()
+{
+	if (gyro_int2 || acc_int2) {
 		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 		uint32_t msg = 1;
 		xQueueSendFromISR(hGyroQueue, &msg, &xHigherPriorityTaskWoken);
-//		xTaskResumeFromISR(hMain);
-//		trace_printf("WTM isr...\n");
+	}
+}
+
+
+void acc_isr()
+{
+	if (gyro_int2 || acc_int2) {
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		uint32_t msg = 1;
+		xQueueSendFromISR(hGyroQueue, &msg, &xHigherPriorityTaskWoken);
 	}
 }
 
@@ -125,16 +139,19 @@ void main_task(void *pvParameters)
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
 				{PF_8, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_MISO_PIN */
 				{PF_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},			/* DISCOVERY_SPIx_MOSI_PIN */
-				{PA_1, GPIO_MODE_INPUT, GPIO_NOPULL, GPIO_SPEED_FAST, 0},						/* INT1 */
-				{PA_2, GPIO_MODE_INPUT, GPIO_NOPULL, GPIO_SPEED_FAST, 0},						/* INT2 */
 			}, {
 				{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* GYRO_CS_PIN */
 				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
 			});
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi4, 0);
+	uint8_t gyr_wtm = 18;
+	uint8_t acc_wtm = 17;
+	L3GD20::AxesDPS_t gyr_axes;
+	LSM303D::AxesAcc_t acc_axes;
 
-	wtm.callback(wtm_isr);
+	gyro_int2.callback(gyro_isr);
+	acc_int2.callback(acc_isr);
 	init_lcd();
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 
@@ -142,8 +159,9 @@ void main_task(void *pvParameters)
 	gyro.SetODR(L3GD20::ODR_95Hz_BW_25);
 	gyro.SetFullScale(L3GD20::FULLSCALE_500);
 	gyro.SetBDU(L3GD20::MEMS_ENABLE);
-	gyro.SetWaterMark(14);
+	gyro.SetWaterMark(gyr_wtm);
 	gyro.FIFOModeEnable(L3GD20::FIFO_STREAM_MODE);
+	gyro.SetInt2Pin(0);
 	gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
 	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
 
@@ -151,37 +169,40 @@ void main_task(void *pvParameters)
 	accel.SetFullScale(LSM303D::FULLSCALE_8);
 	accel.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
 	accel.FIFOModeSet(LSM303D::FIFO_STREAM_MODE);
+	accel.SetThreshold(acc_wtm);
+	accel.SetInt2Pin(LSM303D_INT2_OVERRUN_ENABLE|LSM303D_INT2_FTH_ENABLE);
+	accel.SetInt2Pin(0);
 
 	// Infinite loop
 	TickType_t ticks = 0, oldticks = 0;
 	char disp[128] = {0};
 	while (1) {
-		L3GD20::AxesDPS_t rate;
-		LSM303D::AxesAcc_t g;
 		uint8_t gyr_samples = gyro.GetFifoSourceReg() & 0x1F;
 		uint8_t acc_samples = accel.GetFifoSourceFSS();
-		gyro.GetFifoAngRateDPS(&rate);
-		accel.GetFifoAcc(&g);
+		if (gyr_samples >= gyr_wtm)
+			gyro.GetFifoAngRateDPS(&gyr_axes);
+		if (acc_samples > acc_wtm)
+			accel.GetFifoAcc(&acc_axes);
 //		trace_printf("Accelerometer ID: 0x%x, g: %3.2f %3.2f %3.2f\n", accel.ReadReg8(LSM303D_WHO_AM_I), g.AXIS_X, g.AXIS_Y, g.AXIS_Z);
 		ticks = xTaskGetTickCount() - oldticks;
 		oldticks = xTaskGetTickCount();
 
-		sprintf(disp,"GYRO X: %6.2f", rate.AXIS_X);
+		sprintf(disp,"GYRO X: %6.2f", gyr_axes.AXIS_X);
 		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"GYRO Y: %6.2f", rate.AXIS_Y);
+		sprintf(disp,"GYRO Y: %6.2f", gyr_axes.AXIS_Y);
 		BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"GYRO Z: %6.2f", rate.AXIS_Z);
+		sprintf(disp,"GYRO Z: %6.2f", gyr_axes.AXIS_Z);
 		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*)disp, LEFT_MODE);
 		sprintf(disp,"SAMPLES: %d           ", gyr_samples);
 		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*)disp, LEFT_MODE);
 		sprintf(disp,"QUEUE: %lu           ", uxQueueMessagesWaiting(hGyroQueue));
 //		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*)disp, LEFT_MODE);
 
-		sprintf(disp,"ACCL X: %6.2f", g.AXIS_X);
+		sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);
 		BSP_LCD_DisplayStringAt(0, 110, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"ACCL Y: %6.2f", g.AXIS_Y);
+		sprintf(disp,"ACCL Y: %6.2f", acc_axes.AXIS_Y);
 		BSP_LCD_DisplayStringAt(0, 130, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"ACCL Z: %6.2f", g.AXIS_Z);
+		sprintf(disp,"ACCL Z: %6.2f", acc_axes.AXIS_Z);
 		BSP_LCD_DisplayStringAt(0, 150, (uint8_t*)disp, LEFT_MODE);
 		sprintf(disp,"SAMPLES: %d           ", acc_samples);
 		BSP_LCD_DisplayStringAt(0, 170, (uint8_t*)disp, LEFT_MODE);
@@ -205,9 +226,7 @@ int main(int argc, char* argv[])
 	uint32_t freq = HAL_RCC_GetSysClockFreq();
 
 	button.callback(&led2, &DigitalOut::toggle);
-
 	trace_printf("Starting main_task:, CPU freq: %d, f=%f\n", freq, 0.75);
-
 	  /* Create tasks */
 	xTaskCreate(
 		main_task, /* Function pointer */

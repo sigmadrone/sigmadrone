@@ -364,14 +364,14 @@ void LSM303D::SetFilterDataSel(State_t state)
 /*******************************************************************************
  * Function Name  : SetInt1Pin
  * Description    : Set Interrupt1 pin Function
- * Input          :   INT1_BOOT_ENABLE/DISABLE
- * 					| INT1_CLICK_ENABLE/DISABLE
- * 					| INT1_IG1_ENABLE/DISABLE
- * 					| INT1_IG2_ENABLE/DISABLE
- * 					| INT1_IGM_ENABLE/DISABLE
- * 					| INT1_DRDY_A_ENABLE/DISABLE
- * 					| INT1_DRDY_M_ENABLE/DISABLE
- * 					| INT1_EMPTY_ENABLE/DISABLE
+ * Input          :   LSM303D_INT1_BOOT_ENABLE/DISABLE
+ * 					| LSM303D_INT1_CLICK_ENABLE/DISABLE
+ * 					| LSM303D_INT1_IG1_ENABLE/DISABLE
+ * 					| LSM303D_INT1_IG2_ENABLE/DISABLE
+ * 					| LSM303D_INT1_IGM_ENABLE/DISABLE
+ * 					| LSM303D_INT1_DRDY_A_ENABLE/DISABLE
+ * 					| LSM303D_INT1_DRDY_M_ENABLE/DISABLE
+ * 					| LSM303D_INT1_EMPTY_ENABLE/DISABLE
  *
  * Note           : To enable Interrupt signals on INT1 Pad (You MUST use all input variable in the argument, as example)
  * Output         : None
@@ -390,14 +390,14 @@ void LSM303D::SetInt1Pin(IntPinConf_t pinConf)
 /*******************************************************************************
  * Function Name  : SetInt2Pin
  * Description    : Set Interrupt2 pin Function
- * Input          :   INT2_CLICK_ENABLE/DISABLE
- * 					| INT2_IG1_ENABLE/DISABLE
- * 					| INT2_IG2_ENABLE/DISABLE
- * 					| INT2_IGM_ENABLE/DISABLE
- * 					| INT2_DRDY_A_ENABLE/DISABLE
- * 					| INT2_DRDY_M_ENABLE/DISABLE
- * 					| INT2_OVERRUN_ENABLE/DISABLE
- * 					| INT2_FTH_ENABLE/DISABLE
+ * Input          :   LSM303D_INT2_CLICK_ENABLE/DISABLE
+ * 					| LSM303D_INT2_IG1_ENABLE/DISABLE
+ * 					| LSM303D_INT2_IG2_ENABLE/DISABLE
+ * 					| LSM303D_INT2_IGM_ENABLE/DISABLE
+ * 					| LSM303D_INT2_DRDY_A_ENABLE/DISABLE
+ * 					| LSM303D_INT2_DRDY_M_ENABLE/DISABLE
+ * 					| LSM303D_INT2_OVERRUN_ENABLE/DISABLE
+ * 					| LSM303D_INT2_FTH_ENABLE/DISABLE
  *
  * Note           : To enable Interrupt signals on INT2 Pad (You MUST use all input variable in the argument, as example)
  * Output         : None
