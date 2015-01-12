@@ -21,6 +21,8 @@
 #include "spimaster.h"
 #include "l3gd20.h"
 #include "lsm303d.h"
+#include "matrix.h"
+#include "attitudetracker.h"
 
 void* __dso_handle = 0;
 
@@ -149,6 +151,8 @@ void main_task(void *pvParameters)
 	uint8_t acc_wtm = 17;
 	L3GD20::AxesDPS_t gyr_axes;
 	LSM303D::AxesAcc_t acc_axes;
+	QuaternionD q;
+	attitudetracker att;
 
 	gyro_int2.callback(gyro_isr);
 	acc_int2.callback(acc_isr);
@@ -156,7 +160,7 @@ void main_task(void *pvParameters)
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 
 	gyro.SetMode(L3GD20::NORMAL);
-	gyro.SetODR(L3GD20::ODR_95Hz_BW_25);
+	gyro.SetODR(L3GD20::ODR_190Hz_BW_70);
 	gyro.SetFullScale(L3GD20::FULLSCALE_500);
 	gyro.SetBDU(L3GD20::MEMS_ENABLE);
 	gyro.SetWaterMark(gyr_wtm);
@@ -165,7 +169,7 @@ void main_task(void *pvParameters)
 	gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
 	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
 
-	accel.SetODR(LSM303D::ODR_100Hz);
+	accel.SetODR(LSM303D::ODR_200Hz);
 	accel.SetFullScale(LSM303D::FULLSCALE_8);
 	accel.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
 	accel.FIFOModeSet(LSM303D::FIFO_STREAM_MODE);
@@ -175,7 +179,23 @@ void main_task(void *pvParameters)
 
 	// Infinite loop
 	TickType_t ticks = 0, oldticks = 0;
+	Vector3d gyr_bias;
 	char disp[128] = {0};
+
+	sprintf(disp,"Calibrating Gyro...");
+	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
+
+	for (int i = 0; i < 50; i++) {
+		gyro.GetFifoAngRateDPS(&gyr_axes);
+		gyr_bias.at(0) += gyr_axes.AXIS_X;
+		gyr_bias.at(1) += gyr_axes.AXIS_Y;
+		gyr_bias.at(2) += gyr_axes.AXIS_Z;
+		led1.toggle();
+		uint32_t msg;
+		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
+		}
+	}
+	gyr_bias = gyr_bias / 50.0;
 	while (1) {
 		uint8_t gyr_samples = gyro.GetFifoSourceReg() & 0x1F;
 		uint8_t acc_samples = accel.GetFifoSourceFSS();
@@ -183,19 +203,22 @@ void main_task(void *pvParameters)
 			gyro.GetFifoAngRateDPS(&gyr_axes);
 		if (acc_samples > acc_wtm)
 			accel.GetFifoAcc(&acc_axes);
+		Vector3d gyr_data = Vector3d(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
 //		trace_printf("Accelerometer ID: 0x%x, g: %3.2f %3.2f %3.2f\n", accel.ReadReg8(LSM303D_WHO_AM_I), g.AXIS_X, g.AXIS_Y, g.AXIS_Z);
 		ticks = xTaskGetTickCount() - oldticks;
 		oldticks = xTaskGetTickCount();
+		att.track_gyroscope(DEG2RAD(gyr_data), ticks * portTICK_PERIOD_MS / (float)1000.0);
+		q = att.get_attitude();
 
-		sprintf(disp,"GYRO X: %6.2f", gyr_axes.AXIS_X);
+		sprintf(disp,"GYRO X: %6.2f         ", gyr_data.at(0));
 		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"GYRO Y: %6.2f", gyr_axes.AXIS_Y);
+		sprintf(disp,"GYRO Y: %6.2f         ", gyr_data.at(1));
 		BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"GYRO Z: %6.2f", gyr_axes.AXIS_Z);
+		sprintf(disp,"GYRO Z: %6.2f         ", gyr_data.at(2));
 		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*)disp, LEFT_MODE);
 		sprintf(disp,"SAMPLES: %d           ", gyr_samples);
 		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"QUEUE: %lu           ", uxQueueMessagesWaiting(hGyroQueue));
+		sprintf(disp,"QUEUE: %lu            ", uxQueueMessagesWaiting(hGyroQueue));
 //		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*)disp, LEFT_MODE);
 
 		sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);
@@ -206,9 +229,19 @@ void main_task(void *pvParameters)
 		BSP_LCD_DisplayStringAt(0, 150, (uint8_t*)disp, LEFT_MODE);
 		sprintf(disp,"SAMPLES: %d           ", acc_samples);
 		BSP_LCD_DisplayStringAt(0, 170, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"UPDATE: %d ms          ", (int)(ticks * portTICK_PERIOD_MS));
+		sprintf(disp,"Attitude:             ");
 		BSP_LCD_DisplayStringAt(0, 190, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"W:      %6.2f              ", q.w);
+		BSP_LCD_DisplayStringAt(0, 210, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"X:      %6.2f              ", q.x);
+		BSP_LCD_DisplayStringAt(0, 230, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"Y:      %6.2f              ", q.y);
+		BSP_LCD_DisplayStringAt(0, 250, (uint8_t*)disp, LEFT_MODE);
+		sprintf(disp,"Z:      %6.2f              ", q.z);
+		BSP_LCD_DisplayStringAt(0, 270, (uint8_t*)disp, LEFT_MODE);
 
+		sprintf(disp,"UPDATE: %d ms          ", (int)(ticks * portTICK_PERIOD_MS));
+		BSP_LCD_DisplayStringAt(0, 290, (uint8_t*)disp, LEFT_MODE);
 		led1.toggle();
 
 		uint32_t msg;
