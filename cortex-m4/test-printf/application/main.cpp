@@ -147,8 +147,9 @@ void main_task(void *pvParameters)
 			});
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi4, 0);
-	uint8_t gyr_wtm = 18;
+	uint8_t gyr_wtm = 30;
 	uint8_t acc_wtm = 17;
+	uint8_t bias_iterations = 40;
 	L3GD20::AxesDPS_t gyr_axes;
 	LSM303D::AxesAcc_t acc_axes;
 	QuaternionD q;
@@ -160,7 +161,6 @@ void main_task(void *pvParameters)
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 
 	gyro.SetMode(L3GD20::NORMAL);
-	gyro.SetODR(L3GD20::ODR_190Hz_BW_25);
 	gyro.SetFullScale(L3GD20::FULLSCALE_500);
 	gyro.SetBDU(L3GD20::MEMS_ENABLE);
 	gyro.SetWaterMark(gyr_wtm);
@@ -168,8 +168,12 @@ void main_task(void *pvParameters)
 	gyro.SetInt2Pin(0);
 	gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
 	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
+	gyro.HPFEnable(L3GD20::MEMS_ENABLE);
+	gyro.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
+	gyro.SetHPFCutOFF(L3GD20::HPFCF_0);
+	gyro.SetODR(L3GD20::ODR_95Hz_BW_12_5);
 
-	accel.SetODR(LSM303D::ODR_200Hz);
+	accel.SetODR(LSM303D::ODR_100Hz);
 	accel.SetFullScale(LSM303D::FULLSCALE_8);
 	accel.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
 	accel.FIFOModeSet(LSM303D::FIFO_STREAM_MODE);
@@ -187,7 +191,7 @@ void main_task(void *pvParameters)
 	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
 
 	gyro.GetFifoAngRateDPS(&gyr_axes); // Drain the fifo
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < bias_iterations; i++) {
 		uint32_t msg;
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
 		}
@@ -197,7 +201,7 @@ void main_task(void *pvParameters)
 		gyr_bias.at(2) += gyr_axes.AXIS_Z;
 		led1.toggle();
 	}
-	gyr_bias = gyr_bias / 50.0;
+	gyr_bias = gyr_bias / (double)bias_iterations;
 	while (1) {
 		uint32_t msg;
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
