@@ -92,6 +92,7 @@ void HAL_Delay(__IO uint32_t delay)
 #define LCD_FRAME_BUFFER_LAYER1                  0xC0000000
 #define CONVERTED_FRAME_BUFFER                   0xC0260000
 
+#if 0
 void init_lcd()
 {
 	/*##-1- Initialize the LCD #################################################*/
@@ -122,6 +123,58 @@ void init_lcd()
 	trace_printf("LCD %d by %d pixels\n", BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
 
 	vTaskDelay(200 / portTICK_RATE_MS);
+
+	BSP_LCD_Clear(LCD_COLOR_WHITE);
+}
+#endif
+
+void init_lcd()
+{
+	/*##-1- Initialize the LCD #################################################*/
+	/* Initialize the LCD */
+	BSP_LCD_Init();
+
+#if 0
+	/* Initialise the LCD Layers */
+	BSP_LCD_LayerDefaultInit(1, LCD_FRAME_BUFFER);
+
+	/* Set LCD Foreground Layer  */
+	BSP_LCD_SelectLayer(1);
+#endif
+
+	for (uint8_t layer = 0; layer < 2; ++layer)
+	{
+		BSP_LCD_LayerDefaultInit(layer, (uint32_t) LCD_FRAME_BUFFER +
+				(BSP_LCD_GetXSize()*BSP_LCD_GetYSize()*4)*layer);
+		BSP_LCD_SetLayerVisible(layer, DISABLE);
+		BSP_LCD_SelectLayer(layer);
+
+		BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
+
+		/* Clear the LCD */
+		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
+		BSP_LCD_Clear(LCD_COLOR_WHITE);
+
+		/* Set the LCD Text Color */
+		BSP_LCD_SetTextColor(LCD_COLOR_DARKBLUE);
+	}
+
+	BSP_LCD_SelectLayer(1);
+	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)"STM32F429I BSP", CENTER_MODE);
+	BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)"Hello world!", CENTER_MODE);
+	BSP_LCD_SetLayerVisible(1, ENABLE);
+
+	vTaskDelay(1000 / portTICK_RATE_MS);
+
+	BSP_LCD_SelectLayer(0);
+	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)"LAYER 0", CENTER_MODE);
+	BSP_LCD_SetLayerVisible(1, DISABLE);
+	BSP_LCD_SetLayerVisible(0, ENABLE);
+
+
+	trace_printf("LCD %d by %d pixels\n", BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
+
+	vTaskDelay(2000 / portTICK_RATE_MS);
 
 	BSP_LCD_Clear(LCD_COLOR_WHITE);
 }
@@ -202,6 +255,7 @@ void main_task(void *pvParameters)
 		led1.toggle();
 	}
 	gyr_bias = gyr_bias / (double)bias_iterations;
+	TickType_t displayUpdateTicks = xTaskGetTickCount();
 	while (1) {
 		uint32_t msg;
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
@@ -219,38 +273,41 @@ void main_task(void *pvParameters)
 		att.track_gyroscope(DEG2RAD(gyr_data), ticks * portTICK_PERIOD_MS / (float)1000.0);
 		q = att.get_attitude();
 
-		sprintf(disp,"GYRO X: %6.2f         ", gyr_data.at(0));
-		BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"GYRO Y: %6.2f         ", gyr_data.at(1));
-		BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"GYRO Z: %6.2f         ", gyr_data.at(2));
-		BSP_LCD_DisplayStringAt(0, 50, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"SAMPLES: %d           ", gyr_samples);
-		BSP_LCD_DisplayStringAt(0, 70, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"QUEUE: %lu            ", uxQueueMessagesWaiting(hGyroQueue));
-//		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*)disp, LEFT_MODE);
+		if ((oldticks - displayUpdateTicks) * portTICK_PERIOD_MS > 200) {
+			displayUpdateTicks = oldticks;
+			sprintf(disp,"GYRO X: %6.2f         ", gyr_data.at(0));
+			BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"GYRO Y: %6.2f         ", gyr_data.at(1));
+			BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"GYRO Z: %6.2f         ", gyr_data.at(2));
+			BSP_LCD_DisplayStringAt(0, 50, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"SAMPLES: %d           ", gyr_samples);
+			BSP_LCD_DisplayStringAt(0, 70, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"QUEUE: %lu            ", uxQueueMessagesWaiting(hGyroQueue));
+			//		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*)disp, LEFT_MODE);
 
-		sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);
-		BSP_LCD_DisplayStringAt(0, 110, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"ACCL Y: %6.2f", acc_axes.AXIS_Y);
-		BSP_LCD_DisplayStringAt(0, 130, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"ACCL Z: %6.2f", acc_axes.AXIS_Z);
-		BSP_LCD_DisplayStringAt(0, 150, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"SAMPLES: %d           ", acc_samples);
-		BSP_LCD_DisplayStringAt(0, 170, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"Attitude:             ");
-		BSP_LCD_DisplayStringAt(0, 190, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"W:      %6.2f              ", q.w);
-		BSP_LCD_DisplayStringAt(0, 210, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"X:      %6.2f              ", q.x);
-		BSP_LCD_DisplayStringAt(0, 230, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"Y:      %6.2f              ", q.y);
-		BSP_LCD_DisplayStringAt(0, 250, (uint8_t*)disp, LEFT_MODE);
-		sprintf(disp,"Z:      %6.2f              ", q.z);
-		BSP_LCD_DisplayStringAt(0, 270, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);
+			BSP_LCD_DisplayStringAt(0, 110, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"ACCL Y: %6.2f", acc_axes.AXIS_Y);
+			BSP_LCD_DisplayStringAt(0, 130, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"ACCL Z: %6.2f", acc_axes.AXIS_Z);
+			BSP_LCD_DisplayStringAt(0, 150, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"SAMPLES: %d           ", acc_samples);
+			BSP_LCD_DisplayStringAt(0, 170, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"Attitude:             ");
+			BSP_LCD_DisplayStringAt(0, 190, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"W:      %6.2f              ", q.w);
+			BSP_LCD_DisplayStringAt(0, 210, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"X:      %6.2f              ", q.x);
+			BSP_LCD_DisplayStringAt(0, 230, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"Y:      %6.2f              ", q.y);
+			BSP_LCD_DisplayStringAt(0, 250, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"Z:      %6.2f              ", q.z);
+			BSP_LCD_DisplayStringAt(0, 270, (uint8_t*)disp, LEFT_MODE);
 
-		sprintf(disp,"UPDATE: %d ms          ", (int)(ticks * portTICK_PERIOD_MS));
-		BSP_LCD_DisplayStringAt(0, 290, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"UPDATE: %d ms          ", (int)(ticks * portTICK_PERIOD_MS));
+			BSP_LCD_DisplayStringAt(0, 290, (uint8_t*)disp, LEFT_MODE);
+		}
 		led1.toggle();
 	}
 }
