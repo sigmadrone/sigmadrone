@@ -19,6 +19,7 @@
 #include "queue.h"
 #include "stm32f429i_discovery_lcd.h"
 #include "spimaster.h"
+#include "spislave.h"
 #include "l3gd20.h"
 #include "lsm303d.h"
 #include "matrix.h"
@@ -54,6 +55,14 @@ extern "C" void EXTI4_IRQHandler(void)
 	DigitalIn::vector_handler(4);
 	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
 }
+
+extern "C" void SPI4_IRQHandler(void)
+{
+	uint32_t mask = portDISABLE_INTERRUPTS();
+	SPISlave::vector_handler(4);
+	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
+}
+
 
 void gyro_isr()
 {
@@ -181,12 +190,12 @@ void init_lcd()
 
 void main_task(void *pvParameters)
 {
-	SPIMaster spi4(SPI4, SPI_BAUDRATEPRESCALER_16, 0x2000, {
-				{PE_2, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPIx_SCK_PIN */
-				{PE_5, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPIx_MISO_PIN */
-				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},			/* DISCOVERY_SPIx_MOSI_PIN */
+	SPISlave spi4(SPI4, SPI_BAUDRATEPRESCALER_16, 0x2000, {
+				{PE_2, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_SCK_PIN */
+				{PE_4, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_NSS_PIN */
+				{PE_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MISO_PIN */
+				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MOSI_PIN */
 			}, {
-				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
 			});
 
 
@@ -199,7 +208,7 @@ void main_task(void *pvParameters)
 				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
 			});
 	L3GD20 gyro(spi5, 0);
-	LSM303D accel(spi4, 0);
+	LSM303D accel(spi5, 1);
 	uint8_t gyr_wtm = 30;
 	uint8_t acc_wtm = 17;
 	uint8_t bias_iterations = 40;
@@ -234,6 +243,7 @@ void main_task(void *pvParameters)
 	accel.SetInt2Pin(LSM303D_INT2_OVERRUN_ENABLE|LSM303D_INT2_FTH_ENABLE);
 	accel.SetInt2Pin(0);
 
+	spi4.Start();
 	vTaskDelay(1000 / portTICK_RATE_MS);
 	// Infinite loop
 	TickType_t ticks = 0, oldticks = 0;
