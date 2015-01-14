@@ -91,7 +91,7 @@ void LSM303D::ReadData(u8_t reg, u8_t* data, u16_t nbytes)
 	} else {
 		reg |= (uint8_t) READWRITE_CMD;
 	}
-	spi_.read(cs_, reg, data, nbytes);
+	spi_.read_reg(cs_, reg, data, nbytes);
 }
 
 void LSM303D::WriteData(u8_t reg, u8_t *data, u16_t nbytes)
@@ -103,7 +103,7 @@ void LSM303D::WriteData(u8_t reg, u8_t *data, u16_t nbytes)
 	if (nbytes > 0x01) {
 		reg |= (uint8_t) MULTIPLEBYTE_CMD;
 	}
-	spi_.write(cs_, reg, data, nbytes);
+	spi_.write_reg(cs_, reg, data, nbytes);
 }
 
 void LSM303D::ReadReg8(u8_t reg, u8_t* data)
@@ -120,7 +120,7 @@ u8_t LSM303D::ReadReg8(u8_t reg)
 
 void LSM303D::WriteReg8(u8_t reg, u8_t data)
 {
-	spi_.write(cs_, reg, &data, 1);
+	spi_.write_reg(cs_, reg, &data, 1);
 }
 
 /*******************************************************************************

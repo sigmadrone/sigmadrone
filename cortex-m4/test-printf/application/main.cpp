@@ -206,10 +206,11 @@ void main_task(void *pvParameters)
 			}, {
 				{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* GYRO_CS_PIN */
 				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
+				{PG_3, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* SLAVE_CS_PIN */
 			});
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi5, 1);
-	uint8_t gyr_wtm = 30;
+	uint8_t gyr_wtm = 20;
 	uint8_t acc_wtm = 17;
 	uint8_t bias_iterations = 40;
 	L3GD20::AxesDPS_t gyr_axes;
@@ -233,9 +234,9 @@ void main_task(void *pvParameters)
 	gyro.HPFEnable(L3GD20::MEMS_ENABLE);
 	gyro.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
 	gyro.SetHPFCutOFF(L3GD20::HPFCF_0);
-	gyro.SetODR(L3GD20::ODR_95Hz_BW_12_5);
+	gyro.SetODR(L3GD20::ODR_380Hz_BW_25);
 
-	accel.SetODR(LSM303D::ODR_100Hz);
+	accel.SetODR(LSM303D::ODR_400Hz);
 	accel.SetFullScale(LSM303D::FULLSCALE_8);
 	accel.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
 	accel.FIFOModeSet(LSM303D::FIFO_STREAM_MODE);
@@ -243,7 +244,6 @@ void main_task(void *pvParameters)
 	accel.SetInt2Pin(LSM303D_INT2_OVERRUN_ENABLE|LSM303D_INT2_FTH_ENABLE);
 	accel.SetInt2Pin(0);
 
-	spi4.Start();
 	vTaskDelay(1000 / portTICK_RATE_MS);
 	// Infinite loop
 	TickType_t ticks = 0, oldticks = 0;
