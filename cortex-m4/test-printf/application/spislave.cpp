@@ -59,7 +59,7 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t clk_prescale, uint32_t time
 	handle_.Init.CRCPolynomial = 7;
 	handle_.Init.DataSize = SPI_DATASIZE_8BIT;
 	handle_.Init.FirstBit = SPI_FIRSTBIT_MSB;
-	handle_.Init.NSS = SPI_NSS_HARD_INPUT;
+	handle_.Init.NSS = SPI_NSS_SOFT;
 	handle_.Init.TIMode = SPI_TIMODE_DISABLED;
 	handle_.Init.Mode = SPI_MODE_SLAVE;
 

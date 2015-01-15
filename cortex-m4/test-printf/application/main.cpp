@@ -92,10 +92,65 @@ void secondary_task(void *pvParameters)
 	}
 }
 
-void HAL_Delay(__IO uint32_t delay)
+
+void spi_slave_task(void *pvParameters)
 {
-	vTaskDelay(delay / portTICK_RATE_MS);
+	trace_printf("SPI Slave task...\n");
+	SPISlave spi4(SPI4, SPI_BAUDRATEPRESCALER_16, 0x2000, {
+				{PE_2, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_SCK_PIN */
+				{PE_4, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_NSS_PIN */
+				{PE_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MISO_PIN */
+				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MOSI_PIN */
+			}, {
+			});
+
+
+	char tx = 't', rx = 0;
+	SPI_HandleTypeDef SpiHandle;
+	/*##-1- Configure the SPI peripheral #######################################*/
+	/* Set the SPI parameters */
+	SpiHandle.Instance               = SPI4;
+	SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+	SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
+	SpiHandle.Init.CLKPhase          = SPI_PHASE_1EDGE;
+	SpiHandle.Init.CLKPolarity       = SPI_POLARITY_HIGH;
+	SpiHandle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLED;
+	SpiHandle.Init.CRCPolynomial     = 7;
+	SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
+	SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+	SpiHandle.Init.NSS               = SPI_NSS_SOFT;
+	SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLED;
+	SpiHandle.Init.Mode              = SPI_MODE_SLAVE;
+	if(HAL_SPI_Init(&SpiHandle) != HAL_OK) {
+		trace_printf("SPI Slave task... error\n");
+	}
+
+	while (1) {
+		switch (HAL_SPI_TransmitReceive(&SpiHandle, (uint8_t*) &tx, (uint8_t *) &rx, sizeof(tx), 10000)) {
+		case HAL_OK:
+			trace_printf("SPI Slave received: %c\n", rx);
+			break;
+
+		case HAL_TIMEOUT:
+			trace_printf("SPI Slave TX/RX timed out\n");
+			break;
+
+			/* An Error occurred______________________________________________________*/
+		case HAL_ERROR:
+			trace_printf("SPI Slave TX/RX error\n");
+			break;
+
+		default:
+			break;
+		}
+	}
 }
+
+
+//void HAL_Delay(__IO uint32_t delay)
+//{
+//	vTaskDelay(delay / portTICK_RATE_MS);
+//}
 
 #define LCD_FRAME_BUFFER_LAYER0                  0xC0130000
 #define LCD_FRAME_BUFFER_LAYER1                  0xC0000000
@@ -190,15 +245,6 @@ void init_lcd()
 
 void main_task(void *pvParameters)
 {
-	SPISlave spi4(SPI4, SPI_BAUDRATEPRESCALER_16, 0x2000, {
-				{PE_2, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_SCK_PIN */
-				{PE_4, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_NSS_PIN */
-				{PE_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MISO_PIN */
-				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MOSI_PIN */
-			}, {
-			});
-
-
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
 				{PF_8, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_MISO_PIN */
@@ -350,8 +396,8 @@ int main(int argc, char* argv[])
 		);
 
 	xTaskCreate(
-		secondary_task, /* Function pointer */
-		"Task3", /* Task name - for debugging only*/
+		spi_slave_task, /* Function pointer */
+		"SPI Slave Task", /* Task name - for debugging only*/
 		configMINIMAL_STACK_SIZE, /* Stack depth in words */
 		(void*) NULL, /* Pointer to tasks arguments (parameter) */
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/
@@ -365,7 +411,7 @@ int main(int argc, char* argv[])
 
 	// Infinite loop
 	while (1) {
-		trace_printf("Hello world, freq: %d, f=%f\n", freq, 0.75);
+		trace_printf("Hello world, freq: %d\n", freq);
 	}
 	// Infinite loop, never return.
 }
