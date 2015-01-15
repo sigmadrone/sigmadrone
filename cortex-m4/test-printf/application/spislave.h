@@ -25,11 +25,6 @@ protected:
 	char rxdata_[32];
 	char txdata_[32];
 
-	static void RxISR(struct __SPI_HandleTypeDef * hspi); /* function pointer on Rx ISR */
-	static void TxISR(struct __SPI_HandleTypeDef * hspi); /* function pointer on Tx ISR */
-	void RxISR();
-	void TxISR();
-
 public:
 	SPISlave(SPI_TypeDef* spi_device = SPI5, uint32_t clk_prescale = SPI_BAUDRATEPRESCALER_16, uint32_t timeout = 0x1000, const std::vector<GPIOPin>& data_pins = {}, const std::vector<GPIOPin>& cs_pins = {});
 	~SPISlave();

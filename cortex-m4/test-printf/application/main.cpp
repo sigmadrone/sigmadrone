@@ -58,9 +58,7 @@ extern "C" void EXTI4_IRQHandler(void)
 
 extern "C" void SPI4_IRQHandler(void)
 {
-	uint32_t mask = portDISABLE_INTERRUPTS();
 	SPISlave::vector_handler(4);
-	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
 }
 
 
@@ -105,6 +103,10 @@ void spi_slave_task(void *pvParameters)
 			});
 
 
+	spi4.Start();
+	while (1) {
+
+	}
 	char tx = 't', rx = 0;
 	SPI_HandleTypeDef SpiHandle;
 	/*##-1- Configure the SPI peripheral #######################################*/
@@ -118,7 +120,7 @@ void spi_slave_task(void *pvParameters)
 	SpiHandle.Init.CRCPolynomial     = 7;
 	SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
 	SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
-	SpiHandle.Init.NSS               = SPI_NSS_SOFT;
+	SpiHandle.Init.NSS               = SPI_NSS_HARD_INPUT;
 	SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLED;
 	SpiHandle.Init.Mode              = SPI_MODE_SLAVE;
 	if(HAL_SPI_Init(&SpiHandle) != HAL_OK) {
@@ -297,6 +299,7 @@ void main_task(void *pvParameters)
 	char disp[128] = {0};
 
 	sprintf(disp,"Calibrating...");
+//	spi5.read(2, (uint8_t*)disp, 1);
 	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
 
 	gyro.GetFifoAngRateDPS(&gyr_axes); // Drain the fifo
@@ -323,7 +326,6 @@ void main_task(void *pvParameters)
 		if (acc_samples > acc_wtm)
 			accel.GetFifoAcc(&acc_axes);
 		Vector3d gyr_data = Vector3d(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
-//		trace_printf("Accelerometer ID: 0x%x, g: %3.2f %3.2f %3.2f\n", accel.ReadReg8(LSM303D_WHO_AM_I), g.AXIS_X, g.AXIS_Y, g.AXIS_Z);
 		ticks = xTaskGetTickCount() - oldticks;
 		oldticks = xTaskGetTickCount();
 		att.track_gyroscope(DEG2RAD(gyr_data), ticks * portTICK_PERIOD_MS / (float)1000.0);

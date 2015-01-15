@@ -59,7 +59,7 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t clk_prescale, uint32_t time
 	handle_.Init.CRCPolynomial = 7;
 	handle_.Init.DataSize = SPI_DATASIZE_8BIT;
 	handle_.Init.FirstBit = SPI_FIRSTBIT_MSB;
-	handle_.Init.NSS = SPI_NSS_SOFT;
+	handle_.Init.NSS = SPI_NSS_HARD_INPUT;
 	handle_.Init.TIMode = SPI_TIMODE_DISABLED;
 	handle_.Init.Mode = SPI_MODE_SLAVE;
 
@@ -83,6 +83,13 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t clk_prescale, uint32_t time
 		g_spislave[6] = this;
 	}
 	HAL_SPI_Init(&handle_);
+
+	/*##-3- Configure the NVIC for SPI #########################################*/
+	/* NVIC for SPI */
+	/*
+	HAL_NVIC_SetPriority(SPI4_IRQn, 15, 1);
+	HAL_NVIC_EnableIRQ(SPI4_IRQn);
+	*/
 }
 
 SPISlave::~SPISlave()
@@ -110,28 +117,6 @@ SPISlave::~SPISlave()
 	HAL_SPI_DeInit(&handle_);
 }
 
-void SPISlave::RxISR(struct __SPI_HandleTypeDef * hspi)
-{
-	SPISlave *pThis = (SPISlave*)hspi;
-	pThis->RxISR();
-}
-
-void SPISlave::TxISR(struct __SPI_HandleTypeDef * hspi)
-{
-	SPISlave *pThis = (SPISlave*)hspi;
-	pThis->TxISR();
-}
-
-void SPISlave::RxISR()
-{
-	trace_printf("SPISlave::RxISR ...\n");
-}
-
-void SPISlave::TxISR()
-{
-	trace_printf("SPISlave::TxISR ...\n");
-}
-
 void SPISlave::RxTxError()
 {
 	trace_printf("SPISlave::RxTxError ...\n");
@@ -139,5 +124,8 @@ void SPISlave::RxTxError()
 
 void SPISlave::Start()
 {
-	HAL_SPI_TransmitReceive_IT(&handle_, (uint8_t*)txdata_, (uint8_t *)rxdata_, sizeof(txdata_));
+	while (1) {
+		if (HAL_SPI_GetState(&handle_) == HAL_SPI_STATE_READY)
+			HAL_SPI_TransmitReceive(&handle_, (uint8_t*)txdata_, (uint8_t *)rxdata_, 1, 5000);
+	}
 }

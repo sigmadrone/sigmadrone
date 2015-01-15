@@ -522,6 +522,9 @@ void xPortSysTickHandler( void )
 	known. */
 	( void ) portSET_INTERRUPT_MASK_FROM_ISR();
 	{
+		/* Increment hal counter */
+		HAL_IncTick();
+
 		/* Increment the RTOS tick. */
 		if( xTaskIncrementTick() != pdFALSE )
 		{
@@ -529,8 +532,6 @@ void xPortSysTickHandler( void )
 			the PendSV interrupt.  Pend the PendSV interrupt. */
 			portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;
 		}
-
-		HAL_IncTick();
 	}
 	portCLEAR_INTERRUPT_MASK_FROM_ISR( 0 );
 }
