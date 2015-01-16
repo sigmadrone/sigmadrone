@@ -239,11 +239,14 @@ void L3GD20::HPFEnable(State_t hpf)
 *******************************************************************************/
 void L3GD20::Reboot()
 {
-	u8_t value;
+	int i;
 
-	ReadReg8(L3GD20_CTRL_REG5, &value);
-	value = (1 << L3GD20_BOOT);
-	WriteReg8(L3GD20_CTRL_REG5, value);
+	WriteReg8(L3GD20_CTRL_REG5, (1 << L3GD20_BOOT));
+	/*
+	 * Add some delay after reboot
+	 */
+	for (i = 0; i < 100000; i++)
+		;
 }
 /*******************************************************************************
 * Function Name  : L3GD20_SetHPFMode
