@@ -242,7 +242,7 @@ void L3GD20::Reboot()
 	u8_t value;
 
 	ReadReg8(L3GD20_CTRL_REG5, &value);
-	value |= (1 << L3GD20_BOOT);
+	value = (1 << L3GD20_BOOT);
 	WriteReg8(L3GD20_CTRL_REG5, value);
 }
 /*******************************************************************************
