@@ -230,7 +230,21 @@ void L3GD20::HPFEnable(State_t hpf)
 	WriteReg8(L3GD20_CTRL_REG5, value);
 }
 
+/*******************************************************************************
+* Function Name  : L3GD20_Reboot
+* Description    : Reboot the memory content
+* Input          : None
+* Output         : None
+* Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+*******************************************************************************/
+void L3GD20::Reboot()
+{
+	u8_t value;
 
+	ReadReg8(L3GD20_CTRL_REG5, &value);
+	value |= (1 << L3GD20_BOOT);
+	WriteReg8(L3GD20_CTRL_REG5, value);
+}
 /*******************************************************************************
 * Function Name  : L3GD20_SetHPFMode
 * Description    : Set High Pass Filter Modality
