@@ -256,7 +256,7 @@ void main_task(void *pvParameters)
 			}, {
 				{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* GYRO_CS_PIN */
 				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
-				{PG_3, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* SLAVE_CS_PIN */
+				{PG_3, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},				/* SLAVE_CS_PIN */
 			});
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi5, 1);
@@ -272,11 +272,14 @@ void main_task(void *pvParameters)
 	trace_printf("SysTick_IRQn priority: %u\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
 	trace_printf("configKERNEL_INTERRUPT_PRIORITY: %u\n", configKERNEL_INTERRUPT_PRIORITY);
 	trace_printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %u\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
+	vTaskDelay(500 / portTICK_RATE_MS);
 
 	gyro_int2.callback(gyro_isr);
 	acc_int2.callback(acc_isr);
 	init_lcd();
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
+
+	vTaskDelay(500 / portTICK_RATE_MS);
 
 	gyro.SetMode(L3GD20::NORMAL);
 	gyro.SetFullScale(L3GD20::FULLSCALE_500);
@@ -306,7 +309,6 @@ void main_task(void *pvParameters)
 	char disp[128] = {0};
 
 	sprintf(disp,"Calibrating...");
-//	spi5.read(2, (uint8_t*)disp, 1);
 	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
 
 	gyro.GetFifoAngRateDPS(&gyr_axes); // Drain the fifo
@@ -341,6 +343,8 @@ void main_task(void *pvParameters)
 		if ((oldticks - displayUpdateTicks) * portTICK_PERIOD_MS > 200) {
 			displayUpdateTicks = oldticks;
 			sprintf(disp,"GYRO X: %6.2f         ", gyr_data.at(0));
+//			memset(disp, 0, sizeof(disp));
+//			spi5.read(2, (uint8_t*)disp, 15);
 			BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"GYRO Y: %6.2f         ", gyr_data.at(1));
 			BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);

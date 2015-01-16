@@ -6,6 +6,7 @@
  */
 
 #include <cstring>
+#include <cstdio>
 #include <stdexcept>
 #include "spislave.h"
 #include "diag/Trace.h"
@@ -86,10 +87,8 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t clk_prescale, uint32_t time
 
 	/*##-3- Configure the NVIC for SPI #########################################*/
 	/* NVIC for SPI */
-	/**/
-	HAL_NVIC_SetPriority(SPI4_IRQn, 15, 1);
-	HAL_NVIC_EnableIRQ(SPI4_IRQn);
-	/**/
+//	HAL_NVIC_SetPriority(SPI4_IRQn, 15, 1);
+//	HAL_NVIC_EnableIRQ(SPI4_IRQn);
 }
 
 SPISlave::~SPISlave()
@@ -124,8 +123,12 @@ void SPISlave::RxTxError()
 
 void SPISlave::Start()
 {
+	int i = 0;
 	while (1) {
-		if (HAL_SPI_GetState(&handle_) == HAL_SPI_STATE_READY)
-			HAL_SPI_TransmitReceive_IT(&handle_, (uint8_t*)txdata_, (uint8_t *)rxdata_, 1);
+		if (HAL_SPI_GetState(&handle_) == HAL_SPI_STATE_READY) {
+			memset(txdata_, 0, sizeof(txdata_));
+			snprintf(txdata_, sizeof(txdata_) - 1, "From SPI:%d", i++);
+			HAL_SPI_TransmitReceive_IT(&handle_, (uint8_t*)txdata_, (uint8_t *)rxdata_, 15);
+		}
 	}
 }
