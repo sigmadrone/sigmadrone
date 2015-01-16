@@ -102,7 +102,7 @@ void spi_slave_task(void *pvParameters)
 			}, {
 			});
 
-
+	trace_printf("SPI4_IRQn priority: %u\n", NVIC_GetPriority(SPI4_IRQn) << __NVIC_PRIO_BITS);
 	spi4.Start();
 	while (1) {
 
@@ -245,6 +245,8 @@ void init_lcd()
 	BSP_LCD_Clear(LCD_COLOR_WHITE);
 }
 
+#define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
+
 void main_task(void *pvParameters)
 {
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
@@ -265,6 +267,11 @@ void main_task(void *pvParameters)
 	LSM303D::AxesAcc_t acc_axes;
 	QuaternionD q;
 	attitudetracker att;
+
+	trace_printf("Priority Group: %u\n", NVIC_GetPriorityGrouping());
+	trace_printf("SysTick_IRQn priority: %u\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
+	trace_printf("configKERNEL_INTERRUPT_PRIORITY: %u\n", configKERNEL_INTERRUPT_PRIORITY);
+	trace_printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %u\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
 
 	gyro_int2.callback(gyro_isr);
 	acc_int2.callback(acc_isr);
@@ -376,6 +383,13 @@ int main(int argc, char* argv[])
 	char buffer[512];
 	uint32_t freq = HAL_RCC_GetSysClockFreq();
 
+	/*
+	 * Disable the SysTick_IRQn and clean the priority
+	 * and let the scheduler configure and enable it.
+	 */
+	NVIC_DisableIRQ(SysTick_IRQn);
+	NVIC_SetPriority(SysTick_IRQn, 0);
+
 	button.callback(&led2, &DigitalOut::toggle);
 	trace_printf("Starting main_task:, CPU freq: %d, f=%f\n", freq, 0.75);
 	  /* Create tasks */
@@ -406,9 +420,8 @@ int main(int argc, char* argv[])
 		NULL /* Task handle */
 		);
 
-	vTaskList(buffer);
-	trace_printf("Tasks: \n%s\n\n", buffer);
-
+//	vTaskList(buffer);
+//	trace_printf("Tasks: \n%s\n\n", buffer);
 	vTaskStartScheduler();
 
 	// Infinite loop

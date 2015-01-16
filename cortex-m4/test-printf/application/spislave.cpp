@@ -86,10 +86,10 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t clk_prescale, uint32_t time
 
 	/*##-3- Configure the NVIC for SPI #########################################*/
 	/* NVIC for SPI */
-	/*
+	/**/
 	HAL_NVIC_SetPriority(SPI4_IRQn, 15, 1);
 	HAL_NVIC_EnableIRQ(SPI4_IRQn);
-	*/
+	/**/
 }
 
 SPISlave::~SPISlave()
@@ -126,6 +126,6 @@ void SPISlave::Start()
 {
 	while (1) {
 		if (HAL_SPI_GetState(&handle_) == HAL_SPI_STATE_READY)
-			HAL_SPI_TransmitReceive(&handle_, (uint8_t*)txdata_, (uint8_t *)rxdata_, 1, 5000);
+			HAL_SPI_TransmitReceive_IT(&handle_, (uint8_t*)txdata_, (uint8_t *)rxdata_, 1);
 	}
 }

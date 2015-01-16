@@ -99,7 +99,8 @@
 #define portNVIC_PEND_SYSTICK_CLEAR_BIT		( 1UL << 25UL )
 
 #define portNVIC_PENDSV_PRI					( ( ( uint32_t ) configKERNEL_INTERRUPT_PRIORITY ) << 16UL )
-#define portNVIC_SYSTICK_PRI				( ( ( uint32_t ) configKERNEL_INTERRUPT_PRIORITY ) << 24UL )
+//#define portNVIC_SYSTICK_PRI				( ( ( uint32_t ) configKERNEL_INTERRUPT_PRIORITY ) << 24UL )
+#define portNVIC_SYSTICK_PRI				( ( ( uint32_t ) configMAX_SYSCALL_INTERRUPT_PRIORITY ) << 24UL )
 
 /* Constants required to check the validity of an interrupt priority. */
 #define portFIRST_USER_INTERRUPT_NUMBER		( 16 )
@@ -520,7 +521,8 @@ void xPortSysTickHandler( void )
 	executes all interrupts must be unmasked.  There is therefore no need to
 	save and then restore the interrupt mask value as its value is already
 	known. */
-	( void ) portSET_INTERRUPT_MASK_FROM_ISR();
+//	( void ) portSET_INTERRUPT_MASK_FROM_ISR();
+	uint32_t mask = portSET_INTERRUPT_MASK_FROM_ISR();
 	{
 		/* Increment hal counter */
 		HAL_IncTick();
@@ -533,8 +535,10 @@ void xPortSysTickHandler( void )
 			portNVIC_INT_CTRL_REG = portNVIC_PENDSVSET_BIT;
 		}
 	}
-	portCLEAR_INTERRUPT_MASK_FROM_ISR( 0 );
+	portCLEAR_INTERRUPT_MASK_FROM_ISR( mask );
+//	portCLEAR_INTERRUPT_MASK_FROM_ISR( 0 );
 }
+
 /*-----------------------------------------------------------*/
 
 #if configUSE_TICKLESS_IDLE == 1
