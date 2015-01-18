@@ -23,6 +23,7 @@
 #include "lsm303d.h"
 #include "matrix.h"
 #include "attitudetracker.h"
+#include "hwtimer.h"
 
 void* __dso_handle = 0;
 
@@ -179,6 +180,11 @@ void init_lcd()
 	BSP_LCD_Clear(LCD_COLOR_WHITE);
 }
 
+void tim3_isr() {
+	//trace_printf("==> tim3 interrupt\n");
+	led2.toggle();
+}
+
 void main_task(void *pvParameters)
 {
 	SPIMaster spi4(SPI4, SPI_BAUDRATEPRESCALER_16, 0x2000, {
@@ -207,10 +213,15 @@ void main_task(void *pvParameters)
 	LSM303D::AxesAcc_t acc_axes;
 	QuaternionD q;
 	attitudetracker att;
+	HwTimer tim3(3, TimeSpan::from_milliseconds(500), Frequency::from_kilohertz(30),
+		FunctionPointer(tim3_isr));
+
+	tim3.start();
 
 	gyro_int2.callback(gyro_isr);
 	acc_int2.callback(acc_isr);
 	init_lcd();
+
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 
 	gyro.SetMode(L3GD20::NORMAL);
@@ -312,14 +323,17 @@ void main_task(void *pvParameters)
 	}
 }
 
-
 int main(int argc, char* argv[])
 {
 	char buffer[512];
 	uint32_t freq = HAL_RCC_GetSysClockFreq();
+	uint32_t pclk1 = HAL_RCC_GetPCLK1Freq();
+	uint32_t pclk2 = HAL_RCC_GetPCLK2Freq();
 
 	button.callback(&led2, &DigitalOut::toggle);
-	trace_printf("Starting main_task:, CPU freq: %d, f=%f\n", freq, 0.75);
+	trace_printf("Starting main_task:, CPU freq: %d, PCLK1 freq: %d, PCLK2 freq: %d\n",
+			freq, pclk1, pclk2);
+
 	  /* Create tasks */
 	xTaskCreate(
 		main_task, /* Function pointer */
@@ -355,7 +369,7 @@ int main(int argc, char* argv[])
 
 	// Infinite loop
 	while (1) {
-		trace_printf("Hello world, freq: %d, f=%f\n", freq, 0.75);
+		//trace_printf("Hello world, freq: %d, f=%f\n", freq, 0.75);
 	}
 	// Infinite loop, never return.
 }
