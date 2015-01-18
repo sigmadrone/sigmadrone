@@ -24,7 +24,7 @@ void L3GD20::ReadData(u8_t reg, u8_t* data, u16_t nbytes)
 	} else {
 		reg |= (uint8_t) READWRITE_CMD;
 	}
-	spi_.read(cs_, reg, data, nbytes);
+	spi_.read_reg(cs_, reg, data, nbytes);
 }
 
 void L3GD20::WriteData(u8_t reg, u8_t *data, u16_t nbytes)
@@ -36,7 +36,7 @@ void L3GD20::WriteData(u8_t reg, u8_t *data, u16_t nbytes)
 	if (nbytes > 0x01) {
 		reg |= (uint8_t) MULTIPLEBYTE_CMD;
 	}
-	spi_.write(cs_, reg, data, nbytes);
+	spi_.write_reg(cs_, reg, data, nbytes);
 }
 
 /*******************************************************************************
@@ -69,7 +69,7 @@ u8_t L3GD20::ReadReg8(u8_t reg)
 *******************************************************************************/
 void L3GD20::WriteReg8(u8_t reg, u8_t data)
 {
-	spi_.write(cs_, reg, &data, 1);
+	spi_.write_reg(cs_, reg, &data, 1);
 }
 
 
@@ -230,7 +230,24 @@ void L3GD20::HPFEnable(State_t hpf)
 	WriteReg8(L3GD20_CTRL_REG5, value);
 }
 
+/*******************************************************************************
+* Function Name  : L3GD20_Reboot
+* Description    : Reboot the memory content
+* Input          : None
+* Output         : None
+* Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
+*******************************************************************************/
+void L3GD20::Reboot()
+{
+	int i;
 
+	WriteReg8(L3GD20_CTRL_REG5, (1 << L3GD20_BOOT));
+	/*
+	 * Add some delay after reboot
+	 */
+	for (i = 0; i < 100000; i++)
+		;
+}
 /*******************************************************************************
 * Function Name  : L3GD20_SetHPFMode
 * Description    : Set High Pass Filter Modality

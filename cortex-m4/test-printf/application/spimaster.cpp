@@ -84,56 +84,66 @@ void SPIMaster::spi_chip_select(uint8_t chip, bool select)
 	}
 }
 
-void SPIMaster::read(uint8_t cs, uint8_t addr, uint8_t* buffer, uint16_t nbytes)
+void SPIMaster::read(uint8_t cs, uint8_t* buffer, uint16_t nbytes)
 {
-	uint8_t dummybuffer[64];
-
-	memset(dummybuffer, 0, sizeof(dummybuffer));
-
 	/* Set chip select Low at the start of the transmission */
 	spi_chip_select(cs, true);
 
-	/* Send the Address of the indexed register */
-	if (HAL_SPI_TransmitReceive(&handle_, (uint8_t*) &addr, (uint8_t*) dummybuffer, 1, timeout_) != HAL_OK) {
-		throw std::runtime_error("SPI timeout");
-	}
-
 	/* Read the data from the device */
-	while (nbytes > 0) {
-		uint32_t rxbytes = (nbytes > sizeof(dummybuffer)) ? sizeof(dummybuffer) : nbytes;
-		if (HAL_SPI_TransmitReceive(&handle_, (uint8_t*) dummybuffer, (uint8_t*) buffer, rxbytes, timeout_) != HAL_OK) {
-			throw std::runtime_error("SPI timeout");
-		}
-		buffer += rxbytes;
-		nbytes -= rxbytes;
+	if (HAL_SPI_Receive(&handle_, (uint8_t*) buffer, nbytes, timeout_) != HAL_OK) {
+		throw std::runtime_error("SPI timeout");
 	}
 
 	/* Set chip select High at the end of the transmission */
 	spi_chip_select(cs, false);
 }
 
-void SPIMaster::write(uint8_t cs, uint8_t addr, uint8_t* buffer, uint16_t nbytes)
+void SPIMaster::write(uint8_t cs, uint8_t* buffer, uint16_t nbytes)
 {
-	uint8_t dummybuffer[64];
+	/* Set chip select Low at the start of the transmission */
+	spi_chip_select(cs, true);
 
-	memset(dummybuffer, 0, sizeof(dummybuffer));
+	/* Send the data that will be written into the device */
+	if (HAL_SPI_Transmit(&handle_, (uint8_t*) buffer, nbytes, timeout_) != HAL_OK) {
+		throw std::runtime_error("SPI timeout");
+	}
 
+	/* Set chip select High at the end of the transmission */
+	spi_chip_select(cs, false);
+}
+
+void SPIMaster::read_reg(uint8_t cs, uint8_t addr, uint8_t* buffer, uint16_t nbytes)
+{
 	/* Set chip select Low at the start of the transmission */
 	spi_chip_select(cs, true);
 
 	/* Send the Address of the indexed register */
-	if (HAL_SPI_TransmitReceive(&handle_, (uint8_t*) &addr, (uint8_t*) dummybuffer, 1, timeout_) != HAL_OK) {
+	if (HAL_SPI_Transmit(&handle_, (uint8_t*) &addr, 1, timeout_) != HAL_OK) {
+		throw std::runtime_error("SPI timeout");
+	}
+
+	/* Read the data from the device */
+	if (HAL_SPI_Receive(&handle_, (uint8_t*) buffer, nbytes, timeout_) != HAL_OK) {
+		throw std::runtime_error("SPI timeout");
+	}
+
+	/* Set chip select High at the end of the transmission */
+	spi_chip_select(cs, false);
+}
+
+void SPIMaster::write_reg(uint8_t cs, uint8_t addr, uint8_t* buffer, uint16_t nbytes)
+{
+	/* Set chip select Low at the start of the transmission */
+	spi_chip_select(cs, true);
+
+	/* Send the Address of the indexed register */
+	if (HAL_SPI_Transmit(&handle_, (uint8_t*) &addr, 1, timeout_) != HAL_OK) {
 		throw std::runtime_error("SPI timeout");
 	}
 
 	/* Send the data that will be written into the device */
-	while (nbytes > 0) {
-		uint32_t txbytes = (nbytes > sizeof(dummybuffer)) ? sizeof(dummybuffer) : nbytes;
-		if (HAL_SPI_TransmitReceive(&handle_, (uint8_t*) buffer, (uint8_t*) dummybuffer, txbytes, timeout_) != HAL_OK) {
-			throw std::runtime_error("SPI timeout");
-		}
-		buffer += txbytes;
-		nbytes -= txbytes;
+	if (HAL_SPI_Transmit(&handle_, (uint8_t*) buffer, nbytes, timeout_) != HAL_OK) {
+		throw std::runtime_error("SPI timeout");
 	}
 
 	/* Set chip select High at the end of the transmission */
@@ -143,24 +153,24 @@ void SPIMaster::write(uint8_t cs, uint8_t addr, uint8_t* buffer, uint16_t nbytes
 uint8_t SPIMaster::read_reg8(uint8_t cs, uint8_t reg)
 {
 	uint8_t ret;
-	read(cs, reg, (uint8_t*)&ret, sizeof(ret));
+	read_reg(cs, reg, (uint8_t*)&ret, sizeof(ret));
 	return ret;
 }
 
 uint16_t SPIMaster::read_reg16(uint8_t cs, uint8_t reg)
 {
 	uint16_t ret;
-	read(cs, reg, (uint8_t*)&ret, sizeof(ret));
+	read_reg(cs, reg, (uint8_t*)&ret, sizeof(ret));
 	return ret;
 }
 
 void SPIMaster::write_reg8(uint8_t cs, uint8_t reg, uint8_t val)
 {
-	write(cs, reg, (uint8_t*)&val, sizeof(val));
+	write_reg(cs, reg, (uint8_t*)&val, sizeof(val));
 }
 
 void SPIMaster::write_reg16(uint8_t cs, uint8_t reg, uint16_t val)
 {
-	write(cs, reg, (uint8_t*)&val, sizeof(val));
+	write_reg(cs, reg, (uint8_t*)&val, sizeof(val));
 }
 

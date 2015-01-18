@@ -84,6 +84,7 @@ typedef u8_t L3GD20_Axis_t;
 
 /***************CTRL5***************/
 #define L3GD20_CTRL_REG5                               0x24
+#define L3GD20_BOOT                                    BIT(7)
 #define L3GD20_FIFO_EN                                 BIT(6)
 #define L3GD20_HPEN                                    BIT(4)
 #define L3GD20_INT1_SEL1                               BIT(3)
@@ -286,6 +287,7 @@ public:
 	void SetBDU(State_t bdu);
 	void SetBLE(Endianess_t ble);
 	void SetSPIInterface(SPIMode_t spi);
+	void Reboot();
 
 	/***************Filtering Functions****************/
 	void SetHPFMode(HPFMode_t hpf);

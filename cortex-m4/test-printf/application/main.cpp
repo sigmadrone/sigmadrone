@@ -19,6 +19,7 @@
 #include "queue.h"
 #include "stm32f429i_discovery_lcd.h"
 #include "spimaster.h"
+#include "spislave.h"
 #include "l3gd20.h"
 #include "lsm303d.h"
 #include "matrix.h"
@@ -56,6 +57,12 @@ extern "C" void EXTI4_IRQHandler(void)
 	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
 }
 
+extern "C" void SPI4_IRQHandler(void)
+{
+	SPISlave::vector_handler(4);
+}
+
+
 void gyro_isr()
 {
 	if (gyro_int2 || acc_int2) {
@@ -84,10 +91,69 @@ void secondary_task(void *pvParameters)
 	}
 }
 
-void HAL_Delay(__IO uint32_t delay)
+
+void spi_slave_task(void *pvParameters)
 {
-	vTaskDelay(delay / portTICK_RATE_MS);
+	trace_printf("SPI Slave task...\n");
+	SPISlave spi4(SPI4, SPI_BAUDRATEPRESCALER_16, 0x2000, {
+				{PE_2, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_SCK_PIN */
+				{PE_4, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_NSS_PIN */
+				{PE_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MISO_PIN */
+				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MOSI_PIN */
+			}, {
+			});
+
+	trace_printf("SPI4_IRQn priority: %u\n", NVIC_GetPriority(SPI4_IRQn) << __NVIC_PRIO_BITS);
+	spi4.Start();
+	while (1) {
+
+	}
+	char tx = 't', rx = 0;
+	SPI_HandleTypeDef SpiHandle;
+	/*##-1- Configure the SPI peripheral #######################################*/
+	/* Set the SPI parameters */
+	SpiHandle.Instance               = SPI4;
+	SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
+	SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
+	SpiHandle.Init.CLKPhase          = SPI_PHASE_1EDGE;
+	SpiHandle.Init.CLKPolarity       = SPI_POLARITY_HIGH;
+	SpiHandle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLED;
+	SpiHandle.Init.CRCPolynomial     = 7;
+	SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
+	SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+	SpiHandle.Init.NSS               = SPI_NSS_HARD_INPUT;
+	SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLED;
+	SpiHandle.Init.Mode              = SPI_MODE_SLAVE;
+	if(HAL_SPI_Init(&SpiHandle) != HAL_OK) {
+		trace_printf("SPI Slave task... error\n");
+	}
+
+	while (1) {
+		switch (HAL_SPI_TransmitReceive(&SpiHandle, (uint8_t*) &tx, (uint8_t *) &rx, sizeof(tx), 10000)) {
+		case HAL_OK:
+			trace_printf("SPI Slave received: %c\n", rx);
+			break;
+
+		case HAL_TIMEOUT:
+			trace_printf("SPI Slave TX/RX timed out\n");
+			break;
+
+			/* An Error occurred______________________________________________________*/
+		case HAL_ERROR:
+			trace_printf("SPI Slave TX/RX error\n");
+			break;
+
+		default:
+			break;
+		}
+	}
 }
+
+
+//void HAL_Delay(__IO uint32_t delay)
+//{
+//	vTaskDelay(delay / portTICK_RATE_MS);
+//}
 
 #define LCD_FRAME_BUFFER_LAYER0                  0xC0130000
 #define LCD_FRAME_BUFFER_LAYER1                  0xC0000000
@@ -185,17 +251,10 @@ void tim3_isr() {
 	led2.toggle();
 }
 
+#define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
+
 void main_task(void *pvParameters)
 {
-	SPIMaster spi4(SPI4, SPI_BAUDRATEPRESCALER_16, 0x2000, {
-				{PE_2, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPIx_SCK_PIN */
-				{PE_5, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPIx_MISO_PIN */
-				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},			/* DISCOVERY_SPIx_MOSI_PIN */
-			}, {
-				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
-			});
-
-
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
 				{PF_8, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_MISO_PIN */
@@ -203,10 +262,11 @@ void main_task(void *pvParameters)
 			}, {
 				{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* GYRO_CS_PIN */
 				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
+				{PG_3, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},				/* SLAVE_CS_PIN */
 			});
 	L3GD20 gyro(spi5, 0);
-	LSM303D accel(spi4, 0);
-	uint8_t gyr_wtm = 30;
+	LSM303D accel(spi5, 1);
+	uint8_t gyr_wtm = 20;
 	uint8_t acc_wtm = 17;
 	uint8_t bias_iterations = 40;
 	L3GD20::AxesDPS_t gyr_axes;
@@ -218,11 +278,19 @@ void main_task(void *pvParameters)
 
 	tim3.start();
 
+	trace_printf("Priority Group: %u\n", NVIC_GetPriorityGrouping());
+	trace_printf("SysTick_IRQn priority: %u\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
+	trace_printf("configKERNEL_INTERRUPT_PRIORITY: %u\n", configKERNEL_INTERRUPT_PRIORITY);
+	trace_printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %u\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
+	vTaskDelay(500 / portTICK_RATE_MS);
+
 	gyro_int2.callback(gyro_isr);
 	acc_int2.callback(acc_isr);
 	init_lcd();
 
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
+
+	vTaskDelay(500 / portTICK_RATE_MS);
 
 	gyro.SetMode(L3GD20::NORMAL);
 	gyro.SetFullScale(L3GD20::FULLSCALE_500);
@@ -235,9 +303,9 @@ void main_task(void *pvParameters)
 	gyro.HPFEnable(L3GD20::MEMS_ENABLE);
 	gyro.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
 	gyro.SetHPFCutOFF(L3GD20::HPFCF_0);
-	gyro.SetODR(L3GD20::ODR_95Hz_BW_12_5);
+	gyro.SetODR(L3GD20::ODR_380Hz_BW_25);
 
-	accel.SetODR(LSM303D::ODR_100Hz);
+	accel.SetODR(LSM303D::ODR_400Hz);
 	accel.SetFullScale(LSM303D::FULLSCALE_8);
 	accel.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
 	accel.FIFOModeSet(LSM303D::FIFO_STREAM_MODE);
@@ -278,7 +346,6 @@ void main_task(void *pvParameters)
 		if (acc_samples > acc_wtm)
 			accel.GetFifoAcc(&acc_axes);
 		Vector3d gyr_data = Vector3d(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
-//		trace_printf("Accelerometer ID: 0x%x, g: %3.2f %3.2f %3.2f\n", accel.ReadReg8(LSM303D_WHO_AM_I), g.AXIS_X, g.AXIS_Y, g.AXIS_Z);
 		ticks = xTaskGetTickCount() - oldticks;
 		oldticks = xTaskGetTickCount();
 		att.track_gyroscope(DEG2RAD(gyr_data), ticks * portTICK_PERIOD_MS / (float)1000.0);
@@ -287,6 +354,8 @@ void main_task(void *pvParameters)
 		if ((oldticks - displayUpdateTicks) * portTICK_PERIOD_MS > 200) {
 			displayUpdateTicks = oldticks;
 			sprintf(disp,"GYRO X: %6.2f         ", gyr_data.at(0));
+//			memset(disp, 0, sizeof(disp));
+//			spi5.read(2, (uint8_t*)disp, 15);
 			BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"GYRO Y: %6.2f         ", gyr_data.at(1));
 			BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
@@ -330,6 +399,13 @@ int main(int argc, char* argv[])
 	uint32_t pclk1 = HAL_RCC_GetPCLK1Freq();
 	uint32_t pclk2 = HAL_RCC_GetPCLK2Freq();
 
+	/*
+	 * Disable the SysTick_IRQn and clean the priority
+	 * and let the scheduler configure and enable it.
+	 */
+	NVIC_DisableIRQ(SysTick_IRQn);
+	NVIC_SetPriority(SysTick_IRQn, 0);
+
 	button.callback(&led2, &DigitalOut::toggle);
 	trace_printf("Starting main_task:, CPU freq: %d, PCLK1 freq: %d, PCLK2 freq: %d\n",
 			freq, pclk1, pclk2);
@@ -354,22 +430,21 @@ int main(int argc, char* argv[])
 		);
 
 	xTaskCreate(
-		secondary_task, /* Function pointer */
-		"Task3", /* Task name - for debugging only*/
+		spi_slave_task, /* Function pointer */
+		"SPI Slave Task", /* Task name - for debugging only*/
 		configMINIMAL_STACK_SIZE, /* Stack depth in words */
 		(void*) NULL, /* Pointer to tasks arguments (parameter) */
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/
 		NULL /* Task handle */
 		);
 
-	vTaskList(buffer);
-	trace_printf("Tasks: \n%s\n\n", buffer);
-
+//	vTaskList(buffer);
+//	trace_printf("Tasks: \n%s\n\n", buffer);
 	vTaskStartScheduler();
 
 	// Infinite loop
 	while (1) {
-		//trace_printf("Hello world, freq: %d, f=%f\n", freq, 0.75);
+		trace_printf("Hello world, freq: %d, f=%f\n", freq, 0.75);
 	}
 	// Infinite loop, never return.
 }
