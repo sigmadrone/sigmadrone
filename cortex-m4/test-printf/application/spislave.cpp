@@ -16,74 +16,16 @@
 
 static SPISlave* g_spislave[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
 
+#define __HAL_NSS_DISABLE(__HANDLE__) ((__HANDLE__)->Instance->CR1 |=  SPI_CR1_SSI)
+#define __HAL_NSS_ENABLE(__HANDLE__) ((__HANDLE__)->Instance->CR1 &=  ~SPI_CR1_SSI)
+
+
 void SPISlave::vector_handler(uint8_t device)
 {
 	if (g_spislave[device])
 		IRQHandler(&g_spislave[device]->handle_);
 }
 
-/**
-  * @brief  This function handles SPI interrupt request.
-  * @param  hspi: pointer to a SPI_HandleTypeDef structure that contains
-  *                the configuration information for SPI module.
-  * @retval HAL status
-  */
-void SPISlave::IRQHandler(SPI_HandleTypeDef *hspi)
-{
-	SPISlave *slave = (SPISlave*)hspi;
-	uint32_t tmp1 = 0, tmp2 = 0, tmp3 = 0;
-
-	tmp1 = __HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE);
-	tmp2 = __HAL_SPI_GET_IT_SOURCE(hspi, SPI_IT_RXNE);
-	tmp3 = __HAL_SPI_GET_FLAG(hspi, SPI_FLAG_OVR);
-	/* SPI in mode Receiver and Overrun not occurred ---------------------------*/
-	if ((tmp1 != RESET) && (tmp2 != RESET) && (tmp3 == RESET)) {
-		slave->SPI_RxISR();
-		return;
-	}
-
-	tmp1 = __HAL_SPI_GET_FLAG(hspi, SPI_FLAG_TXE);
-	tmp2 = __HAL_SPI_GET_IT_SOURCE(hspi, SPI_IT_TXE);
-	/* SPI in mode Tramitter ---------------------------------------------------*/
-	if ((tmp1 != RESET) && (tmp2 != RESET)) {
-		slave->SPI_TxISR();
-		return;
-	}
-
-	if (__HAL_SPI_GET_IT_SOURCE(hspi, SPI_IT_ERR) != RESET) {
-		/* SPI CRC error interrupt occurred ---------------------------------------*/
-		if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_CRCERR) != RESET) {
-			hspi->ErrorCode = (HAL_SPI_ErrorTypeDef)((unsigned int)hspi->ErrorCode | (unsigned int)HAL_SPI_ERROR_CRC);
-			__HAL_SPI_CLEAR_CRCERRFLAG(hspi);
-		}
-
-		/* SPI Mode Fault error interrupt occurred --------------------------------*/
-		if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_MODF) != RESET) {
-			hspi->ErrorCode = (HAL_SPI_ErrorTypeDef)((unsigned int)hspi->ErrorCode | (unsigned int)HAL_SPI_ERROR_MODF);
-			__HAL_SPI_CLEAR_MODFFLAG(hspi);
-		}
-
-		/* SPI Overrun error interrupt occurred -----------------------------------*/
-		if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_OVR) != RESET) {
-			if (hspi->State != HAL_SPI_STATE_BUSY_TX) {
-				hspi->ErrorCode = (HAL_SPI_ErrorTypeDef)((unsigned int)hspi->ErrorCode | (unsigned int)HAL_SPI_ERROR_OVR);
-				__HAL_SPI_CLEAR_OVRFLAG(hspi);
-			}
-		}
-
-		/* SPI Frame error interrupt occurred -------------------------------------*/
-		if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_FRE) != RESET) {
-			hspi->ErrorCode = (HAL_SPI_ErrorTypeDef)((unsigned int)hspi->ErrorCode | (unsigned int)HAL_SPI_ERROR_FRE);
-			__HAL_SPI_CLEAR_FREFLAG(hspi);
-		}
-
-		/* Call the Error call Back in case of Errors */
-		if (hspi->ErrorCode != HAL_SPI_ERROR_NONE) {
-			hspi->State = HAL_SPI_STATE_READY;
-			HAL_SPI_ErrorCallback(hspi);
-		}
-	}
-}
 
 extern "C" void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 {
@@ -100,6 +42,7 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t clk_prescale, uint32_t time
 	: timeout_(timeout)
 	, data_pins_(data_pins)
 	, cs_pins_(cs_pins)
+	, cs_interrupt_(NULL) //new DigitalIn(PE_4, DigitalIn::PullNone, DigitalIn::InterruptRisingFalling))
 {
 	for (auto& data_pin : data_pins_)
 		data_pin.init();
@@ -111,6 +54,7 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t clk_prescale, uint32_t time
 	memset(rxdata_, 0, sizeof(rxdata_));
 	memset(txdata_, 0, sizeof(txdata_));
 	strncpy(txdata_, "From SPI Slave", sizeof(txdata_) - 1);
+//	cs_interrupt_->callback(this, &SPISlave::SPI_ChipSelect);
 
 	/* SPI configuration -----------------------------------------------------*/
 	handle_.Instance = spi_device;
@@ -153,8 +97,8 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t clk_prescale, uint32_t time
 
 	/*##-3- Configure the NVIC for SPI #########################################*/
 	/* NVIC for SPI */
-	HAL_NVIC_SetPriority(SPI4_IRQn, 15, 1);
-	HAL_NVIC_EnableIRQ(SPI4_IRQn);
+//	HAL_NVIC_SetPriority(SPI4_IRQn, 15, 1);
+//	HAL_NVIC_EnableIRQ(SPI4_IRQn);
 }
 
 SPISlave::~SPISlave()
@@ -180,6 +124,7 @@ SPISlave::~SPISlave()
 		g_spislave[6] = 0;
 	}
 	HAL_SPI_DeInit(&handle_);
+//	delete cs_interrupt_;
 }
 
 void SPISlave::RxTxError()
@@ -193,12 +138,21 @@ void SPISlave::Start()
 	while (1) {
 		if (HAL_SPI_GetState(&handle_) == HAL_SPI_STATE_READY) {
 			memset(txdata_, 0, sizeof(txdata_));
-			snprintf(txdata_, sizeof(txdata_) - 1, "From SPI:%d", i++);
+			snprintf(txdata_, sizeof(txdata_) - 1, "From SPI:%d*******", i++);
 			TransmitReceive_IT((uint8_t*)txdata_, (uint8_t *)rxdata_, 15);
 		}
 	}
 }
 
+void SPISlave::SPI_ChipSelect()
+{
+	if (cs_interrupt_->read()) {
+		__HAL_NSS_DISABLE(&handle_);
+		SPI_ResetHandle();
+	} else {
+		__HAL_NSS_ENABLE(&handle_);
+	}
+}
 
 /**
   * @brief  Return the SPI state
@@ -485,6 +439,36 @@ void SPISlave::SPI_TxCloseIRQHandler()
 }
 
 /**
+* @brief  Interrupt Handler to close Tx transfer
+* @param  None
+* @retval void
+*/
+void SPISlave::SPI_ResetHandle()
+{
+	SPI_HandleTypeDef *hspi = &this->handle_;
+
+	/* Disable TXE interrupt */
+	__HAL_SPI_DISABLE_IT(hspi, (SPI_IT_TXE ));
+
+	/* Disable RXNE and ERR interrupt */
+	__HAL_SPI_DISABLE_IT(hspi, (SPI_IT_RXNE));
+
+	/* Disable ERR interrupt */
+	__HAL_SPI_DISABLE_IT(hspi, (SPI_IT_ERR));
+
+	__HAL_SPI_CLEAR_OVRFLAG(hspi);
+
+	/* Reset CRC Calculation */
+	__HAL_SPI_RESET_CRC(hspi);
+
+	/* Disable SPI peripheral */
+	__HAL_SPI_DISABLE(hspi);
+
+	handle_.State = HAL_SPI_STATE_READY;
+}
+
+
+/**
   * @brief  Transmit and Receive an amount of data in no-blocking mode with Interrupt
   * @param  pTxData: pointer to transmission data buffer
   * @param  pRxData: pointer to reception data buffer to be
@@ -532,6 +516,8 @@ HAL_StatusTypeDef SPISlave::TransmitReceive_IT(uint8_t *pTxData, uint8_t *pRxDat
 			__HAL_SPI_RESET_CRC(hspi);
 		}
 
+		SPI_TxISR();
+
 		/* Enable TXE, RXNE and ERR interrupt */
 		__HAL_SPI_ENABLE_IT(hspi, (SPI_IT_TXE | SPI_IT_RXNE | SPI_IT_ERR));
 
@@ -549,3 +535,68 @@ HAL_StatusTypeDef SPISlave::TransmitReceive_IT(uint8_t *pTxData, uint8_t *pRxDat
 		return HAL_BUSY;
 	}
 }
+
+/**
+  * @brief  This function handles SPI interrupt request.
+  * @param  hspi: pointer to a SPI_HandleTypeDef structure that contains
+  *                the configuration information for SPI module.
+  * @retval HAL status
+  */
+void SPISlave::IRQHandler(SPI_HandleTypeDef *hspi)
+{
+	SPISlave *slave = (SPISlave*)hspi;
+	uint32_t tmp1 = 0, tmp2 = 0, tmp3 = 0;
+
+	tmp1 = __HAL_SPI_GET_FLAG(hspi, SPI_FLAG_RXNE);
+	tmp2 = __HAL_SPI_GET_IT_SOURCE(hspi, SPI_IT_RXNE);
+	tmp3 = __HAL_SPI_GET_FLAG(hspi, SPI_FLAG_OVR);
+	/* SPI in mode Receiver and Overrun not occurred ---------------------------*/
+	if ((tmp1 != RESET) && (tmp2 != RESET) && (tmp3 == RESET)) {
+		slave->SPI_RxISR();
+		return;
+	}
+
+	tmp1 = __HAL_SPI_GET_FLAG(hspi, SPI_FLAG_TXE);
+	tmp2 = __HAL_SPI_GET_IT_SOURCE(hspi, SPI_IT_TXE);
+	/* SPI in mode Tramitter ---------------------------------------------------*/
+	if ((tmp1 != RESET) && (tmp2 != RESET)) {
+		slave->SPI_TxISR();
+		return;
+	}
+
+	if (__HAL_SPI_GET_IT_SOURCE(hspi, SPI_IT_ERR) != RESET) {
+		/* SPI CRC error interrupt occurred ---------------------------------------*/
+		if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_CRCERR) != RESET) {
+			hspi->ErrorCode = (HAL_SPI_ErrorTypeDef)((unsigned int)hspi->ErrorCode | (unsigned int)HAL_SPI_ERROR_CRC);
+			__HAL_SPI_CLEAR_CRCERRFLAG(hspi);
+		}
+
+		/* SPI Mode Fault error interrupt occurred --------------------------------*/
+		if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_MODF) != RESET) {
+			hspi->ErrorCode = (HAL_SPI_ErrorTypeDef)((unsigned int)hspi->ErrorCode | (unsigned int)HAL_SPI_ERROR_MODF);
+			__HAL_SPI_CLEAR_MODFFLAG(hspi);
+		}
+
+		/* SPI Overrun error interrupt occurred -----------------------------------*/
+		if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_OVR) != RESET) {
+			if (hspi->State != HAL_SPI_STATE_BUSY_TX) {
+				hspi->ErrorCode = (HAL_SPI_ErrorTypeDef)((unsigned int)hspi->ErrorCode | (unsigned int)HAL_SPI_ERROR_OVR);
+				__HAL_SPI_CLEAR_OVRFLAG(hspi);
+			}
+		}
+
+		/* SPI Frame error interrupt occurred -------------------------------------*/
+		if (__HAL_SPI_GET_FLAG(hspi, SPI_FLAG_FRE) != RESET) {
+			hspi->ErrorCode = (HAL_SPI_ErrorTypeDef)((unsigned int)hspi->ErrorCode | (unsigned int)HAL_SPI_ERROR_FRE);
+			__HAL_SPI_CLEAR_FREFLAG(hspi);
+		}
+
+		/* Call the Error call Back in case of Errors */
+		if (hspi->ErrorCode != HAL_SPI_ERROR_NONE) {
+			hspi->State = HAL_SPI_STATE_READY;
+			HAL_SPI_ErrorCallback(hspi);
+		}
+	}
+}
+
+

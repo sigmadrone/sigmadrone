@@ -1684,8 +1684,7 @@ static void SPI_TxCloseIRQHandler(SPI_HandleTypeDef *hspi)
 		__HAL_SPI_DISABLE_IT(hspi, (SPI_IT_ERR));
 
 		/* Wait until Busy flag is reset before disabling SPI */
-		if (SPI_WaitOnFlagUntilTimeout(hspi, SPI_FLAG_BSY, SET,
-				SPI_TIMEOUT_VALUE) != HAL_OK) {
+		if (SPI_WaitOnFlagUntilTimeout(hspi, SPI_FLAG_BSY, SET, SPI_TIMEOUT_VALUE) != HAL_OK) {
 			hspi->ErrorCode |= HAL_SPI_ERROR_FLAG;
 		}
 

@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include <vector>
+#include "digitalin.h"
 #include "stm32f4xx_hal_conf.h"
 #include "stm32f429xx.h"
 #include "gpiopin.h"
@@ -24,14 +25,16 @@ protected:
 	std::vector<GPIOPin> cs_pins_;
 	char rxdata_[32];
 	char txdata_[32];
-
+	DigitalIn *cs_interrupt_;
 
 protected:
 	void SPI_TxISR();
 	void SPI_RxISR();
 	void SPI_RxCloseIRQHandler();
 	void SPI_TxCloseIRQHandler();
+	void SPI_ResetHandle();
 	HAL_StatusTypeDef SPI_WaitOnFlagUntilTimeout(uint32_t Flag, FlagStatus Status, uint32_t Timeout);
+	void SPI_ChipSelect();
 
 public:
 	SPISlave(SPI_TypeDef* spi_device = SPI5, uint32_t clk_prescale = SPI_BAUDRATEPRESCALER_16, uint32_t timeout = 0x1000, const std::vector<GPIOPin>& data_pins = {}, const std::vector<GPIOPin>& cs_pins = {});

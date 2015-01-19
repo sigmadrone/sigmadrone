@@ -29,9 +29,8 @@ void* __dso_handle = 0;
 
 DigitalOut led1(USER_LED1);
 DigitalOut led2(USER_LED2);
-DigitalIn gyro_int2(PA_2, DigitalIn::PullUp, DigitalIn::InterruptRising);
-DigitalIn acc_int2(PB_4, DigitalIn::PullUp, DigitalIn::InterruptRising);
-DigitalIn button(USER_BUTTON, DigitalIn::PullDown, DigitalIn::InterruptRising);
+DigitalIn gyro_int2(PA_2, DigitalIn::PullNone, DigitalIn::InterruptRising);
+DigitalIn button(USER_BUTTON, DigitalIn::PullNone, DigitalIn::InterruptRising);
 TaskHandle_t hMain;
 QueueHandle_t hGyroQueue;
 
@@ -61,20 +60,9 @@ extern "C" void SPI4_IRQHandler(void)
 	SPISlave::vector_handler(4);
 }
 
-
 void gyro_isr()
 {
-	if (gyro_int2 || acc_int2) {
-		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-		uint32_t msg = 1;
-		xQueueSendFromISR(hGyroQueue, &msg, &xHigherPriorityTaskWoken);
-	}
-}
-
-
-void acc_isr()
-{
-	if (gyro_int2 || acc_int2) {
+	if (gyro_int2) {
 		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 		uint32_t msg = 1;
 		xQueueSendFromISR(hGyroQueue, &msg, &xHigherPriorityTaskWoken);
@@ -105,7 +93,7 @@ void spi_slave_task(void *pvParameters)
 	trace_printf("SPI4_IRQn priority: %u\n", NVIC_GetPriority(SPI4_IRQn) << __NVIC_PRIO_BITS);
 	spi4.Start();
 	while (1) {
-
+		HAL_Delay(1000);
 	}
 	char tx = 't', rx = 0;
 	SPI_HandleTypeDef SpiHandle;
@@ -249,14 +237,16 @@ void init_lcd()
 
 void main_task(void *pvParameters)
 {
+	vTaskDelay(500 / portTICK_RATE_MS);
+
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
 				{PF_8, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_MISO_PIN */
 				{PF_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},			/* DISCOVERY_SPIx_MOSI_PIN */
 			}, {
-				{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* GYRO_CS_PIN */
-				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, 0},				/* ACCEL_CS_PIN */
-				{PG_3, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},				/* SLAVE_CS_PIN */
+				{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},					/* GYRO_CS_PIN */
+				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},					/* ACCEL_CS_PIN */
+				{PG_3, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},					/* SLAVE_CS_PIN */
 			});
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi5, 1);
@@ -275,10 +265,8 @@ void main_task(void *pvParameters)
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	gyro_int2.callback(gyro_isr);
-	acc_int2.callback(acc_isr);
 	init_lcd();
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
-
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	gyro.SetMode(L3GD20::NORMAL);
@@ -384,7 +372,6 @@ void main_task(void *pvParameters)
 
 int main(int argc, char* argv[])
 {
-	char buffer[512];
 	uint32_t freq = HAL_RCC_GetSysClockFreq();
 
 	/*
