@@ -17,14 +17,43 @@ class HwTimer {
 public:
 	HwTimer(uint32_t timerId,
 			const TimeSpan& period,
-			const Frequency& timerClock = Frequency::from_hertz(0),
+			const Frequency& timerClock = Frequency::from_kilohertz(10),
 			const FunctionPointer& interruptCallback = FunctionPointer());
 	virtual ~HwTimer();
+
+	/*
+	 * Starts the timer. The routine will implicitly stop the timer if it is
+	 * currently ticking
+	 */
 	bool start();
+
+	/*
+	 * Stops the timer
+	 */
 	void stop();
-	const TimeSpan& current_value() const;
-	const TimeSpan& period() const { return period_; }
+
+	/*
+	 * The new values from set_period/timer_clock will take effect after
+	 * the timer was restarted
+	 */
 	void set_period(const TimeSpan& period) { period_ = period; }
+	void set_timer_clock(const Frequency& timer_clock);
+
+	/*
+	 * Returns the elapsed interval since the timer was zeroed out
+	 */
+	const TimeSpan& time_elapsed() const;
+
+	/*
+	 * Returns the current timer counter value
+	 */
+	uint32_t current_counter_value() const;
+
+	/*
+	 * Returns the configured timer period
+	 */
+	const TimeSpan& period() const { return period_; }
+
 	uint32_t timerid() const { return timer_id_; }
 
 	/*
@@ -39,8 +68,6 @@ private:
 	TimeSpan period_;
 	Frequency timer_clock_;
 	FunctionPointer callback_;
-
-	static size_t interrupt_handler_count_;
 };
 
 #endif /* TEST_PRINTF_HWTIMER_H_ */

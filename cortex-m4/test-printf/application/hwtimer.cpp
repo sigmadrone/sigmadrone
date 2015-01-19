@@ -13,16 +13,20 @@
 struct HwTimerStatic {
 	TIM_HandleTypeDef handle_;
 	HwTimer* hwtimer_;
-	uint32_t busnum_; // based on what bus the timer is located
+	uint32_t busnum_; // what bus the timer is connected to - 1 or 2
+	uint32_t counter_resolution_;
 };
 
 #define array_size(x) (sizeof(x) / sizeof((x)[0]))
 
 static HwTimerStatic all_timers_[] = {
 		{ {0}, 0, 0}, // invalid entry
-		{ {TIM1}, 0, 2 }, { {TIM2}, 0, 1 }, { {TIM3}, 0, 1 }, { {TIM4}, 0, 1 }, { {TIM5}, 0, 1 },
-		{ {TIM6}, 0, 1 }, { {TIM7}, 0, 1 }, { {TIM8}, 0, 2 }, { {TIM9}, 0, 2 }, { {TIM10}, 0, 2 },
-		{ {TIM11}, 0, 2}, { {TIM12}, 0, 1}, { {TIM13}, 0, 1 }, { {TIM14}, 0, 1}
+		{ {TIM1},  0, 2, 0xffff }, { {TIM2},  0, 1, 0xffffffff }, { {TIM3}, 0, 1, 0xffff },
+		{ {TIM4},  0, 1, 0xffff }, { {TIM5},  0, 1, 0xffffffff }, { {TIM6}, 0, 1, 0xffff },
+		{ {TIM7},  0, 1, 0xffff }, { {TIM8},  0, 2, 0xffff },
+		{ {TIM9},  0, 2, 0xffff }, { {TIM10}, 0, 2, 0xffff },
+		{ {TIM11}, 0, 2, 0xffff }, { {TIM12}, 0, 1, 0xffff },
+		{ {TIM13}, 0, 1, 0xffff }, { {TIM14}, 0, 1, 0xffff }
 };
 
 static bool is_valid_timer_id(uint32_t timer_id) {
@@ -41,8 +45,6 @@ static HwTimer* from_handle_to_timer(TIM_HandleTypeDef* handle) {
 	return reinterpret_cast<HwTimerStatic*>(handle)->hwtimer_;
 }
 
-size_t HwTimer::interrupt_handler_count_ = 0;
-
 static Frequency get_apb_bus_freq(uint32_t busnum) {
 	if (1 == busnum) {
 		return Frequency::from_hertz(HAL_RCC_GetPCLK1Freq());
@@ -56,6 +58,7 @@ Frequency HwTimer::get_timx_input_clock(uint32_t timer_id)
 	assert(is_valid_timer_id(timer_id));
 	uint32_t apbusnum = all_timers_[timer_id].busnum_;
 	assert(1 == apbusnum || 2 == apbusnum);
+
 	Frequency bus_freq = get_apb_bus_freq(apbusnum);
 	RCC_ClkInitTypeDef RCC_ClkInitStruct;
 	uint32_t fLatency;
@@ -96,13 +99,13 @@ HwTimer::HwTimer(uint32_t timer_id,
 		const TimeSpan& period,
 		const Frequency& timer_clock,
 		const FunctionPointer& interrupt_callback) :
-		timer_id_(0), period_(period), timer_clock_(timer_clock),
-		callback_(interrupt_callback)
+		timer_id_(0), period_(period), callback_(interrupt_callback)
 {
 	if (is_valid_timer_id(timer_id) && !all_timers_[timer_id].hwtimer_) {
 		all_timers_[timer_id].hwtimer_ = this;
 		timer_id_ = timer_id;
 	}
+	set_timer_clock(timer_clock);
 }
 
 HwTimer::~HwTimer() {
@@ -113,24 +116,33 @@ HwTimer::~HwTimer() {
 }
 
 bool HwTimer::start() {
-	if (!is_valid_timer_id(timer_id_)) {
+	TIM_HandleTypeDef* handle = timer_handle(timer_id_);
+	if (0 == handle) {
 		return false;
 	}
+	assert(handle->Instance); // TIMx should be initialized
 
 	stop();
 
-	/* Initialize TIMX peripheral as follows:
+	/*
+	 * Initialize TIMX peripheral as follows:
 	 * + Period = period - 1
 	 * + Prescaler = input_clock/timer_clock - 1
 	 * + ClockDivision = 0
 	 * + Counter direction = Up
 	 */
-	Frequency input_clock = get_timx_input_clock(timer_id_);
-	uint32_t prescaler = input_clock.unit() / timer_clock_.unit() - 1;
-	TIM_HandleTypeDef* handle = timer_handle(timer_id_);
-	assert(handle->Instance); // TIMx should be initialized
 
-	handle->Init.Period = period_.nanoseconds() / timer_clock_.period().nanoseconds() - 1;
+	uint64_t timer_counter = period_.nanoseconds() / timer_clock_.period().nanoseconds() - 1;
+	if (timer_counter > all_timers_[timer_id_].counter_resolution_) {
+		// since we will overflow the timer counter, we have to readjust the timer clock
+		timer_counter = all_timers_[timer_id_].counter_resolution_;
+		timer_clock_ = Frequency::from_timespan(period_ / (timer_counter + 1));
+	}
+
+	Frequency input_clock = get_timx_input_clock(timer_id_);
+	uint32_t prescaler = input_clock.hertz() / timer_clock_.hertz() - 1;
+
+	handle->Init.Period = timer_counter;
 	handle->Init.Prescaler = prescaler;
 	handle->Init.ClockDivision = 0;
 	handle->Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -158,7 +170,19 @@ void HwTimer::period_elapsed() {
 }
 
 void HwTimer::stop() {
-// TODO:
+	TIM_HandleTypeDef* handle = timer_handle(timer_id_);
+	if (0 != handle) {
+		HAL_TIM_Base_Stop_IT(handle);
+		HAL_TIM_Base_DeInit(handle);
+	}
+}
+
+void HwTimer::set_timer_clock(const Frequency& timer_clock) {
+	if (timer_clock.unit() > 0) {
+		timer_clock_ = timer_clock;
+	} else {
+		timer_clock_ = Frequency::from_kilohertz(10);
+	}
 }
 
 /*
