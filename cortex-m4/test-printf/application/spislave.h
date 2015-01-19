@@ -25,18 +25,29 @@ protected:
 	char rxdata_[32];
 	char txdata_[32];
 
+
+protected:
+	void SPI_TxISR();
+	void SPI_RxISR();
+	void SPI_RxCloseIRQHandler();
+	void SPI_TxCloseIRQHandler();
+	HAL_StatusTypeDef SPI_WaitOnFlagUntilTimeout(uint32_t Flag, FlagStatus Status, uint32_t Timeout);
+
 public:
 	SPISlave(SPI_TypeDef* spi_device = SPI5, uint32_t clk_prescale = SPI_BAUDRATEPRESCALER_16, uint32_t timeout = 0x1000, const std::vector<GPIOPin>& data_pins = {}, const std::vector<GPIOPin>& cs_pins = {});
 	~SPISlave();
 	void Start();
+	HAL_SPI_StateTypeDef GetState();
+	HAL_SPI_ErrorTypeDef GetError();
+	HAL_StatusTypeDef TransmitReceive_IT(uint8_t *pTxData, uint8_t *pRxData, uint16_t Size);
 
 public:
 	/*
 	 * This is not really public APIs.
 	 */
 	static void vector_handler(uint8_t device);
+	static void IRQHandler(SPI_HandleTypeDef *hspi);
 	void RxTxError();
-
 };
 
 #endif /* _SPISLAVE_H_ */
