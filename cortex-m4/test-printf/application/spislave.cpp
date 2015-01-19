@@ -19,11 +19,111 @@ static SPISlave* g_spislave[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define __HAL_NSS_DISABLE(__HANDLE__) ((__HANDLE__)->Instance->CR1 |=  SPI_CR1_SSI)
 #define __HAL_NSS_ENABLE(__HANDLE__) ((__HANDLE__)->Instance->CR1 &=  ~SPI_CR1_SSI)
 
+#define SPIx_FORCE_RESET()               __SPI4_FORCE_RESET()
+#define SPIx_RELEASE_RESET()             __SPI4_RELEASE_RESET()
+#define DMAx_CLK_ENABLE()                __DMA2_CLK_ENABLE()
+/* Definition for SPIx's DMA */
+#define SPIx_TX_DMA_CHANNEL              DMA_CHANNEL_4
+#define SPIx_TX_DMA_STREAM               DMA2_Stream1
+#define SPIx_RX_DMA_CHANNEL              DMA_CHANNEL_4
+#define SPIx_RX_DMA_STREAM               DMA2_Stream0
+
+/* Definition for SPIx's NVIC */
+#define SPIx_DMA_TX_IRQn                 DMA2_Stream1_IRQn
+#define SPIx_DMA_RX_IRQn                 DMA2_Stream0_IRQn
+#define SPIx_DMA_TX_IRQHandler           DMA2_Stream1_IRQHandler
+#define SPIx_DMA_RX_IRQHandler           DMA2_Stream0_IRQHandler
+
 
 void SPISlave::vector_handler(uint8_t device)
 {
 	if (g_spislave[device])
 		IRQHandler(&g_spislave[device]->handle_);
+}
+
+void SPISlave::DMAConfig()
+{
+	SPI_HandleTypeDef *hspi = &this->handle_;
+
+	/* Enable DMA1 clock */
+	DMAx_CLK_ENABLE();
+
+	/*##-3- Configure the DMA streams ##########################################*/
+	/* Configure the DMA handler for Transmission process */
+	memset(&hdma_rx, 0, sizeof(hdma_rx));
+	memset(&hdma_tx, 0, sizeof(hdma_tx));
+	hdma_tx.Instance = SPIx_TX_DMA_STREAM;
+
+	hdma_tx.Init.Channel = SPIx_TX_DMA_CHANNEL;
+	hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
+	hdma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_tx.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	hdma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+	hdma_tx.Init.Mode = DMA_NORMAL;
+	hdma_tx.Init.Priority = DMA_PRIORITY_LOW;
+	hdma_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	hdma_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+	hdma_tx.Init.MemBurst = DMA_MBURST_INC4;
+	hdma_tx.Init.PeriphBurst = DMA_PBURST_INC4;
+
+	HAL_DMA_Init (&hdma_tx);
+
+	/* Associate the initialized DMA handle to the the SPI handle */
+	__HAL_LINKDMA(hspi, hdmatx, hdma_tx);
+
+	/* Configure the DMA handler for Transmission process */
+	hdma_rx.Instance = SPIx_RX_DMA_STREAM;
+
+	hdma_rx.Init.Channel = SPIx_RX_DMA_CHANNEL;
+	hdma_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+	hdma_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_rx.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	hdma_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+	hdma_rx.Init.Mode = DMA_NORMAL;
+	hdma_rx.Init.Priority = DMA_PRIORITY_HIGH;
+	hdma_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	hdma_rx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+	hdma_rx.Init.MemBurst = DMA_MBURST_INC4;
+	hdma_rx.Init.PeriphBurst = DMA_PBURST_INC4;
+
+	HAL_DMA_Init (&hdma_rx);
+
+	/* Associate the initialized DMA handle to the the SPI handle */
+	__HAL_LINKDMA(hspi, hdmarx, hdma_rx);
+
+	/*##-4- Configure the NVIC for DMA #########################################*/
+	/* NVIC configuration for DMA transfer complete interrupt (SPI3_TX) */
+	HAL_NVIC_SetPriority(SPIx_DMA_TX_IRQn, 0, 1);
+	HAL_NVIC_EnableIRQ (SPIx_DMA_TX_IRQn);
+
+	/* NVIC configuration for DMA transfer complete interrupt (SPI3_RX) */
+	HAL_NVIC_SetPriority(SPIx_DMA_RX_IRQn, 0, 0);
+	HAL_NVIC_EnableIRQ (SPIx_DMA_RX_IRQn);
+}
+
+/**
+ * @brief  This function handles DMA Rx interrupt request.
+ * @param  None
+ * @retval None
+ */
+extern "C" void SPIx_DMA_RX_IRQHandler(void)
+{
+//	NVIC_ClearPendingIRQ(SPIx_DMA_RX_IRQn);
+	HAL_DMA_IRQHandler(g_spislave[4]->handle_.hdmarx);
+}
+
+/**
+ * @brief  This function handles DMA Tx interrupt request.
+ * @param  None
+ * @retval None
+ */
+extern "C" void SPIx_DMA_TX_IRQHandler(void)
+{
+//	NVIC_ClearPendingIRQ(SPIx_DMA_TX_IRQn);
+	HAL_DMA_IRQHandler(g_spislave[4]->handle_.hdmatx);
+	((SPISlave*)&g_spislave[4]->handle_)->SPI_ResetHandle();
 }
 
 
@@ -97,8 +197,9 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t clk_prescale, uint32_t time
 
 	/*##-3- Configure the NVIC for SPI #########################################*/
 	/* NVIC for SPI */
-//	HAL_NVIC_SetPriority(SPI4_IRQn, 15, 1);
-//	HAL_NVIC_EnableIRQ(SPI4_IRQn);
+	HAL_NVIC_SetPriority(SPI4_IRQn, 15, 1);
+	HAL_NVIC_EnableIRQ(SPI4_IRQn);
+	DMAConfig();
 }
 
 SPISlave::~SPISlave()
@@ -139,7 +240,7 @@ void SPISlave::Start()
 		if (HAL_SPI_GetState(&handle_) == HAL_SPI_STATE_READY) {
 			memset(txdata_, 0, sizeof(txdata_));
 			snprintf(txdata_, sizeof(txdata_) - 1, "From SPI:%d*******", i++);
-			TransmitReceive_IT((uint8_t*)txdata_, (uint8_t *)rxdata_, 15);
+			HAL_SPI_TransmitReceive_DMA(&handle_, (uint8_t*)txdata_, (uint8_t *)rxdata_, 15);
 		}
 	}
 }

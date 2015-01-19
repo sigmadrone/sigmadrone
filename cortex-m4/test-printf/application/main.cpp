@@ -343,7 +343,8 @@ void main_task(void *pvParameters)
 			displayUpdateTicks = oldticks;
 			sprintf(disp,"GYRO X: %6.2f         ", gyr_data.at(0));
 //			memset(disp, 0, sizeof(disp));
-//			spi5.read(2, (uint8_t*)disp, 15);
+//			spi5.read(2, (uint8_t*)disp, 13);
+//			trace_printf("recved: %s\n", disp);
 			BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"GYRO Y: %6.2f         ", gyr_data.at(1));
 			BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);

@@ -12,14 +12,17 @@
 #include <vector>
 #include "digitalin.h"
 #include "stm32f4xx_hal_conf.h"
+#include "stm32f4xx_hal_dma.h"
 #include "stm32f429xx.h"
 #include "gpiopin.h"
 
 
 class SPISlave
 {
-protected:
+public:
 	SPI_HandleTypeDef handle_;
+
+protected:
 	uint32_t timeout_;
 	std::vector<GPIOPin> data_pins_;
 	std::vector<GPIOPin> cs_pins_;
@@ -27,7 +30,10 @@ protected:
 	char txdata_[32];
 	DigitalIn *cs_interrupt_;
 
-protected:
+	DMA_HandleTypeDef hdma_tx;
+	DMA_HandleTypeDef hdma_rx;
+
+public:
 	void SPI_TxISR();
 	void SPI_RxISR();
 	void SPI_RxCloseIRQHandler();
@@ -35,6 +41,7 @@ protected:
 	void SPI_ResetHandle();
 	HAL_StatusTypeDef SPI_WaitOnFlagUntilTimeout(uint32_t Flag, FlagStatus Status, uint32_t Timeout);
 	void SPI_ChipSelect();
+	void DMAConfig();
 
 public:
 	SPISlave(SPI_TypeDef* spi_device = SPI5, uint32_t clk_prescale = SPI_BAUDRATEPRESCALER_16, uint32_t timeout = 0x1000, const std::vector<GPIOPin>& data_pins = {}, const std::vector<GPIOPin>& cs_pins = {});
