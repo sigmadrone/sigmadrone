@@ -30,6 +30,15 @@
 .project
 .settings
 
+# .d files
+*.d
+
+# .bin .hex .elf .map files
+*.bin
+*.hex
+*.elf
+*.map
+
 # bin files
 test/matrix/testmatrix
 test/mergevec/mergevec

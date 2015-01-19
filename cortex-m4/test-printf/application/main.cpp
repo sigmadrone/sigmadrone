@@ -24,6 +24,7 @@
 #include "lsm303d.h"
 #include "matrix.h"
 #include "attitudetracker.h"
+#include "hwtimer.h"
 
 void* __dso_handle = 0;
 
@@ -233,6 +234,11 @@ void init_lcd()
 	BSP_LCD_Clear(LCD_COLOR_WHITE);
 }
 
+void tim3_isr() {
+	//trace_printf("==> tim3 interrupt\n");
+	led2.toggle();
+}
+
 #define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
 
 void main_task(void *pvParameters)
@@ -257,6 +263,10 @@ void main_task(void *pvParameters)
 	LSM303D::AxesAcc_t acc_axes;
 	QuaternionD q;
 	attitudetracker att;
+	HwTimer tim3(3, TimeSpan::from_milliseconds(500), Frequency::from_kilohertz(30),
+		FunctionPointer(tim3_isr));
+
+	tim3.start();
 
 	trace_printf("Priority Group: %u\n", NVIC_GetPriorityGrouping());
 	trace_printf("SysTick_IRQn priority: %u\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
@@ -266,6 +276,7 @@ void main_task(void *pvParameters)
 
 	gyro_int2.callback(gyro_isr);
 	init_lcd();
+
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 	vTaskDelay(500 / portTICK_RATE_MS);
 
@@ -369,10 +380,11 @@ void main_task(void *pvParameters)
 	}
 }
 
-
 int main(int argc, char* argv[])
 {
 	uint32_t freq = HAL_RCC_GetSysClockFreq();
+	uint32_t pclk1 = HAL_RCC_GetPCLK1Freq();
+	uint32_t pclk2 = HAL_RCC_GetPCLK2Freq();
 
 	/*
 	 * Disable the SysTick_IRQn and clean the priority
@@ -382,7 +394,9 @@ int main(int argc, char* argv[])
 	NVIC_SetPriority(SysTick_IRQn, 0);
 
 	button.callback(&led2, &DigitalOut::toggle);
-	trace_printf("Starting main_task:, CPU freq: %d, f=%f\n", freq, 0.75);
+	trace_printf("Starting main_task:, CPU freq: %d, PCLK1 freq: %d, PCLK2 freq: %d\n",
+			freq, pclk1, pclk2);
+
 	  /* Create tasks */
 	xTaskCreate(
 		main_task, /* Function pointer */
@@ -417,7 +431,7 @@ int main(int argc, char* argv[])
 
 	// Infinite loop
 	while (1) {
-		trace_printf("Hello world, freq: %d\n", freq);
+		trace_printf("Hello world, freq: %d, f=%f\n", freq, 0.75);
 	}
 	// Infinite loop, never return.
 }
