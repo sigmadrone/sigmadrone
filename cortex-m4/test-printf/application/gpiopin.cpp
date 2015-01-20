@@ -7,6 +7,18 @@
 
 #include "gpiopin.h"
 
+#define GET_GPIO_SOURCE(__GPIOx__) \
+(((uint32_t)(__GPIOx__) == ((uint32_t)GPIOA_BASE))? (uint32_t)0 :\
+ ((uint32_t)(__GPIOx__) == ((uint32_t)(GPIOA_BASE + 0x0400)))? (uint32_t)1 :\
+ ((uint32_t)(__GPIOx__) == ((uint32_t)(GPIOA_BASE + 0x0800)))? (uint32_t)2 :\
+ ((uint32_t)(__GPIOx__) == ((uint32_t)(GPIOA_BASE + 0x0C00)))? (uint32_t)3 :\
+ ((uint32_t)(__GPIOx__) == ((uint32_t)(GPIOA_BASE + 0x1000)))? (uint32_t)4 :\
+ ((uint32_t)(__GPIOx__) == ((uint32_t)(GPIOA_BASE + 0x1400)))? (uint32_t)5 :\
+ ((uint32_t)(__GPIOx__) == ((uint32_t)(GPIOA_BASE + 0x1800)))? (uint32_t)6 :\
+ ((uint32_t)(__GPIOx__) == ((uint32_t)(GPIOA_BASE + 0x1C00)))? (uint32_t)7 :\
+ ((uint32_t)(__GPIOx__) == ((uint32_t)(GPIOA_BASE + 0x2000)))? (uint32_t)8 :\
+ ((uint32_t)(__GPIOx__) == ((uint32_t)(GPIOA_BASE + 0x2400)))? (uint32_t)9 : (uint32_t)10)
+
 GPIOPin::GPIOPin(
 		GPIO_TypeDef* gpio_port,
 		uint16_t pinnum,			// pin number (0..15)
