@@ -35,6 +35,18 @@ static SPISlave* g_spislave[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 #define SPIx_DMA_RX_IRQHandler           DMA2_Stream0_IRQHandler
 
 
+//extern "C" void EXTI4_IRQHandler(void)
+//{
+//	SPISlave* slave = (SPISlave*)&g_spislave[4]->handle_;
+//	uint16_t GPIO_Pin = ((uint16_t)1) << 4;
+//	if (__HAL_GPIO_EXTI_GET_IT(GPIO_Pin) != RESET) {
+//		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
+//		if (slave)
+//			slave->SPI_ChipSelect();
+//	}
+//}
+
+
 void SPISlave::vector_handler(uint8_t device)
 {
 	if (g_spislave[device])
@@ -150,6 +162,10 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t clk_prescale, uint32_t time
 		cs_pin.init();
 		HAL_GPIO_WritePin(cs_pin.gpio_port_, cs_pin.Pin, GPIO_PIN_SET);
 	}
+//	EnableEXTI(PE_4);
+//	HAL_NVIC_SetPriority(EXTI4_IRQn, 15, 0);
+//	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
 	memset(&handle_, 0, sizeof(handle_));
 	memset(rxdata_, 0, sizeof(rxdata_));
 	memset(txdata_, 0, sizeof(txdata_));
@@ -228,6 +244,44 @@ SPISlave::~SPISlave()
 //	delete cs_interrupt_;
 }
 
+void SPISlave::EnableEXTI(PinName pin)
+{
+	uint32_t position = STM_PIN(pin);
+	uint32_t ioposition = ((uint32_t)0x01) << position;
+	uint32_t temp = 0x00;
+
+	/* Enable SYSCFG Clock */
+	__SYSCFG_CLK_ENABLE();
+
+	temp = SYSCFG->EXTICR[position >> 2];
+	temp &= ~(((uint32_t) 0x0F) << (4 * (position & 0x03)));
+	temp |= ((uint32_t) (STM_PORT(pin)) << (4 * (position & 0x03)));
+	SYSCFG->EXTICR[position >> 2] = temp;
+
+	/* Clear EXTI line configuration */
+	temp = EXTI->IMR;
+	temp &= ~((uint32_t) ioposition);
+	temp |= ioposition;
+	EXTI->IMR = temp;
+
+	/* Clear EVT configuration */
+	temp = EXTI->EMR;
+	temp &= ~((uint32_t) ioposition);
+	EXTI->EMR = temp;
+
+	/* Clear Rising edge configuration */
+	temp = EXTI->RTSR;
+	temp &= ~((uint32_t) ioposition);
+	temp |= ioposition;
+	EXTI->RTSR = temp;
+
+//	/* Clear Falling edge configuration */
+//	temp = EXTI->FTSR;
+//	temp &= ~((uint32_t) ioposition);
+//	temp |= ioposition;
+//	EXTI->FTSR = temp;
+}
+
 void SPISlave::RxTxError()
 {
 	trace_printf("SPISlave::RxTxError ...\n");
@@ -240,6 +294,7 @@ void SPISlave::Start()
 		if (HAL_SPI_GetState(&handle_) == HAL_SPI_STATE_READY) {
 			memset(txdata_, 0, sizeof(txdata_));
 			snprintf(txdata_, sizeof(txdata_) - 1, "From SPI:%d*******", i++);
+			trace_printf("SPISlave::Start: %s\n", txdata_);
 			HAL_SPI_TransmitReceive_DMA(&handle_, (uint8_t*)txdata_, (uint8_t *)rxdata_, 15);
 		}
 	}
@@ -247,12 +302,7 @@ void SPISlave::Start()
 
 void SPISlave::SPI_ChipSelect()
 {
-	if (cs_interrupt_->read()) {
-		__HAL_NSS_DISABLE(&handle_);
-		SPI_ResetHandle();
-	} else {
-		__HAL_NSS_ENABLE(&handle_);
-	}
+//	SPI_ResetHandle();
 }
 
 /**

@@ -42,6 +42,7 @@ public:
 	HAL_StatusTypeDef SPI_WaitOnFlagUntilTimeout(uint32_t Flag, FlagStatus Status, uint32_t Timeout);
 	void SPI_ChipSelect();
 	void DMAConfig();
+	void EnableEXTI(PinName pin);
 
 public:
 	SPISlave(SPI_TypeDef* spi_device = SPI5, uint32_t clk_prescale = SPI_BAUDRATEPRESCALER_16, uint32_t timeout = 0x1000, const std::vector<GPIOPin>& data_pins = {}, const std::vector<GPIOPin>& cs_pins = {});
