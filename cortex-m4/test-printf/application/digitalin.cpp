@@ -28,7 +28,7 @@ DigitalIn::DigitalIn(PinName pin, PullMode pmode, InterruptMode imode)
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	clock_enable(STM_PORT(pin));
-	GPIO_InitStructure.Pin = 1 << pin_;
+	GPIO_InitStructure.Pin = ((uint32_t)0x01) << pin_;
 	if (imode == InterruptRising)
 		GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
 	else if (imode == InterruptRising)
