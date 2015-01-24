@@ -390,7 +390,7 @@ static void MspInit(void)
   HAL_DMA_Init(&dmaHandle); 
   
   /* NVIC configuration for DMA transfer complete interrupt */
-  HAL_NVIC_SetPriority(SDRAM_DMAx_IRQn, 0, 0);
+  HAL_NVIC_SetPriority(SDRAM_DMAx_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(SDRAM_DMAx_IRQn);
 }
 

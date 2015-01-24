@@ -32,6 +32,7 @@ public:
 public:
 	GPIO_TypeDef* gpio_port_;
 	uint16_t pinnum_;
+	PinName pn_;
 };
 
 #endif /* GPIOINIT_H_ */

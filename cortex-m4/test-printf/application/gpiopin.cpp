@@ -35,6 +35,7 @@ GPIOPin::GPIOPin(
 	Alternate = af;
 	gpio_port_ = gpio_port;
 	pinnum_ = pinnum;
+	pn_ = (PinName)((GET_GPIO_SOURCE(gpio_port) << 8) | ((uint32_t)pinnum & 0xFF));
 }
 
 GPIOPin::GPIOPin(
@@ -46,6 +47,7 @@ GPIOPin::GPIOPin(
 		)
 		: gpio_port_((GPIO_TypeDef *) (GPIOA_BASE + 0x0400 * STM_PORT(pn)))
 		, pinnum_(STM_PIN(pn))
+		, pn_(pn)
 {
 	Pin = 1 << pinnum_;
 	Mode = mode;

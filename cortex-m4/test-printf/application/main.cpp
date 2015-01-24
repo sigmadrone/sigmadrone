@@ -49,17 +49,6 @@ extern "C" void EXTI2_IRQHandler(void)
 	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
 }
 
-extern "C" void EXTI4_IRQHandler(void)
-{
-	uint32_t mask = portDISABLE_INTERRUPTS();
-	DigitalIn::vector_handler(4);
-	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
-}
-
-extern "C" void SPI4_IRQHandler(void)
-{
-	SPISlave::vector_handler(4);
-}
 
 void gyro_isr()
 {
@@ -83,12 +72,11 @@ void secondary_task(void *pvParameters)
 void spi_slave_task(void *pvParameters)
 {
 	trace_printf("SPI Slave task...\n");
-	SPISlave spi4(SPI4, SPI_BAUDRATEPRESCALER_16, 0x2000, {
-				{PE_2, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_SCK_PIN */
+	SPISlave spi4(SPI4, 0x2000, 0, {
 				{PE_4, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_NSS_PIN */
+				{PE_2, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_SCK_PIN */
 				{PE_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MISO_PIN */
 				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MOSI_PIN */
-			}, {
 			});
 
 	trace_printf("SPI4_IRQn priority: %u\n", NVIC_GetPriority(SPI4_IRQn) << __NVIC_PRIO_BITS);
@@ -229,7 +217,7 @@ void init_lcd()
 
 	trace_printf("LCD %d by %d pixels\n", BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
 
-	vTaskDelay(2000 / portTICK_RATE_MS);
+	vTaskDelay(200 / portTICK_RATE_MS);
 
 	BSP_LCD_Clear(LCD_COLOR_WHITE);
 }
@@ -243,7 +231,7 @@ void tim3_isr() {
 
 void main_task(void *pvParameters)
 {
-	vTaskDelay(500 / portTICK_RATE_MS);
+	vTaskDelay(200 / portTICK_RATE_MS);
 
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
@@ -258,7 +246,7 @@ void main_task(void *pvParameters)
 	LSM303D accel(spi5, 1);
 	uint8_t gyr_wtm = 20;
 	uint8_t acc_wtm = 17;
-	uint8_t bias_iterations = 40;
+	uint8_t bias_iterations = 4;
 	L3GD20::AxesDPS_t gyr_axes;
 	LSM303D::AxesAcc_t acc_axes;
 	QuaternionD q;
@@ -342,9 +330,9 @@ void main_task(void *pvParameters)
 		if ((oldticks - displayUpdateTicks) * portTICK_PERIOD_MS > 200) {
 			displayUpdateTicks = oldticks;
 			sprintf(disp,"GYRO X: %6.2f         ", gyr_data.at(0));
-//			memset(disp, 0, sizeof(disp));
-//			spi5.read(2, (uint8_t*)disp, 13);
-//			trace_printf("recved: %s\n", disp);
+			memset(disp, 0, sizeof(disp));
+			spi5.read(2, (uint8_t*)disp, 13);
+			trace_printf("recved: %s\n", disp);
 			BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"GYRO Y: %6.2f         ", gyr_data.at(1));
 			BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
