@@ -10,54 +10,52 @@
 
 #include <stdint.h>
 #include <vector>
-#include "digitalin.h"
 #include "stm32f4xx_hal_conf.h"
 #include "stm32f4xx_hal_dma.h"
 #include "stm32f429xx.h"
 #include "gpiopin.h"
+#include "pinnames.h"
 
 
 class SPISlave
 {
 public:
 	SPI_HandleTypeDef handle_;
+	uint32_t serial_;
+	bool run_;
+	size_t bufsize_;
 
 protected:
 	uint32_t timeout_;
+	int cs_index_;
 	std::vector<GPIOPin> data_pins_;
-	std::vector<GPIOPin> cs_pins_;
-	char rxdata_[32];
-	char txdata_[32];
-	DigitalIn *cs_interrupt_;
+	uint8_t* rx_buffer_[2];
+	uint8_t* tx_buffer_[2];
 
 	DMA_HandleTypeDef hdma_tx;
 	DMA_HandleTypeDef hdma_rx;
 
-public:
-	void SPI_TxISR();
-	void SPI_RxISR();
-	void SPI_RxCloseIRQHandler();
-	void SPI_TxCloseIRQHandler();
+protected:
 	void SPI_ResetHandle();
-	HAL_StatusTypeDef SPI_WaitOnFlagUntilTimeout(uint32_t Flag, FlagStatus Status, uint32_t Timeout);
-	void SPI_ChipSelect();
 	void DMAConfig();
 	void EnableEXTI(PinName pin);
 
 public:
-	SPISlave(SPI_TypeDef* spi_device = SPI5, uint32_t clk_prescale = SPI_BAUDRATEPRESCALER_16, uint32_t timeout = 0x1000, const std::vector<GPIOPin>& data_pins = {}, const std::vector<GPIOPin>& cs_pins = {});
+	SPISlave(SPI_TypeDef* spi_device = SPI5, uint32_t bufsize = 128, uint32_t timeout = 0x1000, int pin_index = -1, const std::vector<GPIOPin>& data_pins = {});
 	~SPISlave();
+	void SPI_ChipSelect();
 	void Start();
+	void Stop();
+	void Transmit(const uint8_t* buf, uint32_t size);
+	void Receive(uint8_t* buf, uint32_t size);
+
 	HAL_SPI_StateTypeDef GetState();
 	HAL_SPI_ErrorTypeDef GetError();
-	HAL_StatusTypeDef TransmitReceive_IT(uint8_t *pTxData, uint8_t *pRxData, uint16_t Size);
 
 public:
 	/*
 	 * This is not really public APIs.
 	 */
-	static void vector_handler(uint8_t device);
-	static void IRQHandler(SPI_HandleTypeDef *hspi);
 	void RxTxError();
 };
 
