@@ -28,20 +28,28 @@ public:
 	~PwmEncoder() { stop(); }
 
 	/** Starts the encoder.
+	 *
 	 *  @param pwm_period If specified the pwm_period overloads the one provided in the constructor
+	 *  @returns true - success, false - failure
 	 */
 	bool start(const TimeSpan& pwm_period = TimeSpan::from_seconds(0));
+
+	/** Stops the encoder
+	 *
+	 */
 	void stop();
 
 	/** Sets the duty cycle for a channel.
 	 *  @param channel Channel to configure [1..4]
 	 *  @param duty_cycle Duty cycle value, must be less than the pwm period
+	 *  @returns true - success, false - failure
 	 */
 	bool set_duty_cycle(uint32_t channel, const TimeSpan& duty_cycle);
 
 	/** Sets the duty cycle for a channel.
 	 *  @param channel Channel to configure [1..4]
 	 *  @param duty_cycle Relative duty_cycle value [0.0..1.0]
+	 *  @returns true - success, false - failure
 	 */
 	bool set_duty_cycle(uint32_t channel, float duty_cycle);
 

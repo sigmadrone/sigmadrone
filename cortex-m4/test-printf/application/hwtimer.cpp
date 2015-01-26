@@ -100,7 +100,7 @@ HwTimer::HwTimer(Id timer_id,
 		const Frequency& timer_clock,
 		const FunctionPointer& interrupt_callback) :
 		timer_id_(TIMER_INVALID), period_(period), callback_(interrupt_callback),
-		mode_(HwTimer::MODE_UNKNOWN)
+		mode_(HwTimer::MODE_NOT_INITIALIZED)
 {
 	if (is_valid_timer_id(timer_id) && !all_timers_[timer_id].hwtimer_) {
 		all_timers_[timer_id].hwtimer_ = this;
@@ -113,7 +113,7 @@ HwTimer::HwTimer(Id timer_id,
 		const Frequency& timer_clock,
 		const FunctionPointer& interrupt_callback) :
 		timer_id_(TIMER_INVALID), period_(), callback_(interrupt_callback),
-		mode_(HwTimer::MODE_UNKNOWN)
+		mode_(HwTimer::MODE_NOT_INITIALIZED)
 {
 	if (is_valid_timer_id(timer_id) && !all_timers_[timer_id].hwtimer_) {
 		all_timers_[timer_id].hwtimer_ = this;
@@ -349,7 +349,7 @@ void HwTimer::stop() {
 			channels_.clear();
 		}
 	}
-	mode_ = MODE_UNKNOWN;
+	mode_ = MODE_NOT_INITIALIZED;
 }
 
 void HwTimer::set_timer_clock(const Frequency& timer_clock) {

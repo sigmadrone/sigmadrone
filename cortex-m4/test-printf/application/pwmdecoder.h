@@ -13,23 +13,49 @@
 
 class PwmDecoder {
 public:
+	/** Constructs and initializes an instance of PwmDecoder
+	 *
+	 *  @param timer_id ID of the timer to be used
+	 *  @param input_pin Name of the input pin
+	 *  @param max_period The maximum period that can be decoded
+	 *  @param callback Callback to be invoked when a period is decoded
+	 *  @param callback_on_change_only Controls whether the callback will be
+	 *  invoked only when the duty cycle changes
+	 */
 	PwmDecoder(HwTimer::Id timer_id,
-			PinName pin,
+			PinName input_pin,
 			const TimeSpan& max_period = TimeSpan::from_milliseconds(20),
 			const FunctionPointer callback = FunctionPointer(),
 			bool callback_on_change_only = false);
+
+	/** Constructs and initializes an instance of PwmDecoder
+	 *
+	 *  @param timer_id ID of the timer to be used
+	 *  @param gpio GPIOPin initialized with the input pin to be used
+	 *  @param max_period The maximum period that can be decoded
+	 *  @param callback Callback to be invoked when a period is decoded
+	 *  @param callback_on_change_only Controls whether the callback will be
+	 *  invoked only when the duty cycle changes
+	 */
 	PwmDecoder(HwTimer::Id timer_id,
 			const GPIOPin& gpio,
 			const TimeSpan& max_period = TimeSpan::from_milliseconds(20),
 			const FunctionPointer callback = FunctionPointer(),
 			bool callback_on_change_only = false);
+
+	/** Stops and destructs the decoder instance
+	 *
+	 */
 	~PwmDecoder() { stop(); }
 
-	/** Starts the decoding
+	/** Starts the decoder.
+	 *
+	 *  @returns true - success, false - failure
 	 */
 	bool start();
 
-	/** Stops the decoding
+	/** Stops the decoder
+	 *
 	 */
 	void stop();
 
@@ -44,7 +70,8 @@ public:
 	TimeSpan duty_cycle() { return duty_cycle_; }
 
 	/** Returns the duty cycle as a relative value
-	 *  @returns The returned value is in the range [0..1]
+	 *
+	 *  @returns Current duty_cycle, the value is in the range [0..1].
 	 */
 	float duty_cycle_rel() {
 		return (float)duty_cycle_.unit() / (float)decoded_period_.unit();
