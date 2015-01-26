@@ -76,16 +76,19 @@ struct TimeSpan : public ScaledUnit<uint64_t> {
 		return from_nanoseconds(from_seconds(ticks).nanoseconds()/freq.hertz());
 	}
 
+	TimeSpan() : ScaledUnit(0) {}
 	~TimeSpan() {}
 	uint64_t seconds() const { return nanounit(); }
 	uint64_t milliseconds() const { return microunit(); }
 	uint64_t microseconds() const { return milliunit(); }
 	uint64_t nanoseconds() const { return unit(); }
+	bool is_null() const { return !unit(); }
 
 	inline TimeSpan operator*(uint64_t rhs) const { return TimeSpan(unit() * rhs); }
 	inline TimeSpan operator/(uint64_t rhs) const { return TimeSpan(unit() / rhs); }
 	inline TimeSpan operator+(const TimeSpan& rhs) const { return TimeSpan(unit() + rhs.unit()); }
 	inline TimeSpan operator-(const TimeSpan& rhs) const { return TimeSpan(unit() - rhs.unit()); }
+	inline uint64_t operator/(const TimeSpan& rhs) const { return unit() / rhs.unit(); }
 
 private:
 	TimeSpan(uint64_t nanosecs) : ScaledUnit(nanosecs) {}

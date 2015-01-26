@@ -25,11 +25,15 @@
 #include "matrix.h"
 #include "attitudetracker.h"
 #include "hwtimer.h"
+#include "pwmencoder.h"
+#include "pwmdecoder.h"
 
 void* __dso_handle = 0;
 
 DigitalOut led1(USER_LED1);
+
 DigitalOut led2(USER_LED2);
+
 DigitalIn gyro_int2(PA_2, DigitalIn::PullNone, DigitalIn::InterruptRising);
 DigitalIn button(USER_BUTTON, DigitalIn::PullNone, DigitalIn::InterruptRising);
 TaskHandle_t hMain;
@@ -234,9 +238,27 @@ void init_lcd()
 	BSP_LCD_Clear(LCD_COLOR_WHITE);
 }
 
+
+void pwm_decoder_callback();
+
+PwmEncoder pwmEncoder(HwTimer::TIMER_1, TimeSpan::from_seconds(2), {PA_8}, {1});
+PwmDecoder pwmDecoder(HwTimer::TIMER_4, PB_7, TimeSpan::from_seconds(3),
+		FunctionPointer(pwm_decoder_callback));
+
+void pwm_decoder_callback() {
+	float duty_cycle = pwmDecoder.duty_cycle_rel();
+	trace_printf("PWM decoded: period %d mS, duty cycle %.4f\n",
+			(uint32_t)pwmDecoder.decoded_period().milliseconds(),
+			duty_cycle);
+}
+
 void tim3_isr() {
-	//trace_printf("==> tim3 interrupt\n");
+	static float duty_cycle[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
+	static int index = 0;
+	trace_printf("==> tim3 interrupt\n");
 	led2.toggle();
+	pwmEncoder.set_duty_cycle(1, duty_cycle[index]);
+	index = (index + 1) % (sizeof(duty_cycle)/sizeof(duty_cycle[1]));
 }
 
 #define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
@@ -244,6 +266,19 @@ void tim3_isr() {
 void main_task(void *pvParameters)
 {
 	vTaskDelay(500 / portTICK_RATE_MS);
+
+	HwTimer tim3(HwTimer::TIMER_3, TimeSpan::from_seconds(4), Frequency::from_kilohertz(30),
+		FunctionPointer(tim3_isr));
+	tim3.start();
+
+	/*
+	 * NOTE: for this particular example in order for the pwmDecoder to function, then
+	 * PA_8 and PB_7 must be connected. pwmEncoder outputs to PA_8 and pwmDecoder
+	 * receives its input on PB_7.
+	 */
+	pwmDecoder.start();
+	pwmEncoder.start();
+	pwmEncoder.set_duty_cycle(1, TimeSpan::from_milliseconds(1000));
 
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
@@ -263,10 +298,6 @@ void main_task(void *pvParameters)
 	LSM303D::AxesAcc_t acc_axes;
 	QuaternionD q;
 	attitudetracker att;
-	HwTimer tim3(3, TimeSpan::from_milliseconds(500), Frequency::from_kilohertz(30),
-		FunctionPointer(tim3_isr));
-
-	tim3.start();
 
 	trace_printf("Priority Group: %u\n", NVIC_GetPriorityGrouping());
 	trace_printf("SysTick_IRQn priority: %u\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
@@ -394,7 +425,7 @@ int main(int argc, char* argv[])
 	NVIC_DisableIRQ(SysTick_IRQn);
 	NVIC_SetPriority(SysTick_IRQn, 0);
 
-	button.callback(&led2, &DigitalOut::toggle);
+	button.callback(&led1, &DigitalOut::toggle);
 	trace_printf("Starting main_task:, CPU freq: %d, PCLK1 freq: %d, PCLK2 freq: %d\n",
 			freq, pclk1, pclk2);
 
@@ -408,6 +439,7 @@ int main(int argc, char* argv[])
 		&hMain /* Task handle */
 		);
 
+#if 0
 	xTaskCreate(
 		secondary_task, /* Function pointer */
 		"Task2", /* Task name - for debugging only*/
@@ -425,6 +457,7 @@ int main(int argc, char* argv[])
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/
 		NULL /* Task handle */
 		);
+#endif
 
 //	vTaskList(buffer);
 //	trace_printf("Tasks: \n%s\n\n", buffer);
