@@ -7,6 +7,7 @@
 
 #include <cstring>
 #include <cstdio>
+#include <cstdlib>
 #include <stdexcept>
 #include "stm32f4xx_hal.h"
 #include "spislave.h"
@@ -142,11 +143,10 @@ extern "C" void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 	}
 }
 
-SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t timeout, int cs_index, const std::vector<GPIOPin>& data_pins)
+SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t bufsize, uint32_t timeout, int cs_index, const std::vector<GPIOPin>& data_pins)
 	: serial_(0)
 	, run_(false)
-	, active_rx_(0)
-	, active_tx_(0)
+	, bufsize_(bufsize)
 	, timeout_(timeout)
 	, cs_index_(cs_index)
 	, data_pins_(data_pins)
@@ -159,8 +159,14 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t timeout, int cs_index, cons
 	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
 	memset(&handle_, 0, sizeof(handle_));
-	memset(rxdata_, 0, sizeof(rxdata_));
-	memset(txdata_, 0, sizeof(txdata_));
+	rx_buffer_[0] = (uint8_t*)malloc(bufsize_);
+	rx_buffer_[1] = (uint8_t*)malloc(bufsize_);
+	tx_buffer_[0] = (uint8_t*)malloc(bufsize_);
+	tx_buffer_[1] = (uint8_t*)malloc(bufsize_);
+	memset(rx_buffer_[0], 0, bufsize_);
+	memset(rx_buffer_[1], 0, bufsize_);
+	memset(tx_buffer_[0], 0, bufsize_);
+	memset(tx_buffer_[1], 0, bufsize_);
 
 	/* SPI configuration -----------------------------------------------------*/
 	handle_.Instance = spi_device;
@@ -282,8 +288,6 @@ void SPISlave::Stop()
 
 void SPISlave::SPI_ChipSelect()
 {
-	int active_rx = active_rx_ % 2;
-	int active_tx = active_tx_ % 2;
 	HAL_DMA_Abort(handle_.hdmarx);
 	HAL_DMA_Abort(handle_.hdmatx);
 	SPI_ResetHandle();
@@ -291,12 +295,33 @@ void SPISlave::SPI_ChipSelect()
 	HAL_DMA_Init (&hdma_tx);
 	if (!run_)
 		return;
-	memset(txdata_, 0, sizeof(txdata_));
-	snprintf(txdata_[active_tx], sizeof(txdata_[0]) - 1, "SPI:%u*******************", (unsigned int)serial_++);
-//			trace_printf("SPISlave::Start: %s\n", txdata_);
-	handle_.Instance->DR = *((uint8_t*)txdata_[active_tx]);
-	HAL_SPI_TransmitReceive_DMA(&handle_, (uint8_t*)txdata_[active_tx] + 1, (uint8_t *)rxdata_[active_rx], sizeof(rxdata_[0]) - 1);
+//	memset(tx_buffer_[active_tx], 0, bufsize_);
+//	snprintf((char*)tx_buffer_[active_tx], bufsize_ - 1, "SPI:%u*******************", (unsigned int)serial_++);
+//	trace_printf("SPISlave::Start: %s\n", (char*)tx_buffer_[active_tx]);
+	memcpy(tx_buffer_[1], tx_buffer_[0], bufsize_);
+	memcpy(rx_buffer_[0], rx_buffer_[1], bufsize_);
+	handle_.Instance->DR = *((uint8_t*)tx_buffer_[1]);
+	HAL_SPI_TransmitReceive_DMA(&handle_, ((uint8_t*)tx_buffer_[1]) + 1, ((uint8_t*)rx_buffer_[1]), bufsize_);
 }
+
+void SPISlave::Transmit(const uint8_t* buf, uint32_t size)
+{
+	if (size > bufsize_)
+		throw std::range_error("SPISlave::Transmit size error");
+	__disable_irq();
+	memcpy(tx_buffer_[0], buf, size);
+	__enable_irq();
+}
+
+void SPISlave::Receive(uint8_t* buf, uint32_t size)
+{
+	if (size > bufsize_)
+		throw std::range_error("SPISlave::Transmit size error");
+	__disable_irq();
+	memcpy(buf, rx_buffer_[0], size);
+	__enable_irq();
+}
+
 
 /**
   * @brief  Return the SPI state

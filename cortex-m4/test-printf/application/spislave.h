@@ -23,30 +23,32 @@ public:
 	SPI_HandleTypeDef handle_;
 	uint32_t serial_;
 	bool run_;
-	unsigned int active_rx_;
-	unsigned int active_tx_;
+	size_t bufsize_;
 
 protected:
 	uint32_t timeout_;
 	int cs_index_;
 	std::vector<GPIOPin> data_pins_;
-	char rxdata_[2][128];
-	char txdata_[2][128];
+	uint8_t* rx_buffer_[2];
+	uint8_t* tx_buffer_[2];
 
 	DMA_HandleTypeDef hdma_tx;
 	DMA_HandleTypeDef hdma_rx;
 
-public:
+protected:
 	void SPI_ResetHandle();
-	void SPI_ChipSelect();
 	void DMAConfig();
 	void EnableEXTI(PinName pin);
 
 public:
-	SPISlave(SPI_TypeDef* spi_device = SPI5, uint32_t timeout = 0x1000, int pin_index = -1, const std::vector<GPIOPin>& data_pins = {});
+	SPISlave(SPI_TypeDef* spi_device = SPI5, uint32_t bufsize = 128, uint32_t timeout = 0x1000, int pin_index = -1, const std::vector<GPIOPin>& data_pins = {});
 	~SPISlave();
+	void SPI_ChipSelect();
 	void Start();
 	void Stop();
+	void Transmit(const uint8_t* buf, uint32_t size);
+	void Receive(uint8_t* buf, uint32_t size);
+
 	HAL_SPI_StateTypeDef GetState();
 	HAL_SPI_ErrorTypeDef GetError();
 

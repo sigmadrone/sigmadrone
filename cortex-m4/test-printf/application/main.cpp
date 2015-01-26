@@ -71,9 +71,11 @@ void secondary_task(void *pvParameters)
 
 void spi_slave_task(void *pvParameters)
 {
+	char buf[128];
+	unsigned int i = 0;
 	trace_printf("SPI Slave task...\n");
-	SPISlave spi4(SPI4, 0x2000, 0, {
-				{PE_4, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_NSS_PIN */
+	SPISlave spi4(SPI4, 256, 0x2000, 0, {
+				{PE_4, GPIO_MODE_AF_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_NSS_PIN */
 				{PE_2, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_SCK_PIN */
 				{PE_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MISO_PIN */
 				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MOSI_PIN */
@@ -82,46 +84,9 @@ void spi_slave_task(void *pvParameters)
 	trace_printf("SPI4_IRQn priority: %u\n", NVIC_GetPriority(SPI4_IRQn) << __NVIC_PRIO_BITS);
 	spi4.Start();
 	while (1) {
-		HAL_Delay(1000);
-	}
-	char tx = 't', rx = 0;
-	SPI_HandleTypeDef SpiHandle;
-	/*##-1- Configure the SPI peripheral #######################################*/
-	/* Set the SPI parameters */
-	SpiHandle.Instance               = SPI4;
-	SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_16;
-	SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
-	SpiHandle.Init.CLKPhase          = SPI_PHASE_1EDGE;
-	SpiHandle.Init.CLKPolarity       = SPI_POLARITY_HIGH;
-	SpiHandle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLED;
-	SpiHandle.Init.CRCPolynomial     = 7;
-	SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
-	SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
-	SpiHandle.Init.NSS               = SPI_NSS_HARD_INPUT;
-	SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLED;
-	SpiHandle.Init.Mode              = SPI_MODE_SLAVE;
-	if(HAL_SPI_Init(&SpiHandle) != HAL_OK) {
-		trace_printf("SPI Slave task... error\n");
-	}
-
-	while (1) {
-		switch (HAL_SPI_TransmitReceive(&SpiHandle, (uint8_t*) &tx, (uint8_t *) &rx, sizeof(tx), 10000)) {
-		case HAL_OK:
-			trace_printf("SPI Slave received: %c\n", rx);
-			break;
-
-		case HAL_TIMEOUT:
-			trace_printf("SPI Slave TX/RX timed out\n");
-			break;
-
-			/* An Error occurred______________________________________________________*/
-		case HAL_ERROR:
-			trace_printf("SPI Slave TX/RX error\n");
-			break;
-
-		default:
-			break;
-		}
+		HAL_Delay(50);
+		snprintf(buf, sizeof(buf), "SPI: %d", i++);
+		spi4.Transmit((uint8_t*)buf, strlen(buf) + 1);
 	}
 }
 
@@ -231,8 +196,6 @@ void tim3_isr() {
 
 void main_task(void *pvParameters)
 {
-	vTaskDelay(200 / portTICK_RATE_MS);
-
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
 				{PF_8, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_MISO_PIN */
@@ -246,7 +209,7 @@ void main_task(void *pvParameters)
 	LSM303D accel(spi5, 1);
 	uint8_t gyr_wtm = 20;
 	uint8_t acc_wtm = 17;
-	uint8_t bias_iterations = 4;
+	uint8_t bias_iterations = 10;
 	L3GD20::AxesDPS_t gyr_axes;
 	LSM303D::AxesAcc_t acc_axes;
 	QuaternionD q;
@@ -330,40 +293,40 @@ void main_task(void *pvParameters)
 		if ((oldticks - displayUpdateTicks) * portTICK_PERIOD_MS > 200) {
 			displayUpdateTicks = oldticks;
 			sprintf(disp,"GYRO X: %6.2f         ", gyr_data.at(0));
-			memset(disp, 0, sizeof(disp));
-			spi5.read(2, (uint8_t*)disp, 13);
-			trace_printf("recved: %s\n", disp);
-			BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 00, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"GYRO Y: %6.2f         ", gyr_data.at(1));
-			BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 20, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"GYRO Z: %6.2f         ", gyr_data.at(2));
-			BSP_LCD_DisplayStringAt(0, 50, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 40, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"SAMPLES: %d           ", gyr_samples);
-			BSP_LCD_DisplayStringAt(0, 70, (uint8_t*)disp, LEFT_MODE);
-			sprintf(disp,"QUEUE: %lu            ", uxQueueMessagesWaiting(hGyroQueue));
-			//		BSP_LCD_DisplayStringAt(0, 90, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 60, (uint8_t*)disp, LEFT_MODE);
 
 			sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);
-			BSP_LCD_DisplayStringAt(0, 110, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 100, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"ACCL Y: %6.2f", acc_axes.AXIS_Y);
-			BSP_LCD_DisplayStringAt(0, 130, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 120, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"ACCL Z: %6.2f", acc_axes.AXIS_Z);
-			BSP_LCD_DisplayStringAt(0, 150, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 140, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"SAMPLES: %d           ", acc_samples);
-			BSP_LCD_DisplayStringAt(0, 170, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 160, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"Attitude:             ");
-			BSP_LCD_DisplayStringAt(0, 190, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 180, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"W:      %6.2f              ", q.w);
-			BSP_LCD_DisplayStringAt(0, 210, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 200, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"X:      %6.2f              ", q.x);
-			BSP_LCD_DisplayStringAt(0, 230, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 220, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"Y:      %6.2f              ", q.y);
-			BSP_LCD_DisplayStringAt(0, 250, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 240, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"Z:      %6.2f              ", q.z);
-			BSP_LCD_DisplayStringAt(0, 270, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 260, (uint8_t*)disp, LEFT_MODE);
 
 			sprintf(disp,"UPDATE: %d ms          ", (int)(ticks * portTICK_PERIOD_MS));
-			BSP_LCD_DisplayStringAt(0, 290, (uint8_t*)disp, LEFT_MODE);
+			BSP_LCD_DisplayStringAt(0, 280, (uint8_t*)disp, LEFT_MODE);
+
+			memset(disp, 0, sizeof(disp));
+			spi5.read(2, (uint8_t*)disp, 15);
+			BSP_LCD_DisplayStringAt(0, 300, (uint8_t*)disp, LEFT_MODE);
+			trace_printf("recved: %s\n", disp);
 		}
 		led1.toggle();
 	}
