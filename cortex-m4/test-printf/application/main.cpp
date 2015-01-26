@@ -359,7 +359,7 @@ void main_task(void *pvParameters)
 			memset(disp, 0, sizeof(disp));
 			spi5.read(2, (uint8_t*)disp, 15);
 			BSP_LCD_DisplayStringAt(0, 300, (uint8_t*)disp, LEFT_MODE);
-			trace_printf("recved: %s\n", disp);
+//			trace_printf("recved: %s\n", disp);
 		}
 		led1.toggle();
 	}
