@@ -43,11 +43,11 @@ extern "C" void EXTI4_IRQHandler(void)
 	if (__HAL_GPIO_EXTI_GET_IT(GPIO_Pin) != RESET) {
 		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
 		if (slave)
-			slave->SPI_ChipSelect();
+			slave->spi_chip_select();
 	}
 }
 
-void SPISlave::DMAConfig()
+void SPISlave::dma_config()
 {
 	SPI_HandleTypeDef *hspi = &this->handle_;
 
@@ -56,48 +56,48 @@ void SPISlave::DMAConfig()
 
 	/*##-3- Configure the DMA streams ##########################################*/
 	/* Configure the DMA handler for Transmission process */
-	memset(&hdma_rx, 0, sizeof(hdma_rx));
-	memset(&hdma_tx, 0, sizeof(hdma_tx));
-	hdma_tx.Instance = SPIx_TX_DMA_STREAM;
+	memset(&hdma_rx_, 0, sizeof(hdma_rx_));
+	memset(&hdma_tx_, 0, sizeof(hdma_tx_));
+	hdma_tx_.Instance = SPIx_TX_DMA_STREAM;
 
-	hdma_tx.Init.Channel = SPIx_TX_DMA_CHANNEL;
-	hdma_tx.Init.Direction = DMA_MEMORY_TO_PERIPH;
-	hdma_tx.Init.PeriphInc = DMA_PINC_DISABLE;
-	hdma_tx.Init.MemInc = DMA_MINC_ENABLE;
-	hdma_tx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-	hdma_tx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-	hdma_tx.Init.Mode = DMA_NORMAL;
-	hdma_tx.Init.Priority = DMA_PRIORITY_LOW;
-	hdma_tx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-	hdma_tx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
-	hdma_tx.Init.MemBurst = DMA_MBURST_INC4;
-	hdma_tx.Init.PeriphBurst = DMA_PBURST_INC4;
+	hdma_tx_.Init.Channel = SPIx_TX_DMA_CHANNEL;
+	hdma_tx_.Init.Direction = DMA_MEMORY_TO_PERIPH;
+	hdma_tx_.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_tx_.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_tx_.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	hdma_tx_.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+	hdma_tx_.Init.Mode = DMA_NORMAL;
+	hdma_tx_.Init.Priority = DMA_PRIORITY_LOW;
+	hdma_tx_.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	hdma_tx_.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+	hdma_tx_.Init.MemBurst = DMA_MBURST_INC4;
+	hdma_tx_.Init.PeriphBurst = DMA_PBURST_INC4;
 
-	HAL_DMA_Init (&hdma_tx);
+	HAL_DMA_Init (&hdma_tx_);
 
 	/* Associate the initialized DMA handle to the the SPI handle */
-	__HAL_LINKDMA(hspi, hdmatx, hdma_tx);
+	__HAL_LINKDMA(hspi, hdmatx, hdma_tx_);
 
 	/* Configure the DMA handler for Transmission process */
-	hdma_rx.Instance = SPIx_RX_DMA_STREAM;
+	hdma_rx_.Instance = SPIx_RX_DMA_STREAM;
 
-	hdma_rx.Init.Channel = SPIx_RX_DMA_CHANNEL;
-	hdma_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
-	hdma_rx.Init.PeriphInc = DMA_PINC_DISABLE;
-	hdma_rx.Init.MemInc = DMA_MINC_ENABLE;
-	hdma_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
-	hdma_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
-	hdma_rx.Init.Mode = DMA_NORMAL;
-	hdma_rx.Init.Priority = DMA_PRIORITY_HIGH;
-	hdma_rx.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
-	hdma_rx.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
-	hdma_rx.Init.MemBurst = DMA_MBURST_INC4;
-	hdma_rx.Init.PeriphBurst = DMA_PBURST_INC4;
+	hdma_rx_.Init.Channel = SPIx_RX_DMA_CHANNEL;
+	hdma_rx_.Init.Direction = DMA_PERIPH_TO_MEMORY;
+	hdma_rx_.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_rx_.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_rx_.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	hdma_rx_.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+	hdma_rx_.Init.Mode = DMA_NORMAL;
+	hdma_rx_.Init.Priority = DMA_PRIORITY_HIGH;
+	hdma_rx_.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
+	hdma_rx_.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_FULL;
+	hdma_rx_.Init.MemBurst = DMA_MBURST_INC4;
+	hdma_rx_.Init.PeriphBurst = DMA_PBURST_INC4;
 
-	HAL_DMA_Init (&hdma_rx);
+	HAL_DMA_Init (&hdma_rx_);
 
 	/* Associate the initialized DMA handle to the the SPI handle */
-	__HAL_LINKDMA(hspi, hdmarx, hdma_rx);
+	__HAL_LINKDMA(hspi, hdmarx, hdma_rx_);
 
 	/*##-4- Configure the NVIC for DMA #########################################*/
 	/* NVIC configuration for DMA transfer complete interrupt (SPI3_TX) */
@@ -137,7 +137,7 @@ extern "C" void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 	SPISlave* slave = (SPISlave*) hspi;
 	for (size_t i = 0; i < sizeof(g_spislave)/sizeof(g_spislave[0]); i++) {
 		if (slave == g_spislave[i]) {
-			slave->RxTxError();
+			slave->spi_error_callback();
 			break;
 		}
 	}
@@ -154,7 +154,7 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t bufsize, uint32_t timeout, 
 	for (auto& data_pin : data_pins_)
 		data_pin.init();
 	if (cs_index_ >= 0)
-		EnableEXTI(data_pins_[cs_index_].pn_);
+		exti_config(data_pins_[cs_index_].pn_);
 	HAL_NVIC_SetPriority(EXTI4_IRQn, 15, 0);
 	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
@@ -202,7 +202,7 @@ SPISlave::SPISlave(SPI_TypeDef* spi_device, uint32_t bufsize, uint32_t timeout, 
 		g_spislave[6] = this;
 	}
 	HAL_SPI_Init(&handle_);
-	DMAConfig();
+	dma_config();
 }
 
 SPISlave::~SPISlave()
@@ -230,7 +230,7 @@ SPISlave::~SPISlave()
 	HAL_SPI_DeInit(&handle_);
 }
 
-void SPISlave::EnableEXTI(PinName pin)
+void SPISlave::exti_config(PinName pin)
 {
 	uint32_t position = STM_PIN(pin);
 	uint32_t ioposition = ((uint32_t)0x01) << position;
@@ -268,31 +268,31 @@ void SPISlave::EnableEXTI(PinName pin)
 //	EXTI->FTSR = temp;
 }
 
-void SPISlave::RxTxError()
+void SPISlave::spi_error_callback()
 {
 //	trace_printf("SPISlave::RxTxError ...\n");
 }
 
-void SPISlave::Start()
+void SPISlave::start()
 {
 	run_ = true;
-	SPI_ChipSelect();
+	spi_chip_select();
 }
 
-void SPISlave::Stop()
+void SPISlave::stop()
 {
 	run_ = false;
-	SPI_ChipSelect();
+	spi_chip_select();
 }
 
 
-void SPISlave::SPI_ChipSelect()
+void SPISlave::spi_chip_select()
 {
 	HAL_DMA_Abort(handle_.hdmarx);
 	HAL_DMA_Abort(handle_.hdmatx);
-	SPI_ResetHandle();
-	HAL_DMA_Init (&hdma_rx);
-	HAL_DMA_Init (&hdma_tx);
+	reset_handle();
+	HAL_DMA_Init (&hdma_rx_);
+	HAL_DMA_Init (&hdma_tx_);
 	if (!run_)
 		return;
 //	memset(tx_buffer_[active_tx], 0, bufsize_);
@@ -304,7 +304,7 @@ void SPISlave::SPI_ChipSelect()
 	HAL_SPI_TransmitReceive_DMA(&handle_, ((uint8_t*)tx_buffer_[1]) + 1, ((uint8_t*)rx_buffer_[1]), bufsize_);
 }
 
-void SPISlave::Transmit(const uint8_t* buf, uint32_t size)
+void SPISlave::transmit(const uint8_t* buf, uint32_t size)
 {
 	if (size > bufsize_)
 		throw std::range_error("SPISlave::Transmit size error");
@@ -313,7 +313,7 @@ void SPISlave::Transmit(const uint8_t* buf, uint32_t size)
 	__enable_irq();
 }
 
-void SPISlave::Receive(uint8_t* buf, uint32_t size)
+void SPISlave::receive(uint8_t* buf, uint32_t size)
 {
 	if (size > bufsize_)
 		throw std::range_error("SPISlave::Transmit size error");
@@ -322,33 +322,12 @@ void SPISlave::Receive(uint8_t* buf, uint32_t size)
 	__enable_irq();
 }
 
-
-/**
-  * @brief  Return the SPI state
-  * @param  None
-  * @retval HAL state
-  */
-HAL_SPI_StateTypeDef SPISlave::GetState()
-{
-	return handle_.State;
-}
-
-/**
-  * @brief  Return the SPI error code
-  * @param  None
-  * @retval SPI Error Code
-  */
-HAL_SPI_ErrorTypeDef SPISlave::GetError()
-{
-	return handle_.ErrorCode;
-}
-
 /**
 * @brief  Interrupt Handler to close Tx transfer
 * @param  None
 * @retval void
 */
-void SPISlave::SPI_ResetHandle()
+void SPISlave::reset_handle()
 {
 	SPI_HandleTypeDef *hspi = &this->handle_;
 

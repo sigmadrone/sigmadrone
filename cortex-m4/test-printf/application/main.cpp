@@ -86,11 +86,11 @@ void spi_slave_task(void *pvParameters)
 			});
 
 	trace_printf("SPI4_IRQn priority: %u\n", NVIC_GetPriority(SPI4_IRQn) << __NVIC_PRIO_BITS);
-	spi4.Start();
+	spi4.start();
 	while (1) {
 		HAL_Delay(50);
 		snprintf(buf, sizeof(buf), "SPI: %d", i++);
-		spi4.Transmit((uint8_t*)buf, strlen(buf) + 1);
+		spi4.transmit((uint8_t*)buf, strlen(buf) + 1);
 	}
 }
 
