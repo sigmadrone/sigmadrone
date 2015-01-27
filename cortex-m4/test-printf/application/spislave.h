@@ -20,15 +20,22 @@
 class SPISlave
 {
 public:
-	SPISlave(SPI_TypeDef* spi_device = SPI5, uint32_t bufsize = 128, uint32_t timeout = 0x1000, int pin_index = -1, const std::vector<GPIOPin>& data_pins = {});
+	SPISlave(const std::vector<GPIOPin>& data_pins = {},
+			int cs_index = -1,
+			SPI_TypeDef* spi_device = SPI4,
+			DMA_TypeDef *dma_device = DMA2,
+			DMA_Stream_TypeDef *tx_dma_stream = DMA2_Stream1,
+			uint32_t tx_dma_channel = DMA_CHANNEL_4,
+			DMA_Stream_TypeDef *rx_dma_stream = DMA2_Stream0,
+			uint32_t rx_dma_channel = DMA_CHANNEL_4,
+			uint32_t bufsize = 256,
+			uint32_t timeout = 0x1000
+			);
 	~SPISlave();
 	void start();
 	void stop();
 	void transmit(const uint8_t* buf, uint32_t size);
 	void receive(uint8_t* buf, uint32_t size);
-
-	HAL_SPI_StateTypeDef GetState();
-	HAL_SPI_ErrorTypeDef GetError();
 
 public:
 	SPI_HandleTypeDef handle_;
@@ -44,6 +51,12 @@ protected:
 	uint8_t* tx_buffer_[2];
 	DMA_HandleTypeDef hdma_tx_;
 	DMA_HandleTypeDef hdma_rx_;
+	DMA_TypeDef *dma_device_;
+	DMA_Stream_TypeDef *tx_dma_stream_;
+	uint32_t tx_dma_channel_;
+	DMA_Stream_TypeDef *rx_dma_stream_;
+	uint32_t rx_dma_channel_;
+
 
 protected:
 	void reset_handle();
@@ -55,7 +68,12 @@ public:
 	 * These are not really public APIs.
 	 */
 	void spi_error_callback();
-	void spi_chip_select();
+	void spi_chipselect(bool select);
+
+	static void spi_chipselect_handler(unsigned int device, bool select);
+	static void spi_dmatx_handler(unsigned int device);
+	static void spi_dmarx_handler(unsigned int device);
+
 };
 
 #endif /* _SPISLAVE_H_ */

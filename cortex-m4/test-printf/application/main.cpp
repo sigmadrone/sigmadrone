@@ -78,12 +78,12 @@ void spi_slave_task(void *pvParameters)
 	char buf[128];
 	unsigned int i = 0;
 	trace_printf("SPI Slave task...\n");
-	SPISlave spi4(SPI4, 256, 0x2000, 0, {
+	SPISlave spi4({
 				{PE_4, GPIO_MODE_AF_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_NSS_PIN */
 				{PE_2, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_SCK_PIN */
 				{PE_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MISO_PIN */
 				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MOSI_PIN */
-			});
+			}, 0);
 
 	trace_printf("SPI4_IRQn priority: %u\n", NVIC_GetPriority(SPI4_IRQn) << __NVIC_PRIO_BITS);
 	spi4.start();
@@ -401,6 +401,7 @@ int main(int argc, char* argv[])
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/
 		NULL /* Task handle */
 		);
+#endif
 
 	xTaskCreate(
 		spi_slave_task, /* Function pointer */
@@ -410,7 +411,6 @@ int main(int argc, char* argv[])
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/
 		NULL /* Task handle */
 		);
-#endif
 
 //	vTaskList(buffer);
 //	trace_printf("Tasks: \n%s\n\n", buffer);
