@@ -70,7 +70,7 @@ public:
 	void spi_error_callback();
 	void spi_chipselect(bool select);
 
-	static void spi_chipselect_handler(unsigned int device, bool select);
+	static void spi_chipselect_handler(unsigned int device);
 	static void spi_dmatx_handler(unsigned int device);
 	static void spi_dmarx_handler(unsigned int device);
 

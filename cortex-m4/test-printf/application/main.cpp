@@ -53,6 +53,21 @@ extern "C" void EXTI2_IRQHandler(void)
 	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
 }
 
+extern "C" void EXTI4_IRQHandler(void)
+{
+	SPISlave::spi_chipselect_handler(4);
+}
+
+extern "C" void DMA2_Stream0_IRQHandler(void)
+{
+	SPISlave::spi_dmarx_handler(4);
+}
+
+extern "C" void DMA2_Stream1_IRQHandler(void)
+{
+	SPISlave::spi_dmatx_handler(4);
+}
+
 
 void gyro_isr()
 {
@@ -72,6 +87,9 @@ void secondary_task(void *pvParameters)
 	}
 }
 
+/* Definition for SPIx's NVIC */
+#define SPIx_DMA_TX_IRQn                 DMA2_Stream1_IRQn
+#define SPIx_DMA_RX_IRQn                 DMA2_Stream0_IRQn
 
 void spi_slave_task(void *pvParameters)
 {
@@ -85,7 +103,12 @@ void spi_slave_task(void *pvParameters)
 				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MOSI_PIN */
 			}, 0);
 
-	trace_printf("SPI4_IRQn priority: %u\n", NVIC_GetPriority(SPI4_IRQn) << __NVIC_PRIO_BITS);
+	HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 1, 1);
+	HAL_NVIC_EnableIRQ (DMA2_Stream1_IRQn);
+	HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 1, 0);
+	HAL_NVIC_EnableIRQ (DMA2_Stream0_IRQn);
+	HAL_NVIC_SetPriority(EXTI4_IRQn, 15, 0);
+	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 	spi4.start();
 	while (1) {
 		HAL_Delay(50);

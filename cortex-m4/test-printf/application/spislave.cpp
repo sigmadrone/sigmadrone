@@ -20,37 +20,6 @@ static SPISlave* g_spislave[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 //#define SPIx_FORCE_RESET()               __SPI4_FORCE_RESET()
 //#define SPIx_RELEASE_RESET()             __SPI4_RELEASE_RESET()
 
-/* Definition for SPIx's NVIC */
-#define SPIx_DMA_TX_IRQn                 DMA2_Stream1_IRQn
-#define SPIx_DMA_RX_IRQn                 DMA2_Stream0_IRQn
-
-
-extern "C" void EXTI4_IRQHandler(void)
-{
-	SPISlave::spi_chipselect_handler(4, false);
-}
-
-/**
- * @brief  This function handles DMA Rx interrupt request.
- * @param  None
- * @retval None
- */
-extern "C" void DMA2_Stream0_IRQHandler(void)
-{
-	SPISlave::spi_dmarx_handler(4);
-}
-
-/**
- * @brief  This function handles DMA Tx interrupt request.
- * @param  None
- * @retval None
- */
-extern "C" void DMA2_Stream1_IRQHandler(void)
-{
-	SPISlave::spi_dmatx_handler(4);
-}
-
-
 void SPISlave::dma_config()
 {
 	SPI_HandleTypeDef *hspi = &this->handle_;
@@ -106,15 +75,6 @@ void SPISlave::dma_config()
 
 	/* Associate the initialized DMA handle to the the SPI handle */
 	__HAL_LINKDMA(hspi, hdmarx, hdma_rx_);
-
-	/*##-4- Configure the NVIC for DMA #########################################*/
-	/* NVIC configuration for DMA transfer complete interrupt (SPI3_TX) */
-	HAL_NVIC_SetPriority(SPIx_DMA_TX_IRQn, 1, 1);
-	HAL_NVIC_EnableIRQ (SPIx_DMA_TX_IRQn);
-
-	/* NVIC configuration for DMA transfer complete interrupt (SPI3_RX) */
-	HAL_NVIC_SetPriority(SPIx_DMA_RX_IRQn, 1, 0);
-	HAL_NVIC_EnableIRQ (SPIx_DMA_RX_IRQn);
 }
 
 extern "C" void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
@@ -128,14 +88,14 @@ extern "C" void HAL_SPI_ErrorCallback(SPI_HandleTypeDef *hspi)
 	}
 }
 
-void SPISlave::spi_chipselect_handler(unsigned int device, bool select)
+void SPISlave::spi_chipselect_handler(unsigned int device)
 {
 	SPISlave* slave = (SPISlave*)&g_spislave[device]->handle_;
 	uint16_t GPIO_Pin = ((uint16_t)1) << device;
 	if (__HAL_GPIO_EXTI_GET_IT(GPIO_Pin) != RESET) {
 		__HAL_GPIO_EXTI_CLEAR_IT(GPIO_Pin);
 		if (slave)
-			slave->spi_chipselect(select);
+			slave->spi_chipselect(false);
 	}
 }
 
@@ -179,8 +139,6 @@ SPISlave::SPISlave(
 		data_pin.init();
 	if (cs_index_ >= 0)
 		exti_config(data_pins_[cs_index_].pn_);
-	HAL_NVIC_SetPriority(EXTI4_IRQn, 15, 0);
-	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
 
 	memset(&handle_, 0, sizeof(handle_));
 	rx_buffer_[0] = (uint8_t*)malloc(bufsize_);
