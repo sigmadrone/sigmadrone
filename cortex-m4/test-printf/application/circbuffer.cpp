@@ -49,17 +49,17 @@ size_t CircBuffer::read_size()
 	return (datasize < datatoend) ? datasize : datatoend;
 }
 
-volatile uint8_t* CircBuffer::get_read_ptr()
+uint8_t* CircBuffer::get_read_ptr()
 {
 	return (buffer_ + rp_);
 }
 
-volatile uint8_t* CircBuffer::get_write_ptr()
+uint8_t* CircBuffer::get_write_ptr()
 {
 	return (buffer_ + wp_);
 }
 
-volatile uint8_t* CircBuffer::get_buffer_ptr()
+uint8_t* CircBuffer::get_buffer_ptr()
 {
 	return buffer_;
 }

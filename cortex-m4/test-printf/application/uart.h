@@ -49,6 +49,8 @@ public:
 	HAL_UART_StateTypeDef get_state();
 	void uart_dmatx_complete();
 	void uart_dmarx_complete();
+	void uart_dmatx_half_complete();
+	void uart_dmarx_half_complete();
 	void uart_dmatx_start();
 	void uart_dmarx_start();
 

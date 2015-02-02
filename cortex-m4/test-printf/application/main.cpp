@@ -117,10 +117,11 @@ void uart_tx_task(void *pvParameters)
 	while (1) {
 		memset(buf, 0, sizeof(buf));
 		snprintf(buf, sizeof(buf) - 1, "%4d**************************************************************\n", i++);
-		size_t size = 10;
+		size_t size = 7;
 		uint8_t *bufptr = (uint8_t*)buf;
 		size_t ret = 0;
 		while (size) {
+//			trace_printf("uart_tx_task: size %d\n", size);
 			ret = uart.transmit((uint8_t*)bufptr, size);
 			size -= ret;
 			bufptr += ret;
@@ -389,12 +390,6 @@ void main_task(void *pvParameters)
 		att.track_gyroscope(DEG2RAD(gyr_data), ticks * portTICK_PERIOD_MS / (float)1000.0);
 		q = att.get_attitude();
 
-		memset(buf, 0, sizeof(buf));
-		if (uart.receive((uint8_t*)buf, sizeof(buf) - 1)) {
-			trace_printf("%s\n", buf);
-			HAL_Delay(250);
-		}
-
 		if ((oldticks - displayUpdateTicks) * portTICK_PERIOD_MS > 200) {
 			displayUpdateTicks = oldticks;
 			sprintf(disp,"GYRO X: %6.2f         ", gyr_data.at(0));
@@ -409,8 +404,12 @@ void main_task(void *pvParameters)
 
 //			memset(buf, 0, sizeof(buf));
 //			trace_printf("(%5d) rp:%5d,  wp:%5d    \n", i, uart.rxbuf_.rp_, uart.rxbuf_.wp_);
-//			if (uart.receive((uint8_t*)buf, sizeof(buf) - 1)) {
-//				trace_printf("(%5d) rp:%5d,  wp:%5d    %s\n", i++, uart.rxbuf_.rp_, uart.rxbuf_.wp_, buf);
+//			size_t retsize = uart.receive((uint8_t*)buf, sizeof(buf) - 1);
+//			if (retsize) {
+//				trace_printf("(%5d) rp:%5d,  wp:%5d, ret:%5d    %s\n", i++, uart.rxbuf_.rp_, uart.rxbuf_.wp_, retsize, buf);
+//				memset(buf, 0, sizeof(buf));
+//				memcpy(buf, (uint8_t*)uart.rxbuf_.buffer_, uart.rxbuf_.bufsize_);
+//				trace_printf("%s\n", buf);
 //				BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)buf, LEFT_MODE);
 //			}
 

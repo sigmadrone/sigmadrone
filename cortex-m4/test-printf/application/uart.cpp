@@ -47,7 +47,7 @@ void UART::dma_config()
 	hdma_rx_.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
 	hdma_rx_.Init.MemDataAlignment    = DMA_MDATAALIGN_BYTE;
 	hdma_rx_.Init.Mode                = DMA_CIRCULAR;
-	hdma_rx_.Init.Priority            = DMA_PRIORITY_HIGH;
+	hdma_rx_.Init.Priority            = DMA_PRIORITY_LOW;
 	hdma_rx_.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
 	hdma_rx_.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
 	hdma_rx_.Init.MemBurst            = DMA_MBURST_SINGLE;
@@ -159,6 +159,19 @@ size_t UART::transmit(const uint8_t* buf, size_t size)
 	return writesize;
 }
 
+void* dmb_memcpy(uint8_t *dst, uint8_t *src, size_t size)
+{
+	void *pdst = (void*)dst;
+	while (size) {
+		*src = *src;
+		__DSB();
+		__DMB();
+		*dst++ = *src++;
+		size--;
+	}
+	return pdst;
+}
+
 size_t UART::receive(uint8_t* buf, size_t size)
 {
 //	size = bufsize_;
@@ -170,15 +183,18 @@ size_t UART::receive(uint8_t* buf, size_t size)
 //	return size;
 
 	size_t ret = 0;
-	size_t wp = (rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR);
-	rxbuf_.reset_wp(wp);
+//	__HAL_DMA_DISABLE(handle_.hdmarx);
+//	uint32_t ndtr = handle_.hdmarx->Instance->NDTR;
+//	handle_.hdmarx->Instance->NDTR = ndtr;
+//	__HAL_DMA_ENABLE(handle_.hdmarx);
+//	size_t wp = (rxbuf_.buffer_size() - ndtr);
+//	rxbuf_.reset_wp(wp);
 	if (rxbuf_.empty())
 		return 0;
 	size_t readsize = rxbuf_.read_size() < size ? rxbuf_.read_size() : size;
 	if (readsize) {
-		__DSB();
-		__DMB();
 		memcpy(buf, (uint8_t*)rxbuf_.get_read_ptr(), readsize);
+		memset((uint8_t*)rxbuf_.get_read_ptr(), '-', readsize);
 		rxbuf_.read_update(readsize);
 	}
 	ret += readsize;
@@ -187,6 +203,7 @@ size_t UART::receive(uint8_t* buf, size_t size)
 	readsize = rxbuf_.read_size() < size ? rxbuf_.read_size() : size;
 	if (readsize) {
 		memcpy(buf, (uint8_t*)rxbuf_.get_read_ptr(), readsize);
+		memset((uint8_t*)rxbuf_.get_read_ptr(), '-', readsize);
 		rxbuf_.read_update(readsize);
 		ret += readsize;
 	}
@@ -218,7 +235,20 @@ void UART::uart_dmarx_complete()
 //	trace_printf("NDTR: %ld, wp_: %ld\n", handle_.hdmarx->Instance->NDTR, rxbuf_.wp_);
 //	memcpy(rx_buffer_[0], rx_buffer_[1], bufsize_);
 //	HAL_UART_Receive_DMA(&handle_, (uint8_t*)rx_buffer_[1], bufsize_);
+//	trace_printf("uart_dmarx_complete CT: 0x%0X\n", handle_.hdmarx->Instance->CR & DMA_SxCR_CT);
+	rxbuf_.write_update(rxbuf_.buffer_size()/2);
 }
+
+void UART::uart_dmatx_half_complete()
+{
+}
+
+void UART::uart_dmarx_half_complete()
+{
+//	trace_printf("uart_dmarx_half_complete CT: 0x%0X\n", handle_.hdmarx->Instance->CR & DMA_SxCR_CT);
+	rxbuf_.write_update(rxbuf_.buffer_size()/2);
+}
+
 
 void UART::uart_dmatx_start()
 {
@@ -228,6 +258,8 @@ void UART::uart_dmatx_start()
 void UART::uart_dmarx_start()
 {
 //	HAL_UART_Receive_DMA(&handle_, (uint8_t*)rx_buffer_[1], bufsize_);
+//	handle_.hdmarx->Instance->M1AR = (uint32_t)(rxbuf_.get_buffer_ptr() + rxbuf_.buffer_size()/2);
+//	handle_.hdmarx->Instance->CR |= DMA_SxCR_DBM;
 	HAL_UART_Receive_DMA(&handle_, (uint8_t*)rxbuf_.get_buffer_ptr(), rxbuf_.buffer_size());
 }
 
@@ -237,8 +269,20 @@ extern "C" void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	uart->uart_dmarx_complete();
 }
 
+extern "C" void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart)
+{
+	UART* uart = (UART*)huart;
+	uart->uart_dmarx_half_complete();
+}
+
 extern "C" void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
 	UART* uart = (UART*)huart;
 	uart->uart_dmatx_complete();
+}
+
+extern "C" void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart)
+{
+	UART* uart = (UART*)huart;
+	uart->uart_dmatx_half_complete();
 }
