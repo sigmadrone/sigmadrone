@@ -20,6 +20,7 @@
 #include "stm32f429i_discovery_lcd.h"
 #include "spimaster.h"
 #include "spislave.h"
+#include "uart.h"
 #include "l3gd20.h"
 #include "lsm303d.h"
 #include "matrix.h"
@@ -31,11 +32,15 @@
 void* __dso_handle = 0;
 
 DigitalOut led1(USER_LED1);
-
 DigitalOut led2(USER_LED2);
-
 DigitalIn gyro_int2(PA_2, DigitalIn::PullNone, DigitalIn::InterruptRising);
 DigitalIn button(USER_BUTTON, DigitalIn::PullNone, DigitalIn::InterruptRising);
+UART uart({
+	{PA_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART1},		/* USART1_TX_PIN */
+	{PA_10, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART1},		/* USART1_RX_PIN */
+});
+
+
 TaskHandle_t hMain;
 QueueHandle_t hGyroQueue;
 
@@ -68,6 +73,15 @@ extern "C" void DMA2_Stream1_IRQHandler(void)
 	SPISlave::spi_dmatx_handler(4);
 }
 
+extern "C" void DMA2_Stream5_IRQHandler(void)
+{
+	UART::uart_dmarx_handler(1);
+}
+
+extern "C" void DMA2_Stream7_IRQHandler(void)
+{
+	UART::uart_dmatx_handler(1);
+}
 
 void gyro_isr()
 {
@@ -91,6 +105,31 @@ void secondary_task(void *pvParameters)
 #define SPIx_DMA_TX_IRQn                 DMA2_Stream1_IRQn
 #define SPIx_DMA_RX_IRQn                 DMA2_Stream0_IRQn
 
+void uart_tx_task(void *pvParameters)
+{
+	char buf[128];
+	int i = 0;
+	HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 1, 1);
+	HAL_NVIC_EnableIRQ (DMA2_Stream7_IRQn);
+	HAL_NVIC_SetPriority(DMA2_Stream5_IRQn, 1, 0);
+	HAL_NVIC_EnableIRQ (DMA2_Stream5_IRQn);
+	uart.uart_dmarx_start();
+	while (1) {
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf) - 1, "%4d**************************************************************\n", i++);
+		size_t size = 10;
+		uint8_t *bufptr = (uint8_t*)buf;
+		size_t ret = 0;
+		while (size) {
+			ret = uart.transmit((uint8_t*)bufptr, size);
+			size -= ret;
+			bufptr += ret;
+		}
+		HAL_Delay(1000);
+	}
+}
+
+
 void spi_slave_task(void *pvParameters)
 {
 	char buf[128];
@@ -109,6 +148,7 @@ void spi_slave_task(void *pvParameters)
 	HAL_NVIC_EnableIRQ (DMA2_Stream0_IRQn);
 	HAL_NVIC_SetPriority(EXTI4_IRQn, 15, 0);
 	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
 	spi4.start();
 	while (1) {
 		HAL_Delay(50);
@@ -231,7 +271,7 @@ void pwm_decoder_callback() {
 void tim3_isr() {
 	static float duty_cycle[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
 	static int index = 0;
-	trace_printf("==> tim3 interrupt\n");
+//	trace_printf("==> tim3 interrupt\n");
 	led2.toggle();
 	pwmEncoder.set_duty_cycle(1, duty_cycle[index]);
 	index = (index + 1) % (sizeof(duty_cycle)/sizeof(duty_cycle[1]));
@@ -241,6 +281,7 @@ void tim3_isr() {
 
 void main_task(void *pvParameters)
 {
+	char buf[256];
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	HwTimer tim3(HwTimer::TIMER_3, TimeSpan::from_seconds(4), Frequency::from_kilohertz(30),
@@ -274,6 +315,7 @@ void main_task(void *pvParameters)
 	LSM303D::AxesAcc_t acc_axes;
 	QuaternionD q;
 	attitudetracker att;
+	int i = 0;
 
 	trace_printf("Priority Group: %u\n", NVIC_GetPriorityGrouping());
 	trace_printf("SysTick_IRQn priority: %u\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
@@ -330,6 +372,7 @@ void main_task(void *pvParameters)
 	}
 	gyr_bias = gyr_bias / (double)bias_iterations;
 	TickType_t displayUpdateTicks = xTaskGetTickCount();
+
 	while (1) {
 		uint32_t msg;
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
@@ -346,6 +389,12 @@ void main_task(void *pvParameters)
 		att.track_gyroscope(DEG2RAD(gyr_data), ticks * portTICK_PERIOD_MS / (float)1000.0);
 		q = att.get_attitude();
 
+		memset(buf, 0, sizeof(buf));
+		if (uart.receive((uint8_t*)buf, sizeof(buf) - 1)) {
+			trace_printf("%s\n", buf);
+			HAL_Delay(250);
+		}
+
 		if ((oldticks - displayUpdateTicks) * portTICK_PERIOD_MS > 200) {
 			displayUpdateTicks = oldticks;
 			sprintf(disp,"GYRO X: %6.2f         ", gyr_data.at(0));
@@ -356,6 +405,14 @@ void main_task(void *pvParameters)
 			BSP_LCD_DisplayStringAt(0, 40, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"SAMPLES: %d           ", gyr_samples);
 			BSP_LCD_DisplayStringAt(0, 60, (uint8_t*)disp, LEFT_MODE);
+
+
+//			memset(buf, 0, sizeof(buf));
+//			trace_printf("(%5d) rp:%5d,  wp:%5d    \n", i, uart.rxbuf_.rp_, uart.rxbuf_.wp_);
+//			if (uart.receive((uint8_t*)buf, sizeof(buf) - 1)) {
+//				trace_printf("(%5d) rp:%5d,  wp:%5d    %s\n", i++, uart.rxbuf_.rp_, uart.rxbuf_.wp_, buf);
+//				BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)buf, LEFT_MODE);
+//			}
 
 			sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);
 			BSP_LCD_DisplayStringAt(0, 100, (uint8_t*)disp, LEFT_MODE);
@@ -429,6 +486,15 @@ int main(int argc, char* argv[])
 	xTaskCreate(
 		spi_slave_task, /* Function pointer */
 		"SPI Slave Task", /* Task name - for debugging only*/
+		configMINIMAL_STACK_SIZE, /* Stack depth in words */
+		(void*) NULL, /* Pointer to tasks arguments (parameter) */
+		tskIDLE_PRIORITY + 2UL, /* Task priority*/
+		NULL /* Task handle */
+		);
+
+	xTaskCreate(
+		uart_tx_task, /* Function pointer */
+		"UART TX Task", /* Task name - for debugging only*/
 		configMINIMAL_STACK_SIZE, /* Stack depth in words */
 		(void*) NULL, /* Pointer to tasks arguments (parameter) */
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/

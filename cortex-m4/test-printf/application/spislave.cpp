@@ -291,7 +291,7 @@ void SPISlave::spi_chipselect(bool select)
 void SPISlave::transmit(const uint8_t* buf, uint32_t size)
 {
 	if (size > bufsize_)
-		throw std::range_error("SPISlave::Transmit size error");
+		throw std::range_error("SPISlave::transmit size error");
 	__disable_irq();
 	memcpy(tx_buffer_[0], buf, size);
 	__enable_irq();
@@ -300,7 +300,7 @@ void SPISlave::transmit(const uint8_t* buf, uint32_t size)
 void SPISlave::receive(uint8_t* buf, uint32_t size)
 {
 	if (size > bufsize_)
-		throw std::range_error("SPISlave::Transmit size error");
+		throw std::range_error("SPISlave::receive size error");
 	__disable_irq();
 	memcpy(buf, rx_buffer_[0], size);
 	__enable_irq();
