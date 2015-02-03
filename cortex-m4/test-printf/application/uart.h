@@ -22,11 +22,8 @@ public:
 	uint32_t tx_dma_channel_;
 	DMA_Stream_TypeDef *rx_dma_stream_;
 	uint32_t rx_dma_channel_;
-	size_t bufsize_;
 	uint32_t timeout_;
 	std::vector<GPIOPin> data_pins_;
-	uint8_t* rx_buffer_[2];
-	uint8_t* tx_buffer_[2];
 	CircBuffer txbuf_;
 	CircBuffer rxbuf_;
 
@@ -38,7 +35,6 @@ public:
 			uint32_t tx_dma_channel = DMA_CHANNEL_4,
 			DMA_Stream_TypeDef *rx_dma_stream = DMA2_Stream5,
 			uint32_t rx_dma_channel = DMA_CHANNEL_4,
-			uint32_t bufsize = 64,
 			uint32_t timeout = 250
 			);
 	~UART();

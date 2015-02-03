@@ -11,7 +11,7 @@ CircBuffer::CircBuffer(size_t sizebits)
 	: wp_(0)
 	, rp_(0)
 	, bufsize_(1 << sizebits)
-	, buffer_(new uint8_t(bufsize_))
+	, buffer_(new uint8_t[bufsize_])
 {
 }
 
@@ -86,10 +86,10 @@ void CircBuffer::reset()
 
 void CircBuffer::reset_wp(size_t wp)
 {
-	wp_ = wp % bufsize_;
+	wp_ = wp;
 }
 
 void CircBuffer::reset_rp(size_t rp)
 {
-	rp_ = rp % bufsize_;
+	rp_ = rp;
 }

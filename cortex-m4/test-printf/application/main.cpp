@@ -114,19 +114,20 @@ void uart_tx_task(void *pvParameters)
 	HAL_NVIC_SetPriority(DMA2_Stream5_IRQn, 1, 0);
 	HAL_NVIC_EnableIRQ (DMA2_Stream5_IRQn);
 	uart.uart_dmarx_start();
+	HAL_Delay(7000);
 	while (1) {
 		memset(buf, 0, sizeof(buf));
-		snprintf(buf, sizeof(buf) - 1, "%4d**************************************************************\n", i++);
-		size_t size = 7;
+		snprintf(buf, sizeof(buf) - 1, "%8d****++++****++++****++++****++++****++++****++++****++++****++++\n", i++);
+		size_t size = 32;
+		buf[size - 1] = '\n';
 		uint8_t *bufptr = (uint8_t*)buf;
 		size_t ret = 0;
 		while (size) {
-//			trace_printf("uart_tx_task: size %d\n", size);
 			ret = uart.transmit((uint8_t*)bufptr, size);
 			size -= ret;
 			bufptr += ret;
 		}
-		HAL_Delay(1000);
+		HAL_Delay(150);
 	}
 }
 
@@ -402,16 +403,22 @@ void main_task(void *pvParameters)
 			BSP_LCD_DisplayStringAt(0, 60, (uint8_t*)disp, LEFT_MODE);
 
 
-//			memset(buf, 0, sizeof(buf));
+			memset(buf, 0, sizeof(buf));
 //			trace_printf("(%5d) rp:%5d,  wp:%5d    \n", i, uart.rxbuf_.rp_, uart.rxbuf_.wp_);
-//			size_t retsize = uart.receive((uint8_t*)buf, sizeof(buf) - 1);
-//			if (retsize) {
+			size_t retsize = uart.receive((uint8_t*)buf, 24);
+			if (retsize) {
 //				trace_printf("(%5d) rp:%5d,  wp:%5d, ret:%5d    %s\n", i++, uart.rxbuf_.rp_, uart.rxbuf_.wp_, retsize, buf);
 //				memset(buf, 0, sizeof(buf));
 //				memcpy(buf, (uint8_t*)uart.rxbuf_.buffer_, uart.rxbuf_.bufsize_);
-//				trace_printf("%s\n", buf);
+				trace_printf("%s", buf);
+//				trace_printf("\n(%5d) rp:%5d,  wp:%5d    %s", i++, uart.rxbuf_.rp_, uart.rxbuf_.wp_, buf);
+//				for (size_t j = 0; j < retsize; j++) {
+//					if (buf[j] != '*' && buf[j] != '+') {
+//						trace_printf("Detected RX error: %d: %c\n", j, buf[j]);
+//					}
+//				}
 //				BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)buf, LEFT_MODE);
-//			}
+			}
 
 			sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);
 			BSP_LCD_DisplayStringAt(0, 100, (uint8_t*)disp, LEFT_MODE);
