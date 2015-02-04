@@ -118,7 +118,7 @@ void uart_tx_task(void *pvParameters)
 	while (1) {
 		memset(buf, 0, sizeof(buf));
 		snprintf(buf, sizeof(buf) - 1, "UART:%7d****************************************************\n", i++);
-		size_t size = 32;
+		size_t size = 30;
 		buf[size - 1] = '\n';
 		uint8_t *bufptr = (uint8_t*)buf;
 		size_t ret = 0;

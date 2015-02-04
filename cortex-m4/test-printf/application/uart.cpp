@@ -151,28 +151,10 @@ size_t UART::transmit(const uint8_t* buf, size_t size)
 	return writesize;
 }
 
-void* dmb_memcpy(uint8_t *dst, uint8_t *src, size_t size)
-{
-	void *pdst = (void*)dst;
-	while (size) {
-		*src = *src;
-		__DSB();
-		__DMB();
-		*dst++ = *src++;
-		size--;
-	}
-	return pdst;
-}
-
 size_t UART::receive(uint8_t* buf, size_t size)
 {
 	size_t ret = 0;
-//	__HAL_DMA_DISABLE(handle_.hdmarx);
-	uint32_t ndtr = handle_.hdmarx->Instance->NDTR;
-//	handle_.hdmarx->Instance->NDTR = ndtr;
-//	__HAL_DMA_ENABLE(handle_.hdmarx);
-	size_t wp = (rxbuf_.buffer_size() - ndtr);
-	rxbuf_.reset_wp(wp % rxbuf_.buffer_size());
+	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
 	if (rxbuf_.empty())
 		return 0;
 	size_t readsize = rxbuf_.read_size() < size ? rxbuf_.read_size() : size;
@@ -218,12 +200,12 @@ void UART::uart_dmatx_half_complete()
 
 void UART::uart_dmarx_complete()
 {
-//	rxbuf_.reset_wp(0);
+	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
 }
 
 void UART::uart_dmarx_half_complete()
 {
-//	rxbuf_.reset_wp(rxbuf_.buffer_size()/2);
+	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
 }
 
 
