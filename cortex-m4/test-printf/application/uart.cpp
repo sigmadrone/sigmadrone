@@ -31,8 +31,8 @@ void UART::dma_config()
 	hdma_tx_.Init.Priority            = DMA_PRIORITY_LOW;
 	hdma_tx_.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
 	hdma_tx_.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-	hdma_tx_.Init.MemBurst            = DMA_MBURST_INC4;
-	hdma_tx_.Init.PeriphBurst         = DMA_PBURST_INC4;
+	hdma_tx_.Init.MemBurst            = DMA_MBURST_SINGLE;
+	hdma_tx_.Init.PeriphBurst         = DMA_PBURST_SINGLE;
 	HAL_DMA_Init (&hdma_tx_);
 
 	/* Associate the initialized DMA handle to the the SPI handle */
@@ -50,8 +50,8 @@ void UART::dma_config()
 	hdma_rx_.Init.Priority            = DMA_PRIORITY_LOW;
 	hdma_rx_.Init.FIFOMode            = DMA_FIFOMODE_DISABLE;
 	hdma_rx_.Init.FIFOThreshold       = DMA_FIFO_THRESHOLD_FULL;
-	hdma_rx_.Init.MemBurst            = DMA_MBURST_INC4;
-	hdma_rx_.Init.PeriphBurst         = DMA_PBURST_INC4;
+	hdma_rx_.Init.MemBurst            = DMA_MBURST_SINGLE;
+	hdma_rx_.Init.PeriphBurst         = DMA_PBURST_SINGLE;
 	HAL_DMA_Init (&hdma_rx_);
 
 	/* Associate the initialized DMA handle to the the SPI handle */
@@ -89,7 +89,7 @@ UART::UART(const std::vector<GPIOPin>& data_pins,
 	 - BaudRate = 9600 baud
 	 - Hardware flow control disabled (RTS and CTS signals) */
 	handle_.Instance = uart_device;
-	handle_.Init.BaudRate = 115200 * 20 / 20 / 4;
+	handle_.Init.BaudRate = 115200 * 20;
 	handle_.Init.WordLength = UART_WORDLENGTH_8B;
 	handle_.Init.StopBits = UART_STOPBITS_2;
 	handle_.Init.Parity = UART_PARITY_NONE;

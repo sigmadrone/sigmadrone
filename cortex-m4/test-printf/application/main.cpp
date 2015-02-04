@@ -117,7 +117,7 @@ void uart_tx_task(void *pvParameters)
 	HAL_Delay(7000);
 	while (1) {
 		memset(buf, 0, sizeof(buf));
-		snprintf(buf, sizeof(buf) - 1, "UART:%8d****************************************************\n", i++);
+		snprintf(buf, sizeof(buf) - 1, "UART:%7d****************************************************\n", i++);
 		size_t size = 32;
 		buf[size - 1] = '\n';
 		uint8_t *bufptr = (uint8_t*)buf;
@@ -403,7 +403,7 @@ void main_task(void *pvParameters)
 			BSP_LCD_DisplayStringAt(0, 60, (uint8_t*)disp, LEFT_MODE);
 
 			memset(buf, 0, sizeof(buf));
-			size_t retsize = uart.receive((uint8_t*)buf, 24);
+			size_t retsize = uart.receive((uint8_t*)buf, sizeof(buf));
 			if (retsize) {
 				trace_printf("%s", buf);
 				BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)buf, LEFT_MODE);
