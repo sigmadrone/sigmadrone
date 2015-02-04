@@ -117,7 +117,7 @@ void uart_tx_task(void *pvParameters)
 	HAL_Delay(7000);
 	while (1) {
 		memset(buf, 0, sizeof(buf));
-		snprintf(buf, sizeof(buf) - 1, "%8d****++++****++++****++++****++++****++++****++++****++++****++++\n", i++);
+		snprintf(buf, sizeof(buf) - 1, "UART:%8d****************************************************\n", i++);
 		size_t size = 32;
 		buf[size - 1] = '\n';
 		uint8_t *bufptr = (uint8_t*)buf;
@@ -402,22 +402,11 @@ void main_task(void *pvParameters)
 			sprintf(disp,"SAMPLES: %d           ", gyr_samples);
 			BSP_LCD_DisplayStringAt(0, 60, (uint8_t*)disp, LEFT_MODE);
 
-
 			memset(buf, 0, sizeof(buf));
-//			trace_printf("(%5d) rp:%5d,  wp:%5d    \n", i, uart.rxbuf_.rp_, uart.rxbuf_.wp_);
 			size_t retsize = uart.receive((uint8_t*)buf, 24);
 			if (retsize) {
-//				trace_printf("(%5d) rp:%5d,  wp:%5d, ret:%5d    %s\n", i++, uart.rxbuf_.rp_, uart.rxbuf_.wp_, retsize, buf);
-//				memset(buf, 0, sizeof(buf));
-//				memcpy(buf, (uint8_t*)uart.rxbuf_.buffer_, uart.rxbuf_.bufsize_);
 				trace_printf("%s", buf);
-//				trace_printf("\n(%5d) rp:%5d,  wp:%5d    %s", i++, uart.rxbuf_.rp_, uart.rxbuf_.wp_, buf);
-//				for (size_t j = 0; j < retsize; j++) {
-//					if (buf[j] != '*' && buf[j] != '+') {
-//						trace_printf("Detected RX error: %d: %c\n", j, buf[j]);
-//					}
-//				}
-//				BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)buf, LEFT_MODE);
+				BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)buf, LEFT_MODE);
 			}
 
 			sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);

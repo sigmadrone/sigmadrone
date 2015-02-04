@@ -74,7 +74,7 @@ UART::UART(const std::vector<GPIOPin>& data_pins,
 	, timeout_(timeout)
 	, data_pins_(data_pins)
 	, txbuf_(12)
-	, rxbuf_(8)
+	, rxbuf_(12)
 {
 	for (auto& data_pin : data_pins_)
 		data_pin.init();
