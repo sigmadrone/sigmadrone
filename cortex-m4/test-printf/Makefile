@@ -21,7 +21,7 @@ L3GD20_SRC_C = $(wildcard BSP/Components/l3gd20/*.c)
 L3GD20DRV_SRC_C = $(wildcard BSP/Components/l3gd20_driver/*.c)
 STMPE811_SRC_C = $(wildcard BSP/Components/stmpe811/*.c)
 ILI9341_SRC_C = $(wildcard BSP/Components/ili9341/*.c)
-
+JSON_SRC_C = $(wildcard application/json/*.c)
 
 CIMSIS_OBJ_C   := $(CIMSIS_SRC_C:.c=.o)
 CORTEXM_OBJ_C  := $(CORTEXM_SRC_C:.c=.o)
@@ -38,25 +38,25 @@ L3GD20DRV_OBJ_C:= $(L3GD20DRV_SRC_C:.c=.o)
 STMPE811_OBJ_C := $(STMPE811_SRC_C:.c=.o)
 ILI9341_OBJ_C  := $(ILI9341_SRC_C:.c=.o)
 FONTS_OBJ_C    := $(FONTS_SRC_C:.c=.o)
-
+JSON_OBJ_C     := $(JSON_SRC_C:.c=.o)
 
 OBJECTS        :=   $(CIMSIS_OBJ_C) \
-					$(CORTEXM_OBJ_C) \
-					$(DIAG_OBJ_C) \
-					$(HAL_OBJ_C) \
-					$(NEWLIB_OBJ_C) \
-					$(NEWLIB_OBJ_CXX) \
-					$(APP_OBJ_C) \
-					$(APP_OBJ_CPP) \
-					$(FREERTOS_OBJ_C) \
-					$(BSP_OBJ_C) \
-					$(L3GD20_OBJ_C) \
-					$(L3GD20DRV_OBJ_C) \
-					$(STMPE811_OBJ_C) \
-					$(ILI9341_OBJ_C)
-					
+			$(CORTEXM_OBJ_C) \
+			$(DIAG_OBJ_C) \
+			$(HAL_OBJ_C) \
+			$(NEWLIB_OBJ_C) \
+			$(NEWLIB_OBJ_CXX) \
+			$(APP_OBJ_C) \
+			$(APP_OBJ_CPP) \
+			$(FREERTOS_OBJ_C) \
+			$(BSP_OBJ_C) \
+			$(L3GD20_OBJ_C) \
+			$(L3GD20DRV_OBJ_C) \
+			$(STMPE811_OBJ_C) \
+			$(ILI9341_OBJ_C) \
+			$(JSON_OBJ_C) \
 
-					
+
 DEPS           := $(OBJECTS:.o=.d)
 
 INCLUDES = \
@@ -74,6 +74,7 @@ INCLUDES = \
 	-I BSP/Components/Common \
 	-I BSP/Components/l3gd20 \
 	-I BSP/Components/l3gd20_driver \
+	-I json \
 
 
 ############################################################################### 
