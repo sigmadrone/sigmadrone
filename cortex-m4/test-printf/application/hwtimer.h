@@ -130,7 +130,7 @@ public:
 	/** Returns the actual timer clock
 	 *  @returns Returns the clock at which the timer ticks.
 	 */
-	Frequency timer_clock() { return timer_clock_; }
+	Frequency timer_clock() const { return timer_clock_; }
 
 	/** Sets the duty cycle on the specified channel. Timer must be configured
 	 *  in MODE_PWM_ENCODE
@@ -139,9 +139,11 @@ public:
 	 */
 	bool set_pwm_duty_cycle(uint32_t channel_no, const TimeSpan& pulse_period);
 
+	uint64_t period_elapsed_count() const { return period_elapsed_cnt_; }
+
 	/** Returns the timer input clock for any of the timers
 	 *  @param timer_id Timer ID
-	 *  @returns Timer input clock, prior to pre-scalaer and divider
+	 *  @returns Timer input clock, prior to pre-scaler and divider
 	 */
 	static Frequency get_timx_input_clock(Id timer_id);
 
@@ -165,6 +167,7 @@ private:
 	FunctionPointer callback_;
 	Mode mode_;
 	std::vector<uint32_t> channels_;
+	volatile uint64_t period_elapsed_cnt_;
 };
 
 #endif /* TEST_PRINTF_HWTIMER_H_ */

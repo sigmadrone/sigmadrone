@@ -100,7 +100,8 @@ HwTimer::HwTimer(Id timer_id,
 		const Frequency& timer_clock,
 		const FunctionPointer& interrupt_callback) :
 		timer_id_(TIMER_INVALID), period_(period), callback_(interrupt_callback),
-		mode_(HwTimer::MODE_NOT_INITIALIZED)
+		mode_(HwTimer::MODE_NOT_INITIALIZED),
+		period_elapsed_cnt_(0)
 {
 	if (is_valid_timer_id(timer_id) && !all_timers_[timer_id].hwtimer_) {
 		all_timers_[timer_id].hwtimer_ = this;
@@ -113,7 +114,8 @@ HwTimer::HwTimer(Id timer_id,
 		const Frequency& timer_clock,
 		const FunctionPointer& interrupt_callback) :
 		timer_id_(TIMER_INVALID), period_(), callback_(interrupt_callback),
-		mode_(HwTimer::MODE_NOT_INITIALIZED)
+		mode_(HwTimer::MODE_NOT_INITIALIZED),
+		period_elapsed_cnt_(0)
 {
 	if (is_valid_timer_id(timer_id) && !all_timers_[timer_id].hwtimer_) {
 		all_timers_[timer_id].hwtimer_ = this;
@@ -134,6 +136,9 @@ TIM_HandleTypeDef* HwTimer::init_handle() {
 	if (0 == handle || all_timers_[timer_id_].hwtimer_ != this) {
 		return nullptr;
 	}
+
+	period_elapsed_cnt_ = 0;
+
 	assert(handle->Instance); // TIMx should be initialized
 	/*
 	 * Initialize TIMX peripheral as follows:
@@ -328,6 +333,7 @@ bool HwTimer::set_pwm_duty_cycle(uint32_t channel_no, const TimeSpan& duty_cycle
 }
 
 void HwTimer::on_period_elapsed() {
+	++period_elapsed_cnt_;
 	callback_.call();
 }
 
@@ -448,30 +454,46 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim) {
 		break;
 	case HwTimer::TIMER_6:
 		__TIM6_CLK_ENABLE();
+		HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 0, 1);
+		HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
 		break;
 	case HwTimer::TIMER_7:
 		__TIM7_CLK_ENABLE();
+		HAL_NVIC_SetPriority(TIM7_IRQn, 0, 1);
+		HAL_NVIC_EnableIRQ(TIM7_IRQn);
 		break;
 	case HwTimer::TIMER_8:
 		__TIM8_CLK_ENABLE();
 		break;
 	case HwTimer::TIMER_9:
 		__TIM9_CLK_ENABLE();
+		HAL_NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, 0, 1);
+		HAL_NVIC_EnableIRQ(TIM1_BRK_TIM9_IRQn);
 		break;
 	case HwTimer::TIMER_10:
 		__TIM10_CLK_ENABLE();
+		HAL_NVIC_SetPriority(TIM1_UP_TIM10_IRQn, 0, 1);
+		HAL_NVIC_EnableIRQ(TIM1_UP_TIM10_IRQn);
 		break;
 	case HwTimer::TIMER_11:
 		__TIM11_CLK_ENABLE();
+		HAL_NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, 0, 1);
+		HAL_NVIC_EnableIRQ(TIM1_TRG_COM_TIM11_IRQn);
 		break;
 	case HwTimer::TIMER_12:
 		__TIM12_CLK_ENABLE();
+		HAL_NVIC_SetPriority(TIM8_BRK_TIM12_IRQn, 0, 1);
+		HAL_NVIC_EnableIRQ(TIM8_BRK_TIM12_IRQn);
 		break;
 	case HwTimer::TIMER_13:
 		__TIM13_CLK_ENABLE();
+		HAL_NVIC_SetPriority(TIM8_UP_TIM13_IRQn, 0, 1);
+		HAL_NVIC_EnableIRQ(TIM8_UP_TIM13_IRQn);
 		break;
 	case HwTimer::TIMER_14:
 		__TIM14_CLK_ENABLE();
+		HAL_NVIC_SetPriority(TIM8_TRG_COM_TIM14_IRQn, 0, 1);
+		HAL_NVIC_EnableIRQ(TIM8_TRG_COM_TIM14_IRQn);
 		break;
 	default:assert(false);
 	}
@@ -483,10 +505,6 @@ void HAL_TIM_IC_MspInit(TIM_HandleTypeDef *htim) {
 
 void HAL_TIM_PWM_MspInit(TIM_HandleTypeDef *htim) {
 	HAL_TIM_Base_MspInit(htim);
-}
-
-extern "C" void TIM1_IRQHandler(void) {
-	HAL_TIM_IRQHandler(&all_timers_[1].handle_);
 }
 
 extern "C" void TIM2_IRQHandler(void) {
@@ -505,8 +523,36 @@ extern "C" void TIM5_IRQHandler(void) {
 	HAL_TIM_IRQHandler(&all_timers_[5].handle_);
 }
 
+extern "C" void TIM6_DAC_IRQHandler(void) {
+	HAL_TIM_IRQHandler(&all_timers_[7].handle_);
+}
+
 extern "C" void TIM7_IRQHandler(void) {
 	HAL_TIM_IRQHandler(&all_timers_[7].handle_);
+}
+
+extern "C" void TIM1_BRK_TIM9_IRQHandler(void) {
+	HAL_TIM_IRQHandler(&all_timers_[9].handle_);
+}
+
+extern "C" void TIM1_UP_TIM10_IRQHandler(void) {
+	HAL_TIM_IRQHandler(&all_timers_[10].handle_);
+}
+
+extern "C" void TIM1_TRG_COM_TIM11_IRQHandler(void) {
+	HAL_TIM_IRQHandler(&all_timers_[9].handle_);
+}
+
+extern "C" void TIM8_BRK_TIM12_IRQHandler(void) {
+	HAL_TIM_IRQHandler(&all_timers_[9].handle_);
+}
+
+extern "C" void TIM8_UP_TIM13_IRQHandler(void) {
+	HAL_TIM_IRQHandler(&all_timers_[9].handle_);
+}
+
+extern "C" void TIM8_TRG_COM_TIM14_IRQHandler(void) {
+	HAL_TIM_IRQHandler(&all_timers_[9].handle_);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *handle) {

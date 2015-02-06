@@ -56,6 +56,7 @@ struct Frequency: public ScaledUnit<uint64_t> {
 	uint64_t kilohertz() const { return kilounit(); }
 	uint64_t megahertz() const { return megaunit(); }
 	uint64_t gigahertz() const { return gigaunit(); }
+	bool is_null() const { return !unit(); }
 
 	inline Frequency operator*(uint64_t rhs) const { return Frequency(unit() * rhs); }
 	inline Frequency operator/(uint64_t rhs) const { return Frequency(unit() / rhs); }
@@ -89,6 +90,7 @@ struct TimeSpan : public ScaledUnit<uint64_t> {
 	inline TimeSpan operator+(const TimeSpan& rhs) const { return TimeSpan(unit() + rhs.unit()); }
 	inline TimeSpan operator-(const TimeSpan& rhs) const { return TimeSpan(unit() - rhs.unit()); }
 	inline uint64_t operator/(const TimeSpan& rhs) const { return unit() / rhs.unit(); }
+	inline void operator+=(const TimeSpan& rhs) { *this = operator+(rhs); }
 
 private:
 	TimeSpan(uint64_t nanosecs) : ScaledUnit(nanosecs) {}
