@@ -28,6 +28,7 @@
 #include "hwtimer.h"
 #include "pwmencoder.h"
 #include "pwmdecoder.h"
+#include "jsmn.h"
 
 void* __dso_handle = 0;
 
@@ -117,9 +118,8 @@ void uart_tx_task(void *pvParameters)
 	HAL_Delay(7000);
 	while (1) {
 		memset(buf, 0, sizeof(buf));
-		snprintf(buf, sizeof(buf) - 1, "UART:%7d****************************************************\n", i++);
-		size_t size = 32;
-		buf[size - 1] = '\n';
+		snprintf(buf, sizeof(buf) - 1, "{\"UART\" : {\"message\" : \"************ Test **********\", \"serial\":%7d}}\n", i++);
+		size_t size = strlen(buf);
 		uint8_t *bufptr = (uint8_t*)buf;
 		size_t ret = 0;
 		while (size) {
@@ -127,7 +127,7 @@ void uart_tx_task(void *pvParameters)
 			size -= ret;
 			bufptr += ret;
 		}
-		HAL_Delay(150);
+		HAL_Delay(250);
 	}
 }
 
