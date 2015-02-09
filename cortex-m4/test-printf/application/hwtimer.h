@@ -104,22 +104,22 @@ public:
 	/** Returns the configured timer period
 	 *  @returns Timer period
 	 */
-	const TimeSpan& period() const { return period_; }
+	inline const TimeSpan& period() const { return period_; }
 
 	/** Returns the timer Id
 	 *  @returns Timer Id
 	 */
-	Id timerid() const { return timer_id_; }
+	inline Id timerid() const { return timer_id_; }
 
 	/** Returns the current mode of operation
 	 *  @returns Mode of operation
 	 */
-	Mode mode() const { return mode_; }
+	inline Mode mode() const { return mode_; }
 
 	/** Returns the timer input clock
 	 *  @returns The timer input clock, prior to pre-scaler and divider
 	 */
-	Frequency input_clock() { return get_timx_input_clock(timer_id_); }
+	inline Frequency input_clock() { return get_timx_input_clock(timer_id_); }
 
 	/** Returns the captured value from the specified channel
 	 *  @param channel Channel number to be queried, value must be in the range [1..4]
@@ -139,7 +139,7 @@ public:
 	 */
 	bool set_pwm_duty_cycle(uint32_t channel_no, const TimeSpan& pulse_period);
 
-	uint64_t period_elapsed_count() const { return period_elapsed_cnt_; }
+	inline uint64_t period_elapsed_count() const { return period_elapsed_cnt_; }
 
 	/** Returns the timer input clock for any of the timers
 	 *  @param timer_id Timer ID

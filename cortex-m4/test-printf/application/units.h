@@ -78,15 +78,15 @@ struct TimeSpan : public ScaledUnit<uint64_t> {
 		return from_nanoseconds(from_seconds(ticks).nanoseconds()/freq.hertz());
 	}
 
-	TimeSpan() : ScaledUnit(0) {}
-	~TimeSpan() {}
+	inline TimeSpan() : ScaledUnit(0) {}
+	inline ~TimeSpan() {}
 	float seconds_float() const { return (float)microseconds() / (1000000.0); }
-	uint64_t seconds() const { return nanounit(); }
-	uint64_t milliseconds() const { return microunit(); }
-	uint64_t microseconds() const { return milliunit(); }
-	uint64_t nanoseconds() const { return unit(); }
-	bool is_null() const { return !unit(); }
-	Frequency to_frequency() const { return Frequency::from_hertz(
+	inline uint64_t seconds() const { return nanounit(); }
+	inline uint64_t milliseconds() const { return microunit(); }
+	inline uint64_t microseconds() const { return milliunit(); }
+	inline uint64_t nanoseconds() const { return unit(); }
+	inline bool is_null() const { return !unit(); }
+	inline Frequency to_frequency() const { return Frequency::from_hertz(
 			TimeSpan::from_seconds(1).nanoseconds()/nanoseconds()); }
 
 	inline TimeSpan operator*(uint64_t rhs) const { return TimeSpan(unit() * rhs); }
@@ -95,9 +95,12 @@ struct TimeSpan : public ScaledUnit<uint64_t> {
 	inline TimeSpan operator-(const TimeSpan& rhs) const { return TimeSpan(unit() - rhs.unit()); }
 	inline uint64_t operator/(const TimeSpan& rhs) const { return unit() / rhs.unit(); }
 	inline void operator+=(const TimeSpan& rhs) { *this = operator+(rhs); }
+	inline void operator-=(const TimeSpan& rhs) { *this = operator+(rhs); }
+	inline void operator/=(uint64_t rhs) { *this = operator/(rhs); }
+	inline void operator*=(uint64_t rhs) { *this = operator*(rhs); }
 
 private:
-	TimeSpan(uint64_t nanosecs) : ScaledUnit(nanosecs) {}
+	inline TimeSpan(uint64_t nanosecs) : ScaledUnit(nanosecs) {}
 };
 
 TimeSpan Frequency::period() {

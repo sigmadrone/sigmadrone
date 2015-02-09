@@ -12,8 +12,9 @@
 
 class TimeStamp {
 public:
-	static bool Init(HwTimer::Id timer_id = HwTimer::TIMER_7);
-	static void Cleanup();
+	static bool init(HwTimer::Id timer_id = HwTimer::TIMER_7);
+	static void cleanup();
+	static TimeSpan time_lost_per_time_stamp();
 
 	TimeStamp();
 	~TimeStamp();
@@ -32,7 +33,6 @@ private:
 private:
 	static HwTimer* timer_;
 	Stamp stamp_;
-	Stamp last_read_stamp_;
 };
 
 #endif /* TIMESTAMP_H_ */
