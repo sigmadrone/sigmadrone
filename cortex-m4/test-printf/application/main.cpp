@@ -45,7 +45,7 @@ UART uart({
 
 TaskHandle_t hMain;
 QueueHandle_t hGyroQueue;
-TimeStamp isrTs;
+TimeStamp isr_ts;
 
 extern "C" void EXTI0_IRQHandler(void)
 {
@@ -89,9 +89,9 @@ extern "C" void DMA2_Stream7_IRQHandler(void)
 void gyro_isr()
 {
 	if (gyro_int2) {
-		isrTs.time_stamp();
 		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 		uint32_t msg = 1;
+		isr_ts.time_stamp();
 		xQueueSendFromISR(hGyroQueue, &msg, &xHigherPriorityTaskWoken);
 	}
 }
@@ -276,11 +276,6 @@ void pwm_decoder_callback() {
 void tim3_isr() {
 	static float duty_cycle[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
 	static int index = 0;
-	static TimeStamp tim3_ts;
-	TimeSpan elapsed = tim3_ts.elapsed();
-	tim3_ts.time_stamp();
-	trace_printf("==> tim3 interrupt, elapsed %u us\n",
-			(unsigned int)elapsed.microseconds());
 	led2.toggle();
 	pwmEncoder.set_duty_cycle(1, duty_cycle[index]);
 	index = (index + 1) % (sizeof(duty_cycle)/sizeof(duty_cycle[1]));
@@ -293,8 +288,8 @@ void main_task(void *pvParameters)
 	char buf[256];
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	HwTimer tim3(HwTimer::TIMER_3, TimeSpan::from_milliseconds(5000),
-			Frequency::from_kilohertz(10), FunctionPointer(tim3_isr));
+	HwTimer tim3(HwTimer::TIMER_3, TimeSpan::from_milliseconds(100),
+			Frequency::from_kilohertz(10000), FunctionPointer(tim3_isr));
 	tim3.start();
 
 	/*
@@ -360,7 +355,6 @@ void main_task(void *pvParameters)
 
 	vTaskDelay(1000 / portTICK_RATE_MS);
 	// Infinite loop
-	TickType_t ticks = 0, oldticks = 0;
 	Vector3d gyr_bias;
 	char disp[128] = {0};
 
@@ -380,14 +374,14 @@ void main_task(void *pvParameters)
 	}
 	gyr_bias = gyr_bias / (double)bias_iterations;
 	TimeStamp lcdUpdateTime;
-	TimeStamp sampleDt;
-	TimeSpan ctxSwitchTime;
+	TimeStamp sample_dt;
+	TimeSpan ctx_switch_time;
 
 	while (1) {
 		uint32_t msg;
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
 		}
-		ctxSwitchTime = isrTs.elapsed();
+		ctx_switch_time = isr_ts.elapsed();
 
 		uint8_t gyr_samples = gyro.GetFifoSourceReg() & 0x1F;
 		uint8_t acc_samples = accel.GetFifoSourceFSS();
@@ -397,12 +391,10 @@ void main_task(void *pvParameters)
 		if (acc_samples > acc_wtm)
 			accel.GetFifoAcc(&acc_axes);
 
-		ticks = xTaskGetTickCount() - oldticks;
-		TimeSpan dt = sampleDt.elapsed();
+		TimeSpan dt = sample_dt.elapsed();
 
 		Vector3d gyr_data = Vector3d(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
-		oldticks = xTaskGetTickCount();
-		att.track_gyroscope(DEG2RAD(gyr_data), ticks * portTICK_PERIOD_MS / (float)1000.0);
+		att.track_gyroscope(DEG2RAD(gyr_data), dt.seconds_float());
 		q = att.get_attitude();
 
 		if (lcdUpdateTime.elapsed().milliseconds() > 500) {
@@ -424,13 +416,6 @@ void main_task(void *pvParameters)
 				BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)buf, LEFT_MODE);
 			}
 
-			sprintf(disp,"CtxSw: %u uS", (unsigned int)ctxSwitchTime.microseconds());
-			BSP_LCD_DisplayStringAt(0, 100, (uint8_t*)disp, LEFT_MODE);
-			ctxSwitchTime = TimeSpan::from_seconds(0);
-
-			sprintf(disp,"dT: %u uS", (unsigned int)dt.microseconds());
-			BSP_LCD_DisplayStringAt(0, 120, (uint8_t*)disp, LEFT_MODE);
-
 #if 0
 			sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);
 			BSP_LCD_DisplayStringAt(0, 100, (uint8_t*)disp, LEFT_MODE);
@@ -441,15 +426,22 @@ void main_task(void *pvParameters)
 			sprintf(disp,"SAMPLES: %d           ", acc_samples);
 			BSP_LCD_DisplayStringAt(0, 160, (uint8_t*)disp, LEFT_MODE);
 #endif
+
+			sprintf(disp,"CTXSW: %u uS", (unsigned int)ctx_switch_time.microseconds());
+			BSP_LCD_DisplayStringAt(0, 140, (uint8_t*)disp, LEFT_MODE);
+
+			sprintf(disp,"dT: %u uS", (unsigned int)dt.microseconds());
+			BSP_LCD_DisplayStringAt(0, 160, (uint8_t*)disp, LEFT_MODE);
+
 			sprintf(disp,"Attitude:             ");
 			BSP_LCD_DisplayStringAt(0, 180, (uint8_t*)disp, LEFT_MODE);
-			sprintf(disp,"W:      %6.2f              ", q.w);
+			sprintf(disp,"W:      %6.3f              ", q.w);
 			BSP_LCD_DisplayStringAt(0, 200, (uint8_t*)disp, LEFT_MODE);
-			sprintf(disp,"X:      %6.2f              ", q.x);
+			sprintf(disp,"X:      %6.3f              ", q.x);
 			BSP_LCD_DisplayStringAt(0, 220, (uint8_t*)disp, LEFT_MODE);
-			sprintf(disp,"Y:      %6.2f              ", q.y);
+			sprintf(disp,"Y:      %6.3f              ", q.y);
 			BSP_LCD_DisplayStringAt(0, 240, (uint8_t*)disp, LEFT_MODE);
-			sprintf(disp,"Z:      %6.2f              ", q.z);
+			sprintf(disp,"Z:      %6.3f              ", q.z);
 			BSP_LCD_DisplayStringAt(0, 260, (uint8_t*)disp, LEFT_MODE);
 
 			memset(disp, 0, sizeof(disp));
@@ -457,7 +449,7 @@ void main_task(void *pvParameters)
 			BSP_LCD_DisplayStringAt(0, 300, (uint8_t*)disp, LEFT_MODE);
 //			trace_printf("recved: %s\n", disp);
 		}
-		sampleDt.time_stamp();
+		sample_dt.time_stamp();
 		led1.toggle();
 	}
 }
@@ -487,7 +479,7 @@ int main(int argc, char* argv[])
 		"Task1", /* Task name - for debugging only*/
 		configMINIMAL_STACK_SIZE, /* Stack depth in words */
 		(void*) NULL, /* Pointer to tasks arguments (parameter) */
-		tskIDLE_PRIORITY + 2UL, /* Task priority*/
+		tskIDLE_PRIORITY + 3UL, /* Task priority*/
 		&hMain /* Task handle */
 		);
 

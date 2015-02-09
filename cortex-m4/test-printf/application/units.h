@@ -13,7 +13,7 @@ struct ScaledUnit {
 	static ScaledUnit from_baseunit(UnitType unit) { return ScaledUnit(unit); }
 	static ScaledUnit from_milliunit(UnitType milli) { return ScaledUnit(milli/1000); }
 	static ScaledUnit from_microunit(UnitType micro) { return ScaledUnit(micro/1000/1000); }
-	static ScaledUnit from_nanounit(UnitType nano) { return ScaledUnit(nano/1000/1000/10000); }
+	static ScaledUnit from_nanounit(UnitType nano) { return ScaledUnit(nano/1000/1000/1000); }
 	static ScaledUnit from_kilounit(UnitType kilo) { return ScaledUnit(kilo*1000); }
 	static ScaledUnit from_megaunit(UnitType mega) { return ScaledUnit(mega*1000*1000); }
 	static ScaledUnit from_gigaunit(UnitType giga) { return ScaledUnit(giga*1000*1000*1000); }
@@ -62,6 +62,7 @@ struct Frequency: public ScaledUnit<uint64_t> {
 	inline Frequency operator/(uint64_t rhs) const { return Frequency(unit() / rhs); }
 	inline Frequency operator+(const Frequency& rhs) const { return Frequency(unit() + rhs.unit()); }
 	inline Frequency operator-(const Frequency& rhs) const { return Frequency(unit() - rhs.unit()); }
+	inline uint64_t operator/(const Frequency& rhs) const { return unit()/rhs.unit(); }
 
 	inline TimeSpan period();
 private:
@@ -79,11 +80,14 @@ struct TimeSpan : public ScaledUnit<uint64_t> {
 
 	TimeSpan() : ScaledUnit(0) {}
 	~TimeSpan() {}
+	float seconds_float() const { return (float)microseconds() / (1000000.0); }
 	uint64_t seconds() const { return nanounit(); }
 	uint64_t milliseconds() const { return microunit(); }
 	uint64_t microseconds() const { return milliunit(); }
 	uint64_t nanoseconds() const { return unit(); }
 	bool is_null() const { return !unit(); }
+	Frequency to_frequency() const { return Frequency::from_hertz(
+			TimeSpan::from_seconds(1).nanoseconds()/nanoseconds()); }
 
 	inline TimeSpan operator*(uint64_t rhs) const { return TimeSpan(unit() * rhs); }
 	inline TimeSpan operator/(uint64_t rhs) const { return TimeSpan(unit() / rhs); }

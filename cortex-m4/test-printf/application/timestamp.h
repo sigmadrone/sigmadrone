@@ -32,6 +32,7 @@ private:
 private:
 	static HwTimer* timer_;
 	Stamp stamp_;
+	Stamp last_read_stamp_;
 };
 
 #endif /* TIMESTAMP_H_ */

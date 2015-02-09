@@ -150,7 +150,7 @@ TIM_HandleTypeDef* HwTimer::init_handle() {
 
 	uint64_t timer_counter;
 	if (!period_.is_null()) {
-		timer_counter = period_.nanoseconds() / timer_clock_.period().nanoseconds() - 1;
+		timer_counter = timer_clock_ / period_.to_frequency() - 1;
 		if (timer_counter > all_timers_[timer_id_].counter_resolution_) {
 			// since we will overflow the timer counter, we have to readjust the timer clock
 			timer_counter = all_timers_[timer_id_].counter_resolution_;
@@ -434,32 +434,32 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim) {
 		break;
 	case HwTimer::TIMER_2:
 		__TIM2_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM2_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM2_IRQn, 2, 1);
 		HAL_NVIC_EnableIRQ(TIM2_IRQn);
 		break;
 	case HwTimer::TIMER_3:
 		__TIM3_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM3_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM3_IRQn, 2, 1);
 		HAL_NVIC_EnableIRQ(TIM3_IRQn);
 		break;
 	case HwTimer::TIMER_4:
 		__TIM4_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM4_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM4_IRQn, 2, 1);
 		HAL_NVIC_EnableIRQ(TIM4_IRQn);
 		break;
 	case HwTimer::TIMER_5:
 		__TIM5_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM5_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM5_IRQn, 2, 1);
 		HAL_NVIC_EnableIRQ(TIM5_IRQn);
 		break;
 	case HwTimer::TIMER_6:
 		__TIM6_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM6_DAC_IRQn, 3, 1);
 		HAL_NVIC_EnableIRQ(TIM6_DAC_IRQn);
 		break;
 	case HwTimer::TIMER_7:
 		__TIM7_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM7_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM7_IRQn, 1, 0);
 		HAL_NVIC_EnableIRQ(TIM7_IRQn);
 		break;
 	case HwTimer::TIMER_8:
@@ -467,32 +467,32 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim) {
 		break;
 	case HwTimer::TIMER_9:
 		__TIM9_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM1_BRK_TIM9_IRQn, 2, 1);
 		HAL_NVIC_EnableIRQ(TIM1_BRK_TIM9_IRQn);
 		break;
 	case HwTimer::TIMER_10:
 		__TIM10_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM1_UP_TIM10_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM1_UP_TIM10_IRQn, 2, 1);
 		HAL_NVIC_EnableIRQ(TIM1_UP_TIM10_IRQn);
 		break;
 	case HwTimer::TIMER_11:
 		__TIM11_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM1_TRG_COM_TIM11_IRQn, 2, 1);
 		HAL_NVIC_EnableIRQ(TIM1_TRG_COM_TIM11_IRQn);
 		break;
 	case HwTimer::TIMER_12:
 		__TIM12_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM8_BRK_TIM12_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM8_BRK_TIM12_IRQn, 2, 1);
 		HAL_NVIC_EnableIRQ(TIM8_BRK_TIM12_IRQn);
 		break;
 	case HwTimer::TIMER_13:
 		__TIM13_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM8_UP_TIM13_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM8_UP_TIM13_IRQn, 2, 1);
 		HAL_NVIC_EnableIRQ(TIM8_UP_TIM13_IRQn);
 		break;
 	case HwTimer::TIMER_14:
 		__TIM14_CLK_ENABLE();
-		HAL_NVIC_SetPriority(TIM8_TRG_COM_TIM14_IRQn, 0, 1);
+		HAL_NVIC_SetPriority(TIM8_TRG_COM_TIM14_IRQn, 2, 1);
 		HAL_NVIC_EnableIRQ(TIM8_TRG_COM_TIM14_IRQn);
 		break;
 	default:assert(false);
