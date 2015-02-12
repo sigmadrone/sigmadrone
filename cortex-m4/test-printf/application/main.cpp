@@ -29,7 +29,7 @@
 #include "pwmencoder.h"
 #include "pwmdecoder.h"
 #include "timestamp.h"
-#include "jsmn.h"
+#include "rexjson.h"
 
 void* __dso_handle = 0;
 
@@ -285,6 +285,8 @@ void tim3_isr() {
 
 void main_task(void *pvParameters)
 {
+	rexjson_t ctx;
+	rexjson_record_t values[50];
 	char buf[256];
 	vTaskDelay(500 / portTICK_RATE_MS);
 
@@ -413,7 +415,20 @@ void main_task(void *pvParameters)
 			size_t retsize = uart.receive((uint8_t*)buf, sizeof(buf));
 			if (retsize) {
 				//trace_printf("%s", buf);
-				BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)buf, LEFT_MODE);
+				if (rexjson_parse_buffer(&ctx, values, sizeof(values)/sizeof(values[0]), buf, retsize, 10) > 0) {
+					ssize_t root_index = 0;
+					ssize_t child1_index = rexjson_recordtree_firstchild(values, sizeof(values), root_index);
+					ssize_t message_index = rexjson_recordtree_firstchild(values, sizeof(values), child1_index);
+					ssize_t serial_index = rexjson_recordtree_next(values, sizeof(values), message_index);
+					if (serial_index >= 0 && serial_index >= 0) {
+						sprintf(disp, "%.*s:%.*s         ",
+								(int)values[serial_index].namesize,
+								&buf[values[serial_index].name],
+								(int)values[serial_index].valuesize,
+								&buf[values[serial_index].value]);
+						BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)disp, LEFT_MODE);
+					}
+				}
 			}
 
 #if 0
@@ -427,10 +442,10 @@ void main_task(void *pvParameters)
 			BSP_LCD_DisplayStringAt(0, 160, (uint8_t*)disp, LEFT_MODE);
 #endif
 
-			sprintf(disp,"CTXSW: %u uS", (unsigned int)ctx_switch_time.microseconds());
+			sprintf(disp,"CTXSW: %u uS          ", (unsigned int)ctx_switch_time.microseconds());
 			BSP_LCD_DisplayStringAt(0, 140, (uint8_t*)disp, LEFT_MODE);
 
-			sprintf(disp,"dT: %u uS", (unsigned int)dt.microseconds());
+			sprintf(disp,"dT: %u uS             ", (unsigned int)dt.microseconds());
 			BSP_LCD_DisplayStringAt(0, 160, (uint8_t*)disp, LEFT_MODE);
 
 			sprintf(disp,"Attitude:             ");
@@ -467,7 +482,7 @@ int main(int argc, char* argv[])
 	NVIC_DisableIRQ(SysTick_IRQn);
 	NVIC_SetPriority(SysTick_IRQn, 0);
 
-	TimeStamp::Init();
+	TimeStamp::init();
 
 	button.callback(&led1, &DigitalOut::toggle);
 	trace_printf("Starting main_task:, CPU freq: %d, PCLK1 freq: %d, PCLK2 freq: %d\n",

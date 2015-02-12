@@ -21,7 +21,7 @@ L3GD20_SRC_C = $(wildcard BSP/Components/l3gd20/*.c)
 L3GD20DRV_SRC_C = $(wildcard BSP/Components/l3gd20_driver/*.c)
 STMPE811_SRC_C = $(wildcard BSP/Components/stmpe811/*.c)
 ILI9341_SRC_C = $(wildcard BSP/Components/ili9341/*.c)
-JSON_SRC_C = $(wildcard application/json/*.c)
+JSON_SRC_C = $(wildcard json/*.c)
 
 CIMSIS_OBJ_C   := $(CIMSIS_SRC_C:.c=.o)
 CORTEXM_OBJ_C  := $(CORTEXM_SRC_C:.c=.o)
