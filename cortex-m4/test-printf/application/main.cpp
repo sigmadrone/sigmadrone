@@ -93,6 +93,7 @@ void gyro_isr()
 		uint32_t msg = 1;
 		isr_ts.time_stamp();
 		xQueueSendFromISR(hGyroQueue, &msg, &xHigherPriorityTaskWoken);
+		portEND_SWITCHING_ISR(true);
 	}
 }
 
@@ -229,7 +230,7 @@ void init_lcd()
 		BSP_LCD_SetLayerVisible(layer, DISABLE);
 		BSP_LCD_SelectLayer(layer);
 
-		BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
+		BSP_LCD_SetFont(&Font20);
 
 		/* Clear the LCD */
 		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
@@ -263,14 +264,17 @@ void init_lcd()
 void pwm_decoder_callback();
 
 PwmEncoder pwmEncoder(HwTimer::TIMER_1, TimeSpan::from_seconds(2), {PA_8}, {1});
-PwmDecoder pwmDecoder(HwTimer::TIMER_4, PB_7, TimeSpan::from_seconds(3),
+PwmDecoder pwmDecoder(HwTimer::TIMER_4, PB_7, TimeSpan::from_milliseconds(30),
 		FunctionPointer(pwm_decoder_callback));
 
+
 void pwm_decoder_callback() {
+#if 0
 	float duty_cycle = pwmDecoder.duty_cycle_rel();
 	trace_printf("PWM decoded: period %d mS, duty cycle %.4f\n",
 			(uint32_t)pwmDecoder.decoded_period().milliseconds(),
 			duty_cycle);
+#endif
 }
 
 void tim3_isr() {
@@ -430,6 +434,11 @@ void main_task(void *pvParameters)
 					}
 				}
 			}
+
+			sprintf(disp,"PWM: %u mS", (unsigned)pwmDecoder.decoded_period().milliseconds());
+			BSP_LCD_DisplayStringAt(0, 100, (uint8_t*)disp, LEFT_MODE);
+			sprintf(disp,"PWM duty: %1.3f", pwmDecoder.duty_cycle_rel());
+			BSP_LCD_DisplayStringAt(0, 120, (uint8_t*)disp, LEFT_MODE);
 
 #if 0
 			sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);
