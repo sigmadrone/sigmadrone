@@ -30,6 +30,7 @@
 #include "pwmdecoder.h"
 #include "timestamp.h"
 #include "rexjson.h"
+#include "rexjson++.h"
 
 void* __dso_handle = 0;
 
@@ -112,7 +113,6 @@ void secondary_task(void *pvParameters)
 
 void uart_tx_task(void *pvParameters)
 {
-	char buf[128];
 	int i = 0;
 	HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA2_Stream7_IRQn);
@@ -120,11 +120,14 @@ void uart_tx_task(void *pvParameters)
 	HAL_NVIC_EnableIRQ (DMA2_Stream5_IRQn);
 	uart.uart_dmarx_start();
 	HAL_Delay(7000);
+	rexjson::value v = rexjson::object();
+	v["UART"] = rexjson::object();
 	while (1) {
-		memset(buf, 0, sizeof(buf));
-		snprintf(buf, sizeof(buf) - 1, "{\"UART\" : {\"message\" : \"************ Test **********\", \"serial\":%7d}}\n", i++);
-		size_t size = strlen(buf);
-		uint8_t *bufptr = (uint8_t*)buf;
+		v["UART"]["message"] = "************ Test **********";
+		v["UART"]["serial"] = i++;
+		std::string str = v.write(false);
+		const char *bufptr = str.c_str();
+		size_t size = str.length();
 		size_t ret = 0;
 		while (size) {
 			ret = uart.transmit((uint8_t*)bufptr, size);
@@ -289,8 +292,6 @@ void tim3_isr() {
 
 void main_task(void *pvParameters)
 {
-	rexjson_t ctx;
-	rexjson_record_t values[50];
 	char buf[256];
 	vTaskDelay(500 / portTICK_RATE_MS);
 
@@ -418,21 +419,9 @@ void main_task(void *pvParameters)
 			memset(buf, 0, sizeof(buf));
 			size_t retsize = uart.receive((uint8_t*)buf, sizeof(buf));
 			if (retsize) {
-				//trace_printf("%s", buf);
-				if (rexjson_parse_buffer(&ctx, values, sizeof(values)/sizeof(values[0]), buf, retsize, 10) > 0) {
-					ssize_t root_index = 0;
-					ssize_t child1_index = rexjson_recordtree_firstchild(values, sizeof(values), root_index);
-					ssize_t message_index = rexjson_recordtree_firstchild(values, sizeof(values), child1_index);
-					ssize_t serial_index = rexjson_recordtree_next(values, sizeof(values), message_index);
-					if (serial_index >= 0 && serial_index >= 0) {
-						sprintf(disp, "%.*s:%.*s         ",
-								(int)values[serial_index].namesize,
-								&buf[values[serial_index].name],
-								(int)values[serial_index].valuesize,
-								&buf[values[serial_index].value]);
-						BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)disp, LEFT_MODE);
-					}
-				}
+				rexjson::value v = rexjson::read(buf);
+				sprintf(disp, "serial : %d      ", v["UART"]["serial"].get_int());
+				BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)disp, LEFT_MODE);
 			}
 
 			sprintf(disp,"PWM: %u mS", (unsigned)pwmDecoder.decoded_period().milliseconds());

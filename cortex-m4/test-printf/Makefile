@@ -22,6 +22,7 @@ L3GD20DRV_SRC_C = $(wildcard BSP/Components/l3gd20_driver/*.c)
 STMPE811_SRC_C = $(wildcard BSP/Components/stmpe811/*.c)
 ILI9341_SRC_C = $(wildcard BSP/Components/ili9341/*.c)
 JSON_SRC_C = $(wildcard json/*.c)
+JSON_SRC_CPP = $(wildcard json/*.cpp)
 
 CIMSIS_OBJ_C   := $(CIMSIS_SRC_C:.c=.o)
 CORTEXM_OBJ_C  := $(CORTEXM_SRC_C:.c=.o)
@@ -39,6 +40,7 @@ STMPE811_OBJ_C := $(STMPE811_SRC_C:.c=.o)
 ILI9341_OBJ_C  := $(ILI9341_SRC_C:.c=.o)
 FONTS_OBJ_C    := $(FONTS_SRC_C:.c=.o)
 JSON_OBJ_C     := $(JSON_SRC_C:.c=.o)
+JSON_OBJ_CPP   := $(JSON_SRC_CPP:.cpp=.o)
 
 OBJECTS        :=   $(CIMSIS_OBJ_C) \
 			$(CORTEXM_OBJ_C) \
@@ -55,6 +57,7 @@ OBJECTS        :=   $(CIMSIS_OBJ_C) \
 			$(STMPE811_OBJ_C) \
 			$(ILI9341_OBJ_C) \
 			$(JSON_OBJ_C) \
+			$(JSON_OBJ_CPP) \
 
 
 DEPS           := $(OBJECTS:.o=.d)
