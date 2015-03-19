@@ -33,8 +33,7 @@ class value {
 public:
 	static value null;
 
-	virtual ~value();
-	value();  // creates null value
+	value(); // creates null value
 	value(const value& v);
 	value(const char* v);
 	value(const std::string& v);
@@ -44,9 +43,27 @@ public:
 	value(double v);
 	value(const object& v);
 	value(const array& v);
+	~value();
 
+	/**
+	 * Serialize the JSON tree to string.
+	 *
+	 * @param pretty Format the output string.
+	 * @param nullprop If set to false properties with null values will be omitted
+	 * @param tabsize if pretty is true the formatting will use indentation with the specified tabsize
+	 * @param precision Specifies how many digits to use after the decimal dot
+	 */
 	std::string write(bool pretty = false, bool nullprop = false, size_t tabsize = 4, size_t precision = 4) const;
+
+	/**
+	 * Parse the string and return JSON value representation.
+	 * If parsing fails this function will throw exception std::runtime_error
+	 *
+	 * @param str JSON string to be parsed
+	 * @param maxlevels The maximum nested levels the parser can parse
+	 */
 	value& read(const std::string& str, size_t maxlevels = 32);
+
 	value& push_back(const value& v = value::null);
 	value& operator[](size_t i);
 	value& operator[](const std::string& name);
@@ -160,7 +177,31 @@ protected:
 	std::string crlf_;
 };
 
-inline value read(const std::string& s) { return value().read(s); }
+/**
+ * Parse the string and return JSON value representation.
+ * If parsing fails this function will throw std::runtine_error
+ */
+inline value read(const std::string& s)
+{
+	return value().read(s);
+}
+
+/**
+ * Parse the string and return JSON value representation.
+ * If parsing fails this function will return false
+ */
+inline bool read_no_throw(value& v, const std::string& str, size_t maxlevels = 32)
+{
+	try {
+		std::stringstream oss(str);
+		rexjson::input in(oss);
+		in.read_steam(v);
+	} catch (std::runtime_error &e) {
+		return false;
+	}
+	return true;
+}
+
 
 } // namespace rexjson
 
