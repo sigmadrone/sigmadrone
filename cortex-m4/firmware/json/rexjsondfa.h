@@ -3,7 +3,7 @@
  */
 
 /*
- * To generate the rexjsonpp.cpp file from rexjsonpp.rexcc do:
+ * To generate the rexjsondfa.h file from rexjsondfa.rexcc do:
  * # rexcc rexjsondfa.rexcc -o rexjsondfa.h
  */
 

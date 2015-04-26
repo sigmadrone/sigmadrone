@@ -39,13 +39,101 @@ value::~value()
 	destroy();
 }
 
+static void escape_str_val(const value& v, std::ostream& os)
+{
+	for (std::string::const_iterator it = v.get_str().begin(); it != v.get_str().end(); it++) {
+		std::string::const_iterator next = it + 1;
+		if (*it == '\\' && (it + 1) != v.get_str().end()) {
+			os << *it++;
+			os << *it;
+		} else if (*it == '"') {
+			os << '\\' << *it;
+		} else if (*it == '\b') {
+			os << "\\b";
+		} else if (*it == '\f') {
+			os << "\\f";
+		} else if (*it == '\n') {
+			os << "\\n";
+		} else if (*it == '\r') {
+			os << "\\r";
+		} else if (*it == '\t') {
+			os << "\\t";
+		} else {
+			os << *it;
+		}
+	}
+}
+
+static std::string unescape_str(const std::string& s)
+{
+	std::ostringstream os;
+
+	for (std::string::const_iterator it = s.begin(); it < s.end(); it++) {
+		std::string::const_iterator next = it + 1;
+		if (*it == '\\' && (it + 1) < s.end() && *(it + 1) == '"') {
+			os << '"';
+			it++;
+		} else if (*it == '\\' && (it + 1) < s.end() && *(it + 1) == '\\') {
+			os << '\\';
+			it++;
+		} else if (*it == '\\' && (it + 1) < s.end() && *(it + 1) == '/') {
+			os << '/';
+			it++;
+		} else if (*it == '\\' && (it + 1) < s.end() && *(it + 1) == 'b') {
+			os << '\b';
+			it++;
+		} else if (*it == '\\' && (it + 1) < s.end() && *(it + 1) == 'f') {
+			os << '\f';
+			it++;
+		} else if (*it == '\\' && (it + 1) < s.end() && *(it + 1) == 'n') {
+			os << '\n';
+			it++;
+		} else if (*it == '\\' && (it + 1) < s.end() && *(it + 1) == 'r') {
+			os << '\r';
+			it++;
+		} else if (*it == '\\' && (it + 1) < s.end() && *(it + 1) == 't') {
+			os << '\t';
+			it++;
+		} else if (*it == '\\' && (it + 5) < s.end() && *(it + 1) == 'u') {
+			std::string ustr(it + 2, it + 6);
+			unsigned int wc = static_cast<unsigned int>(std::strtol(ustr.c_str(), NULL, 16));
+			unsigned int count = 0;
+			if (wc <= 0x007F)
+				count = 1;
+			else if (wc <= 0x07FF)
+				count = 2;
+			else if (wc <= 0xFFFF)
+				count = 3;
+			switch (count) {
+				case 3:
+					os << static_cast<unsigned char>(0x80 | (wc & 0x3f));
+					wc = wc >> 6;
+					wc |= 0x800;
+				case 2:
+					os << static_cast<unsigned char>(0x80 | (wc & 0x3f));
+					wc = wc >> 6;
+					wc |= 0xc0;
+				case 1:
+					os << static_cast<unsigned char>(wc);
+			}
+			it += 5;
+		} else if (*it == '\\' && (it + 1) < s.end()) {
+			os << *it++;
+			os << *it;
+		} else {
+			os << *it;
+		}
+	}
+	return os.str();
+}
+
 void value::destroy()
 {
-	if (get_type() == string_type)
+	if (get_type() == str_type)
 		delete store_.v_string_;
 	else if (get_type() == array_type)
 		delete store_.v_array_;
-	else if (get_type() == object_type)
+	else if (get_type() == obj_type)
 		delete store_.v_object_;
 	store_.v_null_ = NULL;
 	value_type_ = null_type;
@@ -68,14 +156,14 @@ value::value(const value& v)
 
 value::value(const char* v)
 {
-	value_type_ = string_type;
-	store_.v_string_ = new std::string(v);
+	value_type_ = str_type;
+	store_.v_string_ = new std::string(unescape_str(v));
 }
 
 value::value(const std::string& v)
 {
-	value_type_ = string_type;
-	store_.v_string_ = new std::string(v);
+	value_type_ = str_type;
+	store_.v_string_ = new std::string(unescape_str(v));
 }
 
 value::value(bool v)
@@ -104,7 +192,7 @@ value::value(double v)
 
 value::value(const object& v)
 {
-	value_type_ = object_type;
+	value_type_ = obj_type;
 	store_.v_object_ = new object(v);
 }
 
@@ -131,7 +219,7 @@ bool value::is_null() const
 
 const std::string& value::get_str()    const
 {
-	check_type(string_type);
+	check_type(str_type);
 	return *store_.v_string_;
 }
 
@@ -161,9 +249,9 @@ double value::get_real() const
 	return store_.v_double_;
 }
 
-const object& value::get_object() const
+const object& value::get_obj() const
 {
-	check_type(object_type);
+	check_type(obj_type);
 	return *store_.v_object_;
 }
 
@@ -173,9 +261,9 @@ const array& value::get_array() const
 	return *store_.v_array_;
 }
 
-object& value::get_object()
+object& value::get_obj()
 {
-	check_type(object_type);
+	check_type(obj_type);
 	return *store_.v_object_;
 }
 
@@ -196,9 +284,9 @@ std::string value::to_string() const
 		os << get_int64();
 	else if (value_type_ == real_type)
 		os << get_real();
-	else if (value_type_ == string_type)
+	else if (value_type_ == str_type)
 		os << get_str();
-	else if (value_type_ == object_type)
+	else if (value_type_ == obj_type)
 		throw std::runtime_error("'object' can not be converted to 'string'");
 	else if (value_type_ == array_type)
 		throw std::runtime_error("'array' can not be converted to 'string'");
@@ -218,7 +306,7 @@ value& value::operator=(const char* v)
 {
 	destroy();
 	check_type(null_type);
-	value_type_ = string_type;
+	value_type_ = str_type;
 	store_.v_string_ = new std::string(v);
 	return *this;
 }
@@ -257,10 +345,10 @@ value& value::operator=(double v)
 
 value& value::operator=(const std::string& v)
 {
-	std::string *tmp = new std::string(v);
+	std::string *tmp = new std::string(unescape_str(v));
 
 	destroy();
-	value_type_ = string_type;
+	value_type_ = str_type;
 	store_.v_string_ = tmp;
 	return *this;
 }
@@ -270,7 +358,7 @@ value& value::operator=(const object& v)
 	object *tmp = new object(v);
 
 	destroy();
-	value_type_ = object_type;
+	value_type_ = obj_type;
 	store_.v_object_ = tmp;
 	return *this;
 }
@@ -291,11 +379,11 @@ value& value::operator=(const value& v)
 		return *this;
 	destroy();
 	value_type_ = v.value_type_;
-	if (get_type() == string_type)
+	if (get_type() == str_type)
 		store_.v_string_ = new std::string(*v.store_.v_string_);
 	else if (get_type() == array_type)
 		store_.v_array_ = new array(*v.store_.v_array_);
-	else if (get_type() == object_type)
+	else if (get_type() == obj_type)
 		store_.v_object_ =  new object(*v.store_.v_object_);
 	else
 		store_ = v.store_;
@@ -317,7 +405,7 @@ value& value::operator[](size_t i)
 
 value& value::operator[](const std::string& name)
 {
-	check_type(object_type);
+	check_type(obj_type);
 	return store_.v_object_->operator[](name);
 }
 
@@ -391,25 +479,24 @@ void output::write_stream(const value& v, std::ostream& os, size_t level)
 		os.precision(precision_);
 		os.setf(std::ios::fixed, std:: ios::floatfield);
 		os << v.get_real();
-	} else if (v.value_type_ == string_type) {
+	} else if (v.value_type_ == str_type) {
 		os << '"';
-		os << v.get_str();
+		escape_str_val(v, os);
 		os << '"';
-	} else if (v.value_type_ == object_type) {
+	} else if (v.value_type_ == obj_type) {
 		os << '{';
-		if (pretty_ && !v.get_object().empty())
+		if (pretty_ && !v.get_obj().empty())
 			os << crlf_;
-		for (object::const_iterator it = v.get_object().begin(); it != v.get_object().end();) {
+		for (object::const_iterator it = v.get_obj().begin(); it != v.get_obj().end();it++) {
 			if (it->second.is_null() && nullprop_ == false) {
-				++it;
 				continue;
 			}
-			write_stream_namevalue(it->first, it->second, os, level + 1);
-			if (++it != v.get_object().end()) {
+			if (it != v.get_obj().begin()) {
 				os << ',';
 				if (pretty_)
 					os << crlf_;
 			}
+			write_stream_namevalue(it->first, it->second, os, level + 1);
 		}
 		if (pretty_)
 			os << crlf_ << indent;
@@ -418,13 +505,13 @@ void output::write_stream(const value& v, std::ostream& os, size_t level)
 		os << '[';
 		if (pretty_ && !v.get_array().empty())
 			os << crlf_;
-		for (array::const_iterator it = v.get_array().begin(); it != v.get_array().end();) {
-			write_stream_value(*it, os, level + 1);
-			if (++it != v.get_array().end()) {
+		for (array::const_iterator it = v.get_array().begin(); it != v.get_array().end(); it++) {
+			if (it != v.get_array().begin()) {
 				os << ',';
 				if (pretty_)
 					os << crlf_;
 			}
+			write_stream_value(*it, os, level + 1);
 		}
 		if (pretty_)
 			os << crlf_ << indent;
@@ -599,14 +686,15 @@ void input::parse_value(value& v)
 
 }
 
+//#define REXJSON_TEST_MAIN
 #ifdef REXJSON_TEST_MAIN
 int main(int argc, const char *argv[])
 {
-	char text1[]="{\n\"name\" : \"Jack (\\\"Bee\\\") Nimble\", \n\"format\": {\"type\":       \"rect\", \n\"width\":      1920, \n\"height\":     1080, \n\"interlace\":  false,\"frame rate\": 24\n}\n}}";
+	char text1[]="{\n\"name\" : \"Jack (\\\"Bee\\\") Nimble \u0434\u0432\u0435\", \n\"format\": {\"type\":       \"rect\", \n\"width\":      1920, \n\"height\":     1080, \n\"interlace\":  false,\"frame rate\": 24\n}\n}}";
 	char text2[]="[\"Sunday\", \"Monday\", \"Tuesday\", \"Wednesday\", \"Thursday\", \"Friday\", \"Saturday\"]";
 	char text3[]="[\n    [0.1, -1, 0],\n    [1, 0, 0],\n    [0, 0, 1]\n	]\n";
 	char text4[]="{\n		\"Image\": {\n			\"Width\":  800,\n			\"Height\": 600,\n			\"Title\":  \"View from 15th Floor\",\n		\"Thumbnail\": {\n				\"Url\":    \"http:/*www.example.com/image/481989943\",\n				\"Height\": 125,\n				\"Width\":  \"100\"\n			},\n			\"IDs\": [116, 943, 234, 38793]\n		}\n	}";
-	char text5[]="[\n	 {\n	 \"precision\": \"zip\",\n	 \"Latitude\":  37.7668,\n	 \"Longitude\": -122.3959,\n	 \"Address\":   \"\",\n	 \"City\":      \"SAN FRANCISCO\",\n	 \"State\":     \"CA\",\n	 \"Zip\":       \"94107\",\n	 \"Country\":   \"US\"\n	 },\n	 {\n	 \"precision\": \"zip\",\n	 \"Latitude\":  37.371991,\n	 \"Longitude\": -122.026020,\n	 \"Address\":   \"\",\n	 \"City\":      \"SUNNYVALE\",\n	 \"State\":     \"CA\",\n	 \"Zip\":       \"94085\",\n	 \"Country\":   \"US\"\n	 }\n	 ]";
+	char text5[]="[\n	 {\n	 \"precision\": \"zip\",\n	 \"Latitude\":  37.7668,\n	 \"Longitude\": -122.3959,\n	 \"Address\":   \"\",\n	 \"City\":      \"SAN FRANCISCO\",\n	 \"State\":     \"CA\",\n	 \"Zip\":       \"94107\",\n	 \"Country\":   \"US\"\n	 },\n	 {\n	 \"precision\": \"zip\",\n	 \"Latitude\":  37.371991,\n	 \"Longitude\": -122.026020,\n	 \"Address\":   \"\",\n	 \"City\":      \"SUNNYVALE\",\n	 \"State\":     \"CA\",\n	 \"Zip\":       \"94085\",\n	 \"Country\":   \"US\", \"tst\" : null\n	 }\n	 ]";
 
 	std::cout << "*** text1 ***\n" << rexjson::read(text1).write(false) << std::endl << std::endl;
 	std::cout << "*** text2 ***\n" << rexjson::read(text2).write(false) << std::endl << std::endl;
@@ -618,7 +706,7 @@ int main(int argc, const char *argv[])
 
 	rexjson::value v = rexjson::object();
 	v["prop1"] = "Value \\\"one\\\"";
-	v["prop2"] = "Value two";
+	v["prop2"] = "Value \u0434\u0432\u0435 two \u0434\u0432\u0435";
 	v["prop3"] = rexjson::array();
 	v["prop3"].push_back().read("\"Value 3\"");
 	v["prop3"].push_back() = "Value 4";

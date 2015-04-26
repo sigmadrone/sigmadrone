@@ -1,5 +1,5 @@
 
-PROJECT = test-printf
+PROJECT = sdfirmware
 
 all : $(PROJECT)
 

@@ -14,7 +14,6 @@
 #include <vector>
 #include <iostream>
 #include <stdint.h>
-#include "rexjson.h"
 
 namespace rexjson {
 
@@ -24,7 +23,7 @@ class output;
 
 typedef std::map<std::string, value> object;
 typedef std::vector<value> array;
-enum value_type {null_type = 0, object_type, array_type, string_type, bool_type, int_type, real_type};
+enum value_type {null_type = 0, obj_type, array_type, str_type, bool_type, int_type, real_type};
 
 class value {
 	friend class input;
@@ -53,7 +52,7 @@ public:
 	 * @param tabsize if pretty is true the formatting will use indentation with the specified tabsize
 	 * @param precision Specifies how many digits to use after the decimal dot
 	 */
-	std::string write(bool pretty = false, bool nullprop = false, size_t tabsize = 4, size_t precision = 4) const;
+	std::string write(bool pretty = false, bool nullprop = true, size_t tabsize = 4, size_t precision = 4) const;
 
 	/**
 	 * Parse the string and return JSON value representation.
@@ -67,8 +66,8 @@ public:
 	value& push_back(const value& v = value::null);
 	value& operator[](size_t i);
 	value& operator[](const std::string& name);
-	object& get_object();
-	const object& get_object() const;
+	object& get_obj();
+	const object& get_obj() const;
 	array& get_array();
 	const array& get_array() const;
 	const std::string& get_str() const;
@@ -78,6 +77,7 @@ public:
 	int64_t get_int64() const;
 	double get_real() const;
 	value_type get_type() const;
+	value_type type() const { return get_type(); }
 	std::string get_typename() const;
 	std::string to_string() const;
 
@@ -160,7 +160,7 @@ protected:
 
 class output {
 public:
-	output(bool pretty = false, bool nullprop = false, size_t tabsize = 4, size_t precision = 3, const std::string& crlf = "\n");
+	output(bool pretty = false, bool nullprop = true, size_t tabsize = 4, size_t precision = 3, const std::string& crlf = "\n");
 	void write(const value& v, std::ostream& os);
 	std::string write(const value& v);
 
@@ -200,6 +200,17 @@ inline bool read_no_throw(value& v, const std::string& str, size_t maxlevels = 3
 		return false;
 	}
 	return true;
+}
+
+
+inline std::string write(const value& v)
+{
+	return v.write(false);
+}
+
+inline std::string write_formatted(const value& v)
+{
+	return v.write(true);
 }
 
 
