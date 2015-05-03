@@ -1,53 +1,59 @@
+ARCH		?= arm
+OUTDIR		:= bin-$(ARCH)
 AR  		?= $(CROSS_COMPILE)ar
 CXX 		?= $(CROSS_COMPILE)g++
 CC  		?= $(CROSS_COMPILE)gcc
 LD  		?= $(CROSS_COMPILE)ld
 LINK 		:= $(CXX)
-DEFS 		+= $(addprefix -I,$(CURDIR) $(CURDIR)/obj)
-DEBUGFLAGS 	= -g -O0
-INCLUDES	= -I../include -I../ -I../libhttp -I../librexjson -I../libcmdargs -I../liblogger
-xCXXFLAGS 	= -O2 -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(DEBUGFLAGS) $(DEFS) $(CXXFLAGS)
+INCLUDES	+= $(addprefix -I,$(CURDIR) ../ ../include ../libhttp ../librexjson ../libcmdargs ../liblogger)
+ifneq ($(BUILD),release)
+DEBUGFLAGS	= -g -O0
+else
+DEBUGFLAGS	= -O2
+endif
+xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
+xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
 xLDFLAGS 	= $(LDFLAGS)
 LIBS		= -lattitude -llogger -ldevice -lhttp -lrexjson -lcmdargs -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-LIBS		+= -L../libattitude -L../libdevice -L../libcmdargs -L../liblogger -L../libhttp -L../librexjson
-TARGET 		= sigmad
+LIBS		+= -L../libattitude/$(OUTDIR) -L../libdevice/$(OUTDIR) -L../libcmdargs/$(OUTDIR) -L../liblogger/$(OUTDIR) -L../libhttp/$(OUTDIR) -L../librexjson/$(OUTDIR)
+TARGET 		= $(OUTDIR)/sigmad
 OBJS		= \
-		obj/main.o \
-		obj/daemon.o \
-		obj/signals.o \
-		obj/clientapp.o \
-		obj/serverapp.o \
-		obj/userrpcserver.o \
-		obj/attcontroller.o \
-		obj/pidtorque.o \
+		$(OUTDIR)/main.o \
+		$(OUTDIR)/daemon.o \
+		$(OUTDIR)/signals.o \
+		$(OUTDIR)/clientapp.o \
+		$(OUTDIR)/serverapp.o \
+		$(OUTDIR)/userrpcserver.o \
+		$(OUTDIR)/attcontroller.o \
+		$(OUTDIR)/pidtorque.o \
 
 
-all: obj $(TARGET)
+all: $(OUTDIR) $(TARGET)
 
 # auto-generated dependencies:
--include obj/*.P
+-include $(OUTDIR)/*.P
 
-obj/%.o: %.cpp
+$(OUTDIR)/%.o: %.cpp
 	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-obj/%.o: %.c
-	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+$(OUTDIR)/%.o: %.c
+	$(CC) -c $(xCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-obj:
-	mkdir obj
+$(OUTDIR):
+	mkdir $(OUTDIR)
 
-$(TARGET): $(OBJS:obj/%=obj/%)
+$(TARGET): $(OBJS:$(OUTDIR)/%=$(OUTDIR)/%)
 	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
 
 clean:
 	-rm -f $(TARGET)
-	-rm -f obj/*.o
-	-rm -rf obj 
+	-rm -f $(OUTDIR)/*.o
+	-rm -rf $(OUTDIR) 

@@ -1,29 +1,52 @@
-CXX	    	?= $(CROSS_COMPILE)g++
-CC          	?= $(CROSS_COMPILE)gcc
-INCLUDES    	= -I../../include -I../../libdevice -I../../libcmdargs -I../../libattitude
-LIBS		= -lm -lcmdargs -ldevice -lattitude -pthread -L../../libcmdargs -L../../libdevice -L../../libattitude -lrt
-CFLAGS		= -g -O0 -Wall
-OBJECTS		= alldata.o
-SRCS        	= alldata.c
-TARGET		= alldata
+ARCH		?= arm
+OUTDIR		:= bin-$(ARCH)
+AR  		?= $(CROSS_COMPILE)ar
+CXX 		?= $(CROSS_COMPILE)g++
+CC  		?= $(CROSS_COMPILE)gcc
+LD  		?= $(CROSS_COMPILE)ld
+LINK 		:= $(CXX)
+INCLUDES	+= $(addprefix -I,$(CURDIR) ../.. ../../include ../../libhttp ../../librexjson ../../libcmdargs ../../liblogger ../../libdevice ../../libattitude)
+ifneq ($(BUILD),release)
+DEBUGFLAGS	= -g -O0
+else
+DEBUGFLAGS	= -O2
+endif
+xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
+xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
+xLDFLAGS 	= $(LDFLAGS)
+LIBS		= -lattitude -llogger -ldevice -lhttp -lrexjson -lcmdargs -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
+LIBS		+= -L../../libattitude/$(OUTDIR) -L../../libdevice/$(OUTDIR) -L../../libcmdargs/$(OUTDIR) -L../../liblogger/$(OUTDIR) -L../../libhttp/$(OUTDIR) -L../../librexjson/$(OUTDIR)
+TARGET 		= $(OUTDIR)/alldata
+OBJS		= \
+		$(OUTDIR)/alldata.o \
 
-all : $(TARGET)
 
+all: $(OUTDIR) $(TARGET)
 
-.SUFFIXES:	.c .cpp .cxx
+# auto-generated dependencies:
+-include $(OUTDIR)/*.P
 
-.c.o: 
-	$(CC) -c $< $(CFLAGS) $(INCLUDES)
+$(OUTDIR)/%.o: %.cpp
+	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
-.cxx.o: 
-	$(CXX) -std=c++11 -c $< $(CFLAGS) $(INCLUDES)
+$(OUTDIR)/%.o: %.c
+	$(CC) -c $(xCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
-.cpp.o: 
-	$(CXX) -std=c++11 -c $< $(CFLAGS) $(INCLUDES)
+$(OUTDIR):
+	mkdir $(OUTDIR)
 
-$(TARGET) : $(OBJECTS)
-	$(CXX) -std=c++11 $^ -o $(TARGET) $(LIBS)
+$(TARGET): $(OBJS:$(OUTDIR)/%=$(OUTDIR)/%)
+	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
 
 clean:
-	rm -f *.o *~ $(TARGET)
-
+	-rm -f $(TARGET)
+	-rm -f $(OUTDIR)/*.o
+	-rm -rf $(OUTDIR) 

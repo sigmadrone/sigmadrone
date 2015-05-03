@@ -1,54 +1,61 @@
-AR		?= $(CROSS_COMPILE)ar
-CXX		?= $(CROSS_COMPILE)g++
-CC		?= $(CROSS_COMPILE)gcc
-LD		?= $(CROSS_COMPILE)ld
-DEFS		+= $(addprefix -I,$(CURDIR) $(CURDIR)/obj ..)
+ARCH		?= arm
+OUTDIR		:= bin-$(ARCH)
+AR			?= $(CROSS_COMPILE)ar
+CXX			?= $(CROSS_COMPILE)g++
+CC			?= $(CROSS_COMPILE)gcc
+LD 			= $(CROSS_COMPILE)ld
+INCLUDES	+= $(addprefix -I,$(CURDIR) ../include ..)
+ifneq ($(BUILD),release)
 DEBUGFLAGS	= -g -O0
-xCXXFLAGS	= -O2 -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(CXXFLAGS)
+else
+DEBUGFLAGS	= -O2
+endif
+xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
+xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
 xLDFLAGS	= $(LDFLAGS)
-TARGET		= libhttp.a
+TARGET		= $(OUTDIR)/libhttp.a
 
 OBJS= \
-    obj/connection.o \
-    obj/connection_manager.o \
-    obj/mime_types.o \
-    obj/reply.o \
-    obj/request.o \
-    obj/request_handler.o \
-    obj/request_parser.o \
-    obj/http_server.o \
-    obj/http_client.o \
-    obj/response_parser.o \
-    obj/base64.o \
+    $(OUTDIR)/connection.o \
+    $(OUTDIR)/connection_manager.o \
+    $(OUTDIR)/mime_types.o \
+    $(OUTDIR)/reply.o \
+    $(OUTDIR)/request.o \
+    $(OUTDIR)/request_handler.o \
+    $(OUTDIR)/request_parser.o \
+    $(OUTDIR)/http_server.o \
+    $(OUTDIR)/http_client.o \
+    $(OUTDIR)/response_parser.o \
+    $(OUTDIR)/base64.o \
 
 
-all: obj $(TARGET)
+all: $(OUTDIR) $(TARGET)
 
 # auto-generated dependencies:
--include obj/*.P
+-include $(OUTDIR)/*.P
 
-obj/%.o: %.cpp
+$(OUTDIR)/%.o: %.cpp
 	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-obj/%.o: %.c
-	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+$(OUTDIR)/%.o: %.c
+	$(CC) -c $(xCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-obj:
-	mkdir obj
+$(OUTDIR):
+	mkdir $(OUTDIR)
 
-$(TARGET): $(OBJS:obj/%=obj/%)
+$(TARGET): $(OBJS:$(OUTDIR)/%=$(OUTDIR)/%)
 	$(AR) -crs $@ $^
 
 
 clean:
 	-rm -f $(TARGET)
-	-rm -f obj/*.o
-	-rm -rf obj 
+	-rm -f $(OUTDIR)/*.o
+	-rm -rf $(OUTDIR) 

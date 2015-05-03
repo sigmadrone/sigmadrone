@@ -1,43 +1,50 @@
-AR  ?= $(CROSS_COMPILE)ar
-CXX ?= $(CROSS_COMPILE)g++
-CC  ?= $(CROSS_COMPILE)gcc
-LD  ?= $(CROSS_COMPILE)ld
-DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj)
-DEBUGFLAGS = -g -O0
-xCXXFLAGS = -O2 -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(CXXFLAGS)
-xLDFLAGS = $(LDFLAGS)
-TARGET = libcmdargs.a
+ARCH		?= arm
+OUTDIR		:= bin-$(ARCH)
+AR			?= $(CROSS_COMPILE)ar
+CXX			?= $(CROSS_COMPILE)g++
+CC			?= $(CROSS_COMPILE)gcc
+LD			?= $(CROSS_COMPILE)ld
+INCLUDES	+= $(addprefix -I,$(CURDIR) ../include ..)
+ifneq ($(BUILD),release)
+DEBUGFLAGS	= -g -O0
+else
+DEBUGFLAGS	= -O2
+endif
+xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
+xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
+xLDFLAGS	= $(LDFLAGS)
+TARGET		= $(OUTDIR)/libcmdargs.a
 
 OBJS= \
-    obj/cmdargs.o \
+    $(OUTDIR)/cmdargs.o \
 
-all: obj $(TARGET)
+all: $(OUTDIR) $(TARGET)
 
 # auto-generated dependencies:
--include obj/*.P
+-include $(OUTDIR)/*.P
 
-obj/%.o: %.cpp
+$(OUTDIR)/%.o: %.cpp
 	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-obj/%.o: %.c
-	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+$(OUTDIR)/%.o: %.c
+	$(CC) -c $(xCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-obj:
-	mkdir obj
+$(OUTDIR):
+	mkdir $(OUTDIR)
 
-$(TARGET): $(OBJS:obj/%=obj/%)
+$(TARGET): $(OBJS:$(OUTDIR)/%=$(OUTDIR)/%)
 	$(AR) -crs $@ $^
 
 
 clean:
 	-rm -f $(TARGET)
-	-rm -f obj/*.o
-	-rm -rf obj 
+	-rm -f $(OUTDIR)/*.o
+	-rm -rf $(OUTDIR) 

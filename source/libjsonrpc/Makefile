@@ -1,9 +1,16 @@
-CXX	    ?= $(CROSS_COMPILE)g++
-CC          ?= $(CROSS_COMPILE)gcc
-INCLUDES    = -I../include -I../
-INCLUDES   += $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
+ARCH		?= arm
+OUTDIR		:= bin-$(ARCH)
+ifneq ($(BUILD),release)
+DEBUGFLAGS	= -g -O0
+else
+DEBUGFLAGS	= -O2
+endif
+CXX			?= $(CROSS_COMPILE)g++
+CC			?= $(CROSS_COMPILE)gcc
+INCLUDES	= -I../include -I../
+INCLUDES	+= $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
 LIBS		= -lm -lrt -lpthread -ldl
-LIBS        += $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs json-glib-1.0)
+LIBS		+= $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs json-glib-1.0)
 
 # Hardening
 # Make some classes of vulnerabilities unexploitable in case one is discovered.
@@ -38,41 +45,41 @@ LIBS        += $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs jso
     HARDENING+=-D_FORTIFY_SOURCE=2
 #
 
-CFLAGS		= -g -O0 -Wall -Wno-psabi -static $(HARDENING)
-TARGET		= libjsonrpc.a
+xCFLAGS		= -Wall -Wno-psabi -static $(DEBUGFLAGS) $(HARDENING) $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
+xCXXFLAGS	= -Wall -Wno-psabi -static $(DEBUGFLAGS) $(HARDENING) $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
+TARGET		= $(OUTDIR)/libjsonrpc.a
 OBJS		= \
-	obj/jsonrpcparser.o\
-	obj/jsonreadwrite.o\
-	obj/jsonrpcbuilder.o\
-	obj/jsonrpctransport.o\
-	obj/jsonrpcdispatch.o
+	$(OUTDIR)/jsonrpcparser.o\
+	$(OUTDIR)/jsonreadwrite.o\
+	$(OUTDIR)/jsonrpcbuilder.o\
+	$(OUTDIR)/jsonrpctransport.o\
+	$(OUTDIR)/jsonrpcdispatch.o
 	
-all : obj $(TARGET)
+all : $(OUTDIR) $(TARGET)
 
-obj/%.o: %.c
-#.c.o: 
-	$(CC) -c $(CFLAGS) $(INCLUDES) -MMD -MF $(@:%.o=%.d) -o $@ $<
+$(OUTDIR)/%.o: %.cpp
+	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
-	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-	-e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
-	rm -f $(@:%.o=%.d)
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
-obj/%.o: %.cpp
-#.cpp.o: 
-	$(CXX) -std=c++11 -c $(CFLAGS) $(INCLUDES) -MMD -MF $(@:%.o=%.d) -o $@ $<
+$(OUTDIR)/%.o: %.c
+	$(CC) -c $(xCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
-	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
-	-e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
-	rm -f $(@:%.o=%.d)
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
-$(TARGET): $(OBJS:obj/%=obj/%)
+
+$(TARGET): $(OBJS:$(OUTDIR)/%=$(OUTDIR)/%)
 	$(AR) -crs $@ $^
 
-obj:
-	mkdir obj
+$(OUTDIR):
+	mkdir $(OUTDIR)
 	
 clean:
 	rm -f $(TARGET)
-	-rm -f obj/*.o
-	-rm -rf obj 
+	-rm -f $(OUTDIR)/*.o
+	-rm -rf $(OUTDIR) 
 

@@ -1,56 +1,52 @@
+ARCH		?= arm
+OUTDIR		:= bin-$(ARCH)
+AR			?= $(CROSS_COMPILE)ar
+CXX			?= $(CROSS_COMPILE)g++
+CC			?= $(CROSS_COMPILE)gcc
+LD			?= $(CROSS_COMPILE)ld
+INCLUDES	+= $(addprefix -I,$(CURDIR) ../include ..)
 ifneq ($(BUILD),release)
-CFLAGS := -g -O0
+DEBUGFLAGS	= -g -O0
 else
-CFLAGS := -O2
+DEBUGFLAGS	= -O2
 endif
+xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
+xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
+xLDFLAGS	= $(LDFLAGS)
+TARGET		= $(OUTDIR)/librexjson.a
 
-PROJECT = librexjson.a
-CC = $(PREFIX)gcc
-CXX = $(PREFIX)g++
-CPP = $(PREFIX)g++
-AR = $(PREFIX)ar
-AS = $(PREFIX)as
-LD = $(PREFIX)gcc
-SIZE = $(PREFIX)size
-OBJCOPY = $(PREFIX)objcopy
-OBJDUMP = $(PREFIX)objdump
-LDFLAGS = -std=c++11
-CFLAGS += -c -Wall
-CC_FLAGS = $(CFLAGS)
-CXX_FLAGS =  -std=c++11 $(CFLAGS)
+OBJS= \
+    $(OUTDIR)/rexjson.o \
+    $(OUTDIR)/rexjson++.o \
 
-PROJECT_SRC_C = $(wildcard *.c)
-PROJECT_SRC_CXX = $(wildcard *.cxx)
-PROJECT_SRC_CPP = $(wildcard *.cpp)
-PROJECT_OBJ_C := $(PROJECT_SRC_C:.c=.o)
-PROJECT_OBJ_CXX := $(PROJECT_SRC_CXX:.cxx=.o)
-PROJECT_OBJ_CPP := $(PROJECT_SRC_CPP:.cpp=.o)
+all: $(OUTDIR) $(TARGET)
 
-OBJECTS	:= \
-	$(PROJECT_OBJ_C) \
-	$(PROJECT_OBJ_CXX) \
-	$(PROJECT_OBJ_CPP) \
+# auto-generated dependencies:
+-include $(OUTDIR)/*.P
 
+$(OUTDIR)/%.o: %.cpp
+	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
-DEPS := $(OBJECTS:.o=.d)
+$(OUTDIR)/%.o: %.c
+	$(CC) -c $(xCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
+$(OUTDIR):
+	mkdir $(OUTDIR)
 
-all : $(PROJECT)
-
-clean:
-	rm -f $(PROJECT) $(OBJECTS) $(DEPS)
-
-.c.o:
-	$(CC)  $(CC_FLAGS) $(INCLUDES) -o $@ $<
-
-.cpp.o:
-	$(CPP) $(CXX_FLAGS) $(INCLUDES) -o $@ $<
-
-.cxx.o:
-	$(CPP) $(CXX_FLAGS) $(INCLUDES) -o $@ $<
-
-$(PROJECT) : $(OBJECTS)
+$(TARGET): $(OBJS:$(OUTDIR)/%=$(OUTDIR)/%)
 	$(AR) -crs $@ $^
 
--include $(DEPS)
+
+clean:
+	-rm -f $(TARGET)
+	-rm -f $(OUTDIR)/*.o
+	-rm -rf $(OUTDIR) 
 	

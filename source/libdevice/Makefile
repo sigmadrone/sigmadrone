@@ -1,50 +1,57 @@
-AR  ?= $(CROSS_COMPILE)ar
-CXX ?= $(CROSS_COMPILE)g++
-CC  ?= $(CROSS_COMPILE)gcc
-LD  ?= $(CROSS_COMPILE)ld
-DEFS += $(addprefix -I,$(CURDIR) $(CURDIR)/obj ../include)
-DEBUGFLAGS = -g -O0
-xCXXFLAGS = -O2 -Wall -Wextra $(DEBUGFLAGS) $(DEFS) $(CXXFLAGS) 
-xLDFLAGS = $(LDFLAGS)
-TARGET = libdevice.a
+ARCH		?= arm
+OUTDIR		:= bin-$(ARCH)
+AR			?= $(CROSS_COMPILE)ar
+CXX			?= $(CROSS_COMPILE)g++
+CC			?= $(CROSS_COMPILE)gcc
+LD			?= $(CROSS_COMPILE)ld
+INCLUDES	+= $(addprefix -I,$(CURDIR) ../include ..)
+ifneq ($(BUILD),release)
+DEBUGFLAGS	= -g -O0
+else
+DEBUGFLAGS	= -O2
+endif
+xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
+xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
+xLDFLAGS	= $(LDFLAGS)
+TARGET		= $(OUTDIR)/libdevice.a
 
 OBJS= \
-    obj/imusensor.o \
-    obj/biasimusensor.o \
-    obj/filesensor.o \
-    obj/sampler.o \
-    obj/filesampler.o \
-    obj/servomotor.o \
-    obj/servocontroller.o \
-    obj/pca9685controller.o \
+    $(OUTDIR)/imusensor.o \
+    $(OUTDIR)/biasimusensor.o \
+    $(OUTDIR)/filesensor.o \
+    $(OUTDIR)/sampler.o \
+    $(OUTDIR)/filesampler.o \
+    $(OUTDIR)/servomotor.o \
+    $(OUTDIR)/servocontroller.o \
+    $(OUTDIR)/pca9685controller.o \
 
-all: obj $(TARGET)
+all: $(OUTDIR) $(TARGET)
 
 # auto-generated dependencies:
--include obj/*.P
+-include $(OUTDIR)/*.P
 
-obj/%.o: %.cpp
+$(OUTDIR)/%.o: %.cpp
 	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-obj/%.o: %.c
-	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+$(OUTDIR)/%.o: %.c
+	$(CC) -c $(xCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
 	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
 	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
 	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
 	  rm -f $(@:%.o=%.d)
 
-obj:
-	mkdir obj
+$(OUTDIR):
+	mkdir $(OUTDIR)
 
-$(TARGET): $(OBJS:obj/%=obj/%)
+$(TARGET): $(OBJS:$(OUTDIR)/%=$(OUTDIR)/%)
 	$(AR) -crs $@ $^
 
 
 clean:
 	-rm -f $(TARGET)
-	-rm -f obj/*.o
-	-rm -rf obj 
+	-rm -f $(OUTDIR)/*.o
+	-rm -rf $(OUTDIR) 
