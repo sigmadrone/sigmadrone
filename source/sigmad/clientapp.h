@@ -6,7 +6,7 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/noncopyable.hpp>
 #include "libhttp/http_client.hpp"
-#include "json.h"
+#include "librexjson/rexjson++.h"
 #include "cmdargs.h"
 
 class client_app : private boost::noncopyable

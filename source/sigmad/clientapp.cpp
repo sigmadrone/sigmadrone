@@ -55,21 +55,20 @@ int client_app::run(int argc, const char *argv[])
 		std::vector<std::string> params(parsed_cmd_line.size() - 1);
 		std::copy(parsed_cmd_line.begin() + 1, parsed_cmd_line.end(), params.begin());
 		client.request(response, "POST", url, create_rpc_specrequest(method), headers);
-		json::value spec_result;
-		json::read(response.content, spec_result);
+		rexjson::value spec_result;
+		spec_result.read(response.content);
 		std::vector<unsigned int> rpc_types = rpc_server<>::rpc_types(spec_result.get_obj()["result"].get_array());
 		client.request(response, "POST", url, create_rpc_request(method, params, rpc_types), headers);
 //		std::cout << "Raw RPC response(DEBUG): " << response.content << std::endl;
-		json::value val;
-		if (json::read(response.content, val)) {
-			if (val.get_obj()["error"].type() == json::str_type) {
-				std::cout << "Error: " << val.get_obj()["error"].get_str() << std::endl;
-			} else if (val.get_obj()["result"].type() == json::str_type)
-				std::cout << val.get_obj()["result"].get_str() << std::endl;
-			else
-				std::cout << json::write_formatted(val.get_obj()["result"]) << std::endl;
-		}
-	} catch (std::exception& e) {
+		rexjson::value val;
+		val.read(response.content);
+		if (val.get_obj()["error"].type() == rexjson::obj_type ) {
+			std::cout << "Error: " << val.get_obj()["error"].get_obj()["message"].get_str() << std::endl;
+		} else if (val.get_obj()["result"].type() == rexjson::str_type) {
+			std::cout << val.get_obj()["result"].get_str() << std::endl;
+		} else {
+			std::cout << val.get_obj()["result"].write(true) << std::endl;
+		}	} catch (std::exception& e) {
 		std::cout << "RPC command failed! " << e.what() << std::endl;
 	}
 	return 0;
@@ -91,21 +90,21 @@ std::vector<std::string> client_app::parse_command_line(int argc, const char *ar
 std::string client_app::create_rpc_request(const std::string& method,
 		const std::vector<std::string>& params, const std::vector<unsigned int>& params_types)
 {
-	json::object rpc_request;
-	json::array parameters;
+	rexjson::object rpc_request;
+	rexjson::array parameters;
 
 	rpc_request["jsonrpc"] = "1.0";
 	rpc_request["id"] = "clientid";
-	rpc_request["method"] = json::value(method);
+	rpc_request["method"] = rexjson::value(method);
 	for (size_t i = 0; i < params_types.size(); i++) {
 		if (i < params.size()) {
-			json::value val(params[i]);
+			rexjson::value val(params[i]);
 			if (!(rpc_server<>::get_rpc_type(val.type()) & params_types[i])) {
 				/*
 				 * The default (string) interpretation is not valid type
 				 * try to reinterpret it by parsing.
 				 */
-				if (!json::read(params[i], val))
+				if (!rexjson::read_no_throw(val, params[i]))
 					throw std::runtime_error("Error parsing: " + params[i]);
 				if (!(rpc_server<>::get_rpc_type(val.type()) & params_types[i]))
 					throw std::runtime_error("Parameter: " + params[i] + " is of invalid type");
@@ -116,18 +115,18 @@ std::string client_app::create_rpc_request(const std::string& method,
 		}
 	}
 	rpc_request["params"] = parameters;
-	return json::write(rpc_request);
+	return rexjson::write(rpc_request);
 }
 
 std::string client_app::create_rpc_specrequest(const std::string& method)
 {
-	json::object rpc_request;
-	json::array parameters;
+	rexjson::object rpc_request;
+	rexjson::array parameters;
 
 	rpc_request["jsonrpc"] = "1.0";
 	rpc_request["id"] = "clientid";
 	rpc_request["method"] = "spec";
 	parameters.push_back(method);
 	rpc_request["params"] = parameters;
-	return json::write(rpc_request);
+	return rexjson::write(rpc_request);
 }

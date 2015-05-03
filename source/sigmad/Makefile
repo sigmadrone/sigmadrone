@@ -5,11 +5,11 @@ LD  		?= $(CROSS_COMPILE)ld
 LINK 		:= $(CXX)
 DEFS 		+= $(addprefix -I,$(CURDIR) $(CURDIR)/obj)
 DEBUGFLAGS 	= -g -O0
-INCLUDES	= -I../include -I../ -I../libhttp -I../libjsonspirit -I../libcmdargs -I../liblogger
+INCLUDES	= -I../include -I../ -I../libhttp -I../librexjson -I../libcmdargs -I../liblogger
 xCXXFLAGS 	= -O2 -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(DEBUGFLAGS) $(DEFS) $(CXXFLAGS)
 xLDFLAGS 	= $(LDFLAGS)
-LIBS		= -lattitude -llogger -ldevice -lhttp -ljsonspirit -lcmdargs -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-LIBS		+= -L../libattitude -L../libdevice -L../libcmdargs -L../liblogger -L../libhttp -L../libjsonspirit
+LIBS		= -lattitude -llogger -ldevice -lhttp -lrexjson -lcmdargs -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
+LIBS		+= -L../libattitude -L../libdevice -L../libcmdargs -L../liblogger -L../libhttp -L../librexjson
 TARGET 		= sigmad
 OBJS		= \
 		obj/main.o \

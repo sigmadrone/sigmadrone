@@ -5,7 +5,7 @@
 #include <map>
 #include <stdexcept>
 #include <iostream>
-#include "json.h"
+#include "librexjson/rexjson++.h"
 
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(x) (sizeof(x)/sizeof(x[0]))
@@ -62,77 +62,77 @@ public:
 	 * Then we use a vector of these bit masks to specify the parameter types we expect for
 	 * the rpc calls.
 	 *
-	 * get_rpc_type will convert json::Value_type to one of the rpc types.
+	 * get_rpc_type will convert rexjson::value_type to one of the rpc types.
 	 *
 	 * create_json_spec will convert the rpc_type bit mask to an integer or array of integers
-	 * correspoinding to json Value_type(s)
+	 * correspoinding to rexjson value_type(s)
 	 *
 	 * rpc_types will convert json spec to a std::vector of rpc_type_ bitmasks.
 	 *
 	 */
-	static const unsigned int rpc_obj_type = 1;
-	static const unsigned int rpc_array_type = 2;
-	static const unsigned int rpc_str_type = 4;
-	static const unsigned int rpc_bool_type = 8;
-	static const unsigned int rpc_int_type = 16;
-	static const unsigned int rpc_real_type = 32;
-	static const unsigned int rpc_null_type = 64;
+	static const unsigned int rpc_null_type = 1;
+	static const unsigned int rpc_obj_type = 2;
+	static const unsigned int rpc_array_type = 4;
+	static const unsigned int rpc_str_type = 8;
+	static const unsigned int rpc_bool_type = 16;
+	static const unsigned int rpc_int_type = 32;
+	static const unsigned int rpc_real_type = 64;
 	enum rpc_exec_mode {
 		execute = 0, 	// normal execution
 		spec,			// produce machine readable parameter specification
 		helpspec, 		// produce a human readable parameter specification
 		help, 			// produce a help message
 	};
-	typedef json::value (T::*rpc_method_type)(R connection, json::array& params, rpc_exec_mode mode);
+	typedef rexjson::value (T::*rpc_method_type)(R connection, rexjson::array& params, rpc_exec_mode mode);
 	typedef std::map<std::string, rpc_method_type> method_map_type;
 
 	rpc_server() {};
 	~rpc_server() {};
 
-	static unsigned int get_rpc_type(json::Value_type value_type)
+	static unsigned int get_rpc_type(rexjson::value_type value_type)
 	{
-		static const unsigned int rpc_types[] = {rpc_obj_type, rpc_array_type, rpc_str_type, rpc_bool_type, rpc_int_type, rpc_real_type, rpc_null_type};
+		static const unsigned int rpc_types[] = {rpc_null_type, rpc_obj_type, rpc_array_type, rpc_str_type, rpc_bool_type, rpc_int_type, rpc_real_type};
 		return rpc_types[value_type];
 	}
 
-	static json::value create_json_spec(unsigned int *arr, size_t n)
+	static rexjson::value create_json_spec(unsigned int *arr, size_t n)
 	{
-		json::array params;
+		rexjson::array params;
 
 		for (size_t i = 0; i < n; i++) {
-			json::array param;
+			rexjson::array param;
 			if (arr[i] & rpc_obj_type)
-				param.push_back(json::obj_type);
+				param.push_back(rexjson::obj_type);
 			if (arr[i] & rpc_array_type)
-				param.push_back(json::array_type);
+				param.push_back(rexjson::array_type);
 			if (arr[i] & rpc_str_type)
-				param.push_back(json::str_type);
+				param.push_back(rexjson::str_type);
 			if (arr[i] & rpc_bool_type)
-				param.push_back(json::bool_type);
+				param.push_back(rexjson::bool_type);
 			if (arr[i] & rpc_int_type)
-				param.push_back(json::int_type);
+				param.push_back(rexjson::int_type);
 			if (arr[i] & rpc_real_type)
-				param.push_back(json::real_type);
+				param.push_back(rexjson::real_type);
 			if (arr[i] & rpc_null_type)
-				param.push_back(json::null_type);
+				param.push_back(rexjson::null_type);
 			params.push_back((param.size() > 1) ? param : param[0]);
 		}
 		return params;
 	}
 
-	static std::vector<unsigned int> rpc_types(const json::array& spec)
+	static std::vector<unsigned int> rpc_types(const rexjson::array& spec)
 	{
 		std::vector<unsigned int> ret;
 
 		for (size_t i = 0; i < spec.size(); i++) {
-			if (spec[i].type() == json::array_type) {
+			if (spec[i].get_type() == rexjson::array_type) {
 				unsigned int rpc_types = 0;
 				for (size_t j = 0; j < spec[i].get_array().size(); j++) {
-					rpc_types |= get_rpc_type((json::Value_type)spec[i].get_array()[j].get_int());
+					rpc_types |= get_rpc_type((rexjson::value_type)spec[i].get_array()[j].get_int());
 				}
 				ret.push_back(rpc_types);
 			} else {
-				ret.push_back(get_rpc_type((json::Value_type)spec[i].get_int()));
+				ret.push_back(get_rpc_type((rexjson::value_type)spec[i].get_int()));
 			}
 		}
 		return ret;
@@ -140,22 +140,22 @@ public:
 
 	static std::vector<unsigned int> rpc_types(const std::string strspec)
 	{
-		json::value jsonspec;
+		rexjson::value jsonspec;
 
-		json::read(strspec, jsonspec);
+		jsonspec.read(strspec);
 		return rpc_types(jsonspec.get_array());
 	}
 
-	static json::value create_json_helpspec(unsigned int *arr, size_t n)
+	static rexjson::value create_json_helpspec(unsigned int *arr, size_t n)
 	{
-		json::value ret = create_json_spec(arr, n);
+		rexjson::value ret = create_json_spec(arr, n);
 		convert_types_to_strings(ret);
 		return ret;
 	}
 
-	static json::object create_rpc_error(rpc_error_code code, const std::string& message)
+	static rexjson::object create_rpc_error(rpc_error_code code, const std::string& message)
 	{
-		json::object error;
+		rexjson::object error;
 		error["code"] = code;
 		error["message"] = message;
 		return error;
@@ -170,9 +170,9 @@ public:
 		map_[name] = method;
 	}
 
-	json::value call_method_name(R connection, const json::value& methodname, json::array& params, rpc_exec_mode mode = execute)
+	rexjson::value call_method_name(R connection, const rexjson::value& methodname, rexjson::array& params, rpc_exec_mode mode = execute)
 	{
-		if (methodname.type() != json::str_type)
+		if (methodname.get_type() != rexjson::str_type)
 			throw create_rpc_error(RPC_INVALID_REQUEST, "method must be a string");
 		typename method_map_type::const_iterator method_entry = map_.find(methodname.get_str());
 		if (method_entry == map_.end())
@@ -180,33 +180,36 @@ public:
 		return (static_cast<T*>(this)->*(method_entry->second))(connection, params, mode);
 	}
 
-	json::value call(R connection, const json::value& val, rpc_exec_mode mode = execute)
+	rexjson::value call(R connection, const rexjson::value& val, rpc_exec_mode mode = execute)
 	{
-		json::object ret;
-		json::value result;
-		json::value error;
-		json::value id;
-		json::array params;
+		rexjson::object ret;
+		rexjson::value result;
+		rexjson::value error;
+		rexjson::value id;
+		rexjson::array params;
 
 		try {
-			if (val.type() != json::obj_type)
+			if (val.get_type() != rexjson::obj_type)
 				throw create_rpc_error(RPC_PARSE_ERROR, "top-level object parse error");
-			json::object::const_iterator params_it = val.get_obj().find("params");
-			if (params_it != val.get_obj().end() && params_it->second.type() != json::array_type)
+			rexjson::object::const_iterator params_it = val.get_obj().find("params");
+			if (params_it != val.get_obj().end() && params_it->second.type() != rexjson::array_type)
 				throw create_rpc_error(RPC_INVALID_REQUEST, "params must be an array");
 			if (params_it != val.get_obj().end())
 				params = params_it->second.get_array();
-			json::object::const_iterator id_it = val.get_obj().find("id");
+			rexjson::object::const_iterator id_it = val.get_obj().find("id");
 			if (id_it != val.get_obj().end())
 				id = id_it->second;
-			json::object::const_iterator method_it = val.get_obj().find("method");
+			rexjson::object::const_iterator method_it = val.get_obj().find("method");
 			if (method_it == val.get_obj().end())
 				throw create_rpc_error(RPC_INVALID_REQUEST, "missing method");
 			result = call_method_name(connection, method_it->second, params, mode);
-		} catch (json::object& e) {
+		} catch (rexjson::object& e) {
 			error = e;
 		} catch (std::exception& e) {
-			error = std::string(e.what());
+			rexjson::object errobj;
+			errobj["message"] = e.what();
+			errobj["code"] = RPC_MISC_ERROR;
+			error = errobj;
 		}
 		ret["result"] = result;
 		ret["id"] = id;
@@ -214,35 +217,36 @@ public:
 		return ret;
 	}
 
-	json::value call(R connection, const std::string& name, const json::value& id, const json::array& params, rpc_exec_mode mode = execute)
+	rexjson::value call(R connection, const std::string& name, const rexjson::value& id, const rexjson::array& params, rpc_exec_mode mode = execute)
 	{
-		json::object req;
+		rexjson::object req;
 		req["id"] = id;
-		req["method"] = json::value(name);
-		req["params"] = json::value(params);
-		return call(connection, json::value(req), mode);
+		req["method"] = rexjson::value(name);
+		req["params"] = rexjson::value(params);
+		return call(connection, rexjson::value(req), mode);
 
 	}
 
 protected:
-	static void convert_types_to_strings(json::value& val)
+	static void convert_types_to_strings(rexjson::value& val)
 	{
-		if (val.type() == json::int_type && val.get_int() >= json::obj_type && val.get_int() <= json::null_type) {
-			val = std::string(json::Value_type_name[val.get_int()]);
-		} else if (val.type() == json::array_type) {
+		if (val.get_type() == rexjson::int_type && val.get_int() >= rexjson::obj_type && val.get_int() <= rexjson::null_type) {
+			std::string strtypename = val.get_typename();
+			val = strtypename;
+		} else if (val.get_type() == rexjson::array_type) {
 			for (size_t i = 0; i < val.get_array().size(); i++) {
 				convert_types_to_strings(val.get_array()[i]);
 			}
 		}
 	}
 
-	static void verify_parameters(json::array& params, unsigned int *types, size_t n)
+	static void verify_parameters(rexjson::array& params, unsigned int *types, size_t n)
 	{
 		params.resize(n);
 		for (size_t i = 0; i < n; i++) {
-			json::Value_type value_type = params[i].type();
+			rexjson::value_type value_type = params[i].get_type();
 			if ((get_rpc_type(value_type) & types[i]) == 0) {
-				throw create_rpc_error(RPC_INVALID_PARAMS, "Invalid parameter: '" + json::write(params[i]) + "'");
+				throw create_rpc_error(RPC_INVALID_PARAMS, "Invalid parameter: '" + params[i].write(false) + "'");
 			}
 		}
 	}

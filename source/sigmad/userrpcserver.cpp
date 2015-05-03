@@ -2,8 +2,7 @@
 #include <boost/lexical_cast.hpp>
 #include "serverapp.h"
 #include "userrpcserver.h"
-#include "libjsonspirit/jsonserialization.h"
-
+#include "jsonserialization.h"
 
 user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_service, const std::string& address, const std::string& port)
 	: http_server(io_service, address, port)
@@ -48,7 +47,7 @@ user_rpcserver::~user_rpcserver()
 {
 }
 
-json::value user_rpcserver::rpc_spec(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_spec(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = { rpc_str_type };
 	if (mode != execute) {
@@ -66,11 +65,11 @@ json::value user_rpcserver::rpc_spec(http::server::connection_ptr connection, js
 	}
 
 	verify_parameters(params, types, ARRAYSIZE(types));
-	json::array ignored;
+	rexjson::array ignored;
 	return call_method_name(connection, params[0], ignored, spec);
 }
 
-json::value user_rpcserver::rpc_help(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_help(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = { (rpc_str_type | rpc_null_type) };
 	if (mode != execute) {
@@ -88,20 +87,20 @@ json::value user_rpcserver::rpc_help(http::server::connection_ptr connection, js
 	}
 
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if (params[0].type() == json::null_type) {
+	if (params[0].type() == rexjson::null_type) {
 		std::string result;
 		for (method_map_type::const_iterator it = map_.begin(); it != map_.end(); it++) {
-			json::array ignored;
-			std::string ret = call_method_name(connection, json::value(it->first), ignored, help).get_str();
+			rexjson::array ignored;
+			std::string ret = call_method_name(connection, rexjson::value(it->first), ignored, help).get_str();
 			result += ret.substr(0, ret.find('\n')) + "\n";
 		}
 		return result;
 	}
-	json::array ignored;
+	rexjson::array ignored;
 	return call_method_name(connection, params[0], ignored, help);
 }
 
-json::value user_rpcserver::rpc_exit(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_exit(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -119,7 +118,7 @@ json::value user_rpcserver::rpc_exit(http::server::connection_ptr connection, js
 }
 
 
-json::value user_rpcserver::rpc_myaddress(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_myaddress(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = { };
 	if (mode != execute) {
@@ -136,13 +135,13 @@ json::value user_rpcserver::rpc_myaddress(http::server::connection_ptr connectio
 				;
 	}
 	verify_parameters(params, types, sizeof(types) / sizeof(types[0]));
-	json::object ret;
+	rexjson::object ret;
 	ret["address"] = connection->get_remote_address();
 	ret["port"] = connection->get_remote_port();
 	return ret;
 }
 
-json::value user_rpcserver::rpc_servo_enable(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_servo_enable(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_bool_type};
 	if (mode != execute) {
@@ -167,7 +166,7 @@ json::value user_rpcserver::rpc_servo_enable(http::server::connection_ptr connec
 	return "Servo is disabled";
 }
 
-json::value user_rpcserver::rpc_servo_setoffset(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_servo_setoffset(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_int_type, rpc_real_type};
 	if (mode != execute) {
@@ -193,7 +192,7 @@ json::value user_rpcserver::rpc_servo_setoffset(http::server::connection_ptr con
 	return params[1];
 }
 
-json::value user_rpcserver::rpc_servo_getpulse(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_servo_getpulse(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_int_type};
 	if (mode != execute) {
@@ -213,7 +212,7 @@ json::value user_rpcserver::rpc_servo_getpulse(http::server::connection_ptr conn
 	return (int)app_.servoctrl_->getpulse(params[0].get_int());
 }
 
-json::value user_rpcserver::rpc_servo_getpulsems(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_servo_getpulsems(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_int_type};
 	if (mode != execute) {
@@ -233,7 +232,7 @@ json::value user_rpcserver::rpc_servo_getpulsems(http::server::connection_ptr co
 	return app_.servoctrl_->getpulse_ms(params[0].get_int());
 }
 
-json::value user_rpcserver::rpc_get_attitude(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_get_attitude(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -252,7 +251,7 @@ json::value user_rpcserver::rpc_get_attitude(http::server::connection_ptr connec
 	return quaternion_to_json_value(app_.ctrl_thread_.get_attitude());
 }
 
-json::value user_rpcserver::rpc_get_accelerometer(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_get_accelerometer(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -271,7 +270,7 @@ json::value user_rpcserver::rpc_get_accelerometer(http::server::connection_ptr c
 	return matrix_to_json_value(app_.ssampler_->data.acc3d_);
 }
 
-json::value user_rpcserver::rpc_get_magnetometer(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_get_magnetometer(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -291,7 +290,7 @@ json::value user_rpcserver::rpc_get_magnetometer(http::server::connection_ptr co
 	return matrix_to_json_value(app_.attitude_tracker_->earth_m_);
 }
 
-json::value user_rpcserver::rpc_get_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_get_earth_g(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -310,7 +309,7 @@ json::value user_rpcserver::rpc_get_earth_g(http::server::connection_ptr connect
 	return  matrix_to_json_value(app_.attitude_tracker_->get_earth_g());
 }
 
-json::value user_rpcserver::rpc_set_earth_g(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_set_earth_g(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_array_type};
 	if (mode != execute) {
@@ -331,7 +330,7 @@ json::value user_rpcserver::rpc_set_earth_g(http::server::connection_ptr connect
 	return  matrix_to_json_value(app_.attitude_tracker_->get_earth_g());
 }
 
-json::value user_rpcserver::rpc_set_correction_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_set_correction_thrust(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_array_type};
 	if (mode != execute) {
@@ -352,7 +351,7 @@ json::value user_rpcserver::rpc_set_correction_thrust(http::server::connection_p
 	return  matrix_to_json_value(app_.ctrl_thread_.get_correction_thrust());
 }
 
-json::value user_rpcserver::rpc_get_correction_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_get_correction_thrust(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -372,7 +371,7 @@ json::value user_rpcserver::rpc_get_correction_thrust(http::server::connection_p
 }
 
 
-json::value user_rpcserver::rpc_run(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_run(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -392,7 +391,7 @@ json::value user_rpcserver::rpc_run(http::server::connection_ptr connection, jso
 	return "Controller started.";
 }
 
-json::value user_rpcserver::rpc_get_running(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_get_running(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -412,7 +411,7 @@ json::value user_rpcserver::rpc_get_running(http::server::connection_ptr connect
 }
 
 
-json::value user_rpcserver::rpc_reset(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_reset(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -433,7 +432,7 @@ json::value user_rpcserver::rpc_reset(http::server::connection_ptr connection, j
 }
 
 
-json::value user_rpcserver::rpc_servo_rate(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_servo_rate(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_int_type|rpc_null_type};
 	if (mode != execute) {
@@ -451,12 +450,12 @@ json::value user_rpcserver::rpc_servo_rate(http::server::connection_ptr connecti
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == json::int_type))
+	if ((params[0].type() == rexjson::int_type))
 		app_.servoctrl_->setrate(params[0].get_int());
 	return (int)app_.servoctrl_->getrate();
 }
 
-json::value user_rpcserver::rpc_kp(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_kp(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_real_type|rpc_null_type};
 	if (mode != execute) {
@@ -474,12 +473,12 @@ json::value user_rpcserver::rpc_kp(http::server::connection_ptr connection, json
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == json::real_type))
+	if ((params[0].type() == rexjson::real_type))
 		app_.ctrl_thread_.pid_.Kp_ = params[0].get_real();
 	return app_.ctrl_thread_.pid_.Kp_;
 }
 
-json::value user_rpcserver::rpc_kd(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_kd(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_real_type|rpc_null_type};
 	if (mode != execute) {
@@ -497,12 +496,12 @@ json::value user_rpcserver::rpc_kd(http::server::connection_ptr connection, json
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == json::real_type))
+	if ((params[0].type() == rexjson::real_type))
 		app_.ctrl_thread_.pid_.Kd_ = params[0].get_real();
 	return app_.ctrl_thread_.pid_.Kd_;
 }
 
-json::value user_rpcserver::rpc_ki(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_ki(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_real_type|rpc_null_type};
 	if (mode != execute) {
@@ -520,12 +519,12 @@ json::value user_rpcserver::rpc_ki(http::server::connection_ptr connection, json
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == json::real_type))
+	if ((params[0].type() == rexjson::real_type))
 		app_.ctrl_thread_.pid_.Ki_ = params[0].get_real();
 	return app_.ctrl_thread_.pid_.Ki_;
 }
 
-json::value user_rpcserver::rpc_get_motors(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_get_motors(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -541,7 +540,7 @@ json::value user_rpcserver::rpc_get_motors(http::server::connection_ptr connecti
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	json::array ret;
+	rexjson::array ret;
 	for (size_t i = 0; i < app_.servoctrl_->channelcount(); i++) {
 		if (app_.servoctrl_->motor(0).valid()) {
 			ret.push_back(app_.servoctrl_->motor(i).offset());
@@ -551,7 +550,7 @@ json::value user_rpcserver::rpc_get_motors(http::server::connection_ptr connecti
 }
 
 
-json::value user_rpcserver::rpc_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_thrust(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_real_type|rpc_null_type};
 	if (mode != execute) {
@@ -569,12 +568,12 @@ json::value user_rpcserver::rpc_thrust(http::server::connection_ptr connection, 
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == json::real_type))
+	if ((params[0].type() == rexjson::real_type))
 		app_.ctrl_thread_.thrust_ = params[0].get_real();
 	return app_.ctrl_thread_.thrust_;
 }
 
-json::value user_rpcserver::rpc_get_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_get_thrust(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -594,7 +593,7 @@ json::value user_rpcserver::rpc_get_thrust(http::server::connection_ptr connecti
 	return app_.ctrl_thread_.thrust_;
 }
 
-json::value user_rpcserver::rpc_set_accelerometer_correction_period(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_set_accelerometer_correction_period(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_real_type};
 	if (mode != execute) {
@@ -620,7 +619,7 @@ json::value user_rpcserver::rpc_set_accelerometer_correction_period(http::server
 	return params[0].get_real();
 }
 
-json::value user_rpcserver::rpc_set_thrust(http::server::connection_ptr connection, json::array& params, rpc_exec_mode mode)
+rexjson::value user_rpcserver::rpc_set_thrust(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_real_type};
 	if (mode != execute) {
@@ -672,10 +671,10 @@ void user_rpcserver::method_request_handler(http::server::connection& connection
 
 void user_rpcserver::jsonrpc_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
 {
-	json::value jsonreq, result;
+	rexjson::value jsonreq, result;
 
-	json::read(req.content, jsonreq);
+	jsonreq.read(req.content);
 	result = call(connection.shared_from_this(), jsonreq);
-	rep.content = json::write(result) + "\n";
+	rep.content = rexjson::write(result) + "\n";
 	rep.status = http::server::reply::ok;
 }
