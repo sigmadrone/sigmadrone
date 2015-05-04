@@ -279,7 +279,7 @@ static int axesdata_open_device(const char *devname)
 		const char *name = devname + strlen(AXIS_NET_PROT);
 		const char *col = strchr(name, ':');
 		memset(servername, 0, sizeof(servername));
-		if (col && (col - name) + 1 < sizeof(servername)) {
+		if (col && (col - name) + 1 < (long) sizeof(servername)) {
 			strncpy(servername, name, (col - name));
 			serverport = atoi(col + 1);
 		} else {

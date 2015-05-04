@@ -165,7 +165,7 @@ void mainwindow::rpc_update_attitude()
 {
 	try {
 		QuaternionD q;
-		json::value val = rpc_client_->call(rpcuri_, "sd_get_attitude");
+		rexjson::value val = rpc_client_->call(rpcuri_, "sd_get_attitude");
 		q = quaternion_from_json_value<double>(val);
 		label_attitude_w_->set_text(double_to_str(q.w));
 		label_attitude_x_->set_text(double_to_str(q.x));
@@ -179,7 +179,7 @@ void mainwindow::rpc_update_attitude()
 void mainwindow::rpc_update_motors()
 {
 	try {
-		json::value val = rpc_client_->call(rpcuri_, "sd_get_motors");
+		rexjson::value val = rpc_client_->call(rpcuri_, "sd_get_motors");
 		label_m1_->set_text(double_to_str(val.get_array().at(0).get_real()));
 		label_m2_->set_text(double_to_str(val.get_array().at(1).get_real()));
 		label_m3_->set_text(double_to_str(val.get_array().at(2).get_real()));
@@ -192,7 +192,7 @@ void mainwindow::rpc_update_motors()
 void mainwindow::rpc_update_correction_thurst()
 {
 	try {
-		json::value val = rpc_client_->call(rpcuri_, "sd_get_correction_thrust");
+		rexjson::value val = rpc_client_->call(rpcuri_, "sd_get_correction_thrust");
 		spinbutton_m1_->set_value(val.get_array().at(0).get_real());
 		spinbutton_m2_->set_value(val.get_array().at(1).get_real());
 		spinbutton_m3_->set_value(val.get_array().at(2).get_real());
@@ -218,7 +218,7 @@ void mainwindow::rpc_update_g()
 void mainwindow::rpc_update_accelerometer()
 {
 	try {
-		json::value val = rpc_client_->call(rpcuri_, "sd_get_accelerometer");
+		rexjson::value val = rpc_client_->call(rpcuri_, "sd_get_accelerometer");
 		Vector3d G = matrix_from_json_value<double, 3, 1>(val);
 		label_accelerometer_x_->set_text(double_to_str(val.get_array().at(0).get_real()));
 		label_accelerometer_y_->set_text(double_to_str(val.get_array().at(1).get_real()));

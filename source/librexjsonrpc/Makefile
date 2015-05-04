@@ -1,11 +1,10 @@
 ARCH		?= x86
 OUTDIR		:= bin-$(ARCH)
-AR  		?= $(CROSS_COMPILE)ar
-CXX 		?= $(CROSS_COMPILE)g++
-CC  		?= $(CROSS_COMPILE)gcc
-LD  		?= $(CROSS_COMPILE)ld
-LINK 		:= $(CXX)
-INCLUDES	+= $(addprefix -I,$(CURDIR) ../.. ../../include ../../libhttp ../../librexjson ../../librexjsonrpc ../../libcmdargs ../../liblogger ../../libdevice ../../libattitude)
+AR			?= $(CROSS_COMPILE)ar
+CXX			?= $(CROSS_COMPILE)g++
+CC			?= $(CROSS_COMPILE)gcc
+LD			?= $(CROSS_COMPILE)ld
+INCLUDES	+= $(addprefix -I,$(CURDIR) ../include ..)
 ifneq ($(BUILD),release)
 DEBUGFLAGS	= -g -O0
 else
@@ -13,19 +12,11 @@ DEBUGFLAGS	= -O2
 endif
 xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
 xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
-xLDFLAGS 	= $(LDFLAGS)
-LIBS		= -lattitude -llogger -ldevice -lrexjsonrpc -lrexjson -lhttp -lcmdargs 
-LIBS		+= -lglut -lGL -lGLEW -lX11 -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-LIBS		+= -L../../libattitude/$(OUTDIR) -L../../libdevice/$(OUTDIR) -L../../libcmdargs/$(OUTDIR) 
-LIBS		+= -L../../liblogger/$(OUTDIR) -L../../libhttp/$(OUTDIR) -L../../librexjson/$(OUTDIR) -L../../librexjsonrpc/$(OUTDIR)
-TARGET 		= $(OUTDIR)/glplane
-OBJS		= \
-		$(OUTDIR)/main.o \
-		$(OUTDIR)/glshaders.o \
-		$(OUTDIR)/glutprogram.o \
-		$(OUTDIR)/glshape.o \
-		$(OUTDIR)/plane.o \
+xLDFLAGS	= $(LDFLAGS)
+TARGET		= $(OUTDIR)/librexjsonrpc.a
 
+OBJS= \
+    $(OUTDIR)/rpcclient.o \
 
 all: $(OUTDIR) $(TARGET)
 
@@ -50,10 +41,11 @@ $(OUTDIR):
 	mkdir $(OUTDIR)
 
 $(TARGET): $(OBJS:$(OUTDIR)/%=$(OUTDIR)/%)
-	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
+	$(AR) -crs $@ $^
+
 
 clean:
 	-rm -f $(TARGET)
 	-rm -f $(OUTDIR)/*.o
 	-rm -rf $(OUTDIR) 
-
+	

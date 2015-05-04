@@ -1,8 +1,12 @@
+ARCH ?= x86
 SUBDIRS += axesdata
 SUBDIRS += alldata
 SUBDIRS += servo
 SUBDIRS += attitudefilter
-
+ifeq ($(ARCH),x86)
+SUBDIRS += flightdeck
+SUBDIRS += glplane
+endif
 
 all:
 	@for dir in $(SUBDIRS); do \

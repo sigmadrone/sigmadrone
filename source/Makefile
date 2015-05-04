@@ -4,6 +4,7 @@ SUBDIRS += libhttp
 SUBDIRS += libcmdargs
 SUBDIRS += liblogger
 SUBDIRS += librexjson
+SUBDIRS += librexjsonrpc
 SUBDIRS += libjsonrpc
 SUBDIRS += tools
 SUBDIRS += plugins

@@ -19,8 +19,8 @@ using namespace std;
 #include "matrix.h"
 #include "libcmdargs/cmdargs.h"
 #include "libhttp/http_client.hpp"
-#include "libjsonspirit/rpcclient.h"
-#include "libjsonspirit/jsonserialization.h"
+#include "librexjsonrpc/rpcclient.h"
+#include "jsonserialization.h"
 
 
 #define ALPHA1 0.95f
@@ -177,7 +177,7 @@ void RpcIdleFunction(void)
 	Matrix4f M;
 
 	try {
-		json::value val = rpcclient->call("/", "sd_get_attitude");
+		rexjson::value val = rpcclient->call("/", "sd_get_attitude");
 		q = quaternion_from_json_value<double>(val);
 	} catch (std::exception& e) {
 		std::cout << "Error: " << e.what() << std::endl;

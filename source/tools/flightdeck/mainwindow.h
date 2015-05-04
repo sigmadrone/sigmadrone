@@ -2,8 +2,8 @@
 #define MAINWINDOW_H
 
 #include <gtkmm.h>
-#include "libjsonspirit/rpcclient.h"
-#include "libjsonspirit/jsonserialization.h"
+#include "rpcclient.h"
+#include "jsonserialization.h"
 
 
 class mainwindow: public Gtk::Window
