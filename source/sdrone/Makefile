@@ -1,65 +1,91 @@
-#CROSS_COMPILE=arm-linux-gnueabi-
-CXX	    ?= $(CROSS_COMPILE)g++
-CC          ?= $(CROSS_COMPILE)gcc
-HTTPSERVER_SRCDIR = ../libhttp
-JSONRPC_SRCDIR = ../libjsonrpc
-CMDARGS_SRCDIR = ../libcmdargs
-LIBDEVICE_SRCDIR = ../libdevice
-LIBATTITUDE_SRCDIR = ../libattitude
-INCLUDES    = -I../include -I.. -I$(JSONRPC_SRCDIR) -I$(LIBDEVICE_SRCDIR) -I$(LIBATTITUDE_SRCDIR)
+ARCH		?= x86
+OUTDIR		:= bin-$(ARCH)
+AR  		?= $(CROSS_COMPILE)ar
+CXX 		?= $(CROSS_COMPILE)g++
+CC  		?= $(CROSS_COMPILE)gcc
+LD  		?= $(CROSS_COMPILE)ld
+LINK 		:= $(CXX)
+INCLUDES	+= $(addprefix -I,$(CURDIR) ../ ../include ../libhttp ../librexjson ../libcmdargs ../liblogger)
+ifneq ($(BUILD),release)
+DEBUGFLAGS	= -g -O0
+else
+DEBUGFLAGS	= -O2
+endif
+xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
+xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
+xLDFLAGS 	= $(LDFLAGS)
+
+LIBHTTP = ../libhttp
+LIBJSONRPC = ../libjsonrpc
+LIBCMDARGS = ../libcmdargs
+LIBDEVICE = ../libdevice
+LIBATTITUDE = ../libattitude
+LIBREXJSON = ../librexjson
+LIBLOGGER = ../liblogger
+
+INCLUDES    = -I../include -I.. -I$(LIBJSONRPC) -I$(LIBDEVICE) -I$(LIBATTITUDE)
 INCLUDES   += $(shell pkg-config --cflags glib-2.0) $(shell pkg-config --cflags json-glib-1.0)
-LIBS		= -llogger -lm -lrt -pthread -ldl -ldevice -lattitude
+LIBS		= -llogger -lm -lrt -pthread -ldl -ldevice -lattitude -ljsonrpc -lhttp -lcmdargs
 LIBS        += $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs json-glib-1.0)
-LIBS		+= -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-LIBS		+= -L$(LIBDEVICE_SRCDIR) -L$(LIBATTITUDE_SRCDIR) -L../liblogger
+LIBS		+= -lboost_system -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread -lcmdargs
+LIBS		+= -L$(LIBATTITUDE)/$(OUTDIR) -L$(LIBDEVICE)/$(OUTDIR) -L$(LIBCMDARGS)/$(OUTDIR) -L$(LIBJSONRPC)/$(OUTDIR)
+LIBS        += -L$(LIBLOGGER)/$(OUTDIR) -L$(LIBHTTP)/$(OUTDIR) -L$(LIBREXJSON)/$(OUTDIR)
 #use -Wno-psabi to turn off warnings about ABI changes for va-list in GCC 4.4
-CFLAGS		= -g -O0 -Wall -Wno-psabi
-TARGET		= sdroned
-OBJECTS		= \
-	commandargs.o\
-	pluginchain.o\
-	plugincontext.o\
-	main.o\
-	drone.o\
-	servoplugin.o\
-	quadrotorpilot.o\
-	imureader.o\
-	navigator.o\
-	imufilterplugin.o\
-	imuremap.o\
-	imubias.o\
-	tracelogplugin.o\
-	imulowpassfilter.o\
-	iopacket.o\
-	kalmanattitudefilter.o\
-	daemon.c\
-	dronerpcclient.o\
-	droneconfig.o\
-	rpcparams.o\
-	pidpilotsd.o\
-	pidtorque.o\
-	pluginregistry.o\
-	thrustcorrectionplugin.o\
-	$(JSONRPC_SRCDIR)/libjsonrpc.a\
-	$(HTTPSERVER_SRCDIR)/libhttp.a\
-	$(CMDARGS_SRCDIR)/libcmdargs.a
 
-all : $(TARGET)
+TARGET 		= $(OUTDIR)/sdroned
+OBJS		= \
+		$(OUTDIR)/main.o \
+		$(OUTDIR)/commandargs.o\
+		$(OUTDIR)/pluginchain.o\
+		$(OUTDIR)/plugincontext.o\
+		$(OUTDIR)/main.o\
+		$(OUTDIR)/drone.o\
+		$(OUTDIR)/servoplugin.o\
+		$(OUTDIR)/quadrotorpilot.o\
+		$(OUTDIR)/imureader.o\
+		$(OUTDIR)/navigator.o\
+		$(OUTDIR)/imufilterplugin.o\
+		$(OUTDIR)/imuremap.o\
+		$(OUTDIR)/imubias.o\
+		$(OUTDIR)/tracelogplugin.o\
+		$(OUTDIR)/imulowpassfilter.o\
+		$(OUTDIR)/iopacket.o\
+		$(OUTDIR)/kalmanattitudefilter.o\
+		$(OUTDIR)/daemon.o\
+		$(OUTDIR)/dronerpcclient.o\
+		$(OUTDIR)/droneconfig.o\
+		$(OUTDIR)/rpcparams.o\
+		$(OUTDIR)/pidpilotsd.o\
+		$(OUTDIR)/pidtorque.o\
+		$(OUTDIR)/pluginregistry.o\
+		$(OUTDIR)/thrustcorrectionplugin.o
 
-.SUFFIXES:	.c .cxx .cpp
+all: $(OUTDIR) $(TARGET)
 
-.c.o: 
-	$(CC) -c $< $(CFLAGS) $(INCLUDES)
+# auto-generated dependencies:
+-include $(OUTDIR)/*.P
 
-.cxx.o: 
-	$(CXX) -std=c++11 -c $< $(CFLAGS) $(INCLUDES)
+$(OUTDIR)/%.o: %.cpp
+	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
-.cpp.o: 
-	$(CXX) -std=c++11 -c $< $(CFLAGS) $(INCLUDES)
+$(OUTDIR)/%.o: %.c
+	$(CC) -c $(xCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
-$(TARGET) : $(OBJECTS)
-	$(CXX) -std=c++11 $^ -o $(TARGET) $(LIBS)
+$(OUTDIR):
+	mkdir $(OUTDIR)
+
+$(TARGET): $(OBJS:$(OUTDIR)/%=$(OUTDIR)/%)
+	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
 
 clean:
-	rm -f *.o *~ $(TARGET)
-
+	-rm -f $(TARGET)
+	-rm -f $(OUTDIR)/*.o
+	-rm -rf $(OUTDIR) 
