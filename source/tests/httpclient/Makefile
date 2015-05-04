@@ -13,13 +13,11 @@ DEBUGFLAGS	= -O2
 endif
 xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
 xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
-xCXXFLAGS	+= $(shell pkg-config --cflags gtkmm-3.0)
 xLDFLAGS 	= $(LDFLAGS)
 LIBS		= -lattitude -llogger -ldevice -lrexjsonrpc -lrexjson -lhttp -lcmdargs 
-LIBS		+= -lglut -lGL -lGLEW -lX11 -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
+LIBS		+= -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
 LIBS		+= -L../../libattitude/$(OUTDIR) -L../../libdevice/$(OUTDIR) -L../../libcmdargs/$(OUTDIR) 
 LIBS		+= -L../../liblogger/$(OUTDIR) -L../../libhttp/$(OUTDIR) -L../../librexjson/$(OUTDIR) -L../../librexjsonrpc/$(OUTDIR)
-LIBS		+= $(shell pkg-config --libs gtkmm-3.0)
 TARGET 		= $(OUTDIR)/http_client
 OBJS		= \
 		$(OUTDIR)/test_httpclient.o \
