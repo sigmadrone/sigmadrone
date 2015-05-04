@@ -1,4 +1,4 @@
-ARCH		?= arm
+ARCH		?= x86
 OUTDIR		:= bin-$(ARCH)
 AR  		?= $(CROSS_COMPILE)ar
 CXX 		?= $(CROSS_COMPILE)g++

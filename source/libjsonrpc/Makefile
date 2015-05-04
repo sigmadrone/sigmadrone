@@ -1,4 +1,4 @@
-ARCH		?= arm
+ARCH		?= x86
 OUTDIR		:= bin-$(ARCH)
 ifneq ($(BUILD),release)
 DEBUGFLAGS	= -g -O0
