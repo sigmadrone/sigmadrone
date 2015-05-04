@@ -8,9 +8,9 @@ SUBDIRS += librexjsonrpc
 SUBDIRS += libjsonrpc
 SUBDIRS += tools
 SUBDIRS += plugins
-#SUBDIRS += sdrone
+SUBDIRS += sdrone
 SUBDIRS += sigmad
-#SUBDIRS += tests
+SUBDIRS += tests
 
 all:
 	@for dir in $(SUBDIRS); do \

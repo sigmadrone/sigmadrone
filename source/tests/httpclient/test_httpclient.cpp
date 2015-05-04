@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
 	if (argc <= 2) {
 		std::cout << "Usage: " << std::endl;
 		std::cout << "    " << std::string(argv[0]) << " <server:port> <url>" << std::endl;
+		return 1;
 	}
 	address = server = argv[1];
 	url = argv[2];

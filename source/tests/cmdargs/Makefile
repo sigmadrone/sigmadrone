@@ -1,35 +1,56 @@
-CXX		?= $(CROSS_COMPILE)g++
-CC		?= $(CROSS_COMPILE)gcc
-ROOTDIR	= ../..
-INCLUDES	= -I$(ROOTDIR)/libcmdargs
-LIBS		= -lm -lrt -lpthread -ldl
-#use -Wno-psabi to turn off warnings about ABI changes for va-list in GCC 4.4
-CFLAGS		= -g -O0 -Wall -Wno-psabi
-TARGET		= test_cmdargs
-OBJECTS		= \
-		test_cmdargs.o \
-		$(ROOTDIR)/libcmdargs/libcmdargs.a
+ARCH		?= x86
+OUTDIR		:= bin-$(ARCH)
+AR  		?= $(CROSS_COMPILE)ar
+CXX 		?= $(CROSS_COMPILE)g++
+CC  		?= $(CROSS_COMPILE)gcc
+LD  		?= $(CROSS_COMPILE)ld
+LINK 		:= $(CXX)
+INCLUDES	+= $(addprefix -I,$(CURDIR) ../.. ../../include ../../libhttp ../../librexjson ../../librexjsonrpc ../../libcmdargs ../../liblogger ../../libdevice ../../libattitude)
+ifneq ($(BUILD),release)
+DEBUGFLAGS	= -g -O0
+else
+DEBUGFLAGS	= -O2
+endif
+xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
+xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
+xCXXFLAGS	+= $(shell pkg-config --cflags gtkmm-3.0)
+xLDFLAGS 	= $(LDFLAGS)
+LIBS		= -lattitude -llogger -ldevice -lrexjsonrpc -lrexjson -lhttp -lcmdargs 
+LIBS		+= -lglut -lGL -lGLEW -lX11 -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
+LIBS		+= -L../../libattitude/$(OUTDIR) -L../../libdevice/$(OUTDIR) -L../../libcmdargs/$(OUTDIR) 
+LIBS		+= -L../../liblogger/$(OUTDIR) -L../../libhttp/$(OUTDIR) -L../../librexjson/$(OUTDIR) -L../../librexjsonrpc/$(OUTDIR)
+LIBS		+= $(shell pkg-config --libs gtkmm-3.0)
+TARGET 		= $(OUTDIR)/test_cmdargs
+OBJS		= \
+		$(OUTDIR)/test_cmdargs.o \
 
 
-all : $(TARGET)
+all: $(OUTDIR) $(TARGET)
 
-.SUFFIXES:	.c .cxx .cpp
+# auto-generated dependencies:
+-include $(OUTDIR)/*.P
 
-.c.o: 
-	$(CC) -c $< $(CFLAGS) $(INCLUDES)
+$(OUTDIR)/%.o: %.cpp
+	$(CXX) -std=c++11 -c $(xCXXFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
-.cxx.o: 
-	$(CXX) -std=c++11 -c $< $(CFLAGS) $(INCLUDES)
+$(OUTDIR)/%.o: %.c
+	$(CC) -c $(xCFLAGS) -MMD -MF $(@:%.o=%.d) -o $@ $<
+	@cp $(@:%.o=%.d) $(@:%.o=%.P); \
+	  sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' \
+	      -e '/^$$/ d' -e 's/$$/ :/' < $(@:%.o=%.d) >> $(@:%.o=%.P); \
+	  rm -f $(@:%.o=%.d)
 
-.cpp.o: 
-	$(CXX) -std=c++11 -c $< $(CFLAGS) $(INCLUDES)
+$(OUTDIR):
+	mkdir $(OUTDIR)
 
-%.o: $(SDRONE_SRCDIR)/%.cpp
-	$(CXX) -std=c++11 $(CFLAGS) -o $*.o -c $(SDRONE_SRCDIR)/$*.cpp
-
-$(TARGET) : $(OBJECTS)
-	$(CXX) -std=c++11 $^ -o $(TARGET) $(LIBS)
+$(TARGET): $(OBJS:$(OUTDIR)/%=$(OUTDIR)/%)
+	$(LINK) $(xCXXFLAGS) -o $@ $^ $(xLDFLAGS) $(LIBS)
 
 clean:
-	rm -f *.o *~ $(TARGET)
-
+	-rm -f $(TARGET)
+	-rm -f $(OUTDIR)/*.o
+	-rm -rf $(OUTDIR) 
