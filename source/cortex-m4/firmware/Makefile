@@ -4,7 +4,8 @@ PROJECT = sdfirmware
 all : $(PROJECT)
 
 $(PROJECT) : $(OBJECTS)
-
+ARCH	:= thumb
+OUTDIR	:= bin-$(ARCH)
 
 CIMSIS_SRC_C = $(wildcard system/cmsis/*.c)
 CORTEXM_SRC_C = $(wildcard system/cortexm/*.c)
@@ -22,7 +23,6 @@ L3GD20DRV_SRC_C = $(wildcard BSP/Components/l3gd20_driver/*.c)
 STMPE811_SRC_C = $(wildcard BSP/Components/stmpe811/*.c)
 ILI9341_SRC_C = $(wildcard BSP/Components/ili9341/*.c)
 JSON_SRC_C = $(wildcard ../../librexjson/*.c)
-JSON_SRC_CPP = $(wildcard ../../librexjson/*.cpp)
 
 CIMSIS_OBJ_C   := $(CIMSIS_SRC_C:.c=.o)
 CORTEXM_OBJ_C  := $(CORTEXM_SRC_C:.c=.o)
@@ -39,8 +39,9 @@ L3GD20DRV_OBJ_C:= $(L3GD20DRV_SRC_C:.c=.o)
 STMPE811_OBJ_C := $(STMPE811_SRC_C:.c=.o)
 ILI9341_OBJ_C  := $(ILI9341_SRC_C:.c=.o)
 FONTS_OBJ_C    := $(FONTS_SRC_C:.c=.o)
-JSON_OBJ_C     := $(JSON_SRC_C:.c=.o)
-JSON_OBJ_CPP   := $(JSON_SRC_CPP:.cpp=.o)
+
+JSON_SRC_DIR := ../../librexjson
+JSON_OBJ_CPP := $(patsubst $(JSON_SRC_DIR)/%.cpp, $(JSON_SRC_DIR)/bin-thumb/%.o, $(wildcard $(JSON_SRC_DIR)/*.cpp))
 
 OBJECTS        :=   $(CIMSIS_OBJ_C) \
 			$(CORTEXM_OBJ_C) \
@@ -123,20 +124,27 @@ else
   CC_FLAGS += -DNDEBUG -Os
 endif
 
-all: $(PROJECT).bin $(PROJECT).hex size
+all: \
+	$(JSON_SRC_DIR)/$(OUTDIR) \
+	$(PROJECT).bin \
+	$(PROJECT).hex \
+	size
 
 clean:
 	rm -f $(PROJECT).bin $(PROJECT).elf $(PROJECT).hex $(PROJECT).map $(PROJECT).lst $(OBJECTS) $(DEPS)
+	rm -rf $(JSON_SRC_DIR)/$(OUTDIR)
 
-.s.o:
+./%.o : %.s
 	$(AS) $(CPU) -o $@ $<
 
-.c.o:
+./%.o: %.c
 	$(CC)  $(CC_FLAGS) $(INCLUDES) -o $@ $<
 
-.cpp.o:
+./%.o: %.cpp
 	$(CPP) $(CXX_FLAGS) $(INCLUDES) -o $@ $<
 
+$(JSON_SRC_DIR)/$(OUTDIR)/%.o: $(JSON_SRC_DIR)/%.cpp
+	$(CPP) $(CXX_FLAGS) $(INCLUDES) -o $@ $<
 
 $(PROJECT).elf: $(OBJECTS)
 	$(LD) $(LD_FLAGS) -T ldscripts/mem.ld -T ldscripts/sections.ld  -nostartfiles -Wl,--gc-sections -Wl,-Map=$(PROJECT).map $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES)
@@ -150,10 +158,15 @@ $(PROJECT).hex: $(PROJECT).elf
 $(PROJECT).lst: $(PROJECT).elf
 	@$(OBJDUMP) -Sdh $< > $@
 
+$(JSON_SRC_DIR)/$(OUTDIR) :
+	@mkdir $@
+
 lst: $(PROJECT).lst
 
 size:
 	$(SIZE) $(PROJECT).elf
+
+.PHONY: size lst clean all
 
 -include $(DEPS)
 
