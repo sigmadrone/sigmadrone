@@ -79,6 +79,7 @@ INCLUDES = \
 	-I BSP/Components/l3gd20 \
 	-I BSP/Components/l3gd20_driver \
 	-I ../../librexjson \
+	-I ../../include \
 
 
 ############################################################################### 

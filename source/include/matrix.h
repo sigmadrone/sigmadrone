@@ -1251,8 +1251,8 @@ public:
 	{
 		std::stringstream oss;
 		oss.setf(std::ios::fixed, std::ios::floatfield);
-		oss.precision(3);
-		oss << "( " << w << " + " << x << "i + "<< y << "j + "<< z << "k )";
+		oss.precision(2);
+		oss << std::showpos << w << std::showpos << x << "i" << std::showpos << y << "j" << std::showpos << z << "k";
 		return oss.str();
 	}
 
@@ -1279,6 +1279,7 @@ typedef MatrixMN<float, 4, 1> Vector4f;
 typedef MatrixMN<double, 4, 1> Vector4d;
 typedef MatrixMN<int, 4, 1> Vector4i;
 typedef Quaternion<double> QuaternionD;
+typedef Quaternion<float> QuaternionF;
 
 #ifdef MATRIX_NAMESPACE
 }

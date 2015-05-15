@@ -324,7 +324,7 @@ void main_task(void *pvParameters)
 	uint8_t bias_iterations = 10;
 	L3GD20::AxesDPS_t gyr_axes;
 	LSM303D::AxesAcc_t acc_axes;
-	QuaternionD q;
+	QuaternionF q;
 	attitudetracker att;
 
 	trace_printf("Priority Group: %u\n", NVIC_GetPriorityGrouping());
@@ -362,7 +362,7 @@ void main_task(void *pvParameters)
 
 	vTaskDelay(1000 / portTICK_RATE_MS);
 	// Infinite loop
-	Vector3d gyr_bias;
+	Vector3f gyr_bias;
 	char disp[128] = {0};
 
 	sprintf(disp,"Calibrating...");
@@ -379,7 +379,7 @@ void main_task(void *pvParameters)
 		gyr_bias.at(2) += gyr_axes.AXIS_Z;
 		led1.toggle();
 	}
-	gyr_bias = gyr_bias / (double)bias_iterations;
+	gyr_bias = gyr_bias / (float)bias_iterations;
 	TimeStamp lcdUpdateTime;
 	TimeStamp sample_dt;
 	TimeSpan ctx_switch_time;
@@ -400,7 +400,7 @@ void main_task(void *pvParameters)
 
 		TimeSpan dt = sample_dt.elapsed();
 
-		Vector3d gyr_data = Vector3d(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
+		Vector3f gyr_data = Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
 		att.track_gyroscope(DEG2RAD(gyr_data), dt.seconds_float());
 		q = att.get_attitude();
 
