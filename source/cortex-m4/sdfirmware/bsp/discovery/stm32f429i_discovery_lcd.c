@@ -74,7 +74,7 @@
 ------------------------------------------------------------------------------*/
 
 /* Includes ------------------------------------------------------------------*/
-#include "../bsp-discovery/stm32f429i_discovery_lcd.h"
+#include "stm32f429i_discovery_lcd.h"
 
 #include "../Fonts/fonts.h"
 #include "../Fonts/font24.c"

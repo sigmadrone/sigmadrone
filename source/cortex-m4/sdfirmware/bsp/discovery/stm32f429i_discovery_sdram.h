@@ -45,7 +45,7 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "../bsp-discovery/stm32f429i_discovery.h"
+#include "stm32f429i_discovery.h"
 
 /** @addtogroup BSP
   * @{

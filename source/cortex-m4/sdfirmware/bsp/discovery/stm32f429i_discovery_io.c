@@ -37,7 +37,7 @@
   */ 
  
 /* Includes ------------------------------------------------------------------*/
-#include "../bsp-discovery/stm32f429i_discovery_io.h"
+#include "stm32f429i_discovery_io.h"
 
 /** @addtogroup BSP
   * @{

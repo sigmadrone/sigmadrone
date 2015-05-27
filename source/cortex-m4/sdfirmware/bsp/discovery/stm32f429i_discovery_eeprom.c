@@ -86,7 +86,7 @@
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
-#include "../bsp-discovery/stm32f429i_discovery_eeprom.h"
+#include "stm32f429i_discovery_eeprom.h"
 
 #ifdef EE_M24LR64
     
