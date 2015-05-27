@@ -1,5 +1,5 @@
 
-PROJECT = sdfirmware
+PROJECT = test-rtos
 
 all : $(PROJECT)
 
