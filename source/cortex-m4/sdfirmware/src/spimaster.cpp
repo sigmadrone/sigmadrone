@@ -164,6 +164,14 @@ uint16_t SPIMaster::read_reg16(uint8_t cs, uint8_t reg)
 	return ret;
 }
 
+uint32_t SPIMaster::read_reg24(uint8_t cs, uint8_t reg)
+{
+	uint32_t ret;
+	read_reg(cs, reg, (uint8_t*)&ret, 3);
+	return ret;
+}
+
+
 void SPIMaster::write_reg8(uint8_t cs, uint8_t reg, uint8_t val)
 {
 	write_reg(cs, reg, (uint8_t*)&val, sizeof(val));

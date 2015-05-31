@@ -26,6 +26,7 @@ public:
 	void write_reg(uint8_t cs, uint8_t reg, uint8_t* buffer, uint16_t nbytes);
 	uint8_t read_reg8(uint8_t cs, uint8_t reg);
 	uint16_t read_reg16(uint8_t cs, uint8_t reg);
+	uint32_t read_reg24(uint8_t cs, uint8_t reg);
 	void write_reg8(uint8_t cs, uint8_t reg, uint8_t val);
 	void write_reg16(uint8_t cs, uint8_t reg, uint16_t val);
 

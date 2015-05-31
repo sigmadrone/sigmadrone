@@ -15,6 +15,7 @@ DigitalOut::DigitalOut(PinName pin, OutputMode omode, PullMode pmode, int value)
 	GPIO_InitTypeDef GPIO_InitStructure;
 
 	clock_enable(STM_PORT(pin));
+	GPIO_InitStructure.Alternate = 0;
 	GPIO_InitStructure.Pin = ((uint32_t)0x01) << pin_;
 	if (omode == OutputPP)
 		GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
