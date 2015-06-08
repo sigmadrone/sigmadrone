@@ -35,9 +35,11 @@ public:
 			uint32_t tx_dma_channel = DMA_CHANNEL_4,
 			DMA_Stream_TypeDef *rx_dma_stream = DMA2_Stream5,
 			uint32_t rx_dma_channel = DMA_CHANNEL_4,
-			uint32_t timeout = 250
+			uint32_t timeout = 250,
+			uint32_t baudrate = 9600
 			);
 	~UART();
+	void clear();
 	size_t transmit(const uint8_t* buf, size_t size);
 	size_t receive(uint8_t* buf, size_t size);
 	static void uart_irq_handler(unsigned int device);

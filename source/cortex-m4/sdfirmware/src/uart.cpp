@@ -65,7 +65,8 @@ UART::UART(const std::vector<GPIOPin>& data_pins,
 		uint32_t tx_dma_channel,
 		DMA_Stream_TypeDef *rx_dma_stream,
 		uint32_t rx_dma_channel,
-		uint32_t timeout)
+		uint32_t timeout,
+		uint32_t baudrate)
 	: dma_device_(dma_device)
 	, tx_dma_stream_(tx_dma_stream)
 	, tx_dma_channel_(tx_dma_channel)
@@ -89,9 +90,9 @@ UART::UART(const std::vector<GPIOPin>& data_pins,
 	 - BaudRate = 9600 baud
 	 - Hardware flow control disabled (RTS and CTS signals) */
 	handle_.Instance = uart_device;
-	handle_.Init.BaudRate = 115200 * 20;
+	handle_.Init.BaudRate = baudrate;
 	handle_.Init.WordLength = UART_WORDLENGTH_8B;
-	handle_.Init.StopBits = UART_STOPBITS_2;
+	handle_.Init.StopBits = UART_STOPBITS_1;
 	handle_.Init.Parity = UART_PARITY_NONE;
 	handle_.Init.HwFlowCtl = UART_HWCONTROL_NONE;
 	handle_.Init.Mode = UART_MODE_TX_RX;
@@ -146,6 +147,11 @@ UART::~UART()
 		__UART5_CLK_DISABLE();
 		g_uart[5] = NULL;
 	}
+}
+
+void UART::clear()
+{
+	rxbuf_.rp_ = rxbuf_.wp_;
 }
 
 size_t UART::transmit(const uint8_t* buf, size_t size)

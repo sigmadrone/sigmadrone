@@ -17,7 +17,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-#include "stm32f429i_discovery_lcd.h"
 #include "spimaster.h"
 #include "spislave.h"
 #include "uart.h"
@@ -31,18 +30,35 @@
 #include "timestamp.h"
 #include "rexjson.h"
 #include "rexjson++.h"
+#include "tm_stm32f4_ili9341.h"
 
 void* __dso_handle = 0;
 extern unsigned int __relocated_vectors;
 
-DigitalOut led1(USER_LED1);
-DigitalOut led2(USER_LED2);
+DigitalOut ledusb(PC_4);
+DigitalOut module_rstn(PA_4, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
+DigitalOut module_onoff(PA_7, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0);
+DigitalOut gpspwr(PB_0, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
 DigitalIn gyro_int2(PA_2, DigitalIn::PullNone, DigitalIn::InterruptRising);
 DigitalIn button(USER_BUTTON, DigitalIn::PullNone, DigitalIn::InterruptRising);
 UART uart({
 	{PA_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART1},		/* USART1_TX_PIN */
 	{PA_10, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART1},		/* USART1_RX_PIN */
 });
+
+UART uart3({
+	{PC_10, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},		/* USART3_TX_PIN */
+	{PC_11, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},		/* USART3_RX_PIN */
+},
+		USART3,
+		DMA1,
+		DMA1_Stream3,
+		DMA_CHANNEL_4,
+		DMA1_Stream1,
+		DMA_CHANNEL_4,
+		250,
+		9600
+);
 
 
 TaskHandle_t hMain;
@@ -91,6 +107,21 @@ extern "C" void DMA2_Stream7_IRQHandler(void)
 extern "C" void USART1_IRQHandler(void)
 {
 	UART::uart_irq_handler(1);
+}
+
+extern "C" void DMA1_Stream1_IRQHandler(void)
+{
+	UART::uart_dmarx_handler(3);
+}
+
+extern "C" void DMA1_Stream3_IRQHandler(void)
+{
+	UART::uart_dmatx_handler(3);
+}
+
+extern "C" void USART3_IRQHandler(void)
+{
+	UART::uart_irq_handler(3);
 }
 
 void gyro_isr()
@@ -173,103 +204,6 @@ void spi_slave_task(void *pvParameters)
 }
 
 
-//void HAL_Delay(__IO uint32_t delay)
-//{
-//	vTaskDelay(delay / portTICK_RATE_MS);
-//}
-
-#define LCD_FRAME_BUFFER_LAYER0                  0xC0130000
-#define LCD_FRAME_BUFFER_LAYER1                  0xC0000000
-#define CONVERTED_FRAME_BUFFER                   0xC0260000
-
-#if 0
-void init_lcd()
-{
-	/*##-1- Initialize the LCD #################################################*/
-	/* Initialize the LCD */
-	BSP_LCD_Init();
-
-	/* Initialise the LCD Layers */
-	BSP_LCD_LayerDefaultInit(1, LCD_FRAME_BUFFER);
-
-	/* Set LCD Foreground Layer  */
-	BSP_LCD_SelectLayer(1);
-
-	BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
-
-	/* Clear the LCD */
-	BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-	BSP_LCD_Clear(LCD_COLOR_WHITE);
-
-
-	/* Set the LCD Text Color */
-	BSP_LCD_SetTextColor(LCD_COLOR_DARKBLUE);
-
-	/* Display LCD messages */
-	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)"STM32F429I BSP", CENTER_MODE);
-
-	BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)"Hello world!", CENTER_MODE);
-
-	trace_printf("LCD %d by %d pixels\n", BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
-
-	vTaskDelay(200 / portTICK_RATE_MS);
-
-	BSP_LCD_Clear(LCD_COLOR_WHITE);
-}
-#endif
-
-void init_lcd()
-{
-	/*##-1- Initialize the LCD #################################################*/
-	/* Initialize the LCD */
-	BSP_LCD_Init();
-
-#if 0
-	/* Initialise the LCD Layers */
-	BSP_LCD_LayerDefaultInit(1, LCD_FRAME_BUFFER);
-
-	/* Set LCD Foreground Layer  */
-	BSP_LCD_SelectLayer(1);
-#endif
-
-	for (uint8_t layer = 0; layer < 2; ++layer)
-	{
-		BSP_LCD_LayerDefaultInit(layer, (uint32_t) LCD_FRAME_BUFFER +
-				(BSP_LCD_GetXSize()*BSP_LCD_GetYSize()*4)*layer);
-		BSP_LCD_SetLayerVisible(layer, DISABLE);
-		BSP_LCD_SelectLayer(layer);
-
-		BSP_LCD_SetFont(&Font20);
-
-		/* Clear the LCD */
-		BSP_LCD_SetBackColor(LCD_COLOR_WHITE);
-		BSP_LCD_Clear(LCD_COLOR_WHITE);
-
-		/* Set the LCD Text Color */
-		BSP_LCD_SetTextColor(LCD_COLOR_DARKBLUE);
-	}
-
-	BSP_LCD_SelectLayer(1);
-	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)"STM32F429I BSP", CENTER_MODE);
-	BSP_LCD_DisplayStringAt(0, 30, (uint8_t*)"Hello world!", CENTER_MODE);
-	BSP_LCD_SetLayerVisible(1, ENABLE);
-
-	vTaskDelay(1000 / portTICK_RATE_MS);
-
-	BSP_LCD_SelectLayer(0);
-	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)"LAYER 0", CENTER_MODE);
-	BSP_LCD_SetLayerVisible(1, DISABLE);
-	BSP_LCD_SetLayerVisible(0, ENABLE);
-
-
-	trace_printf("LCD %d by %d pixels\n", BSP_LCD_GetXSize(), BSP_LCD_GetYSize());
-
-	vTaskDelay(200 / portTICK_RATE_MS);
-
-	BSP_LCD_Clear(LCD_COLOR_WHITE);
-}
-
-
 void pwm_decoder_callback();
 
 PwmEncoder pwmEncoder(HwTimer::TIMER_1, TimeSpan::from_seconds(2), {PA_8}, {1});
@@ -289,12 +223,46 @@ void pwm_decoder_callback() {
 void tim3_isr() {
 	static float duty_cycle[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
 	static int index = 0;
-	led2.toggle();
 	pwmEncoder.set_duty_cycle(1, duty_cycle[index]);
 	index = (index + 1) % (sizeof(duty_cycle)/sizeof(duty_cycle[1]));
 }
 
 #define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
+
+int lcd_init(void)
+{
+
+	//Initialize ILI9341
+	TM_ILI9341_Init();
+	//Rotate LCD for 90 degrees
+	TM_ILI9341_Rotate(TM_ILI9341_Orientation_Portrait_2);
+	//FIll lcd with color
+	TM_ILI9341_Fill(ILI9341_COLOR_WHITE);
+	//Draw white circle
+	TM_ILI9341_DrawCircle(60, 60, 40, ILI9341_COLOR_GREEN);
+	//Draw red filled circle
+	TM_ILI9341_DrawFilledCircle(60, 60, 35, ILI9341_COLOR_RED);
+	//Draw blue rectangle
+	TM_ILI9341_DrawRectangle(120, 20, 220, 100, ILI9341_COLOR_BLUE);
+	//Draw black filled rectangle
+	TM_ILI9341_DrawFilledRectangle(130, 30, 210, 90, ILI9341_COLOR_BLACK);
+	//Draw line with custom color 0x0005
+	TM_ILI9341_DrawLine(10, 120, 310, 120, 0x0005);
+
+	//Put string with black foreground color and blue background with 11x18px font
+	TM_ILI9341_Puts(65, 130, "STM32F4 Colibri", &TM_Font_11x18, ILI9341_COLOR_BLACK, ILI9341_COLOR_BLUE2);
+	//Put string with black foreground color and blue background with 11x18px font
+	TM_ILI9341_Puts(60, 150, "ILI9341 LCD Module", &TM_Font_11x18, ILI9341_COLOR_BLACK, ILI9341_COLOR_BLUE2);
+	//Put string with black foreground color and red background with 11x18px font
+	TM_ILI9341_Puts(190, 225, "www.sigmadrone.org", &TM_Font_7x10, ILI9341_COLOR_BLACK, ILI9341_COLOR_ORANGE);
+	TM_ILI9341_Fill(ILI9341_COLOR_WHITE);
+}
+
+void DisplayStringAt(uint16_t x, uint16_t y, const char *str)
+{
+	return;
+	TM_ILI9341_Puts(x, y, str, &TM_Font_11x18, ILI9341_COLOR_BLACK, ILI9341_COLOR_WHITE);
+}
 
 void main_task(void *pvParameters)
 {
@@ -320,8 +288,7 @@ void main_task(void *pvParameters)
 				{PF_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},			/* DISCOVERY_SPIx_MOSI_PIN */
 			}, {
 				{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},					/* GYRO_CS_PIN */
-				{PG_2, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},					/* ACCEL_CS_PIN */
-				{PG_3, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},					/* SLAVE_CS_PIN */
+				{PD_7, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},					/* ACCEL_CS_PIN */
 			});
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi5, 1);
@@ -339,8 +306,10 @@ void main_task(void *pvParameters)
 	trace_printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %u\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
 	vTaskDelay(500 / portTICK_RATE_MS);
 
+	lcd_init();
 	gyro_int2.callback(gyro_isr);
-	init_lcd();
+
+//	module_rstn.write(0);
 
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 	vTaskDelay(500 / portTICK_RATE_MS);
@@ -366,13 +335,14 @@ void main_task(void *pvParameters)
 	accel.SetInt2Pin(LSM303D_INT2_OVERRUN_ENABLE|LSM303D_INT2_FTH_ENABLE);
 	accel.SetInt2Pin(0);
 
-	vTaskDelay(1000 / portTICK_RATE_MS);
+	vTaskDelay(500 / portTICK_RATE_MS);
+
 	// Infinite loop
 	Vector3f gyr_bias;
 	char disp[128] = {0};
 
 	sprintf(disp,"Calibrating...");
-	BSP_LCD_DisplayStringAt(0, 10, (uint8_t*)disp, LEFT_MODE);
+	DisplayStringAt(0, 10, disp);
 
 	gyro.GetFifoAngRateDPS(&gyr_axes); // Drain the fifo
 	for (int i = 0; i < bias_iterations; i++) {
@@ -383,13 +353,19 @@ void main_task(void *pvParameters)
 		gyr_bias.at(0) += gyr_axes.AXIS_X;
 		gyr_bias.at(1) += gyr_axes.AXIS_Y;
 		gyr_bias.at(2) += gyr_axes.AXIS_Z;
-		led1.toggle();
 	}
 	gyr_bias = gyr_bias / (float)bias_iterations;
 	TimeStamp lcdUpdateTime;
 	TimeStamp sample_dt;
 	TimeSpan ctx_switch_time;
 
+	HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 1, 1);
+	HAL_NVIC_EnableIRQ (DMA1_Stream3_IRQn);
+	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);
+	HAL_NVIC_EnableIRQ (DMA1_Stream1_IRQn);
+
+	uart3.uart_dmarx_start();
+	gpspwr.write(0);
 	while (1) {
 		uint32_t msg;
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
@@ -407,69 +383,76 @@ void main_task(void *pvParameters)
 		TimeSpan dt = sample_dt.elapsed();
 
 		Vector3f gyr_data = Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
+		Vector3f acc_data = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z);
 		att.track_gyroscope(DEG2RAD(gyr_data), dt.seconds_float());
 		q = att.get_attitude();
 
 		if (lcdUpdateTime.elapsed().milliseconds() > 500) {
 			lcdUpdateTime.time_stamp();
-
-			sprintf(disp,"GYRO X: %6.2f         ", gyr_data.at(0));
-			BSP_LCD_DisplayStringAt(0, 00, (uint8_t*)disp, LEFT_MODE);
-			sprintf(disp,"GYRO Y: %6.2f         ", gyr_data.at(1));
-			BSP_LCD_DisplayStringAt(0, 20, (uint8_t*)disp, LEFT_MODE);
-			sprintf(disp,"GYRO Z: %6.2f         ", gyr_data.at(2));
-			BSP_LCD_DisplayStringAt(0, 40, (uint8_t*)disp, LEFT_MODE);
 			sprintf(disp,"SAMPLES: %d           ", gyr_samples);
-			BSP_LCD_DisplayStringAt(0, 60, (uint8_t*)disp, LEFT_MODE);
+			DisplayStringAt(0, 60, disp);
 
-			memset(buf, 0, sizeof(buf));
-			size_t retsize = uart.receive((uint8_t*)buf, sizeof(buf));
-			if (retsize) {
-				rexjson::value v = rexjson::read(buf);
-				sprintf(disp, "serial : %d      ", v["UART"]["serial"].get_int());
-				BSP_LCD_DisplayStringAt(0, 80, (uint8_t*)disp, LEFT_MODE);
+			try {
+				memset(buf, 0, sizeof(buf) - 1);
+				size_t retsize = uart.receive((uint8_t*)buf, sizeof(buf));
+				if (retsize) {
+//					rexjson::value v = rexjson::read(buf);
+//					sprintf(disp, "serial : %d      ", v["UART"]["serial"].get_int());
+//					trace_printf("%s\n", disp);
+//					DisplayStringAt(0, 80, disp);
+					trace_printf("%s\n", buf);
+				}
+			} catch (std::exception& e) {
+				trace_printf("exception: %s\n", e.what());
+				uart.clear();
 			}
 
-			sprintf(disp,"PWM: %u mS", (unsigned)pwmDecoder.decoded_period().milliseconds());
-			BSP_LCD_DisplayStringAt(0, 100, (uint8_t*)disp, LEFT_MODE);
-			sprintf(disp,"PWM duty: %1.3f", pwmDecoder.duty_cycle_rel());
-			BSP_LCD_DisplayStringAt(0, 120, (uint8_t*)disp, LEFT_MODE);
+			memset(buf, 0, sizeof(buf));
+			size_t retsize = uart3.receive((uint8_t*)buf, sizeof(buf));
+			if (retsize) {
+				trace_printf("GPS: %s\n", buf);
+			}
 
 #if 0
+			sprintf(disp,"PWM: %u mS", (unsigned)pwmDecoder.decoded_period().milliseconds());
+			DisplayStringAt(0, 100, disp);
+			sprintf(disp,"PWM duty: %1.3f", pwmDecoder.duty_cycle_rel());
+			DisplayStringAt(0, 120, disp);
 			sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);
-			BSP_LCD_DisplayStringAt(0, 100, (uint8_t*)disp, LEFT_MODE);
+			DisplayStringAt(0, 100, disp);
 			sprintf(disp,"ACCL Y: %6.2f", acc_axes.AXIS_Y);
-			BSP_LCD_DisplayStringAt(0, 120, (uint8_t*)disp, LEFT_MODE);
+			DisplayStringAt(0, 120, disp);
 			sprintf(disp,"ACCL Z: %6.2f", acc_axes.AXIS_Z);
-			BSP_LCD_DisplayStringAt(0, 140, (uint8_t*)disp, LEFT_MODE);
+			DisplayStringAt(0, 140, disp);
 			sprintf(disp,"SAMPLES: %d           ", acc_samples);
-			BSP_LCD_DisplayStringAt(0, 160, (uint8_t*)disp, LEFT_MODE);
-#endif
+			DisplayStringAt(0, 160, disp);
 
 			sprintf(disp,"CTXSW: %u uS          ", (unsigned int)ctx_switch_time.microseconds());
-			BSP_LCD_DisplayStringAt(0, 140, (uint8_t*)disp, LEFT_MODE);
-
+			DisplayStringAt(0, 140, disp);
+#endif
 			sprintf(disp,"dT: %u uS             ", (unsigned int)dt.microseconds());
-			BSP_LCD_DisplayStringAt(0, 160, (uint8_t*)disp, LEFT_MODE);
+			DisplayStringAt(0, 160, disp);
 
 			sprintf(disp,"Attitude:             ");
-			BSP_LCD_DisplayStringAt(0, 180, (uint8_t*)disp, LEFT_MODE);
+			DisplayStringAt(0, 180, disp);
 			sprintf(disp,"W:      %6.3f              ", q.w);
-			BSP_LCD_DisplayStringAt(0, 200, (uint8_t*)disp, LEFT_MODE);
+			DisplayStringAt(0, 200, disp);
 			sprintf(disp,"X:      %6.3f              ", q.x);
-			BSP_LCD_DisplayStringAt(0, 220, (uint8_t*)disp, LEFT_MODE);
+			DisplayStringAt(0, 220, disp);
 			sprintf(disp,"Y:      %6.3f              ", q.y);
-			BSP_LCD_DisplayStringAt(0, 240, (uint8_t*)disp, LEFT_MODE);
+			DisplayStringAt(0, 240, disp);
 			sprintf(disp,"Z:      %6.3f              ", q.z);
-			BSP_LCD_DisplayStringAt(0, 260, (uint8_t*)disp, LEFT_MODE);
+			DisplayStringAt(0, 260, disp);
 
 			memset(disp, 0, sizeof(disp));
 			spi5.read(2, (uint8_t*)disp, 15);
-			BSP_LCD_DisplayStringAt(0, 300, (uint8_t*)disp, LEFT_MODE);
+			DisplayStringAt(0, 300, disp);
+//			trace_printf("Gyro: %5.2f %5.2f %5.2f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
+//			trace_printf("Acc : %5.2f %5.2f %5.2f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
+			ledusb.toggle();
 //			trace_printf("recved: %s\n", disp);
 		}
 		sample_dt.time_stamp();
-		led1.toggle();
 	}
 }
 
@@ -509,7 +492,6 @@ int main(int argc, char* argv[])
 
 	TimeStamp::init();
 
-	button.callback(&led1, &DigitalOut::toggle);
 	trace_printf("Starting main_task:, CPU freq: %d, PCLK1 freq: %d, PCLK2 freq: %d\n",
 			freq, pclk1, pclk2);
 
@@ -534,6 +516,7 @@ int main(int argc, char* argv[])
 		);
 #endif
 
+#if 0
 	xTaskCreate(
 		spi_slave_task, /* Function pointer */
 		"SPI Slave Task", /* Task name - for debugging only*/
@@ -543,6 +526,7 @@ int main(int argc, char* argv[])
 		NULL /* Task handle */
 		);
 
+#endif
 	xTaskCreate(
 		uart_tx_task, /* Function pointer */
 		"UART TX Task", /* Task name - for debugging only*/
