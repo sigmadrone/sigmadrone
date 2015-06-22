@@ -36,8 +36,8 @@ void* __dso_handle = 0;
 extern unsigned int __relocated_vectors;
 
 DigitalOut ledusb(PC_4);
-DigitalOut module_rstn(PA_4, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
-DigitalOut module_onoff(PA_7, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0);
+//DigitalOut module_rstn(PA_4, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
+//DigitalOut module_onoff(PA_7, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0);
 DigitalOut gpspwr(PB_0, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
 DigitalIn gyro_int2(PA_2, DigitalIn::PullNone, DigitalIn::InterruptRising);
 DigitalIn button(USER_BUTTON, DigitalIn::PullNone, DigitalIn::InterruptRising);
@@ -56,6 +56,21 @@ UART uart3({
 		DMA_CHANNEL_4,
 		DMA1_Stream1,
 		DMA_CHANNEL_4,
+		250,
+		9600
+);
+
+
+UART uart2({
+	{PD_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART3_TX_PIN */
+	{PD_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART3_RX_PIN */
+},
+		USART2,
+		DMA1,
+		DMA1_Stream6,		/* TX DMA stream */
+		DMA_CHANNEL_4,		/* TX DMA channel */
+		DMA1_Stream5,		/* RX DMA stream */
+		DMA_CHANNEL_4,		/* RX DMA channel */
 		250,
 		9600
 );
@@ -124,6 +139,22 @@ extern "C" void USART3_IRQHandler(void)
 	UART::uart_irq_handler(3);
 }
 
+extern "C" void DMA1_Stream5_IRQHandler(void)
+{
+	UART::uart_dmarx_handler(2);
+}
+
+extern "C" void DMA1_Stream6_IRQHandler(void)
+{
+	UART::uart_dmatx_handler(2);
+}
+
+extern "C" void USART2_IRQHandler(void)
+{
+	UART::uart_irq_handler(2);
+}
+
+
 void gyro_isr()
 {
 	if (gyro_int2) {
@@ -162,7 +193,7 @@ void uart_tx_task(void *pvParameters)
 	while (1) {
 		v["UART"]["message"] = "************ Test **********";
 		v["UART"]["serial"] = i++;
-		std::string str = v.write(false);
+		std::string str = v.write(false) + "\n";
 		const char *bufptr = str.c_str();
 		size_t size = str.length();
 		size_t ret = 0;
@@ -175,6 +206,32 @@ void uart_tx_task(void *pvParameters)
 	}
 }
 
+void uart2_tx_task(void *pvParameters)
+{
+	int i = 0;
+	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
+	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
+	HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 1, 0);
+	HAL_NVIC_EnableIRQ (DMA1_Stream5_IRQn);
+	uart2.uart_dmarx_start();
+	HAL_Delay(7000);
+	rexjson::value v = rexjson::object();
+	v["UART"] = rexjson::object();
+	while (1) {
+		v["UART"]["message"] = "************ Test **********";
+		v["UART"]["serial"] = i++;
+		std::string str = v.write(false) + "\r\n";
+		const char *bufptr = str.c_str();
+		size_t size = str.length();
+		size_t ret = 0;
+		while (size) {
+			ret = uart2.transmit((uint8_t*)bufptr, size);
+			size -= ret;
+			bufptr += ret;
+		}
+		HAL_Delay(250);
+	}
+}
 
 void spi_slave_task(void *pvParameters)
 {
@@ -394,17 +451,17 @@ void main_task(void *pvParameters)
 
 			try {
 				memset(buf, 0, sizeof(buf) - 1);
-				size_t retsize = uart.receive((uint8_t*)buf, sizeof(buf));
+				size_t retsize = uart2.receive((uint8_t*)buf, sizeof(buf));
 				if (retsize) {
-//					rexjson::value v = rexjson::read(buf);
-//					sprintf(disp, "serial : %d      ", v["UART"]["serial"].get_int());
+					trace_printf("UART2: %s\n", buf);
+					rexjson::value v = rexjson::read(buf);
+					sprintf(disp, "serial : %d      ", v["UART"]["serial"].get_int());
 //					trace_printf("%s\n", disp);
 //					DisplayStringAt(0, 80, disp);
-					trace_printf("%s\n", buf);
 				}
 			} catch (std::exception& e) {
 				trace_printf("exception: %s\n", e.what());
-				uart.clear();
+				uart2.clear();
 			}
 
 			memset(buf, 0, sizeof(buf));
@@ -535,6 +592,16 @@ int main(int argc, char* argv[])
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/
 		NULL /* Task handle */
 		);
+
+	xTaskCreate(
+		uart2_tx_task, /* Function pointer */
+		"UART2 TX Task", /* Task name - for debugging only*/
+		configMINIMAL_STACK_SIZE, /* Stack depth in words */
+		(void*) NULL, /* Pointer to tasks arguments (parameter) */
+		tskIDLE_PRIORITY + 2UL, /* Task priority*/
+		NULL /* Task handle */
+		);
+
 
 //	vTaskList(buffer);
 //	trace_printf("Tasks: \n%s\n\n", buffer);

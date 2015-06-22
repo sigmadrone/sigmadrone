@@ -36,7 +36,7 @@ public:
 			DMA_Stream_TypeDef *rx_dma_stream = DMA2_Stream5,
 			uint32_t rx_dma_channel = DMA_CHANNEL_4,
 			uint32_t timeout = 250,
-			uint32_t baudrate = 9600
+			uint32_t baudrate = 115200
 			);
 	~UART();
 	void clear();
