@@ -20,7 +20,7 @@ struct HwTimerStatic {
 #define array_size(x) (sizeof(x) / sizeof((x)[0]))
 
 static HwTimerStatic all_timers_[HwTimer::TIMER_LAST] = {
-		{ {0}, 0, 0}, // invalid entry
+		{ {0,0,0,0,0,0}, 0, 0, 0}, // invalid entry
 		{ {TIM1},  0, 2, 0xffff }, { {TIM2},  0, 1, 0xffffffff }, { {TIM3}, 0, 1, 0xffff },
 		{ {TIM4},  0, 1, 0xffff }, { {TIM5},  0, 1, 0xffffffff }, { {TIM6}, 0, 1, 0xffff },
 		{ {TIM7},  0, 1, 0xffff }, { {TIM8},  0, 2, 0xffff },
@@ -194,9 +194,27 @@ bool HwTimer::start() {
 	return true;
 }
 
-bool HwTimer::start_pwm_decode_mode() {
+bool HwTimer::start_pwm_decode_mode(
+		uint32_t rising_edge_channel_no,
+		uint32_t falling_edge_channel_no,
+		uint32_t input_trigger) {
 	TIM_HandleTypeDef* handle = init_handle();
 	if (0 == handle) {
+		assert(false);
+		return false;
+	}
+
+	stop();
+
+	uint32_t timx_rising_channel = get_timx_channel(rising_edge_channel_no);
+	uint32_t timx_falling_channel = get_timx_channel(falling_edge_channel_no);
+	if (timx_rising_channel == INVALID_CHANNEL_NO || timx_falling_channel == INVALID_CHANNEL_NO) {
+		assert(false);
+		return false;
+	}
+
+	if (input_trigger != TIM_TS_TI1FP1 && input_trigger != TIM_TS_TI2FP2) {
+		assert(false);
 		return false;
 	}
 
@@ -211,20 +229,19 @@ bool HwTimer::start_pwm_decode_mode() {
 	ic_init.ICPrescaler = TIM_ICPSC_DIV1;
 	ic_init.ICFilter = 0;
 
-	/* Configure the Input Capture of channel 1 */
-	ic_init.ICPolarity = TIM_ICPOLARITY_FALLING;
-	ic_init.ICSelection = TIM_ICSELECTION_INDIRECTTI;
-	if (HAL_TIM_IC_ConfigChannel(handle, &ic_init, TIM_CHANNEL_1) != HAL_OK) {
+	/* Configure the Input Capture of channel active on the rising edge*/
+	ic_init.ICPolarity = TIM_ICPOLARITY_RISING;
+	ic_init.ICSelection = TIM_ICSELECTION_DIRECTTI;
+	if (HAL_TIM_IC_ConfigChannel(handle, &ic_init, timx_rising_channel) != HAL_OK) {
 		/* Initialization Error */
 		trace_printf("HAL_TIM_IC_ConfigChannel failed\n");
 		return false;
 	}
 
-	/* Configure the Input Capture of channel 2 */
-	ic_init.ICPolarity = TIM_ICPOLARITY_RISING;
-	ic_init.ICSelection = TIM_ICSELECTION_DIRECTTI;
-	if (HAL_TIM_IC_ConfigChannel(handle, &ic_init, TIM_CHANNEL_2) != HAL_OK)
-	{
+	/* Configure the Input Capture of the channel active on the falling edge */
+	ic_init.ICPolarity = TIM_ICPOLARITY_FALLING;
+	ic_init.ICSelection = TIM_ICSELECTION_INDIRECTTI;
+	if (HAL_TIM_IC_ConfigChannel(handle, &ic_init, timx_falling_channel) != HAL_OK) {
 		/* Initialization Error */
 		trace_printf("HAL_TIM_IC_ConfigChannel failed\n");
 		return false;
@@ -234,7 +251,7 @@ bool HwTimer::start_pwm_decode_mode() {
 	/* Select the slave Mode: Reset Mode */
 	/* Slave synchro config */
 	TIM_SlaveConfigTypeDef slave_config = {0};
-	slave_config.InputTrigger = TIM_TS_TI2FP2;
+	slave_config.InputTrigger = input_trigger;
 	slave_config.SlaveMode = TIM_SLAVEMODE_RESET;
 	if (HAL_TIM_SlaveConfigSynchronization(handle, &slave_config) != HAL_OK)
 	{
@@ -242,15 +259,15 @@ bool HwTimer::start_pwm_decode_mode() {
 		return false;
 	}
 
-	/* Start the Input Capture in interrupt mode on channel 2 */
-	if (HAL_TIM_IC_Start_IT(handle, TIM_CHANNEL_2) != HAL_OK)
+	/* Start the Input Capture in interrupt mode on the rising edge channel */
+	if (HAL_TIM_IC_Start_IT(handle, timx_rising_channel) != HAL_OK)
 	{
 		trace_printf("HAL_TIM_IC_Start_IT failed\n");
 		return false;
 	}
 
-	/* Start the Input Capture in interrupt mode on channel 1 */
-	if (HAL_TIM_IC_Start_IT(handle, TIM_CHANNEL_1) != HAL_OK)
+	/* Start the Input Capture in interrupt mode on the falling edge channel */
+	if (HAL_TIM_IC_Start_IT(handle, timx_falling_channel) != HAL_OK)
 	{
 		trace_printf("HAL_TIM_IC_Start_IT failed\n");
 		return false;

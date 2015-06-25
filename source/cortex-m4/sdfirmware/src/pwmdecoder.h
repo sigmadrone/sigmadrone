@@ -50,9 +50,21 @@ public:
 
 	/** Starts the decoder.
 	 *
-	 *  @returns true - success, false - failure
+	 * @param period_channel_no - timer channel no. that is active on the rising edge.
+	 *  The capture register from this channel gives us the period.
+	 * @param duty_cycle_channel_no - timer channel no. that is active on the falling edge.
+	 *  The capture register from this channel gives us the duty cycle.
+	 * @param input_trugger - trigger for the slave controller - TIM_TS_TI1FP1 or TIM_TS_TI2FP2
+	 *
+	 * @returns true - success, false - failure
 	 */
-	bool start();
+	bool start(
+			uint32_t period_channel_no,
+			uint32_t duty_cycle_channel_no,
+			uint32_t input_trigger);
+
+	inline bool start_on_ch1_ch2() { return start(1,2,TIM_TS_TI1FP1); }
+	inline bool start_on_ch2_ch1() { return start(2,1,TIM_TS_TI2FP2); }
 
 	/** Stops the decoder
 	 *
@@ -88,6 +100,8 @@ private:
 	TimeSpan duty_cycle_;
 	TimeSpan max_period_;
 	FunctionPointer callback_;
+	uint32_t period_channel_;
+	uint32_t duty_cycle_channel_;
 	bool callback_on_change_only_;
 };
 

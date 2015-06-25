@@ -263,18 +263,16 @@ void spi_slave_task(void *pvParameters)
 
 void pwm_decoder_callback();
 
-PwmEncoder pwmEncoder(HwTimer::TIMER_1, TimeSpan::from_seconds(2), {PA_8}, {1});
-PwmDecoder pwmDecoder(HwTimer::TIMER_4, PB_7, TimeSpan::from_milliseconds(30),
+PwmEncoder pwmEncoder(HwTimer::TIMER_1, TimeSpan::from_milliseconds(2000), {PA_8}, {1});
+PwmDecoder pwmDecoder(HwTimer::TIMER_4, PD_12, TimeSpan::from_milliseconds(3000),
 		FunctionPointer(pwm_decoder_callback));
 
 
 void pwm_decoder_callback() {
-#if 0
 	float duty_cycle = pwmDecoder.duty_cycle_rel();
 	trace_printf("PWM decoded: period %d mS, duty cycle %.4f\n",
 			(uint32_t)pwmDecoder.decoded_period().milliseconds(),
 			duty_cycle);
-#endif
 }
 
 void tim3_isr() {
@@ -326,16 +324,16 @@ void main_task(void *pvParameters)
 	char buf[256];
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	HwTimer tim3(HwTimer::TIMER_3, TimeSpan::from_milliseconds(100),
+	HwTimer tim3(HwTimer::TIMER_3, TimeSpan::from_milliseconds(3000),
 			Frequency::from_kilohertz(10000), FunctionPointer(tim3_isr));
 	tim3.start();
 
 	/*
 	 * NOTE: for this particular example in order for the pwmDecoder to function, then
-	 * PA_8 and PB_7 must be connected. pwmEncoder outputs to PA_8 and pwmDecoder
-	 * receives its input on PB_7.
+	 * PA_8 and PD_12 must be connected. pwmEncoder outputs to PA_8 and pwmDecoder
+	 * receives its input on PD_12.
 	 */
-	pwmDecoder.start();
+	pwmDecoder.start_on_ch1_ch2();
 	pwmEncoder.start();
 	pwmEncoder.set_duty_cycle(1, TimeSpan::from_milliseconds(1000));
 
@@ -464,11 +462,13 @@ void main_task(void *pvParameters)
 				uart2.clear();
 			}
 
+#if 0
 			memset(buf, 0, sizeof(buf));
 			size_t retsize = uart3.receive((uint8_t*)buf, sizeof(buf));
 			if (retsize) {
 				trace_printf("GPS: %s\n", buf);
 			}
+#endif
 
 #if 0
 			sprintf(disp,"PWM: %u mS", (unsigned)pwmDecoder.decoded_period().milliseconds());

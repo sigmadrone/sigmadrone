@@ -65,9 +65,18 @@ public:
 	 * it is currently ticking. Upon successful execution the timer will be in
 	 * MODE_PWM_DECODE
 	 *
+	 * @param rising_edge_channel_no - timer channel no. that is active on the rising edge.
+	 *  The capture register from this channel gives us the period.
+	 * @param falling_edge_channel_no - timer channel no. that is active on the falling edge.
+	 *  The capture register from this channel gives us the duty cycle.
+	 * @param input_trugger - trigger for the slave controller - TIM_TS_TI1FP1 or TIM_TS_TI2FP2
+	 *
 	 * @returns true - success, false - failure
 	 */
-	bool start_pwm_decode_mode();
+	bool start_pwm_decode_mode(
+			uint32_t rising_edge_channel_no,
+			uint32_t falling_edge_channel_no,
+			uint32_t input_trigger);
 
 	/** Starts the timer in PWM encode mode. Implicitly stops the timer if
 	 *  it is currently ticking. Upon successful execution the timer will be in
