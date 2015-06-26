@@ -31,6 +31,7 @@
 #include "rexjson.h"
 #include "rexjson++.h"
 #include "tm_stm32f4_ili9341.h"
+#include "colibripwm.h"
 
 void* __dso_handle = 0;
 extern unsigned int __relocated_vectors;
@@ -260,27 +261,68 @@ void spi_slave_task(void *pvParameters)
 	}
 }
 
+struct PwmDecoderCallback {
+	PwmDecoderCallback(uint32_t id) :
+			decoder_(colibri::PWM_IN_CONSTS[id].timer_id_,
+					colibri::PWM_IN_CONSTS[id].pin_,
+					TimeSpan::from_milliseconds(3000),
+					FunctionPointer(this, &PwmDecoderCallback::callback)), id_(id) {}
+	void callback(void) {
+		trace_printf("PWM decoder %d: period %d mS, duty cycle %.4f\n", id_,
+				(uint32_t)decoder_.decoded_period().milliseconds(),
+				decoder_.duty_cycle_rel());
+	}
+	void start_decoder() {
+		decoder_.start_on_ch1_ch2();
+	}
+	uint32_t decoder_id() { return id_; }
 
-void pwm_decoder_callback();
+private:
+	PwmDecoderCallback(const PwmDecoderCallback&);
 
-PwmEncoder pwmEncoder(HwTimer::TIMER_1, TimeSpan::from_milliseconds(2000), {PA_8}, {1});
-PwmDecoder pwmDecoder(HwTimer::TIMER_4, PD_12, TimeSpan::from_milliseconds(3000),
-		FunctionPointer(pwm_decoder_callback));
+	PwmDecoder decoder_;
+	uint32_t id_;
+};
 
+static PwmEncoder pwmEncoder1(colibri::PWM_OUT_TIMER_1, TimeSpan::from_milliseconds(2000),
+		{colibri::PWM_OUT_PINS_1_4}, {1, 2, 3, 4});
+static PwmEncoder pwmEncoder2(colibri::PWM_OUT_TIMER_2, TimeSpan::from_milliseconds(2000),
+		colibri::PWM_OUT_PINS_5_8, {1, 2, 3, 4});
 
-void pwm_decoder_callback() {
-	float duty_cycle = pwmDecoder.duty_cycle_rel();
-	trace_printf("PWM decoded: period %d mS, duty cycle %.4f\n",
-			(uint32_t)pwmDecoder.decoded_period().milliseconds(),
-			duty_cycle);
-}
-
-void tim3_isr() {
+void tim6_isr() {
 	static float duty_cycle[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
 	static int index = 0;
-	pwmEncoder.set_duty_cycle(1, duty_cycle[index]);
+	for (uint32_t i = 0; i < 4; ++i) {
+		pwmEncoder1.set_duty_cycle(i+1, duty_cycle[index]);
+		pwmEncoder2.set_duty_cycle(i+1, duty_cycle[index]);
+	}
 	index = (index + 1) % (sizeof(duty_cycle)/sizeof(duty_cycle[1]));
 }
+
+void StartPwmTest() {
+	static HwTimer tim6(HwTimer::TIMER_6, TimeSpan::from_milliseconds(3000),
+				Frequency::from_kilohertz(10000), FunctionPointer(tim6_isr));
+
+	static std::vector<PwmDecoderCallback*> pwm_callbacks;
+
+	tim6.start();
+
+	for (uint32_t i = 0; i < 4; ++i) {
+		pwm_callbacks.push_back(new PwmDecoderCallback(i));
+	}
+
+	for (auto decoder: pwm_callbacks) {
+		decoder->start_decoder();
+	}
+
+	pwmEncoder1.start();
+	pwmEncoder2.start();
+	for (uint32_t i = 0; i < 4; ++i) {
+		pwmEncoder1.set_duty_cycle(i+1, TimeSpan::from_milliseconds(1000));
+		pwmEncoder2.set_duty_cycle(i+1, TimeSpan::from_milliseconds(1000));
+	}
+}
+
 
 #define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
 
@@ -324,18 +366,7 @@ void main_task(void *pvParameters)
 	char buf[256];
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	HwTimer tim3(HwTimer::TIMER_3, TimeSpan::from_milliseconds(3000),
-			Frequency::from_kilohertz(10000), FunctionPointer(tim3_isr));
-	tim3.start();
-
-	/*
-	 * NOTE: for this particular example in order for the pwmDecoder to function, then
-	 * PA_8 and PD_12 must be connected. pwmEncoder outputs to PA_8 and pwmDecoder
-	 * receives its input on PD_12.
-	 */
-	pwmDecoder.start_on_ch1_ch2();
-	pwmEncoder.start();
-	pwmEncoder.set_duty_cycle(1, TimeSpan::from_milliseconds(1000));
+	StartPwmTest();
 
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
@@ -440,9 +471,10 @@ void main_task(void *pvParameters)
 		Vector3f gyr_data = Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
 		Vector3f acc_data = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z);
 		att.track_gyroscope(DEG2RAD(gyr_data), dt.seconds_float());
+		//att.track_accelerometer(acc_data, dt.seconds_float());
 		q = att.get_attitude();
 
-		if (lcdUpdateTime.elapsed().milliseconds() > 500) {
+		if (lcdUpdateTime.elapsed().milliseconds() > 1000) {
 			lcdUpdateTime.time_stamp();
 			sprintf(disp,"SAMPLES: %d           ", gyr_samples);
 			DisplayStringAt(0, 60, disp);
@@ -504,8 +536,9 @@ void main_task(void *pvParameters)
 			memset(disp, 0, sizeof(disp));
 			spi5.read(2, (uint8_t*)disp, 15);
 			DisplayStringAt(0, 300, disp);
-//			trace_printf("Gyro: %5.2f %5.2f %5.2f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
-//			trace_printf("Acc : %5.2f %5.2f %5.2f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
+			trace_printf("Gyro: %5.2f %5.2f %5.2f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
+			trace_printf("Acc : %5.2f %5.2f %5.2f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
+			trace_printf("Q   : %5.2f %5.2f %5.2f %5.2f\n", q.w, q.x, q.y, q.z);
 			ledusb.toggle();
 //			trace_printf("recved: %s\n", disp);
 		}

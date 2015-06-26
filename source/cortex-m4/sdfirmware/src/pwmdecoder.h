@@ -93,6 +93,9 @@ private:
 	static Frequency timer_clock_from_pwm_period(const TimeSpan& max_period);
 	void capture_callback();
 
+	PwmDecoder(const PwmDecoder&);
+	const PwmDecoder& operator=(const PwmDecoder&);
+
 private:
 	HwTimer timer_;
 	GPIOPin gpio_;

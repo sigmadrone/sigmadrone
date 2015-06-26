@@ -541,7 +541,7 @@ extern "C" void TIM5_IRQHandler(void) {
 }
 
 extern "C" void TIM6_DAC_IRQHandler(void) {
-	HAL_TIM_IRQHandler(&all_timers_[7].handle_);
+	HAL_TIM_IRQHandler(&all_timers_[6].handle_);
 }
 
 extern "C" void TIM7_IRQHandler(void) {
@@ -557,19 +557,19 @@ extern "C" void TIM1_UP_TIM10_IRQHandler(void) {
 }
 
 extern "C" void TIM1_TRG_COM_TIM11_IRQHandler(void) {
-	HAL_TIM_IRQHandler(&all_timers_[9].handle_);
+	HAL_TIM_IRQHandler(&all_timers_[11].handle_);
 }
 
 extern "C" void TIM8_BRK_TIM12_IRQHandler(void) {
-	HAL_TIM_IRQHandler(&all_timers_[9].handle_);
+	HAL_TIM_IRQHandler(&all_timers_[12].handle_);
 }
 
 extern "C" void TIM8_UP_TIM13_IRQHandler(void) {
-	HAL_TIM_IRQHandler(&all_timers_[9].handle_);
+	HAL_TIM_IRQHandler(&all_timers_[13].handle_);
 }
 
 extern "C" void TIM8_TRG_COM_TIM14_IRQHandler(void) {
-	HAL_TIM_IRQHandler(&all_timers_[9].handle_);
+	HAL_TIM_IRQHandler(&all_timers_[14].handle_);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *handle) {

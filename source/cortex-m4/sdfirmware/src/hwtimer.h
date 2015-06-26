@@ -169,6 +169,10 @@ private:
 	TIM_HandleTypeDef* init_handle();
 	static uint32_t get_timx_channel(uint32_t channel_no);
 
+	// disbale copy constructor
+	HwTimer(const HwTimer&);
+	const HwTimer& operator=(const HwTimer&);
+
 private:
 	Id timer_id_;
 	TimeSpan period_;
