@@ -3,6 +3,7 @@
 #include <cstring>
 #include "uart.h"
 #include "diag/Trace.h"
+#include "colibritrace.h"
 
 static UART* g_uart[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
 
@@ -15,8 +16,9 @@ void UART::dma_config()
 		__DMA2_CLK_ENABLE();
 	else if (dma_device_ == DMA1)
 		__DMA1_CLK_ENABLE();
-	else
+	else {
 		throw std::runtime_error("UART::dma_config(): Invalid DMA device");
+	}
 
 	memset(&hdma_rx_, 0, sizeof(hdma_rx_));
 	memset(&hdma_tx_, 0, sizeof(hdma_tx_));
@@ -122,11 +124,18 @@ UART::UART(const std::vector<GPIOPin>& data_pins,
 		HAL_NVIC_SetPriority(UART5_IRQn, 7, 0);
 		HAL_NVIC_EnableIRQ(UART5_IRQn);
 		g_uart[5] = this;
+	} else if (uart_device == USART6) {
+		__USART6_CLK_ENABLE();
+		HAL_NVIC_SetPriority(USART6_IRQn, 7, 0);
+		HAL_NVIC_EnableIRQ(USART6_IRQn);
+		g_uart[6] = this;
 	}
 	if (HAL_UART_Init(&handle_) != HAL_OK) {
 		throw std::runtime_error("Failed to init UART");
 	}
-	dma_config();
+	if (dma_device_ != nullptr) {
+		dma_config();
+	}
 }
 
 UART::~UART()
@@ -146,6 +155,9 @@ UART::~UART()
 	} else if (handle_.Instance == UART5) {
 		__UART5_CLK_DISABLE();
 		g_uart[5] = NULL;
+	} else if (handle_.Instance == USART6) {
+		__USART6_CLK_DISABLE();
+		g_uart[6] = NULL;
 	}
 }
 
