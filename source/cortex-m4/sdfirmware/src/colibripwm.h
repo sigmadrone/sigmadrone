@@ -18,6 +18,8 @@ namespace colibri {
  * reserved and should not be used for anything other than PWM encode/decode functions.
  */
 
+static const uint32_t PWM_OUT_CHANNEL_COUNT = 8;
+
 static const HwTimer::Id PWM_OUT_TIMER_1 = HwTimer::TIMER_1;
 static const HwTimer::Id PWM_OUT_TIMER_2 = HwTimer::TIMER_8;
 
@@ -32,6 +34,8 @@ static const PinName PWM_OUT_PIN_8 = PC_9;
 
 static const std::vector<PinName> PWM_OUT_PINS_1_4 = {PWM_OUT_PIN_1, PWM_OUT_PIN_2, PWM_OUT_PIN_3, PWM_OUT_PIN_4};
 static const std::vector<PinName> PWM_OUT_PINS_5_8 = {PWM_OUT_PIN_5, PWM_OUT_PIN_6, PWM_OUT_PIN_7, PWM_OUT_PIN_8};
+
+static const uint32_t PWM_IN_CHANNEL_COUNT = 4;
 
 static const HwTimer::Id PWM_IN_TIMER_1 = HwTimer::TIMER_2;
 static const HwTimer::Id PWM_IN_TIMER_2 = HwTimer::TIMER_3;
