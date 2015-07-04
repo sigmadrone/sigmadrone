@@ -161,7 +161,12 @@ TIM_HandleTypeDef* HwTimer::init_handle() {
 	}
 
 	Frequency input_clock = get_timx_input_clock(timer_id_);
-	uint32_t prescaler = input_clock.hertz() / timer_clock_.hertz() - 1;
+	uint32_t prescaler = 0;
+	if (!timer_clock_.is_null()) {
+		prescaler = input_clock.hertz() / timer_clock_.hertz() - 1;
+	} else {
+		timer_clock_ = input_clock;
+	}
 
 	handle->Init.Period = timer_counter;
 	handle->Init.Prescaler = prescaler;
@@ -171,6 +176,7 @@ TIM_HandleTypeDef* HwTimer::init_handle() {
 }
 
 bool HwTimer::start() {
+	stop();
 	TIM_HandleTypeDef* handle = init_handle();
 	if (0 == handle) {
 		return false;
@@ -198,13 +204,13 @@ bool HwTimer::start_pwm_decode_mode(
 		uint32_t rising_edge_channel_no,
 		uint32_t falling_edge_channel_no,
 		uint32_t input_trigger) {
+	stop();
+
 	TIM_HandleTypeDef* handle = init_handle();
 	if (0 == handle) {
 		assert(false);
 		return false;
 	}
-
-	stop();
 
 	uint32_t timx_rising_channel = get_timx_channel(rising_edge_channel_no);
 	uint32_t timx_falling_channel = get_timx_channel(falling_edge_channel_no);
@@ -379,7 +385,7 @@ void HwTimer::set_timer_clock(const Frequency& timer_clock) {
 	if (timer_clock.unit() > 0) {
 		timer_clock_ = timer_clock;
 	} else {
-		timer_clock_ = Frequency::from_kilohertz(10);
+		timer_clock_ = get_timx_input_clock(timer_id_);
 	}
 }
 

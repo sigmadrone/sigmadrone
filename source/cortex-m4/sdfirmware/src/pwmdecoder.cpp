@@ -18,7 +18,7 @@ PwmDecoder::PwmDecoder(
 		const TimeSpan& max_period,
 		const FunctionPointer callback,
 		bool callback_on_change_only) :
-				timer_(timer_id, timer_clock_from_pwm_period(max_period),
+				timer_(timer_id, Frequency::from_hertz(0),
 						FunctionPointer(this,&PwmDecoder::capture_callback)),
 				gpio_(pin, GPIO_MODE_AF_PP, GPIO_PULLUP, GPIO_SPEED_HIGH, HwTimer::get_gpio_altfunc(timer_id)),
 				decoded_period_(TimeSpan::from_seconds(0)),
@@ -38,7 +38,7 @@ PwmDecoder::PwmDecoder(
 		const TimeSpan& max_period,
 		const FunctionPointer callback,
 		bool callback_on_change_only) :
-				timer_(timer_id, Frequency::from_timespan(max_period), FunctionPointer(this,
+				timer_(timer_id, Frequency::from_hertz(0), FunctionPointer(this,
 						&PwmDecoder::capture_callback)),
 				gpio_(gpio),
 				decoded_period_(TimeSpan::from_seconds(0)),

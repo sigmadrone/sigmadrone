@@ -32,6 +32,7 @@
 #include "rexjson++.h"
 #include "tm_stm32f4_ili9341.h"
 #include "colibripwm.h"
+#include "colibritrace.h"
 
 void* __dso_handle = 0;
 extern unsigned int __relocated_vectors;
@@ -265,12 +266,13 @@ struct PwmDecoderCallback {
 	PwmDecoderCallback(uint32_t id) :
 			decoder_(colibri::PWM_IN_CONSTS[id].timer_id_,
 					colibri::PWM_IN_CONSTS[id].pin_,
-					TimeSpan::from_milliseconds(3000),
+					TimeSpan::from_milliseconds(2),
 					FunctionPointer(this, &PwmDecoderCallback::callback)), id_(id) {}
 	void callback(void) {
-		trace_printf("PWM decoder %d: period %d mS, duty cycle %.4f\n", id_,
-				(uint32_t)decoder_.decoded_period().milliseconds(),
-				decoder_.duty_cycle_rel());
+		trace_printf("PWM %d: period %d uS, duty: %.4f %d uS\n", id_,
+				(uint32_t)decoder_.decoded_period().microseconds(),
+				decoder_.duty_cycle_rel(),
+				decoder_.duty_cycle().microseconds());
 	}
 	void start_decoder() {
 		decoder_.start_on_ch1_ch2();
@@ -284,12 +286,14 @@ private:
 	uint32_t id_;
 };
 
-static PwmEncoder pwmEncoder1(colibri::PWM_OUT_TIMER_1, TimeSpan::from_milliseconds(2000),
+static PwmEncoder pwmEncoder1(colibri::PWM_OUT_TIMER_1, TimeSpan::from_microseconds(2500),
 		{colibri::PWM_OUT_PINS_1_4}, {1, 2, 3, 4});
-static PwmEncoder pwmEncoder2(colibri::PWM_OUT_TIMER_2, TimeSpan::from_milliseconds(2000),
+
+static PwmEncoder pwmEncoder2(colibri::PWM_OUT_TIMER_2, TimeSpan::from_milliseconds(2),
 		colibri::PWM_OUT_PINS_5_8, {1, 2, 3, 4});
 
-void tim6_isr() {
+
+void tim10_isr() {
 	static float duty_cycle[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
 	static int index = 0;
 	for (uint32_t i = 0; i < 4; ++i) {
@@ -300,12 +304,12 @@ void tim6_isr() {
 }
 
 void StartPwmTest() {
-	static HwTimer tim6(HwTimer::TIMER_6, TimeSpan::from_milliseconds(3000),
-				Frequency::from_kilohertz(10000), FunctionPointer(tim6_isr));
+	static HwTimer tim10(HwTimer::TIMER_10, TimeSpan::from_seconds(2),
+				Frequency::from_kilohertz(10000), FunctionPointer(tim10_isr));
 
 	static std::vector<PwmDecoderCallback*> pwm_callbacks;
 
-	tim6.start();
+	tim10.start();
 
 	for (uint32_t i = 0; i < 4; ++i) {
 		pwm_callbacks.push_back(new PwmDecoderCallback(i));
@@ -318,11 +322,10 @@ void StartPwmTest() {
 	pwmEncoder1.start();
 	pwmEncoder2.start();
 	for (uint32_t i = 0; i < 4; ++i) {
-		pwmEncoder1.set_duty_cycle(i+1, TimeSpan::from_milliseconds(1000));
-		pwmEncoder2.set_duty_cycle(i+1, TimeSpan::from_milliseconds(1000));
+		pwmEncoder1.set_duty_cycle(i+1, TimeSpan::from_milliseconds(1));
+		pwmEncoder2.set_duty_cycle(i+1, TimeSpan::from_milliseconds(1));
 	}
 }
-
 
 #define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
 
@@ -353,6 +356,8 @@ int lcd_init(void)
 	//Put string with black foreground color and red background with 11x18px font
 	TM_ILI9341_Puts(190, 225, "www.sigmadrone.org", &TM_Font_7x10, ILI9341_COLOR_BLACK, ILI9341_COLOR_ORANGE);
 	TM_ILI9341_Fill(ILI9341_COLOR_WHITE);
+
+	return 0;
 }
 
 void DisplayStringAt(uint16_t x, uint16_t y, const char *str)
@@ -565,6 +570,10 @@ void relocate_interrupt_table()
 	__DSB();
 }
 
+
+
+
+
 int main(int argc, char* argv[])
 {
 	uint32_t freq = HAL_RCC_GetSysClockFreq();
@@ -581,6 +590,8 @@ int main(int argc, char* argv[])
 	NVIC_SetPriority(SysTick_IRQn, 0);
 
 	TimeStamp::init();
+	colibri::UartTrace::init(115200*2);
+
 
 	trace_printf("Starting main_task:, CPU freq: %d, PCLK1 freq: %d, PCLK2 freq: %d\n",
 			freq, pclk1, pclk2);
