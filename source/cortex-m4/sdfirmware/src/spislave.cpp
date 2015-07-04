@@ -252,7 +252,7 @@ void SPISlave::exti_config(PinName pin)
 
 void SPISlave::spi_error_callback()
 {
-//	trace_printf("SPISlave::RxTxError ...\n");
+//	printf("SPISlave::RxTxError ...\n");
 }
 
 void SPISlave::start()
@@ -280,7 +280,7 @@ void SPISlave::spi_chipselect(bool select)
 			return;
 //		memset(tx_buffer_[active_tx], 0, bufsize_);
 //		snprintf((char*)tx_buffer_[active_tx], bufsize_ - 1, "SPI:%u*******************", (unsigned int)serial_++);
-//		trace_printf("SPISlave::Start: %s\n", (char*)tx_buffer_[active_tx]);
+//		printf("SPISlave::Start: %s\n", (char*)tx_buffer_[active_tx]);
 		memcpy(tx_buffer_[1], tx_buffer_[0], bufsize_);
 		memcpy(rx_buffer_[0], rx_buffer_[1], bufsize_);
 		handle_.Instance->DR = *((uint8_t*)tx_buffer_[1]);

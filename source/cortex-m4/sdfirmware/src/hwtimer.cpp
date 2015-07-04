@@ -6,6 +6,7 @@
  */
 
 #include "hwtimer.h"
+#include <stdio.h>
 #include "stm32f4xx_hal_tim.h"
 #include "stm32f429xx.h"
 #include "diag/Trace.h"
@@ -184,7 +185,7 @@ bool HwTimer::start() {
 
 	mode_ = MODE_BASIC;
 	if(HAL_TIM_Base_Init(handle) != HAL_OK) {
-		trace_printf("HAL_TIM_Base_Init failed\n");
+		printf("HAL_TIM_Base_Init failed\n");
 		return false;
 	}
 
@@ -193,7 +194,7 @@ bool HwTimer::start() {
 	 */
 	if(HAL_TIM_Base_Start_IT(handle) != HAL_OK) {
 		/* Starting Error */
-		trace_printf("HAL_TIM_Base_Start_IT failed\n");
+		printf("HAL_TIM_Base_Start_IT failed\n");
 		return false;
 	}
 
@@ -227,7 +228,7 @@ bool HwTimer::start_pwm_decode_mode(
 	mode_ = MODE_PWM_DECODE;
 	if (HAL_TIM_IC_Init(handle) != HAL_OK) {
 		/* Initialization Error */
-		trace_printf("HAL_TIM_IC_Init failed\n");
+		printf("HAL_TIM_IC_Init failed\n");
 	}
 
 	/* Configure the Input Capture channels */
@@ -240,7 +241,7 @@ bool HwTimer::start_pwm_decode_mode(
 	ic_init.ICSelection = TIM_ICSELECTION_DIRECTTI;
 	if (HAL_TIM_IC_ConfigChannel(handle, &ic_init, timx_rising_channel) != HAL_OK) {
 		/* Initialization Error */
-		trace_printf("HAL_TIM_IC_ConfigChannel failed\n");
+		printf("HAL_TIM_IC_ConfigChannel failed\n");
 		return false;
 	}
 
@@ -249,7 +250,7 @@ bool HwTimer::start_pwm_decode_mode(
 	ic_init.ICSelection = TIM_ICSELECTION_INDIRECTTI;
 	if (HAL_TIM_IC_ConfigChannel(handle, &ic_init, timx_falling_channel) != HAL_OK) {
 		/* Initialization Error */
-		trace_printf("HAL_TIM_IC_ConfigChannel failed\n");
+		printf("HAL_TIM_IC_ConfigChannel failed\n");
 		return false;
 	}
 
@@ -261,21 +262,21 @@ bool HwTimer::start_pwm_decode_mode(
 	slave_config.SlaveMode = TIM_SLAVEMODE_RESET;
 	if (HAL_TIM_SlaveConfigSynchronization(handle, &slave_config) != HAL_OK)
 	{
-		trace_printf("HAL_TIM_SlaveConfigSynchronization failed\n");
+		printf("HAL_TIM_SlaveConfigSynchronization failed\n");
 		return false;
 	}
 
 	/* Start the Input Capture in interrupt mode on the rising edge channel */
 	if (HAL_TIM_IC_Start_IT(handle, timx_rising_channel) != HAL_OK)
 	{
-		trace_printf("HAL_TIM_IC_Start_IT failed\n");
+		printf("HAL_TIM_IC_Start_IT failed\n");
 		return false;
 	}
 
 	/* Start the Input Capture in interrupt mode on the falling edge channel */
 	if (HAL_TIM_IC_Start_IT(handle, timx_falling_channel) != HAL_OK)
 	{
-		trace_printf("HAL_TIM_IC_Start_IT failed\n");
+		printf("HAL_TIM_IC_Start_IT failed\n");
 		return false;
 	}
 
@@ -290,7 +291,7 @@ bool HwTimer::start_pwm_encode_mode(const std::vector<uint32_t>& channels)
 
 	for (uint32_t i = 0; i < channels_.size(); ++i) {
 		if (get_timx_channel(channels[i]) == INVALID_CHANNEL_NO) {
-			trace_printf("Invalid channel NO specified %d\n", channels[i]);
+			printf("Invalid channel NO specified %d\n", channels[i]);
 			return false;
 		}
 	}
@@ -301,7 +302,7 @@ bool HwTimer::start_pwm_encode_mode(const std::vector<uint32_t>& channels)
 	}
 
 	if (HAL_TIM_PWM_Init(handle) != HAL_OK) {
-		trace_printf("HAL_TIM_PWM_Init failed!\n");
+		printf("HAL_TIM_PWM_Init failed!\n");
 		return false;
 	}
 
@@ -315,14 +316,14 @@ bool HwTimer::start_pwm_encode_mode(const std::vector<uint32_t>& channels)
 	oc_init.Pulse = 1;
 	for (uint32_t i = 0; i < channels_.size(); ++i) {
 		if (HAL_TIM_PWM_ConfigChannel(handle, &oc_init, get_timx_channel(channels_[i])) != HAL_OK) {
-			trace_printf("HAL_TIM_PWM_ConfigChannel failed\n");
+			printf("HAL_TIM_PWM_ConfigChannel failed\n");
 			return false;
 		}
 	}
 
 	for (uint32_t i = 0; i < channels_.size(); ++i) {
 		if (HAL_TIM_PWM_Start(handle, get_timx_channel(channels_[i])) != HAL_OK) {
-			trace_printf("HAL_TIM_PWM_Start failed\n");
+			printf("HAL_TIM_PWM_Start failed\n");
 			return false;
 		}
 	}

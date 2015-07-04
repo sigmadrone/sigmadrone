@@ -171,7 +171,7 @@ void gyro_isr()
 void secondary_task(void *pvParameters)
 {
 	// Infinite loop
-	trace_printf("Secondary task...\n");
+	printf("Secondary task...\n");
 	while (1) {
 		vTaskDelay(250 / portTICK_RATE_MS);
 	}
@@ -239,7 +239,7 @@ void spi_slave_task(void *pvParameters)
 {
 	char buf[128];
 	unsigned int i = 0;
-	trace_printf("SPI Slave task...\n");
+	printf("SPI Slave task...\n");
 	SPISlave spi4({
 				{PE_4, GPIO_MODE_AF_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_NSS_PIN */
 				{PE_2, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_SCK_PIN */
@@ -269,8 +269,8 @@ struct PwmDecoderCallback {
 					TimeSpan::from_milliseconds(2),
 					FunctionPointer(this, &PwmDecoderCallback::callback)), id_(id) {}
 	void callback(void) {
-		trace_printf("PWM %d: period %d uS, duty: %.4f %d uS\n", id_,
-				(uint32_t)decoder_.decoded_period().microseconds(),
+		printf("PWM %lu: period %llu uS, duty: %.4f %llu uS\n", id_,
+				decoder_.decoded_period().microseconds(),
 				decoder_.duty_cycle_rel(),
 				decoder_.duty_cycle().microseconds());
 	}
@@ -391,10 +391,10 @@ void main_task(void *pvParameters)
 	QuaternionF q;
 	attitudetracker att;
 
-	trace_printf("Priority Group: %u\n", NVIC_GetPriorityGrouping());
-	trace_printf("SysTick_IRQn priority: %u\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
-	trace_printf("configKERNEL_INTERRUPT_PRIORITY: %u\n", configKERNEL_INTERRUPT_PRIORITY);
-	trace_printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %u\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
+	printf("Priority Group: %lu\n", NVIC_GetPriorityGrouping());
+	printf("SysTick_IRQn priority: %lu\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
+	printf("configKERNEL_INTERRUPT_PRIORITY: %d\n", configKERNEL_INTERRUPT_PRIORITY);
+	printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %d\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	lcd_init();
@@ -488,14 +488,14 @@ void main_task(void *pvParameters)
 				memset(buf, 0, sizeof(buf) - 1);
 				size_t retsize = uart2.receive((uint8_t*)buf, sizeof(buf));
 				if (retsize) {
-					trace_printf("UART2: %s\n", buf);
+					printf("UART2: %s\n", buf);
 					rexjson::value v = rexjson::read(buf);
 					sprintf(disp, "serial : %d      ", v["UART"]["serial"].get_int());
-//					trace_printf("%s\n", disp);
+//					printf("%s\n", disp);
 //					DisplayStringAt(0, 80, disp);
 				}
 			} catch (std::exception& e) {
-				trace_printf("exception: %s\n", e.what());
+				printf("exception: %s\n", e.what());
 				uart2.clear();
 			}
 
@@ -503,7 +503,7 @@ void main_task(void *pvParameters)
 			memset(buf, 0, sizeof(buf));
 			size_t retsize = uart3.receive((uint8_t*)buf, sizeof(buf));
 			if (retsize) {
-				trace_printf("GPS: %s\n", buf);
+				printf("GPS: %s\n", buf);
 			}
 #endif
 
@@ -541,11 +541,11 @@ void main_task(void *pvParameters)
 			memset(disp, 0, sizeof(disp));
 			spi5.read(2, (uint8_t*)disp, 15);
 			DisplayStringAt(0, 300, disp);
-			trace_printf("Gyro: %5.2f %5.2f %5.2f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
-			trace_printf("Acc : %5.2f %5.2f %5.2f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
-			trace_printf("Q   : %5.2f %5.2f %5.2f %5.2f\n", q.w, q.x, q.y, q.z);
+			printf("Gyro: %5.2f %5.2f %5.2f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
+			printf("Acc : %5.2f %5.2f %5.2f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
+			printf("Q   : %5.2f %5.2f %5.2f %5.2f\n", q.w, q.x, q.y, q.z);
 			ledusb.toggle();
-//			trace_printf("recved: %s\n", disp);
+//			printf("recved: %s\n", disp);
 		}
 		sample_dt.time_stamp();
 	}
@@ -593,7 +593,7 @@ int main(int argc, char* argv[])
 	colibri::UartTrace::init(115200*2);
 
 
-	trace_printf("Starting main_task:, CPU freq: %d, PCLK1 freq: %d, PCLK2 freq: %d\n",
+	printf("Starting main_task:, CPU freq: %lu, PCLK1 freq: %lu, PCLK2 freq: %lu\n",
 			freq, pclk1, pclk2);
 
 	  /* Create tasks */
@@ -648,12 +648,12 @@ int main(int argc, char* argv[])
 
 
 //	vTaskList(buffer);
-//	trace_printf("Tasks: \n%s\n\n", buffer);
+//	printf("Tasks: \n%s\n\n", buffer);
 	vTaskStartScheduler();
 
 	// Infinite loop
 	while (1) {
-		trace_printf("Hello world, freq: %d, f=%f\n", freq, 0.75);
+		printf("Hello world, freq: %lu, f=%f\n", freq, 0.75);
 	}
 	// Infinite loop, never return.
 }
