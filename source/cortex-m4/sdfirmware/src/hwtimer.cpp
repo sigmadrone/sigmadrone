@@ -20,6 +20,9 @@ struct HwTimerStatic {
 
 #define array_size(x) (sizeof(x) / sizeof((x)[0]))
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+
 static HwTimerStatic all_timers_[HwTimer::TIMER_LAST] = {
 		{ {0,0,0,0,0,0}, 0, 0, 0}, // invalid entry
 		{ {TIM1},  0, 2, 0xffff }, { {TIM2},  0, 1, 0xffffffff }, { {TIM3}, 0, 1, 0xffff },
@@ -29,6 +32,8 @@ static HwTimerStatic all_timers_[HwTimer::TIMER_LAST] = {
 		{ {TIM11}, 0, 2, 0xffff }, { {TIM12}, 0, 1, 0xffff },
 		{ {TIM13}, 0, 1, 0xffff }, { {TIM14}, 0, 1, 0xffff }
 };
+
+#pragma GCC diagnostic pop
 
 static bool is_valid_timer_id(HwTimer::Id timer_id) {
 	return timer_id > HwTimer::TIMER_INVALID && timer_id < HwTimer::TIMER_LAST;
@@ -232,7 +237,8 @@ bool HwTimer::start_pwm_decode_mode(
 	}
 
 	/* Configure the Input Capture channels */
-	TIM_IC_InitTypeDef ic_init = {0};
+	TIM_IC_InitTypeDef ic_init;
+	memset(&ic_init, 0, sizeof(ic_init));
 	ic_init.ICPrescaler = TIM_ICPSC_DIV1;
 	ic_init.ICFilter = 0;
 
@@ -257,7 +263,8 @@ bool HwTimer::start_pwm_decode_mode(
 	/* Configure the slave mode */
 	/* Select the slave Mode: Reset Mode */
 	/* Slave synchro config */
-	TIM_SlaveConfigTypeDef slave_config = {0};
+	TIM_SlaveConfigTypeDef slave_config;
+	memset(&slave_config,0,sizeof(slave_config));
 	slave_config.InputTrigger = input_trigger;
 	slave_config.SlaveMode = TIM_SLAVEMODE_RESET;
 	if (HAL_TIM_SlaveConfigSynchronization(handle, &slave_config) != HAL_OK)
@@ -291,7 +298,7 @@ bool HwTimer::start_pwm_encode_mode(const std::vector<uint32_t>& channels)
 
 	for (uint32_t i = 0; i < channels_.size(); ++i) {
 		if (get_timx_channel(channels[i]) == INVALID_CHANNEL_NO) {
-			printf("Invalid channel NO specified %d\n", channels[i]);
+			printf("Invalid channel NO specified %lu\n", channels[i]);
 			return false;
 		}
 	}
@@ -309,7 +316,8 @@ bool HwTimer::start_pwm_encode_mode(const std::vector<uint32_t>& channels)
 	mode_ = MODE_PWM_ENCODE;
 	channels_ = channels;
 
-	TIM_OC_InitTypeDef oc_init = {0};
+	TIM_OC_InitTypeDef oc_init;
+	memset(&oc_init, 0, sizeof(oc_init));
 	oc_init.OCMode     = TIM_OCMODE_PWM1;
 	oc_init.OCPolarity = TIM_OCPOLARITY_HIGH;
 	oc_init.OCFastMode = TIM_OCFAST_DISABLE;
