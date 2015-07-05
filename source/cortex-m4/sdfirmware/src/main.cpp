@@ -269,10 +269,12 @@ struct PwmDecoderCallback {
 					TimeSpan::from_milliseconds(2),
 					FunctionPointer(this, &PwmDecoderCallback::callback)), id_(id) {}
 	void callback(void) {
-		printf("PWM %lu: period %llu uS, duty: %.4f %llu uS\n", id_,
-				decoder_.decoded_period().microseconds(),
+#if 0
+		printf("PWM %lu: period %lu uS, duty: %.4f %lu uS\n", id_,
+				(uint32_t)decoder_.decoded_period().microseconds(),
 				decoder_.duty_cycle_rel(),
-				decoder_.duty_cycle().microseconds());
+				(uint32_t)decoder_.duty_cycle().microseconds());
+#endif
 	}
 	void start_decoder() {
 		decoder_.start_on_ch1_ch2();
@@ -397,7 +399,10 @@ void main_task(void *pvParameters)
 	printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %d\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
 	vTaskDelay(500 / portTICK_RATE_MS);
 
+#if 0
 	lcd_init();
+#endif
+
 	gyro_int2.callback(gyro_isr);
 
 //	module_rstn.write(0);
@@ -428,10 +433,10 @@ void main_task(void *pvParameters)
 
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	// Infinite loop
 	Vector3f gyr_bias;
 	char disp[128] = {0};
 
+	printf("Calibrating...\n");
 	sprintf(disp,"Calibrating...");
 	DisplayStringAt(0, 10, disp);
 
@@ -446,9 +451,10 @@ void main_task(void *pvParameters)
 		gyr_bias.at(2) += gyr_axes.AXIS_Z;
 	}
 	gyr_bias = gyr_bias / (float)bias_iterations;
-	TimeStamp lcdUpdateTime;
+	TimeStamp console_update_time;
 	TimeStamp sample_dt;
 	TimeSpan ctx_switch_time;
+	TimeStamp led_toggle_ts;
 
 	HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream3_IRQn);
@@ -457,6 +463,8 @@ void main_task(void *pvParameters)
 
 	uart3.uart_dmarx_start();
 	gpspwr.write(0);
+
+	// Infinite loop
 	while (1) {
 		uint32_t msg;
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
@@ -474,15 +482,20 @@ void main_task(void *pvParameters)
 		TimeSpan dt = sample_dt.elapsed();
 
 		Vector3f gyr_data = Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
-		Vector3f acc_data = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z);
+		Vector3f acc_data = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z).normalize();
+		static const Matrix3f gyro_align(-1,0,0,0,-1,0,0,0,1);
+		gyr_data = gyro_align * gyr_data * 1.0;
 		att.track_gyroscope(DEG2RAD(gyr_data), dt.seconds_float());
-		//att.track_accelerometer(acc_data, dt.seconds_float());
+		att.track_accelerometer(acc_data, dt.seconds_float());
 		q = att.get_attitude();
 
-		if (lcdUpdateTime.elapsed().milliseconds() > 1000) {
-			lcdUpdateTime.time_stamp();
-			sprintf(disp,"SAMPLES: %d           ", gyr_samples);
-			DisplayStringAt(0, 60, disp);
+		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(200)) {
+			console_update_time.time_stamp();
+
+			printf("Gyro: %5.3f %5.3f %5.3f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
+			printf("Acc : %5.3f %5.3f %5.3f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
+			printf("Q   : %5.3f %5.3f %5.3f %5.3f\n", q.w, q.x, q.y, q.z);
+			printf("\n");
 
 			try {
 				memset(buf, 0, sizeof(buf) - 1);
@@ -508,6 +521,9 @@ void main_task(void *pvParameters)
 #endif
 
 #if 0
+			sprintf(disp,"SAMPLES: %d           ", gyr_samples);
+			DisplayStringAt(0, 60, disp);
+
 			sprintf(disp,"PWM: %u mS", (unsigned)pwmDecoder.decoded_period().milliseconds());
 			DisplayStringAt(0, 100, disp);
 			sprintf(disp,"PWM duty: %1.3f", pwmDecoder.duty_cycle_rel());
@@ -523,7 +539,7 @@ void main_task(void *pvParameters)
 
 			sprintf(disp,"CTXSW: %u uS          ", (unsigned int)ctx_switch_time.microseconds());
 			DisplayStringAt(0, 140, disp);
-#endif
+
 			sprintf(disp,"dT: %u uS             ", (unsigned int)dt.microseconds());
 			DisplayStringAt(0, 160, disp);
 
@@ -541,12 +557,14 @@ void main_task(void *pvParameters)
 			memset(disp, 0, sizeof(disp));
 			spi5.read(2, (uint8_t*)disp, 15);
 			DisplayStringAt(0, 300, disp);
-			printf("Gyro: %5.2f %5.2f %5.2f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
-			printf("Acc : %5.2f %5.2f %5.2f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
-			printf("Q   : %5.2f %5.2f %5.2f %5.2f\n", q.w, q.x, q.y, q.z);
-			ledusb.toggle();
-//			printf("recved: %s\n", disp);
+#endif
 		}
+
+		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
+			led_toggle_ts.time_stamp();
+			ledusb.toggle();
+		}
+
 		sample_dt.time_stamp();
 	}
 }
@@ -591,7 +609,6 @@ int main(int argc, char* argv[])
 
 	TimeStamp::init();
 	colibri::UartTrace::init(115200*2);
-
 
 	printf("Starting main_task:, CPU freq: %lu, PCLK1 freq: %lu, PCLK2 freq: %lu\n",
 			freq, pclk1, pclk2);
