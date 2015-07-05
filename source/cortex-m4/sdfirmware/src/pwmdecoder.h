@@ -74,18 +74,18 @@ public:
 	/** Returns the decoded period
 	 *  @returns Returns the decoded period as TimeSpan
 	 */
-	TimeSpan decoded_period() { return decoded_period_; }
+	TimeSpan decoded_period() const { return decoded_period_; }
 
 	/** Returns the duty cycle
 	 *  @returns Returns TimeSpan representing the duty cycle
 	 */
-	TimeSpan duty_cycle() { return duty_cycle_; }
+	TimeSpan duty_cycle() const { return duty_cycle_; }
 
 	/** Returns the duty cycle as a relative value
 	 *
 	 *  @returns Current duty_cycle, the value is in the range [0..1].
 	 */
-	float duty_cycle_rel() {
+	float duty_cycle_rel() const {
 		return (float)duty_cycle_.unit() / (float)decoded_period_.unit();
 	}
 
