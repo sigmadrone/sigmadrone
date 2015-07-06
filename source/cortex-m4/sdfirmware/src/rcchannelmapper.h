@@ -15,22 +15,20 @@
 
 class RcChannelMapper {
 public:
-	RcChannelMapper(const std::vector<RcChannelName> channelIndex) : channelIndex_(channelIndex) {
-		assert(channelIndex_.size() == RC_CHANNEL_LAST);
-	}
+	RcChannelMapper(const std::vector<RcChannelName> channelIndex) : channel_index_(channelIndex) {}
 	uint32_t channel_no(RcChannelName chType) const {
-		for (auto index: channelIndex_) {
-			if (index == chType) {
-				return index;
+		for (uint32_t i = 0; i < channel_index_.size(); ++i) {
+			if (channel_index_[i] == chType) {
+				return i;
 			}
 		}
 		throw std::invalid_argument("invalid channel type provided");
 	}
 	RcChannelName channel_name(uint32_t channelno) const {
-		return channelIndex_[channelno];
+		return channel_index_[channelno];
 	}
 private:
-	std::vector<RcChannelName> channelIndex_;
+	std::vector<RcChannelName> channel_index_;
 };
 
 

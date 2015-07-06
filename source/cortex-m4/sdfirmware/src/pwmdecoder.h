@@ -26,7 +26,8 @@ public:
 			PinName input_pin,
 			const TimeSpan& max_period = TimeSpan::from_milliseconds(20),
 			const FunctionPointer callback = FunctionPointer(),
-			bool callback_on_change_only = false);
+			bool callback_on_change_only = false,
+			const TimeSpan& epsilon = TimeSpan::from_seconds(0));
 
 	/** Constructs and initializes an instance of PwmDecoder
 	 *
@@ -41,7 +42,8 @@ public:
 			const GPIOPin& gpio,
 			const TimeSpan& max_period = TimeSpan::from_milliseconds(20),
 			const FunctionPointer callback = FunctionPointer(),
-			bool callback_on_change_only = false);
+			bool callback_on_change_only = false,
+			const TimeSpan& epsilon = TimeSpan::from_seconds(0));
 
 	/** Stops and destructs the decoder instance
 	 *
@@ -92,6 +94,7 @@ public:
 private:
 	static Frequency timer_clock_from_pwm_period(const TimeSpan& max_period);
 	void capture_callback();
+	bool ts_within_range(const TimeSpan& ts1, const TimeSpan& ts2);
 
 	PwmDecoder(const PwmDecoder&);
 	const PwmDecoder& operator=(const PwmDecoder&);
@@ -106,6 +109,7 @@ private:
 	uint32_t period_channel_;
 	uint32_t duty_cycle_channel_;
 	bool callback_on_change_only_;
+	TimeSpan epsilon_;
 };
 
 #endif /* PWMDECODER_H_ */

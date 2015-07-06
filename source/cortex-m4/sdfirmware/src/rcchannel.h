@@ -8,13 +8,12 @@
 #ifndef RCCHANNEL_H_
 #define RCCHANNEL_H_
 
-#include "colibripwm.h"
 #include "pwmdecoder.h"
 #include "rcdefs.h"
 
 class RcChannel {
 public:
-	RcChannel(uint32_t channelno, FunctionPointer callback);
+	RcChannel(const PwmRxConsts& pwmRxConsts, FunctionPointer callback);
 	const PwmDecoder& decoder() const;
 	void start_receive();
 	void stop_receive();
@@ -25,6 +24,7 @@ private:
 
 private:
 	PwmDecoder decoder_;
+	uint32_t tim_period_channel_;
 };
 
 #endif /* RCCHANNEL_H_ */

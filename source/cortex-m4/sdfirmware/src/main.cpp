@@ -33,6 +33,8 @@
 #include "tm_stm32f4_ili9341.h"
 #include "colibripwm.h"
 #include "colibritrace.h"
+#include "rcreceiver.h"
+#include "rcvalueconverter.h"
 
 void* __dso_handle = 0;
 extern unsigned int __relocated_vectors;
@@ -264,17 +266,15 @@ void spi_slave_task(void *pvParameters)
 
 struct PwmDecoderCallback {
 	PwmDecoderCallback(uint32_t id) :
-			decoder_(colibri::PWM_IN_CONSTS[id].timer_id_,
-					colibri::PWM_IN_CONSTS[id].pin_,
-					TimeSpan::from_milliseconds(2),
+			decoder_(colibri::PWM_RX_CONSTS[id].timer_id_,
+					colibri::PWM_RX_CONSTS[id].pin_,
+					TimeSpan::from_milliseconds(30),
 					FunctionPointer(this, &PwmDecoderCallback::callback)), id_(id) {}
 	void callback(void) {
-#if 0
 		printf("PWM %lu: period %lu uS, duty: %.4f %lu uS\n", id_,
 				(uint32_t)decoder_.decoded_period().microseconds(),
 				decoder_.duty_cycle_rel(),
 				(uint32_t)decoder_.duty_cycle().microseconds());
-#endif
 	}
 	void start_decoder() {
 		decoder_.start_on_ch1_ch2();
@@ -294,7 +294,6 @@ static PwmEncoder pwmEncoder1(colibri::PWM_OUT_TIMER_1, TimeSpan::from_microseco
 static PwmEncoder pwmEncoder2(colibri::PWM_OUT_TIMER_2, TimeSpan::from_milliseconds(2),
 		colibri::PWM_OUT_PINS_5_8, {1, 2, 3, 4});
 
-
 void tim10_isr() {
 	static float duty_cycle[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
 	static int index = 0;
@@ -309,10 +308,9 @@ void StartPwmTest() {
 	static HwTimer tim10(HwTimer::TIMER_10, TimeSpan::from_seconds(2),
 				Frequency::from_kilohertz(10000), FunctionPointer(tim10_isr));
 
-	static std::vector<PwmDecoderCallback*> pwm_callbacks;
-
 	tim10.start();
 
+	static std::vector<PwmDecoderCallback*> pwm_callbacks;
 	for (uint32_t i = 0; i < 4; ++i) {
 		pwm_callbacks.push_back(new PwmDecoderCallback(i));
 	}
@@ -328,6 +326,29 @@ void StartPwmTest() {
 		pwmEncoder2.set_duty_cycle(i+1, TimeSpan::from_milliseconds(1));
 	}
 }
+
+class FlightControl
+{
+public:
+	FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
+			FunctionPointer(this, &FlightControl::rc_callback)),
+			ch_mapper_({RC_CHANNEL_THROTTLE, RC_CHANNEL_RUDDER, RC_CHANNEL_ELEVATOR, RC_CHANNEL_AILERON}),
+			rc_values_(ch_mapper_, rc_receiver_) {
+	}
+	void start_receiver() { rc_receiver_.start(); }
+	void stop_receiver() { rc_receiver_.stop(); }
+	QuaternionF target_q() const { return rc_values_.target_quaternion(); }
+	Throttle throttle() const { return rc_values_.base_throttle(); }
+
+private:
+	void rc_callback() {
+		rc_values_.update();
+	}
+private:
+	RcReceiver rc_receiver_;
+	RcChannelMapper ch_mapper_;
+	RcValueConverter rc_values_;
+};
 
 #define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
 
@@ -372,8 +393,11 @@ void main_task(void *pvParameters)
 {
 	char buf[256];
 	vTaskDelay(500 / portTICK_RATE_MS);
+	FlightControl flight_ctl;
 
-	StartPwmTest();
+	flight_ctl.start_receiver();
+
+	//StartPwmTest();
 
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
@@ -495,6 +519,9 @@ void main_task(void *pvParameters)
 			printf("Gyro: %5.3f %5.3f %5.3f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
 			printf("Acc : %5.3f %5.3f %5.3f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
 			printf("Q   : %5.3f %5.3f %5.3f %5.3f\n", q.w, q.x, q.y, q.z);
+			printf("Thro: %.8f\n", flight_ctl.throttle().get());
+			QuaternionF tq = flight_ctl.target_q();
+			printf("TQ  : %5.3f %5.3f %5.3f %5.3f\n",  tq.w, tq.x, tq.y, tq.z);
 			printf("\n");
 
 			try {

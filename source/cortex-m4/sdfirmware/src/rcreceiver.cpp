@@ -6,9 +6,9 @@
  */
 #include "rcreceiver.h"
 
-RcReceiver::RcReceiver(uint32_t numChannels, FunctionPointer callback) {
-	for (uint32_t i = 0; i < numChannels; ++i) {
-		channels_.push_back(new RcChannel(i, callback));
+RcReceiver::RcReceiver(const std::vector<PwmRxConsts> rxConsts, FunctionPointer callback) {
+	for (auto rxConst: rxConsts) {
+		channels_.push_back(new RcChannel(rxConst, callback));
 	}
 }
 

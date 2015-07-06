@@ -8,8 +8,7 @@
 #ifndef COLIBRIPWM_H_
 #define COLIBRIPWM_H_
 
-#include "hwtimer.h"
-
+#include "rcdefs.h"
 
 namespace colibri {
 
@@ -57,14 +56,7 @@ static const PinName PWM_IN_PIN_3 = PD_12;
 static const PinName PWM_IN_PIN_4 = PA_0;
 static const PinName PWM_IN_PIN_5 = PA_3;
 
-struct PwmInConsts {
-	HwTimer::Id timer_id_;
-	PinName pin_;
-	uint32_t timer_period_channel_;
-	uint32_t timer_dutycycle_channel_;
-};
-
-static const std::vector<PwmInConsts> PWM_IN_CONSTS = {
+static const std::vector<PwmRxConsts> PWM_RX_CONSTS = {
 		{PWM_IN_TIMER_1, PWM_IN_PIN_1, PWM_IN_TIMER_1_PERIOD_CHANNELNO, PWM_IN_TIMER_1_DUTYCYCLE_CHANNELNO},
 		{PWM_IN_TIMER_2, PWM_IN_PIN_2, PWM_IN_TIMER_2_PERIOD_CHANNELNO, PWM_IN_TIMER_2_DUTYCYCLE_CHANNELNO},
 		{PWM_IN_TIMER_3, PWM_IN_PIN_3, PWM_IN_TIMER_3_PERIOD_CHANNELNO, PWM_IN_TIMER_3_DUTYCYCLE_CHANNELNO},
