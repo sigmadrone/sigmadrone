@@ -380,9 +380,9 @@ HardFault_Handler_C (ExceptionStackFrame* frame __attribute__((unused)),
 #if defined(DEBUG)
   __DEBUG_BKPT();
 #endif
-  while (1)
-    {
-    }
+//  while (1)
+//    {
+//    }
 }
 
 #endif // defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__)
