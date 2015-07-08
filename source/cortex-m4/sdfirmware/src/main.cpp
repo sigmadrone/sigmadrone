@@ -35,6 +35,7 @@
 #include "colibritrace.h"
 #include "rcreceiver.h"
 #include "rcvalueconverter.h"
+#include "servocontroller.h"
 
 void* __dso_handle = 0;
 extern unsigned int __relocated_vectors;
@@ -158,7 +159,6 @@ extern "C" void USART2_IRQHandler(void)
 	UART::uart_irq_handler(2);
 }
 
-
 void gyro_isr()
 {
 	if (gyro_int2) {
@@ -264,6 +264,7 @@ void spi_slave_task(void *pvParameters)
 	}
 }
 
+
 struct PwmDecoderCallback {
 	PwmDecoderCallback(uint32_t id) :
 			decoder_(colibri::PWM_RX_CONSTS[id].timer_id_,
@@ -289,17 +290,17 @@ private:
 };
 
 static PwmEncoder pwmEncoder1(colibri::PWM_OUT_TIMER_1, TimeSpan::from_microseconds(2500),
-		{colibri::PWM_OUT_PINS_1_4}, {1, 2, 3, 4});
+		{colibri::PWM_OUT_PINS_1_4}, {0, 1, 2, 3});
 
 static PwmEncoder pwmEncoder2(colibri::PWM_OUT_TIMER_2, TimeSpan::from_milliseconds(2),
-		colibri::PWM_OUT_PINS_5_8, {1, 2, 3, 4});
+		colibri::PWM_OUT_PINS_5_8, {0, 1, 2, 3});
 
 void tim10_isr() {
 	static float duty_cycle[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
 	static int index = 0;
 	for (uint32_t i = 0; i < 4; ++i) {
-		pwmEncoder1.set_duty_cycle(i+1, duty_cycle[index]);
-		pwmEncoder2.set_duty_cycle(i+1, duty_cycle[index]);
+		pwmEncoder1.set_duty_cycle(i, duty_cycle[index]);
+		pwmEncoder2.set_duty_cycle(i, duty_cycle[index]);
 	}
 	index = (index + 1) % (sizeof(duty_cycle)/sizeof(duty_cycle[1]));
 }
@@ -322,8 +323,8 @@ void StartPwmTest() {
 	pwmEncoder1.start();
 	pwmEncoder2.start();
 	for (uint32_t i = 0; i < 4; ++i) {
-		pwmEncoder1.set_duty_cycle(i+1, TimeSpan::from_milliseconds(1));
-		pwmEncoder2.set_duty_cycle(i+1, TimeSpan::from_milliseconds(1));
+		pwmEncoder1.set_duty_cycle(i, TimeSpan::from_milliseconds(1));
+		pwmEncoder2.set_duty_cycle(i, TimeSpan::from_milliseconds(1));
 	}
 }
 
@@ -333,12 +334,19 @@ public:
 	FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
 			FunctionPointer(this, &FlightControl::rc_callback)),
 			ch_mapper_({RC_CHANNEL_THROTTLE, RC_CHANNEL_RUDDER, RC_CHANNEL_ELEVATOR, RC_CHANNEL_AILERON}),
-			rc_values_(ch_mapper_, rc_receiver_) {
+			rc_values_(ch_mapper_, rc_receiver_) ,
+			servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)) {
 	}
 	void start_receiver() { rc_receiver_.start(); }
 	void stop_receiver() { rc_receiver_.stop(); }
 	QuaternionF target_q() const { return rc_values_.target_quaternion(); }
-	Throttle throttle() const { return rc_values_.base_throttle(); }
+	Throttle base_throttle() const { return rc_values_.base_throttle(); }
+	void set_throttle(const std::vector<Throttle>&);
+	void start_servo() {
+		servo_ctrl_.start();
+		// TODO: to be done when signal is received
+		servo_ctrl_.arm_motors();
+	}
 
 private:
 	void rc_callback() {
@@ -348,6 +356,7 @@ private:
 	RcReceiver rc_receiver_;
 	RcChannelMapper ch_mapper_;
 	RcValueConverter rc_values_;
+	ServoController servo_ctrl_;
 };
 
 #define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
@@ -393,11 +402,8 @@ void main_task(void *pvParameters)
 {
 	char buf[256];
 	vTaskDelay(500 / portTICK_RATE_MS);
-	FlightControl flight_ctl;
 
-	flight_ctl.start_receiver();
-
-	//StartPwmTest();
+	StartPwmTest();
 
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
@@ -479,6 +485,11 @@ void main_task(void *pvParameters)
 	TimeStamp sample_dt;
 	TimeSpan ctx_switch_time;
 	TimeStamp led_toggle_ts;
+#if 0
+	FlightControl flight_ctl;
+	flight_ctl.start_receiver();
+	flight_ctl.start_servo();
+#endif
 
 	HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream3_IRQn);
@@ -519,9 +530,9 @@ void main_task(void *pvParameters)
 			printf("Gyro: %5.3f %5.3f %5.3f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
 			printf("Acc : %5.3f %5.3f %5.3f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
 			printf("Q   : %5.3f %5.3f %5.3f %5.3f\n", q.w, q.x, q.y, q.z);
-			printf("Thro: %.8f\n", flight_ctl.throttle().get());
-			QuaternionF tq = flight_ctl.target_q();
-			printf("TQ  : %5.3f %5.3f %5.3f %5.3f\n",  tq.w, tq.x, tq.y, tq.z);
+			//printf("Thro: %.8f\n", flight_ctl.base_throttle().get());
+			//QuaternionF tq = flight_ctl.target_q();
+			//printf("TQ  : %5.3f %5.3f %5.3f %5.3f\n",  tq.w, tq.x, tq.y, tq.z);
 			printf("\n");
 
 			try {

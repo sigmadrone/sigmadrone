@@ -17,6 +17,11 @@ struct PwmRxConsts {
 	uint32_t timer_dutycycle_channel_;
 };
 
+struct PwmTxConsts {
+	HwTimer::Id timer_id_;
+	std::vector<PinName> pins_;
+};
+
 enum RcChannelName {
 	RC_CHANNEL_THROTTLE = 0,
 	RC_CHANNEL_ROLL = 1,

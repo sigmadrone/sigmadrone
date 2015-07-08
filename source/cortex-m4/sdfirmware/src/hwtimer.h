@@ -131,7 +131,7 @@ public:
 	inline Frequency input_clock() { return get_timx_input_clock(timer_id_); }
 
 	/** Returns the captured value from the specified channel
-	 *  @param channel Channel number to be queried, value must be in the range [1..4]
+	 *  @param channel Channel number to be queried, value must be in the range [0..3]
 	 *  @returns The current captured value
 	 */
 	uint32_t read_captured_value(uint32_t channel);
@@ -143,7 +143,7 @@ public:
 
 	/** Sets the duty cycle on the specified channel. Timer must be configured
 	 *  in MODE_PWM_ENCODE
-	 *  @param channel_no Channel number [1..4]
+	 *  @param channel_no Channel number [0..3]
 	 *  @param pulse_period Lenght of the duty cycle, must be LEQ than the timer period
 	 */
 	bool set_pwm_duty_cycle(uint32_t channel_no, const TimeSpan& pulse_period);

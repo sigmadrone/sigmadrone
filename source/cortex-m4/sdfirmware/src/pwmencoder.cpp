@@ -47,3 +47,7 @@ bool PwmEncoder::set_duty_cycle(uint32_t channel, float value) {
 			static_cast<float>(timer_.period().nanoseconds()) * value);
 	return set_duty_cycle(channel, cycle);
 }
+
+uint32_t PwmEncoder::get_channel_count() {
+	return channels_.size();
+}

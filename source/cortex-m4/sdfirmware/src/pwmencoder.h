@@ -14,6 +14,9 @@
 
 class PwmEncoder {
 public:
+
+	static const uint32_t MAX_CHANNEL_COUNT = 4;
+
 	/** Constructs the PwmEncoder object
 	 *  @param timer_id ID of the timer to be used [1..14]
 	 *  @param pwm_period Length of the pwm period - 2 mS, 20 mS, etc
@@ -52,6 +55,13 @@ public:
 	 *  @returns true - success, false - failure
 	 */
 	bool set_duty_cycle(uint32_t channel, float duty_cycle);
+
+	/** Get the number of active channel
+	 *  @return number of active channels
+	 */
+	uint32_t get_channel_count();
+
+	TimeSpan get_duty_cycle(uint32_t channel);
 
 private:
 	HwTimer timer_;

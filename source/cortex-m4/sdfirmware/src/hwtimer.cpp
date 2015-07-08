@@ -296,7 +296,7 @@ bool HwTimer::start_pwm_encode_mode(const std::vector<uint32_t>& channels)
 		return false;
 	}
 
-	for (uint32_t i = 0; i < channels_.size(); ++i) {
+	for (uint32_t i = 0; i < channels.size(); ++i) {
 		if (get_timx_channel(channels[i]) == INVALID_CHANNEL_NO) {
 			printf("Invalid channel NO specified %lu\n", channels[i]);
 			return false;
@@ -354,10 +354,10 @@ bool HwTimer::set_pwm_duty_cycle(uint32_t channel_no, const TimeSpan& duty_cycle
 
 	// TODO: what will happen with the current period duty cycle generation?
 	switch (channel_no) {
-	case 1: handle->Instance->CCR1 = pulse; break;
-	case 2: handle->Instance->CCR2 = pulse; break;
-	case 3: handle->Instance->CCR3 = pulse; break;
-	case 4: handle->Instance->CCR4 = pulse; break;
+	case 0: handle->Instance->CCR1 = pulse; break;
+	case 1: handle->Instance->CCR2 = pulse; break;
+	case 2: handle->Instance->CCR3 = pulse; break;
+	case 3: handle->Instance->CCR4 = pulse; break;
 	default: return false;
 	}
 
@@ -435,14 +435,14 @@ uint32_t HwTimer::get_gpio_altfunc(Id timer_id)
 uint32_t HwTimer::get_timx_channel(uint32_t channel_no)
 {
 	switch (channel_no) {
-	case 1: return TIM_CHANNEL_1;
-	case 2: return TIM_CHANNEL_2;
-	case 3: return TIM_CHANNEL_3;
-	case 4: return TIM_CHANNEL_4;
+	case 0: return TIM_CHANNEL_1;
+	case 1: return TIM_CHANNEL_2;
+	case 2: return TIM_CHANNEL_3;
+	case 3: return TIM_CHANNEL_4;
 	default:;
 	}
 	assert(false);
-	return -1;
+	return INVALID_CHANNEL_NO;
 }
 
 /*

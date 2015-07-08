@@ -36,6 +36,9 @@ static const std::vector<PinName> PWM_OUT_PINS_5_8 = {PWM_OUT_PIN_5, PWM_OUT_PIN
 
 static const uint32_t PWM_IN_CHANNEL_COUNT = 4;
 
+static const PwmTxConsts PWM_TX_1_4 = { PWM_OUT_TIMER_1, PWM_OUT_PINS_1_4 };
+static const PwmTxConsts PWM_TX_5_8 = { PWM_OUT_TIMER_1, PWM_OUT_PINS_5_8 };
+
 static const HwTimer::Id PWM_IN_TIMER_1 = HwTimer::TIMER_2;
 static const HwTimer::Id PWM_IN_TIMER_2 = HwTimer::TIMER_3;
 static const HwTimer::Id PWM_IN_TIMER_3 = HwTimer::TIMER_4;

@@ -73,8 +73,8 @@ struct Frequency: public ScaledUnit<uint64_t> {
 	static inline Frequency from_timespan(const TimeSpan& ts);
 	Frequency() : ScaledUnit(0) {}
 	~Frequency() {}
-	uint64_t microhertz() { return unit(); }
-	uint64_t millihertz() { return milliunit(); }
+	uint64_t microhertz() const { return unit(); }
+	uint64_t millihertz() const { return milliunit(); }
 	uint64_t hertz() const { return microunit(); }
 	uint64_t kilohertz() const { return nanounit(); }
 	uint64_t megahertz() const { return picounit(); }
@@ -86,7 +86,7 @@ struct Frequency: public ScaledUnit<uint64_t> {
 	inline Frequency operator-(const Frequency& rhs) const { return Frequency(unit() - rhs.unit()); }
 	inline uint64_t operator/(const Frequency& rhs) const { return unit()/rhs.unit(); }
 
-	inline TimeSpan period();
+	inline TimeSpan period() const;
 private:
 	Frequency(uint64_t uhz) : ScaledUnit(uhz) {}
 };
@@ -123,7 +123,7 @@ private:
 	inline TimeSpan(uint64_t nanosecs) : ScaledUnit(nanosecs) {}
 };
 
-TimeSpan Frequency::period() {
+TimeSpan Frequency::period() const {
 	return TimeSpan::from_nanoseconds(TimeSpan::from_seconds(mega(1)).nanoseconds()/microhertz());
 }
 
