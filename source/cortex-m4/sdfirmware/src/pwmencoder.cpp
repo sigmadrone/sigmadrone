@@ -22,7 +22,7 @@ PwmEncoder::PwmEncoder(HwTimer::Id timer_id,
 	}
 	if (0 == channels_.size()) {
 		for (size_t i = 0; i < out_pin_names.size(); ++i) {
-			channels_.push_back(i);
+			channels_.push_back(i+1);
 		}
 	}
 }
