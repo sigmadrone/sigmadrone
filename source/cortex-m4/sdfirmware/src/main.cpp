@@ -84,12 +84,12 @@ TaskHandle_t hMain;
 QueueHandle_t hGyroQueue;
 TimeStamp isr_ts;
 
-extern "C" void __malloc_lock(void)
+extern "C" void __malloc_lock(struct _reent*)
 {
 	vPortEnterCritical();
 }
 
-extern "C" void __malloc_unlock(void)
+extern "C" void __malloc_unlock(struct _reent*)
 {
 	vPortExitCritical();
 }
