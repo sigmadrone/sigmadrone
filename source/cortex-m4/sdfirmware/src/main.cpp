@@ -340,13 +340,15 @@ void StartPwmTest() {
 }
 #endif
 
+static float RC_VALUE_SCALE_FACTOR = 1.0;
+
 class FlightControl
 {
 public:
 	FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
 			FunctionPointer(this, &FlightControl::rc_callback)),
 			ch_mapper_({RC_CHANNEL_THROTTLE, RC_CHANNEL_RUDDER, RC_CHANNEL_ELEVATOR, RC_CHANNEL_AILERON}),
-			rc_values_(ch_mapper_, rc_receiver_) ,
+			rc_values_(ch_mapper_, rc_receiver_, RC_VALUE_SCALE_FACTOR) ,
 			servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)) {
 	}
 	void start_receiver() { rc_receiver_.start(); }
@@ -356,8 +358,6 @@ public:
 	void set_throttle(const std::vector<Throttle>& thrVec) {
 		PwmPulse pulse(TimeSpan::from_milliseconds(1), TimeSpan::from_milliseconds(2));
 		for (size_t i = 0; i < thrVec.size(); ++i) {
-			Throttle thr = thrVec[i];
-			TimeSpan ts = pulse.to_timespan(thr.get());
 			servo_ctrl_.set_pwm_pulse(i, pulse.to_timespan(thrVec[i].get()));
 		}
 	}
@@ -369,6 +369,7 @@ public:
 		// TODO: to be done when signal is received
 		servo_ctrl_.arm_motors();
 	}
+	RcReceiver& rc_receiver() { return rc_receiver_; }
 
 private:
 	void rc_callback() {

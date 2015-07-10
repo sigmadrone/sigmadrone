@@ -15,7 +15,7 @@ class ServoController {
 public:
 	ServoController(const std::vector<PwmTxConsts>& pwmChannels,
 			const Frequency& pwm_rate,
-			const TimeSpan& max_pulse = TimeSpan::from_microseconds(2100));
+			const TimeSpan& max_pulse = TimeSpan::from_microseconds(2200));
 	~ServoController();
 
 	/**
