@@ -84,17 +84,6 @@ TaskHandle_t hMain;
 QueueHandle_t hGyroQueue;
 TimeStamp isr_ts;
 
-extern "C" void __malloc_lock(struct _reent*)
-{
-	vPortEnterCritical();
-}
-
-extern "C" void __malloc_unlock(struct _reent*)
-{
-	vPortExitCritical();
-}
-
-
 extern "C" void EXTI0_IRQHandler(void)
 {
 	uint32_t mask = portDISABLE_INTERRUPTS();
