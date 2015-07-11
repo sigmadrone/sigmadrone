@@ -347,7 +347,7 @@ class FlightControl
 public:
 	FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
 			FunctionPointer(this, &FlightControl::rc_callback)),
-			ch_mapper_({RC_CHANNEL_THROTTLE, RC_CHANNEL_RUDDER, RC_CHANNEL_ELEVATOR, RC_CHANNEL_AILERON}),
+			ch_mapper_({RC_CHANNEL_THROTTLE, RC_CHANNEL_RUDDER, RC_CHANNEL_ELEVATOR, RC_CHANNEL_AILERON, RC_CHANNEL_ARM_MOTOR}),
 			rc_values_(ch_mapper_, rc_receiver_, RC_VALUE_SCALE_FACTOR) ,
 			servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)) {
 	}
@@ -364,12 +364,20 @@ public:
 	void update_throttle() {
 		set_throttle({base_throttle(), base_throttle(), base_throttle(), base_throttle()});
 	}
-	void start_servo() {
-		servo_ctrl_.start();
-		// TODO: to be done when signal is received
-		servo_ctrl_.arm_motors();
+
+	/*
+	 * Must not be called from interrupt context - it does malloc!
+	 */
+	void start_stop_servo() {
+		if (rc_values_.motors_armed()) {
+			servo_ctrl_.start();
+		} else {
+			servo_ctrl_.stop();
+		}
 	}
+
 	RcReceiver& rc_receiver() { return rc_receiver_; }
+	ServoController& servo() { return servo_ctrl_; }
 
 private:
 	void rc_callback() {
@@ -509,7 +517,6 @@ void main_task(void *pvParameters)
 
 	FlightControl flight_ctl;
 	flight_ctl.start_receiver();
-	flight_ctl.start_servo();
 
 	HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream3_IRQn);
@@ -544,15 +551,18 @@ void main_task(void *pvParameters)
 		att.track_accelerometer(acc_data, dt.seconds_float());
 		q = att.get_attitude();
 
+		flight_ctl.start_stop_servo();
+
 		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(200)) {
 			console_update_time.time_stamp();
 
-			printf("Gyro: %5.3f %5.3f %5.3f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
-			printf("Acc : %5.3f %5.3f %5.3f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
-			printf("Q   : %5.3f %5.3f %5.3f %5.3f\n", q.w, q.x, q.y, q.z);
-			printf("Thro: %.8f\n", flight_ctl.base_throttle().get());
+			printf("Gyro : %5.3f %5.3f %5.3f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
+			printf("Acc  : %5.3f %5.3f %5.3f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
+			printf("Q    : %5.3f %5.3f %5.3f %5.3f\n", q.w, q.x, q.y, q.z);
+			printf("Thro : %.8f\n", flight_ctl.base_throttle().get());
 			QuaternionF tq = flight_ctl.target_q();
-			printf("TQ  : %5.3f %5.3f %5.3f %5.3f\n",  tq.w, tq.x, tq.y, tq.z);
+			printf("TQ   : %5.3f %5.3f %5.3f %5.3f\n",  tq.w, tq.x, tq.y, tq.z);
+			printf("Servo: %s\n", flight_ctl.servo().is_started() ? "armed" : "disarmed");
 			printf("\n");
 			flight_ctl.update_throttle();
 

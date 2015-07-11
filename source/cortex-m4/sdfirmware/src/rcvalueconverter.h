@@ -56,9 +56,10 @@ public:
 			const TimeSpan& max_duty_cycle = TimeSpan::from_milliseconds(2));
 	QuaternionD target_quaternion() const;
 	Throttle base_throttle() const;
+	bool motors_armed() const;
 	void update();
 private:
-	float get_value_as_float(const RcReceiver& receiver, uint32_t channelno);
+	float get_value_as_float(uint32_t channelno);
 private:
 	PwmPulse pwm_converter_;
 	QuaternionF quaternion_;
@@ -66,6 +67,7 @@ private:
 	const RcChannelMapper& mapper_;
 	const RcReceiver& receiver_;
 	float scale_factor_;
+	bool motors_armed_;
 };
 
 #endif /* RCVALUECONVERTER_H_ */

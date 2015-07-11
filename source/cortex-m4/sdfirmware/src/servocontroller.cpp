@@ -12,7 +12,7 @@
 ServoController::ServoController(
 		const std::vector<PwmTxConsts>& pwmChannels,
 		const Frequency& pwm_rate,
-		const TimeSpan& max_pulse) : pwm_rate_(pwm_rate), max_pulse_(max_pulse) {
+		const TimeSpan& max_pulse) : pwm_rate_(pwm_rate), max_pulse_(max_pulse), started_(false) {
 	for (auto encoder_params: pwmChannels) {
 		encoders_.push_back(new PwmEncoder(encoder_params.timer_id_, pwm_rate.period(),
 				encoder_params.pins_));
@@ -25,9 +25,12 @@ ServoController::~ServoController() {
 	}
 }
 
-void ServoController::start(const Frequency& pwm_rate) {
+void ServoController::start(const Frequency& pwm_rate, const TimeSpan& arm_pulse) {
 	TimeSpan period;
-	stop();
+
+	if (started_) {
+		return;
+	}
 
 	if (!pwm_rate.is_null()) {
 		pwm_rate_ = pwm_rate;
@@ -37,12 +40,17 @@ void ServoController::start(const Frequency& pwm_rate) {
 	for (auto encoder: encoders_) {
 		encoder->start(period);
 	}
+
+	arm_motors(arm_pulse);
+
+	started_ = true;
 }
 
 void ServoController::stop() {
 	for (auto encoder: encoders_) {
 		encoder->stop();
 	}
+	started_ = false;
 }
 
 size_t ServoController::channel_count() const {
@@ -51,13 +59,7 @@ size_t ServoController::channel_count() const {
 
 void ServoController::arm_motors(const TimeSpan& pulse) {
 	for (size_t i = 0; i < channel_count(); ++i) {
-		set_pwm_pulse(i, pulse);
-	}
-}
-
-void ServoController::disarm_motors() {
-	for (size_t i = 0; i < channel_count(); ++i) {
-		set_pwm_pulse(i, TimeSpan::from_milliseconds(0));
+			set_pwm_pulse(i, pulse);
 	}
 }
 
@@ -75,9 +77,15 @@ TimeSpan ServoController::get_pwm_pulse(uint32_t channel) {
 }
 
 void ServoController::set_pwm_pulse(uint32_t channel, const TimeSpan& pulse) {
-	PwmEncoder* encoder = get_encoder_from_channel_no(channel);
-	encoder->set_duty_cycle(get_encoder_channel_from_channel_no(channel),
-			pulse <= max_pulse_ ? pulse : max_pulse_ );
+	if (started_) {
+		PwmEncoder* encoder = get_encoder_from_channel_no(channel);
+		encoder->set_duty_cycle(get_encoder_channel_from_channel_no(channel),
+				pulse <= max_pulse_ ? pulse : max_pulse_ );
+	}
+}
+
+bool ServoController::is_started() {
+	return started_;
 }
 
 PwmEncoder* ServoController::get_encoder_from_channel_no(uint32_t channelno) {
