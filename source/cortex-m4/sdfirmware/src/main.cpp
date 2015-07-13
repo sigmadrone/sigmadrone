@@ -338,7 +338,8 @@ public:
 			FunctionPointer(this, &FlightControl::rc_callback)),
 			ch_mapper_({RC_CHANNEL_THROTTLE, RC_CHANNEL_RUDDER, RC_CHANNEL_ELEVATOR, RC_CHANNEL_AILERON, RC_CHANNEL_ARM_MOTOR}),
 			rc_values_(ch_mapper_, rc_receiver_, RC_VALUE_SCALE_FACTOR) ,
-			servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)) {
+			servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)),
+			motor_power_(PB_2){
 	}
 	void start_receiver() { rc_receiver_.start(); }
 	void stop_receiver() { rc_receiver_.stop(); }
@@ -359,8 +360,10 @@ public:
 	 */
 	void start_stop_servo() {
 		if (rc_values_.motors_armed()) {
+			motor_power_.write(1);
 			servo_ctrl_.start();
 		} else {
+			motor_power_.write(0);
 			servo_ctrl_.stop();
 		}
 	}
@@ -377,6 +380,7 @@ private:
 	RcChannelMapper ch_mapper_;
 	RcValueConverter rc_values_;
 	ServoController servo_ctrl_;
+	DigitalOut motor_power_;
 };
 
 #define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
