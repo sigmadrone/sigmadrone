@@ -45,7 +45,12 @@ DigitalOut ledusb(PC_4);
 //DigitalOut module_onoff(PA_7, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0);
 DigitalOut gpspwr(PB_0, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
 DigitalIn gyro_int2(PA_2, DigitalIn::PullNone, DigitalIn::InterruptRising);
-DigitalIn button(USER_BUTTON, DigitalIn::PullNone, DigitalIn::InterruptRising);
+DigitalIn user_sw5(PG_2, DigitalIn::PullNone, DigitalIn::InterruptDefault);
+DigitalIn user_sw1(PG_3, DigitalIn::PullNone, DigitalIn::InterruptFalling);
+DigitalIn user_sw2(PG_6, DigitalIn::PullNone, DigitalIn::InterruptDefault);
+DigitalIn user_sw3(PG_7, DigitalIn::PullNone, DigitalIn::InterruptDefault);
+DigitalIn user_sw4(PG_11, DigitalIn::PullNone, DigitalIn::InterruptDefault);
+
 UART uart({
 	{PA_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART1},		/* USART1_TX_PIN */
 	{PA_10, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART1},		/* USART1_RX_PIN */
