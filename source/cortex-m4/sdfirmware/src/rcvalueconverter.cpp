@@ -23,16 +23,19 @@ RcValueConverter::RcValueConverter(
 }
 
 void RcValueConverter::update() {
-	throttle_ = Throttle(get_value_as_float(mapper_.channel_no(RC_CHANNEL_THROTTLE)) * scale_factor_);
 	float yaw = get_value_as_float(mapper_.channel_no(RC_CHANNEL_YAW));
+	float pitch = get_value_as_float(mapper_.channel_no(RC_CHANNEL_PITCH));
+	float roll = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ROLL));
+	float throttle = get_value_as_float(mapper_.channel_no(RC_CHANNEL_THROTTLE));
+	float gear = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR));
+
+	throttle_ = Throttle(throttle * scale_factor_);
 	if (yaw > 0.0) {
 		yaw = (yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 	}
-	float pitch = get_value_as_float(mapper_.channel_no(RC_CHANNEL_PITCH));
 	if (pitch > 0.0) {
 		pitch = (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 	}
-	float roll = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ROLL));
 	if (roll > 0.0) {
 		roll = (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 	}
@@ -43,10 +46,10 @@ void RcValueConverter::update() {
 	 * GEAR set to 1 results in min pulse. This settings of course can be reversed, but
 	 * we'd rather work with the defaults. I have no experience with other RCs.
 	 */
-	if (get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR)) > 0.5) {
-		motors_armed_ = false;
-	} else {
+	if (gear > 0.0 && gear < 0.5) {
 		motors_armed_ = true;
+	} else {
+		motors_armed_ = false;
 	}
 }
 
