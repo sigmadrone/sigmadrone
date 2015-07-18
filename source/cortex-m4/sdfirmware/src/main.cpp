@@ -33,9 +33,7 @@
 #include "tm_stm32f4_ili9341.h"
 #include "colibripwm.h"
 #include "colibritrace.h"
-#include "rcreceiver.h"
-#include "rcvalueconverter.h"
-#include "servocontroller.h"
+#include "flightcontrol.h"
 
 void* __dso_handle = 0;
 extern unsigned int __relocated_vectors;
@@ -334,60 +332,6 @@ void StartPwmTest() {
 }
 #endif
 
-static float RC_VALUE_SCALE_FACTOR = 1.0;
-
-class FlightControl
-{
-public:
-	FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
-			FunctionPointer(this, &FlightControl::rc_callback)),
-			ch_mapper_({RC_CHANNEL_THROTTLE, RC_CHANNEL_RUDDER, RC_CHANNEL_ELEVATOR, RC_CHANNEL_AILERON, RC_CHANNEL_ARM_MOTOR}),
-			rc_values_(ch_mapper_, rc_receiver_, RC_VALUE_SCALE_FACTOR) ,
-			servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)),
-			motor_power_(PB_2){
-	}
-	void start_receiver() { rc_receiver_.start(); }
-	void stop_receiver() { rc_receiver_.stop(); }
-	QuaternionF target_q() const { return rc_values_.target_quaternion(); }
-	Throttle base_throttle() const { return rc_values_.base_throttle(); }
-	void set_throttle(const std::vector<Throttle>& thrVec) {
-		PwmPulse pulse(TimeSpan::from_milliseconds(1), TimeSpan::from_milliseconds(2));
-		for (size_t i = 0; i < thrVec.size(); ++i) {
-			servo_ctrl_.set_pwm_pulse(i, pulse.to_timespan(thrVec[i].get()));
-		}
-	}
-	void update_throttle() {
-		set_throttle({base_throttle(), base_throttle(), base_throttle(), base_throttle()});
-	}
-
-	/*
-	 * Must not be called from interrupt context - it calls malloc/free!
-	 */
-	void start_stop_servo() {
-		if (rc_values_.motors_armed()) {
-			motor_power_.write(1);
-			servo_ctrl_.start();
-		} else {
-			motor_power_.write(0);
-			servo_ctrl_.stop();
-		}
-	}
-
-	RcReceiver& rc_receiver() { return rc_receiver_; }
-	ServoController& servo() { return servo_ctrl_; }
-
-private:
-	void rc_callback() {
-		rc_values_.update();
-	}
-private:
-	RcReceiver rc_receiver_;
-	RcChannelMapper ch_mapper_;
-	RcValueConverter rc_values_;
-	ServoController servo_ctrl_;
-	DigitalOut motor_power_;
-};
-
 #define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
 
 int lcd_init(void)
@@ -444,7 +388,7 @@ void main_task(void *pvParameters)
 	LSM303D accel(spi5, 1);
 	uint8_t gyr_wtm = 2;
 	uint8_t acc_wtm = 17;
-	uint8_t bias_iterations = 10;
+	uint8_t bias_iterations = 100;
 	L3GD20::AxesDPS_t gyr_axes;
 	LSM303D::AxesAcc_t acc_axes;
 	QuaternionF q;
@@ -552,7 +496,7 @@ void main_task(void *pvParameters)
 		att.track_gyroscope(DEG2RAD(gyr_data), dt.seconds_float());
 		att.track_accelerometer(acc_data, dt.seconds_float());
 		q = att.get_attitude();
-		flight_ctl.start_stop_servo();
+		flight_ctl.process_servo_start_stop_command();
 		flight_ctl.update_throttle();
 
 		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(200)) {
