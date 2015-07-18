@@ -361,7 +361,7 @@ public:
 	}
 
 	/*
-	 * Must not be called from interrupt context - it does malloc!
+	 * Must not be called from interrupt context - it calls malloc/free!
 	 */
 	void start_stop_servo() {
 		if (rc_values_.motors_armed()) {
@@ -442,7 +442,7 @@ void main_task(void *pvParameters)
 			});
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi5, 1);
-	uint8_t gyr_wtm = 20;
+	uint8_t gyr_wtm = 2;
 	uint8_t acc_wtm = 17;
 	uint8_t bias_iterations = 10;
 	L3GD20::AxesDPS_t gyr_axes;
@@ -478,7 +478,7 @@ void main_task(void *pvParameters)
 	gyro.HPFEnable(L3GD20::MEMS_ENABLE);
 	gyro.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
 	gyro.SetHPFCutOFF(L3GD20::HPFCF_0);
-	gyro.SetODR(L3GD20::ODR_380Hz_BW_25);
+	gyro.SetODR(L3GD20::ODR_760Hz_BW_35);
 
 	accel.SetODR(LSM303D::ODR_400Hz);
 	accel.SetFullScale(LSM303D::FULLSCALE_8);
@@ -525,11 +525,17 @@ void main_task(void *pvParameters)
 	gpspwr.write(0);
 
 	// Infinite loop
+	TimeStamp queueWaitTs;
 	while (1) {
 		uint32_t msg;
+
+		queueWaitTs.time_stamp();
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
 		}
 		ctx_switch_time = isr_ts.elapsed();
+		TimeSpan queueWait = queueWaitTs.elapsed();
+		TimeSpan dt = sample_dt.elapsed();
+		sample_dt.time_stamp();
 
 		uint8_t gyr_samples = gyro.GetFifoSourceReg() & 0x1F;
 		uint8_t acc_samples = accel.GetFifoSourceFSS();
@@ -539,8 +545,6 @@ void main_task(void *pvParameters)
 		if (acc_samples > acc_wtm)
 			accel.GetFifoAcc(&acc_axes);
 
-		TimeSpan dt = sample_dt.elapsed();
-
 		Vector3f gyr_data = Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
 		Vector3f acc_data = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z).normalize();
 		static const Matrix3f gyro_align(-1,0,0,0,-1,0,0,0,1);
@@ -548,21 +552,20 @@ void main_task(void *pvParameters)
 		att.track_gyroscope(DEG2RAD(gyr_data), dt.seconds_float());
 		att.track_accelerometer(acc_data, dt.seconds_float());
 		q = att.get_attitude();
-
 		flight_ctl.start_stop_servo();
+		flight_ctl.update_throttle();
 
 		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(200)) {
 			console_update_time.time_stamp();
-
 			printf("Gyro : %5.3f %5.3f %5.3f\n", gyr_data.at(0), gyr_data.at(1), gyr_data.at(2));
 			printf("Acc  : %5.3f %5.3f %5.3f\n", acc_data.at(0), acc_data.at(1), acc_data.at(2));
+			printf("dT   : %lu uSec\n", (uint32_t)dt.microseconds());
 			printf("Q    : %5.3f %5.3f %5.3f %5.3f\n", q.w, q.x, q.y, q.z);
 			printf("Thro : %.8f\n", flight_ctl.base_throttle().get());
 			QuaternionF tq = flight_ctl.target_q();
 			printf("TQ   : %5.3f %5.3f %5.3f %5.3f\n",  tq.w, tq.x, tq.y, tq.z);
 			printf("Servo: %s\n", flight_ctl.servo().is_started() ? "armed" : "disarmed");
 			printf("\n");
-			flight_ctl.update_throttle();
 
 			try {
 				memset(buf, 0, sizeof(buf) - 1);
@@ -631,8 +634,6 @@ void main_task(void *pvParameters)
 			led_toggle_ts.time_stamp();
 			ledusb.toggle();
 		}
-
-		sample_dt.time_stamp();
 	}
 }
 
@@ -710,8 +711,8 @@ int main(int argc, char* argv[])
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/
 		NULL /* Task handle */
 		);
-
 #endif
+
 	xTaskCreate(
 		uart_tx_task, /* Function pointer */
 		"UART TX Task", /* Task name - for debugging only*/
@@ -729,7 +730,6 @@ int main(int argc, char* argv[])
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/
 		NULL /* Task handle */
 		);
-
 
 //	vTaskList(buffer);
 //	printf("Tasks: \n%s\n\n", buffer);

@@ -9,32 +9,9 @@
 #define PIDPILOT_H_
 
 #include "units.h"
+#include "dronestate.h"
 #include "pidtorque.h"
 #include "pidcontroller.h"
-
-struct DroneState {
-	/*
-	 * Sensors - input attributes
-	 */
-	Vector3f gyro_raw_;
-	Vector3f accel_raw_;
-	Vector3f mag_raw_;
-	Vector3f gyro_;
-	Vector3f accel_;
-	Vector3f mag_;
-	/*more to add here*/
-
-	/*
-	 * Time it took to read sensors
-	 */
-	TimeSpan dt_;
-
-	/*
-	 * Calculated state attributes
-	 */
-	QuaternionF attitude_;
-	Vector4f motors_;
-};
 
 class PidPilot
 {

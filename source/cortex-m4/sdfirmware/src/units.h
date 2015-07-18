@@ -8,6 +8,8 @@
 #ifndef UNITS_H_
 #define UNITS_H_
 
+#include <stdint.h>
+
 template <typename UnitType>
 struct ScaledUnit {
 
