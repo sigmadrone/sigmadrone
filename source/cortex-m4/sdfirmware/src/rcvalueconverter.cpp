@@ -44,13 +44,10 @@ void RcValueConverter::update() {
 	/*
 	 * Note: on Spektrum DX8 by _default_ GEAR switch set to 0 results in max pulse and
 	 * GEAR set to 1 results in min pulse. This settings of course can be reversed, but
-	 * we'd rather work with the defaults. I have no experience with other RCs.
+	 * we'd rather work with the defaults. Here we will assume that gear set to 1 means
+	 * "landed" and gear set to 0 "prepare for take off", i.e. motors armed.
 	 */
-	if (gear > 0.0 && gear < 0.5) {
-		motors_armed_ = true;
-	} else {
-		motors_armed_ = false;
-	}
+	motors_armed_ = (gear > 0.5) ? true : false;
 }
 
 float RcValueConverter::get_value_as_float(uint32_t channelno)
