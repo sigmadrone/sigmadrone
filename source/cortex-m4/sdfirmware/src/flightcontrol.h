@@ -13,6 +13,7 @@
 #include "servocontroller.h"
 #include "rcreceiver.h"
 #include "rcvalueconverter.h"
+#include "pidpilot.h"
 
 static const float RC_VALUE_SCALE_FACTOR = 1.0;
 
@@ -40,6 +41,7 @@ public:
 
 	inline RcReceiver& rc_receiver() { return rc_receiver_; }
 	inline ServoController& servo() { return servo_ctrl_; }
+	inline PidPilot& pilot() { return pilot_; }
 
 private:
 	void rc_callback() {
@@ -52,6 +54,7 @@ private:
 	RcValueConverter rc_values_;
 	ServoController servo_ctrl_;
 	DigitalOut motor_power_;
+	PidPilot pilot_;
 };
 
 

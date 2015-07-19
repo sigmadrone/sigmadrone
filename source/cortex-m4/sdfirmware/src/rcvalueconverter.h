@@ -67,6 +67,7 @@ private:
 	const RcChannelMapper& mapper_;
 	const RcReceiver& receiver_;
 	float scale_factor_;
+	float last_gear_;
 	bool motors_armed_;
 };
 

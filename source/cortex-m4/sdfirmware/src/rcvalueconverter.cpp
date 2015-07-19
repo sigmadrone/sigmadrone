@@ -10,7 +10,7 @@
 const float Throttle::MIN_VALUE = 0.0;
 const float Throttle::MAX_VALUE = 1.0;
 
-static const float MAX_EULER_FROM_RC = M_PI / 6.0;
+static const float MAX_EULER_FROM_RC = M_PI / 4.0;
 
 RcValueConverter::RcValueConverter(
 		const RcChannelMapper& mapper,
@@ -18,7 +18,8 @@ RcValueConverter::RcValueConverter(
 		float scale_factor,
 		const TimeSpan& min_duty_cycle,
 		const TimeSpan& max_duty_cycle) : pwm_converter_(min_duty_cycle, max_duty_cycle),
-				mapper_(mapper), receiver_(receiver), scale_factor_(scale_factor), motors_armed_(false) {
+				mapper_(mapper), receiver_(receiver), scale_factor_(scale_factor),
+				last_gear_(0.0), motors_armed_(false) {
 	update();
 }
 
@@ -47,7 +48,10 @@ void RcValueConverter::update() {
 	 * we'd rather work with the defaults. Here we will assume that gear set to 1 means
 	 * "landed" and gear set to 0 "prepare for take off", i.e. motors armed.
 	 */
-	motors_armed_ = (gear > 0.5) ? true : false;
+	if (last_gear_ != 0.0 && last_gear_ != gear) {
+		motors_armed_ = (gear > 0.5) ? true : false;
+	}
+	last_gear_ = gear;
 }
 
 float RcValueConverter::get_value_as_float(uint32_t channelno)

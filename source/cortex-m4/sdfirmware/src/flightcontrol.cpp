@@ -40,7 +40,8 @@ void FlightControl::set_throttle(const std::vector<Throttle>& thrVec) {
 }
 
 void FlightControl::update_throttle() {
-	set_throttle({base_throttle(), base_throttle(), base_throttle(), base_throttle()});
+	set_throttle({pilot_.motors().at(0,0), pilot_.motors().at(1,0),
+		pilot_.motors().at(2,0), pilot_.motors().at(3,0)});
 }
 
 /*
