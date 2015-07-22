@@ -9,7 +9,7 @@
 #include "stm32f429xx.h"
 #include "gpiopin.h"
 #include "pinnames.h"
-#include "circbuffer.h"
+#include "ringbuffer.h"
 
 class UART
 {
@@ -24,8 +24,8 @@ public:
 	uint32_t rx_dma_channel_;
 	uint32_t timeout_;
 	std::vector<GPIOPin> data_pins_;
-	CircBuffer txbuf_;
-	CircBuffer rxbuf_;
+	RingBuffer txbuf_;
+	RingBuffer rxbuf_;
 
 public:
 	UART(const std::vector<GPIOPin>& data_pins = {},
