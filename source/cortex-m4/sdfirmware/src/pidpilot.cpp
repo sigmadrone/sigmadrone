@@ -56,6 +56,8 @@ void PidPilot::update_state(DroneState& state, const QuaternionF& target_attitud
 
 	state.motors_ = motors();
 
+	state.pid_torque_ = torque_rpm;
+
 	return;
 }
 

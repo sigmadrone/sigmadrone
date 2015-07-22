@@ -556,6 +556,8 @@ void main_task(void *pvParameters)
 			printf("Thro : %.8f\n", flight_ctl.base_throttle().get());
 			printf("Moto : %1.3f %1.3f %1.3f %1.3f\n", state.motors_.at(0,0), state.motors_.at(1,0),
 					state.motors_.at(2,0), state.motors_.at(3,0));
+			printf("Torq :  %1.3f %1.3f %1.3f\n", state.pid_torque_.at(0,0), state.pid_torque_.at(1,0),
+					state.pid_torque_.at(2,0));
 			printf("Servo: %s\n", flight_ctl.servo().is_started() ? "armed" : "disarmed");
 			printf("\n");
 
