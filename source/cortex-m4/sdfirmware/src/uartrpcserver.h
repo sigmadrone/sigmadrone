@@ -18,11 +18,13 @@ public:
 	UartRpcServer();
 	virtual ~UartRpcServer();
 
-	rexjson::value rpc_spec(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
-	rexjson::value rpc_help(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	void jsonrpc_request_handler(UART* uart);
 
 protected:
-	void jsonrpc_request_handler(UART* uart);
+	rexjson::value rpc_spec(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_help(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_get_attitude(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+
 };
 
 #endif /* UARTRPCSERVER_H_ */

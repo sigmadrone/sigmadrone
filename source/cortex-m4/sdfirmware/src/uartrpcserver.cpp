@@ -6,25 +6,46 @@
  */
 
 #include "uartrpcserver.h"
+#include "librexjsonrpc/jsonserialization.h"
 
-UartRpcServer::UartRpcServer() {
-	// TODO Auto-generated constructor stub
+UartRpcServer::UartRpcServer()
+{
+	add("sd_get_attitude", &UartRpcServer::rpc_get_attitude);
 
 }
 
-UartRpcServer::~UartRpcServer() {
-	// TODO Auto-generated destructor stub
+UartRpcServer::~UartRpcServer()
+{
+
 }
+
+rexjson::value UartRpcServer::rpc_get_attitude(UART* uart, rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_attitude\n"
+	            "\nGet the current attitude Quaternion."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return quaternion_to_json_value(QuaternionF::identity);
+}
+
 
 void UartRpcServer::jsonrpc_request_handler(UART* uart)
 {
-	rexjson::value jsonreq, result;
-	std::string response;
+	rexjson::value response;
 	std::string request = uart->readline();
 
 	if (request.empty())
 		return;
-	jsonreq.read(request);
-	result = call(uart, jsonreq);
-	uart->transmit(result.write(false, false, 0, 8) + "\n");
+	response = call(uart, request);
+	uart->transmit(response.write(false, false, 0, 8) + "\n");
 }

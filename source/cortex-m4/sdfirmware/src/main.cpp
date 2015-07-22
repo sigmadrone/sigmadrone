@@ -32,7 +32,7 @@
 #include "colibripwm.h"
 #include "colibritrace.h"
 #include "flightcontrol.h"
-
+#include "uartrpcserver.h"
 #include "librexjson/rexjson++.h"
 
 void* __dso_handle = 0;
@@ -48,11 +48,6 @@ DigitalIn user_sw1(PG_3, DigitalIn::PullNone, DigitalIn::InterruptFalling);
 DigitalIn user_sw2(PG_6, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw3(PG_7, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw4(PG_11, DigitalIn::PullNone, DigitalIn::InterruptDefault);
-
-UART uart({
-	{PA_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART1},		/* USART1_TX_PIN */
-	{PA_10, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART1},		/* USART1_RX_PIN */
-});
 
 UART uart3({
 	{PC_10, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},		/* USART3_TX_PIN */
@@ -80,7 +75,7 @@ UART uart2({
 		DMA1_Stream5,		/* RX DMA stream */
 		DMA_CHANNEL_4,		/* RX DMA channel */
 		250,
-		9600
+		115200
 );
 
 
@@ -186,33 +181,6 @@ void secondary_task(void *pvParameters)
 #define SPIx_DMA_TX_IRQn                 DMA2_Stream1_IRQn
 #define SPIx_DMA_RX_IRQn                 DMA2_Stream0_IRQn
 
-void uart_tx_task(void *pvParameters)
-{
-	int i = 0;
-	HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 1, 1);
-	HAL_NVIC_EnableIRQ (DMA2_Stream7_IRQn);
-	HAL_NVIC_SetPriority(DMA2_Stream5_IRQn, 1, 0);
-	HAL_NVIC_EnableIRQ (DMA2_Stream5_IRQn);
-	uart.uart_dmarx_start();
-	HAL_Delay(7000);
-	rexjson::value v = rexjson::object();
-	v["UART"] = rexjson::object();
-	while (1) {
-		v["UART"]["message"] = "************ Test **********";
-		v["UART"]["serial"] = i++;
-		std::string str = v.write(false) + "\n";
-		const char *bufptr = str.c_str();
-		size_t size = str.length();
-		size_t ret = 0;
-		while (size) {
-			ret = uart.transmit((uint8_t*)bufptr, size);
-			size -= ret;
-			bufptr += ret;
-		}
-		HAL_Delay(250);
-	}
-}
-
 void uart2_tx_task(void *pvParameters)
 {
 	int i = 0;
@@ -240,32 +208,6 @@ void uart2_tx_task(void *pvParameters)
 	}
 }
 
-void spi_slave_task(void *pvParameters)
-{
-	char buf[128];
-	unsigned int i = 0;
-	printf("SPI Slave task...\n");
-	SPISlave spi4({
-				{PE_4, GPIO_MODE_AF_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_NSS_PIN */
-				{PE_2, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_SCK_PIN */
-				{PE_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MISO_PIN */
-				{PE_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI4},		/* DISCOVERY_SPI4_MOSI_PIN */
-			}, 0);
-
-	HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 1, 1);
-	HAL_NVIC_EnableIRQ (DMA2_Stream1_IRQn);
-	HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 1, 0);
-	HAL_NVIC_EnableIRQ (DMA2_Stream0_IRQn);
-	HAL_NVIC_SetPriority(EXTI4_IRQn, 15, 0);
-	HAL_NVIC_EnableIRQ(EXTI4_IRQn);
-
-	spi4.start();
-	while (1) {
-		HAL_Delay(50);
-		snprintf(buf, sizeof(buf), "SPI: %d", i++);
-		spi4.transmit((uint8_t*)buf, strlen(buf) + 1);
-	}
-}
 
 #if 0
 struct PwmDecoderCallback {
@@ -418,7 +360,6 @@ void lcd_update()
 
 void main_task(void *pvParameters)
 {
-	char buf[256];
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
@@ -443,6 +384,13 @@ void main_task(void *pvParameters)
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
 	DroneState state;
+	UartRpcServer rpcserver;
+
+	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
+	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
+	HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 1, 0);
+	HAL_NVIC_EnableIRQ (DMA1_Stream5_IRQn);
+	uart2.uart_dmarx_start();
 
 
 	printf("Priority Group: %lu\n", NVIC_GetPriorityGrouping());
@@ -559,21 +507,6 @@ void main_task(void *pvParameters)
 			printf("Servo: %s\n", flight_ctl.servo().is_started() ? "armed" : "disarmed");
 			printf("\n");
 
-			try {
-				memset(buf, 0, sizeof(buf) - 1);
-				size_t retsize = uart2.readline((uint8_t*)buf, sizeof(buf));
-				if (retsize) {
-					char disp[128] = {0};
-					printf("UART2: %s\n", buf);
-					rexjson::value v = rexjson::read(buf);
-					sprintf(disp, "serial : %d      ", v["UART"]["serial"].get_int());
-					//printf("%s\n", disp);
-				}
-			} catch (std::exception& e) {
-				printf("exception: %s\n", e.what());
-				uart2.clear();
-			}
-
 #if 0
 			memset(buf, 0, sizeof(buf));
 			size_t retsize = uart3.receive((uint8_t*)buf, sizeof(buf));
@@ -588,6 +521,8 @@ void main_task(void *pvParameters)
 			led_toggle_ts.time_stamp();
 			ledusb.toggle();
 		}
+
+		rpcserver.jsonrpc_request_handler(&uart2);
 	}
 }
 
@@ -645,37 +580,8 @@ int main(int argc, char* argv[])
 		&hMain /* Task handle */
 		);
 
-#if 0
-	xTaskCreate(
-		secondary_task, /* Function pointer */
-		"Task2", /* Task name - for debugging only*/
-		configMINIMAL_STACK_SIZE, /* Stack depth in words */
-		(void*) NULL, /* Pointer to tasks arguments (parameter) */
-		tskIDLE_PRIORITY + 2UL, /* Task priority*/
-		NULL /* Task handle */
-		);
-#endif
 
 #if 0
-	xTaskCreate(
-		spi_slave_task, /* Function pointer */
-		"SPI Slave Task", /* Task name - for debugging only*/
-		configMINIMAL_STACK_SIZE, /* Stack depth in words */
-		(void*) NULL, /* Pointer to tasks arguments (parameter) */
-		tskIDLE_PRIORITY + 2UL, /* Task priority*/
-		NULL /* Task handle */
-		);
-#endif
-
-	xTaskCreate(
-		uart_tx_task, /* Function pointer */
-		"UART TX Task", /* Task name - for debugging only*/
-		configMINIMAL_STACK_SIZE, /* Stack depth in words */
-		(void*) NULL, /* Pointer to tasks arguments (parameter) */
-		tskIDLE_PRIORITY + 2UL, /* Task priority*/
-		NULL /* Task handle */
-		);
-
 	xTaskCreate(
 		uart2_tx_task, /* Function pointer */
 		"UART2 TX Task", /* Task name - for debugging only*/
@@ -684,6 +590,7 @@ int main(int argc, char* argv[])
 		tskIDLE_PRIORITY + 2UL, /* Task priority*/
 		NULL /* Task handle */
 		);
+#endif
 
 //	vTaskList(buffer);
 //	printf("Tasks: \n%s\n\n", buffer);

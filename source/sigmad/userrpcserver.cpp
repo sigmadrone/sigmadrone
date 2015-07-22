@@ -5,11 +5,10 @@
 #include "jsonserialization.h"
 
 user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_service, const std::string& address, const std::string& port)
-	: http_server(io_service, address, port)
+	: rpc_server<user_rpcserver, http::server::connection_ptr>()
+	, http_server(io_service, address, port)
 	, app_(app)
 {
-	add("help", &user_rpcserver::rpc_help);
-	add("spec", &user_rpcserver::rpc_spec);
 	add("myaddress", &user_rpcserver::rpc_myaddress);
 	add("servorate", &user_rpcserver::rpc_servo_rate);
 	add("servoenable", &user_rpcserver::rpc_servo_enable);
@@ -45,59 +44,6 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 
 user_rpcserver::~user_rpcserver()
 {
-}
-
-rexjson::value user_rpcserver::rpc_spec(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
-{
-	static unsigned int types[] = { rpc_str_type };
-	if (mode != execute) {
-		if (mode == spec)
-			return create_json_spec(types, ARRAYSIZE(types));
-		if (mode == helpspec)
-			return create_json_helpspec(types, ARRAYSIZE(types));
-		return
-				"spec <\"name\">\n"
-				"\nGet the spec for the specified rpc name.\n"
-				"\nArguments:\n"
-				"1. \"name\"     (string, required) The name of of the rpc method to get the spec on\n"
-				"\nResult:\n"
-				"\"json\"     (string) The rpc call spec in json\n";
-	}
-
-	verify_parameters(params, types, ARRAYSIZE(types));
-	rexjson::array ignored;
-	return call_method_name(connection, params[0], ignored, spec);
-}
-
-rexjson::value user_rpcserver::rpc_help(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
-{
-	static unsigned int types[] = { (rpc_str_type | rpc_null_type) };
-	if (mode != execute) {
-		if (mode == spec)
-			return create_json_spec(types, ARRAYSIZE(types));
-		if (mode == helpspec)
-			return create_json_helpspec(types, ARRAYSIZE(types));
-		return
-				"help [\"command\"]\n"
-				"\nList all commands, or get help for a specified command.\n"
-				"\nArguments:\n"
-				"1. \"command\"     (string, optional) The command to get help on\n"
-				"\nResult:\n"
-				"\"text\"     (string) The help text\n";
-	}
-
-	verify_parameters(params, types, ARRAYSIZE(types));
-	if (params[0].type() == rexjson::null_type) {
-		std::string result;
-		for (method_map_type::const_iterator it = map_.begin(); it != map_.end(); it++) {
-			rexjson::array ignored;
-			std::string ret = call_method_name(connection, rexjson::value(it->first), ignored, help).get_str();
-			result += ret.substr(0, ret.find('\n')) + "\n";
-		}
-		return result;
-	}
-	rexjson::array ignored;
-	return call_method_name(connection, params[0], ignored, help);
 }
 
 rexjson::value user_rpcserver::rpc_exit(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
@@ -673,8 +619,7 @@ void user_rpcserver::jsonrpc_request_handler(http::server::connection& connectio
 {
 	rexjson::value jsonreq, result;
 
-	jsonreq.read(req.content);
-	result = call(connection.shared_from_this(), jsonreq);
+	result = call(connection.shared_from_this(), req.content);
 	rep.content = rexjson::write(result) + "\n";
 	rep.status = http::server::reply::ok;
 }

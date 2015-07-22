@@ -86,8 +86,69 @@ public:
 	typedef rexjson::value (T::*rpc_method_type)(R connection, rexjson::array& params, rpc_exec_mode mode);
 	typedef std::map<std::string, rpc_method_type> method_map_type;
 
-	rpc_server() {};
-	~rpc_server() {};
+	rpc_server()
+	{
+		add("help", &rpc_server::rpc_help);
+		add("spec", &rpc_server::rpc_spec);
+	}
+	~rpc_server()
+	{
+
+	}
+
+	rexjson::value rpc_spec(R connection, rexjson::array& params, rpc_exec_mode mode)
+	{
+		static unsigned int types[] = { rpc_str_type };
+		if (mode != execute) {
+			if (mode == spec)
+				return create_json_spec(types, ARRAYSIZE(types));
+			if (mode == helpspec)
+				return create_json_helpspec(types, ARRAYSIZE(types));
+			return
+					"spec <\"name\">\n"
+					"\nGet the spec for the specified rpc name.\n"
+					"\nArguments:\n"
+					"1. \"name\"     (string, required) The name of of the rpc method to get the spec on\n"
+					"\nResult:\n"
+					"\"json\"     (string) The rpc call spec in json\n";
+		}
+
+		verify_parameters(params, types, ARRAYSIZE(types));
+		rexjson::array ignored;
+		return call_method_name(connection, params[0], ignored, spec);
+	}
+
+	rexjson::value rpc_help(R connection, rexjson::array& params, rpc_exec_mode mode)
+	{
+		static unsigned int types[] = { (rpc_str_type | rpc_null_type) };
+		if (mode != execute) {
+			if (mode == spec)
+				return create_json_spec(types, ARRAYSIZE(types));
+			if (mode == helpspec)
+				return create_json_helpspec(types, ARRAYSIZE(types));
+			return
+					"help [\"command\"]\n"
+					"\nList all commands, or get help for a specified command.\n"
+					"\nArguments:\n"
+					"1. \"command\"     (string, optional) The command to get help on\n"
+					"\nResult:\n"
+					"\"text\"     (string) The help text\n";
+		}
+
+		verify_parameters(params, types, ARRAYSIZE(types));
+		if (params[0].type() == rexjson::null_type) {
+			std::string result;
+			for (typename method_map_type::const_iterator it = map_.begin(); it != map_.end(); it++) {
+				rexjson::array ignored;
+				std::string ret = call_method_name(connection, rexjson::value(it->first), ignored, help).get_str();
+				result += ret.substr(0, ret.find('\n')) + "\n";
+			}
+			return result;
+		}
+		rexjson::array ignored;
+		return call_method_name(connection, params[0], ignored, help);
+	}
+
 
 	static unsigned int get_rpc_type(rexjson::value_type value_type)
 	{
@@ -180,15 +241,17 @@ public:
 		return (static_cast<T*>(this)->*(method_entry->second))(connection, params, mode);
 	}
 
-	rexjson::value call(R connection, const rexjson::value& val, rpc_exec_mode mode = execute)
+	rexjson::value call(R connection, const std::string request, rpc_exec_mode mode = execute)
 	{
 		rexjson::object ret;
 		rexjson::value result;
 		rexjson::value error;
 		rexjson::value id;
 		rexjson::array params;
+		rexjson::value val;
 
 		try {
+			val.read(request);
 			if (val.get_type() != rexjson::obj_type)
 				throw create_rpc_error(RPC_PARSE_ERROR, "top-level object parse error");
 			rexjson::object::const_iterator params_it = val.get_obj().find("params");
