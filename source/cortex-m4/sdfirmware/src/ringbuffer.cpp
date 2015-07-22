@@ -49,6 +49,19 @@ size_t RingBuffer::read_size()
 	return (datasize < datatoend) ? datasize : datatoend;
 }
 
+size_t RingBuffer::line_size()
+{
+	size_t datasize = data_size();
+	size_t rp = rp_;
+
+	for (size_t i = 0; i < datasize; i++) {
+		if (buffer_[(rp + i) % bufsize_] == '\n' )
+			return i + 1;
+	}
+	return 0;
+}
+
+
 uint8_t* RingBuffer::get_read_ptr()
 {
 	return (buffer_ + rp_);

@@ -561,7 +561,7 @@ void main_task(void *pvParameters)
 
 			try {
 				memset(buf, 0, sizeof(buf) - 1);
-				size_t retsize = uart2.receive((uint8_t*)buf, sizeof(buf));
+				size_t retsize = uart2.readline((uint8_t*)buf, sizeof(buf));
 				if (retsize) {
 					char disp[128] = {0};
 					printf("UART2: %s\n", buf);

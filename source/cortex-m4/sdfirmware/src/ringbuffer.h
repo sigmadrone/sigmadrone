@@ -21,6 +21,7 @@ public:
 	size_t data_space();
 	size_t write_size();
 	size_t read_size();
+	size_t line_size();
 	uint8_t *get_read_ptr();
 	uint8_t *get_write_ptr();
 	uint8_t *get_buffer_ptr();
@@ -31,7 +32,7 @@ public:
 	void reset_wp(size_t wp);
 	void reset_rp(size_t rp);
 
-public:
+protected:
 	volatile size_t wp_;
 	volatile size_t rp_;
 	size_t bufsize_;
