@@ -33,6 +33,7 @@ struct DroneState {
 	 */
 	QuaternionF attitude_;
 	Vector4f motors_;
+	Vector3f pid_torque_;
 };
 
 
