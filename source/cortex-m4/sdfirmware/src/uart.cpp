@@ -163,7 +163,12 @@ UART::~UART()
 
 void UART::clear()
 {
-	rxbuf_.rp_ = rxbuf_.wp_;
+	rxbuf_.reset();
+}
+
+void UART::transmit(const std::string& str)
+{
+	transmit((uint8_t*)str.c_str(), str.size());
 }
 
 size_t UART::transmit(const uint8_t* buf, size_t size)
@@ -179,11 +184,42 @@ size_t UART::transmit(const uint8_t* buf, size_t size)
 	return writesize;
 }
 
+std::string UART::readline()
+{
+	size_t linesize = 0;
+	std::string ret;
+
+	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
+	linesize = rxbuf_.line_size();
+	if (!linesize)
+		return ret;
+	ret.resize(linesize);
+	receive((uint8_t*)ret.c_str(), ret.size());
+	return ret;
+}
+
+size_t UART::readline(uint8_t* buf, size_t size)
+{
+	size_t linesize = 0;
+
+	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
+	linesize = rxbuf_.line_size();
+	if (size < linesize)
+		size = linesize;
+	return receive(buf, size);
+}
+
+size_t UART::read(uint8_t* buf, size_t size)
+{
+	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
+	return receive(buf, size);
+}
+
+
 size_t UART::receive(uint8_t* buf, size_t size)
 {
 	size_t ret = 0;
-	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
-	if (rxbuf_.empty())
+	if (!size || rxbuf_.empty())
 		return 0;
 	size_t readsize = rxbuf_.read_size() < size ? rxbuf_.read_size() : size;
 	if (readsize) {

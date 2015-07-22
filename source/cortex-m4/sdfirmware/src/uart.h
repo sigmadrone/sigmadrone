@@ -3,13 +3,14 @@
 
 #include <stdint.h>
 #include <vector>
+#include <string>
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_dma.h"
 #include "stm32f4xx_hal_uart.h"
 #include "stm32f429xx.h"
 #include "gpiopin.h"
 #include "pinnames.h"
-#include "circbuffer.h"
+#include "ringbuffer.h"
 
 class UART
 {
@@ -24,8 +25,8 @@ public:
 	uint32_t rx_dma_channel_;
 	uint32_t timeout_;
 	std::vector<GPIOPin> data_pins_;
-	CircBuffer txbuf_;
-	CircBuffer rxbuf_;
+	RingBuffer txbuf_;
+	RingBuffer rxbuf_;
 
 public:
 	UART(const std::vector<GPIOPin>& data_pins = {},
@@ -41,7 +42,10 @@ public:
 	~UART();
 	void clear();
 	size_t transmit(const uint8_t* buf, size_t size);
-	size_t receive(uint8_t* buf, size_t size);
+	void transmit(const std::string& str);
+	size_t read(uint8_t* buf, size_t size);
+	size_t readline(uint8_t* buf, size_t size);
+	std::string readline();
 	static void uart_irq_handler(unsigned int device);
 	static void uart_dmatx_handler(unsigned int device);
 	static void uart_dmarx_handler(unsigned int device);
@@ -55,6 +59,7 @@ public:
 
 protected:
 	void dma_config();
+	size_t receive(uint8_t* buf, size_t size);
 };
 
 #endif

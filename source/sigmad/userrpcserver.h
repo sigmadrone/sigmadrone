@@ -15,8 +15,6 @@ public:
 	user_rpcserver(server_app& app, boost::asio::io_service& io_service, const std::string& address, const std::string& port);
 	~user_rpcserver();
 
-	rexjson::value rpc_spec(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
-	rexjson::value rpc_help(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_exit(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_myaddress(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_servo_enable(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
