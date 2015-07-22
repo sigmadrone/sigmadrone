@@ -28,12 +28,12 @@
 #include "pwmencoder.h"
 #include "pwmdecoder.h"
 #include "timestamp.h"
-#include "rexjson.h"
-#include "rexjson++.h"
 #include "tm_stm32f4_ili9341.h"
 #include "colibripwm.h"
 #include "colibritrace.h"
 #include "flightcontrol.h"
+
+#include "librexjson/rexjson++.h"
 
 void* __dso_handle = 0;
 extern unsigned int __relocated_vectors;
