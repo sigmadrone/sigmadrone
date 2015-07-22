@@ -8,7 +8,9 @@
 #include "uartrpcserver.h"
 #include "librexjsonrpc/jsonserialization.h"
 
-UartRpcServer::UartRpcServer()
+UartRpcServer::UartRpcServer(DroneState& dronestate)
+	: rpc_server<UartRpcServer, UART*>()
+	, dronestate_(dronestate)
 {
 	add("sd_get_attitude", &UartRpcServer::rpc_get_attitude);
 
@@ -35,7 +37,7 @@ rexjson::value UartRpcServer::rpc_get_attitude(UART* uart, rexjson::array& param
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return quaternion_to_json_value(QuaternionF::identity);
+	return quaternion_to_json_value(dronestate_.attitude_);
 }
 
 
