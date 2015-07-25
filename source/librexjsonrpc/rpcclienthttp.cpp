@@ -1,7 +1,7 @@
-#include "rpcclient.h"
+#include "rpcclienthttp.h"
 
 
-rpc_client::rpc_client(std::string address, std::string port, size_t timeout, const std::string& jsonrpc_version)
+rpc_client_http::rpc_client_http(const std::string& address, std::string port, size_t timeout, const std::string& jsonrpc_version)
 	: http::client::http_client(address, port, timeout)
 	, jsonrpc_version_(jsonrpc_version)
 	, serial_(0)
@@ -9,16 +9,16 @@ rpc_client::rpc_client(std::string address, std::string port, size_t timeout, co
 {
 }
 
-rpc_client::~rpc_client()
+rpc_client_http::~rpc_client_http()
 {
 }
 
-size_t rpc_client::get_failure_count()
+size_t rpc_client_http::get_failure_count()
 {
 	return failures_;
 }
 
-rexjson::value rpc_client::call(const std::string& url, const std::string& method, const rexjson::array& params, http::headers headers) throw(std::exception)
+rexjson::value rpc_client_http::call(const std::string& url, const std::string& method, const rexjson::array& params, http::headers headers) throw(std::exception)
 {
 	rexjson::value rpc_response;
 	rexjson::object rpc_request;
@@ -42,20 +42,20 @@ rexjson::value rpc_client::call(const std::string& url, const std::string& metho
 	return rpc_response.get_obj()["result"];
 }
 
-rexjson::value rpc_client::call(const std::string& url, const std::string& method, http::headers headers) throw(std::exception)
+rexjson::value rpc_client_http::call(const std::string& url, const std::string& method, http::headers headers) throw(std::exception)
 {
 	rexjson::array params;
 	return call(url, method, params, headers);
 }
 
-rexjson::value rpc_client::call(const std::string& url, const std::string& method, const rexjson::value& val1, http::headers headers) throw(std::exception)
+rexjson::value rpc_client_http::call(const std::string& url, const std::string& method, const rexjson::value& val1, http::headers headers) throw(std::exception)
 {
 	rexjson::array params;
 	params.push_back(val1);
 	return call(url, method, params);
 }
 
-rexjson::value rpc_client::call(const std::string& url, const std::string& method, const rexjson::value& val1, const rexjson::value& val2, http::headers headers) throw(std::exception)
+rexjson::value rpc_client_http::call(const std::string& url, const std::string& method, const rexjson::value& val1, const rexjson::value& val2, http::headers headers) throw(std::exception)
 {
 	rexjson::array params;
 	params.push_back(val1);
@@ -63,7 +63,7 @@ rexjson::value rpc_client::call(const std::string& url, const std::string& metho
 	return call(url, method, params);
 }
 
-rexjson::value rpc_client::call(
+rexjson::value rpc_client_http::call(
 		const std::string& url,
 		const std::string& method,
 		const rexjson::value& val1,

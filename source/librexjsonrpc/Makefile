@@ -16,7 +16,8 @@ xLDFLAGS	= $(LDFLAGS)
 TARGET		= $(OUTDIR)/librexjsonrpc.a
 
 OBJS= \
-    $(OUTDIR)/rpcclient.o \
+    $(OUTDIR)/rpcclienthttp.o \
+    $(OUTDIR)/rpcclientuart.o \
 
 all: $(OUTDIR) $(TARGET)
 

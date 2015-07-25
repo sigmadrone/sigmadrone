@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <gtkmm.h>
-#include "rpcclient.h"
+#include "rpcclienthttp.h"
 #include "jsonserialization.h"
 
 
@@ -35,7 +35,7 @@ protected:
 	sigc::connection timer_conn_;
 	int timer_number_;
 	std::string rpcuri_;
-	boost::scoped_ptr<rpc_client> rpc_client_;
+	boost::scoped_ptr<rpc_client_http> rpc_client_;
 	Glib::RefPtr<Gtk::Builder> ref_glade_;
 	Gtk::Button* button_quit_;
 	Gtk::CheckButton* button_arm_motors_;
