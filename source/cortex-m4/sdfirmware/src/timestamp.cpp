@@ -9,6 +9,8 @@
 
 HwTimer* TimeStamp::timer_ = 0;
 
+static TimeStamp boot_ts;
+
 TimeStamp::TimeStamp() : stamp_()
 {
 	time_stamp();
@@ -98,4 +100,8 @@ TimeSpan TimeStamp::time_lost_per_time_stamp()
 		ts2.elapsed();
 	}
 	return (ts.elapsed() - base_line) / count;
+}
+
+TimeSpan TimeStamp::since_boot() {
+	return boot_ts.elapsed();
 }

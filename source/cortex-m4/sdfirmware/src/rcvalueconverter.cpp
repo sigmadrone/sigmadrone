@@ -60,7 +60,7 @@ float RcValueConverter::get_value_as_float(uint32_t channelno)
 	return pwm_converter_.to_float(duty_cycle);
 }
 
-QuaternionD RcValueConverter::target_quaternion() const {
+QuaternionF RcValueConverter::target_quaternion() const {
 	return quaternion_;
 }
 

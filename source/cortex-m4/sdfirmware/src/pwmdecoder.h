@@ -10,6 +10,7 @@
 
 #include "hwtimer.h"
 #include "gpiopin.h"
+#include "timestamp.h"
 
 class PwmDecoder {
 public:
@@ -91,6 +92,8 @@ public:
 		return (float)duty_cycle_.unit() / (float)decoded_period_.unit();
 	}
 
+	TimeStamp last_capture_ts() const { return last_capture_ts_; }
+
 private:
 	static Frequency timer_clock_from_pwm_period(const TimeSpan& max_period);
 	void capture_callback();
@@ -110,6 +113,7 @@ private:
 	uint32_t duty_cycle_channel_;
 	bool callback_on_change_only_;
 	TimeSpan epsilon_;
+	TimeStamp last_capture_ts_;
 };
 
 #endif /* PWMDECODER_H_ */

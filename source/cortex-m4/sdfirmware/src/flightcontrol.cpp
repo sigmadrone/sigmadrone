@@ -7,6 +7,9 @@
 
 #include "flightcontrol.h"
 #include "colibripwm.h"
+#include <stdio.h>
+
+static const Throttle emergency_throttle(0.4);
 
 FlightControl::FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
 		FunctionPointer(this, &FlightControl::rc_callback)),
@@ -25,11 +28,14 @@ void FlightControl::stop_receiver() {
 }
 
 QuaternionF FlightControl::target_q() const {
-	return rc_values_.target_quaternion();
+	return alarm_.is_none() ? rc_values_.target_quaternion() : QuaternionF(1,0,0,0);
 }
 
 Throttle FlightControl::base_throttle() const {
-	return rc_values_.base_throttle();
+	if (alarm_.is_none() || rc_values_.base_throttle() < emergency_throttle) {
+		return rc_values_.base_throttle();
+	}
+	return emergency_throttle;
 }
 
 void FlightControl::set_throttle(const std::vector<Throttle>& thrVec) {
@@ -59,4 +65,41 @@ void FlightControl::process_servo_start_stop_command() {
 
 void FlightControl::motor_power_on_off(bool power_on) {
 	motor_power_.write(power_on ? 1 : 0);
+}
+
+void FlightControl::safety_check(DroneState& drone_state) {
+#ifndef TEST_NO_RC
+	if (!rc_values_.motors_armed()) {
+		/*
+		 * motors are not armed, we will still perform the rest of the checks
+		 * so the alarm will persist if the underlying problem was not fixed
+		 */
+		alarm_ = Alarm();
+	}
+
+	/*
+	 * Are all the RC channels live?
+	 */
+	for (uint32_t i = 0; i < rc_receiver_.channel_count(); ++i) {
+		if (!rc_receiver_.channel(i)->is_live()) {
+			record_alarm(Alarm(Alarm::ALARM_RC_CHANNEL_DEAD, i));
+			break;
+		}
+	}
+
+	/*
+	 * More checks to be added
+	 */
+#endif
+	drone_state.alarm_ = alarm_;
+	drone_state.most_critical_alarm_ = most_critical_alarm_;
+}
+
+void FlightControl::record_alarm(const Alarm& alarm) {
+	if (alarm_.type() < alarm.type()) {
+		alarm_ = alarm;
+	}
+	if (most_critical_alarm_.type() < alarm.type()) {
+		most_critical_alarm_ = alarm;
+	}
 }

@@ -10,6 +10,7 @@
 
 #include "units.h"
 #include "matrix.h"
+#include "alarm.h"
 
 struct DroneState {
 	/*
@@ -34,6 +35,12 @@ struct DroneState {
 	QuaternionF attitude_;
 	Vector4f motors_;
 	Vector3f pid_torque_;
+
+	/*
+	 * Safety...
+	 */
+	Alarm alarm_;
+	Alarm most_critical_alarm_;
 };
 
 

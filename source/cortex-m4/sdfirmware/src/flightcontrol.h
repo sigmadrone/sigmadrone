@@ -14,12 +14,14 @@
 #include "rcreceiver.h"
 #include "rcvalueconverter.h"
 #include "pidpilot.h"
+#include "alarm.h"
 
 static const float RC_VALUE_SCALE_FACTOR = 1.0;
 
 class FlightControl
 {
 public:
+
 	FlightControl();
 	void start_receiver();
 	void stop_receiver();
@@ -39,6 +41,8 @@ public:
 	 */
 	void motor_power_on_off(bool power_on);
 
+	void safety_check(DroneState& state);
+
 	inline RcReceiver& rc_receiver() { return rc_receiver_; }
 	inline ServoController& servo() { return servo_ctrl_; }
 	inline PidPilot& pilot() { return pilot_; }
@@ -47,6 +51,7 @@ private:
 	void rc_callback() {
 		rc_values_.update();
 	}
+	void record_alarm(const Alarm& alarm);
 
 private:
 	RcReceiver rc_receiver_;
@@ -55,6 +60,8 @@ private:
 	ServoController servo_ctrl_;
 	DigitalOut motor_power_;
 	PidPilot pilot_;
+	Alarm alarm_;
+	Alarm most_critical_alarm_;
 };
 
 

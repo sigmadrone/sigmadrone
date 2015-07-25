@@ -17,6 +17,7 @@ public:
 	const PwmDecoder& decoder() const;
 	void start_receive();
 	void stop_receive();
+	bool is_live() const;
 
 private:
 	RcChannel(const RcChannel&);

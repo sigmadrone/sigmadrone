@@ -15,6 +15,7 @@ public:
 	static bool init(HwTimer::Id timer_id = HwTimer::TIMER_7);
 	static void cleanup();
 	static TimeSpan time_lost_per_time_stamp();
+	static TimeSpan since_boot();
 
 	TimeStamp();
 	~TimeStamp();
