@@ -49,5 +49,5 @@ void UartRpcServer::jsonrpc_request_handler(UART* uart)
 	if (request.empty())
 		return;
 	response = call(uart, request);
-	uart->transmit(response.write(false, false, 0, 8) + "\n");
+	uart->write(response.write(false, false, 0, 8) + "\n");
 }

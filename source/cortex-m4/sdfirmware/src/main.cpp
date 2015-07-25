@@ -196,14 +196,7 @@ void uart2_tx_task(void *pvParameters)
 		v["UART"]["message"] = "************ Test **********";
 		v["UART"]["serial"] = i++;
 		std::string str = v.write(false) + "\r\n";
-		const char *bufptr = str.c_str();
-		size_t size = str.length();
-		size_t ret = 0;
-		while (size) {
-			ret = uart2.transmit((uint8_t*)bufptr, size);
-			size -= ret;
-			bufptr += ret;
-		}
+		uart2.write(v.write(false) + "\n");
 		HAL_Delay(250);
 	}
 }
