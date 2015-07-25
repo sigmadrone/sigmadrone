@@ -45,8 +45,8 @@ LIBS		+= $(shell pkg-config --libs glib-2.0) $(shell pkg-config --libs json-glib
     HARDENING+=-D_FORTIFY_SOURCE=2
 #
 
-xCFLAGS		= -Wall -Wno-psabi -static $(DEBUGFLAGS) $(HARDENING) $(DEBUGFLAGS) $(INCLUDES) $(CFLAGS)
-xCXXFLAGS	= -Wall -Wno-psabi -static $(DEBUGFLAGS) $(HARDENING) $(DEBUGFLAGS) $(INCLUDES) $(CXXFLAGS)
+xCFLAGS		= -Wall -Wno-psabi -static $(HARDENING) $(INCLUDES) $(CFLAGS) $(DEBUGFLAGS)
+xCXXFLAGS	= -Wall -Wno-psabi -static $(HARDENING) $(INCLUDES) $(CXXFLAGS) $(DEBUGFLAGS)
 TARGET		= $(OUTDIR)/libjsonrpc.a
 OBJS		= \
 	$(OUTDIR)/jsonrpcparser.o\
