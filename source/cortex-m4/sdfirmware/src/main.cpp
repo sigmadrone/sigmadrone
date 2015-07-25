@@ -428,7 +428,7 @@ void main_task(void *pvParameters)
 	gyro.GetFifoAngRateDPS(&gyr_axes); // Drain the fifo
 	for (int i = 0; i < bias_iterations; i++) {
 		uint32_t msg;
-		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
+		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
 		}
 		gyro.GetFifoAngRateDPS(&gyr_axes);
 		gyr_bias.at(0) += gyr_axes.AXIS_X;
@@ -453,7 +453,7 @@ void main_task(void *pvParameters)
 	while (1) {
 		uint32_t msg;
 
-		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
+		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
 		}
 		ctx_switch_time = isr_ts.elapsed();
 		state.dt_ = sample_dt.elapsed();
