@@ -14,7 +14,8 @@ static const Throttle emergency_throttle(0.4);
 FlightControl::FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
 		FunctionPointer(this, &FlightControl::rc_callback)),
 		ch_mapper_({RC_CHANNEL_THROTTLE, RC_CHANNEL_RUDDER, RC_CHANNEL_ELEVATOR, RC_CHANNEL_AILERON, RC_CHANNEL_ARM_MOTOR}),
-		rc_values_(ch_mapper_, rc_receiver_, RC_VALUE_SCALE_FACTOR) ,
+		rc_values_(ch_mapper_, rc_receiver_, RC_VALUE_SCALE_FACTOR, TimeSpan::from_microseconds(1100),
+				TimeSpan::from_microseconds(1910)),
 		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)),
 		motor_power_(PB_2) {
 }
