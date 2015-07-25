@@ -8,11 +8,12 @@
 #ifndef _RPCCLIENTUART_H_
 #define _RPCCLIENTUART_H_
 
+#include <termios.h>
 #include "librexjson/rexjson++.h"
 
 class rpc_client_uart {
 public:
-	rpc_client_uart(const std::string& filename, size_t usec = 0, const std::string& jsonrpc_version = "1.0");
+	rpc_client_uart(const std::string& filename, speed_t speed = B115200, size_t usec = 0, const std::string& jsonrpc_version = "1.0");
 	virtual ~rpc_client_uart();
 	void request(const std::string& str);
 	std::string response();

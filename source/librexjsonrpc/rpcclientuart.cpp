@@ -18,7 +18,7 @@
 #include <stdexcept>
 #include "rpcclientuart.h"
 
-rpc_client_uart::rpc_client_uart(const std::string& filename, size_t usec, const std::string& jsonrpc_version)
+rpc_client_uart::rpc_client_uart(const std::string& filename, speed_t speed, size_t usec, const std::string& jsonrpc_version)
 	: fd_(-1)
 	, timeout_(usec)
 	, jsonrpc_version_(jsonrpc_version)
@@ -40,8 +40,8 @@ rpc_client_uart::rpc_client_uart(const std::string& filename, size_t usec, const
     tio.c_lflag |= ICANON;
     tio.c_cc[VMIN] = 1;
     tio.c_cc[VTIME] = 0;
-    cfsetospeed(&tio, B115200);
-    cfsetispeed(&tio, B115200);
+    cfsetospeed(&tio, speed);
+    cfsetispeed(&tio, speed);
     tcsetattr(fd_, TCSANOW, &tio);
     tcsetattr(fd_, TCSAFLUSH, &tio);
 }
@@ -81,23 +81,19 @@ int rpc_client_uart::readtimeout(char *buf, size_t size)
 	return 0;
 }
 
-void rpc_client_uart::request(const std::string& str)
+void rpc_client_uart::request(const std::string& req)
 {
+	std::string str = req + "\n";
 	const char *bufptr = str.c_str();
 	size_t size = str.size();
 	ssize_t ret = 0;
 
-	if (size) {
-		while (size) {
-			ret = write(fd_, (void*)bufptr, size);
-			if (ret < 0)
-				throw std::runtime_error("rpc_client_uart::write failed");
-			size -= ret;
-			bufptr += ret;
-		}
-		ret = write(fd_, (void*)"\n", 1);
+	while (size) {
+		ret = write(fd_, (void*)bufptr, size);
 		if (ret < 0)
 			throw std::runtime_error("rpc_client_uart::write failed");
+		size -= ret;
+		bufptr += ret;
 	}
 }
 

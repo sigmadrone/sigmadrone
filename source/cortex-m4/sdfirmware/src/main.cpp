@@ -75,7 +75,7 @@ UART uart2({
 		DMA1_Stream5,		/* RX DMA stream */
 		DMA_CHANNEL_4,		/* RX DMA channel */
 		250,
-		115200
+		921600
 );
 
 
