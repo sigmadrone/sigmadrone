@@ -87,12 +87,17 @@ void rpc_client_uart::request(const std::string& str)
 	size_t size = str.size();
 	ssize_t ret = 0;
 
-	while (size) {
-		ret = write(fd_, (void*)bufptr, size);
+	if (size) {
+		while (size) {
+			ret = write(fd_, (void*)bufptr, size);
+			if (ret < 0)
+				throw std::runtime_error("rpc_client_uart::write failed");
+			size -= ret;
+			bufptr += ret;
+		}
+		ret = write(fd_, (void*)"\n", 1);
 		if (ret < 0)
 			throw std::runtime_error("rpc_client_uart::write failed");
-		size -= ret;
-		bufptr += ret;
 	}
 }
 
@@ -124,7 +129,7 @@ rexjson::value rpc_client_uart::call(const std::string& method, const rexjson::a
 	rpc_request["method"] = rexjson::value(method);
 	rpc_request["params"] = params;
 	request(rexjson::write(rpc_request));
-	rpc_response.read(response(), 20);
+	rpc_response.read(response());
 	if (rpc_response.get_obj()["error"].type() == rexjson::obj_type)
 		throw std::runtime_error(rpc_response.get_obj()["error"].get_obj()["message"].get_str());
 	return rpc_response.get_obj()["result"];

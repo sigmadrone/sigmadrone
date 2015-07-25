@@ -16,7 +16,7 @@ public:
 	virtual ~rpc_client_uart();
 	void request(const std::string& str);
 	std::string response();
-	rexjson::value call(const std::string& method, const rexjson::array& params) throw(std::exception);
+	rexjson::value call(const std::string& method, const rexjson::array& params = rexjson::array()) throw(std::exception);
 
 protected:
 	int readtimeout(char *buf, size_t size);

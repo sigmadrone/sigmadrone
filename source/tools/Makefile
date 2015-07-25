@@ -3,6 +3,7 @@ SUBDIRS += axesdata
 SUBDIRS += alldata
 SUBDIRS += servo
 SUBDIRS += attitudefilter
+SUBDIRS += uartrpc
 ifeq ($(ARCH),x86)
 SUBDIRS += flightdeck
 SUBDIRS += glplane
