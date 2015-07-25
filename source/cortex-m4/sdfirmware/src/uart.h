@@ -41,10 +41,10 @@ public:
 			);
 	~UART();
 	void clear();
-	size_t transmit(const uint8_t* buf, size_t size);
-	void transmit(const std::string& str);
-	size_t read(uint8_t* buf, size_t size);
-	size_t readline(uint8_t* buf, size_t size);
+	void write(const std::string& str);
+	size_t write(const char* buf, size_t size);
+	size_t read(char* buf, size_t size);
+	size_t readline(char* buf, size_t size);
 	std::string readline();
 	static void uart_irq_handler(unsigned int device);
 	static void uart_dmatx_handler(unsigned int device);
@@ -60,6 +60,7 @@ public:
 protected:
 	void dma_config();
 	size_t receive(uint8_t* buf, size_t size);
+	size_t transmit(const uint8_t* buf, size_t size);
 };
 
 #endif

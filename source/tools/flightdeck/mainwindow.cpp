@@ -5,7 +5,7 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	: Gtk::Window(cobject)
 	, timer_number_(0)
 	, rpcuri_("/jsonrpc")
-	, rpc_client_(new rpc_client("localhost", "18222"))
+	, rpc_client_(new rpc_client_http("localhost", "18222"))
 	, ref_glade_(refGlade)
 	, button_quit_(NULL)
 	, button_arm_motors_(NULL)
@@ -152,7 +152,7 @@ void mainwindow::set_rpc_connection(const std::string& rpcserver, const std::str
 {
 	try {
 		timer_conn_.disconnect();
-		rpc_client_.reset(new rpc_client(rpcserver, rpcport, 30000, "2.0"));
+		rpc_client_.reset(new rpc_client_http(rpcserver, rpcport, 30000, "2.0"));
 		on_rpc_update();
 		sigc::slot<bool> my_slot = sigc::mem_fun(*this, &mainwindow::on_rpc_update);
 		timer_conn_ = Glib::signal_timeout().connect(my_slot, 1000/(updaterate + 1));

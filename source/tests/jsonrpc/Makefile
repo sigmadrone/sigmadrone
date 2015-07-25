@@ -23,16 +23,16 @@ all : $(TARGET)
 .SUFFIXES:	.c .cxx .cpp
 
 .c.o: 
-	$(CC) -c $< $(CFLAGS) $(INCLUDES)
+	$(CC) -c $< $(CFLAGS) $(DEBUGFLAGS) $(INCLUDES)
 
 .cxx.o: 
-	$(CXX) -std=c++11 -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -std=c++11 -c $< $(CFLAGS) $(DEBUGFLAGS) $(INCLUDES)
 
 .cpp.o: 
-	$(CXX) -std=c++11 -c $< $(CFLAGS) $(INCLUDES)
+	$(CXX) -std=c++11 -c $< $(CFLAGS) $(DEBUGFLAGS) $(INCLUDES)
 
 %.o: $(SDRONE_SRCDIR)/%.cpp
-	$(CXX) -std=c++11 $(CFLAGS) -o $*.o -c $(SDRONE_SRCDIR)/$*.cpp $(INCLUDES)
+	$(CXX) -std=c++11 $(CFLAGS) $(DEBUGFLAGS) -o $*.o -c $(SDRONE_SRCDIR)/$*.cpp $(INCLUDES)
 
 $(TARGET) : $(OBJECTS)
 	$(CXX) -std=c++11 $^ -o $(TARGET) $(LIBS)

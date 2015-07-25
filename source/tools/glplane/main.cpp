@@ -19,7 +19,7 @@ using namespace std;
 #include "matrix.h"
 #include "libcmdargs/cmdargs.h"
 #include "libhttp/http_client.hpp"
-#include "librexjsonrpc/rpcclient.h"
+#include "librexjsonrpc/rpcclienthttp.h"
 #include "jsonserialization.h"
 
 
@@ -69,7 +69,7 @@ void display(void)
 
 static std::string rpcserver;
 static std::string rpcport;
-static rpc_client* rpcclient = NULL;
+static rpc_client_http* rpcclient = NULL;
 
 int main(int argc, char *argv[])
 {
@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
 		std::cout << "Error: " << e.what() << std::endl;
 	}
 	if (!rpcserver.empty())
-		rpcclient = new rpc_client(rpcserver, rpcport, 30000);
+		rpcclient = new rpc_client_http(rpcserver, rpcport, 30000);
 
 	GlutProgram prog(GLUT_MULTISAMPLE | GLUT_ALPHA | GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGBA, 800, 900, 160 * WINDOW_SIZE_FACTOR, 160 * WINDOW_SIZE_FACTOR);
 	GlShaders shaders;

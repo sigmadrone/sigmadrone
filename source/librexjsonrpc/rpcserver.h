@@ -241,17 +241,15 @@ public:
 		return (static_cast<T*>(this)->*(method_entry->second))(connection, params, mode);
 	}
 
-	rexjson::value call(R connection, const std::string request, rpc_exec_mode mode = execute)
+	rexjson::value call(R connection, const rexjson::value& val, rpc_exec_mode mode = execute)
 	{
 		rexjson::object ret;
 		rexjson::value result;
 		rexjson::value error;
 		rexjson::value id;
 		rexjson::array params;
-		rexjson::value val;
 
 		try {
-			val.read(request);
 			if (val.get_type() != rexjson::obj_type)
 				throw create_rpc_error(RPC_PARSE_ERROR, "top-level object parse error");
 			rexjson::object::const_iterator params_it = val.get_obj().find("params");
@@ -287,7 +285,31 @@ public:
 		req["method"] = rexjson::value(name);
 		req["params"] = rexjson::value(params);
 		return call(connection, rexjson::value(req), mode);
+	}
 
+	rexjson::value call(R connection, const std::string& request, rpc_exec_mode mode = execute)
+	{
+		rexjson::object ret;
+		rexjson::value result;
+		rexjson::value error;
+		rexjson::value id;
+
+		try {
+			rexjson::value val;
+			val.read(request);
+			return call(connection, val, mode);
+		} catch (rexjson::object& e) {
+			error = e;
+		} catch (std::exception& e) {
+			rexjson::object errobj;
+			errobj["message"] = e.what();
+			errobj["code"] = RPC_MISC_ERROR;
+			error = errobj;
+		}
+		ret["result"] = result;
+		ret["id"] = id;
+		ret["error"] = error;
+		return ret;
 	}
 
 protected:

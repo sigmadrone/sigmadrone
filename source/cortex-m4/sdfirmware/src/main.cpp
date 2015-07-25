@@ -75,7 +75,7 @@ UART uart2({
 		DMA1_Stream5,		/* RX DMA stream */
 		DMA_CHANNEL_4,		/* RX DMA channel */
 		250,
-		115200
+		921600
 );
 
 
@@ -196,14 +196,7 @@ void uart2_tx_task(void *pvParameters)
 		v["UART"]["message"] = "************ Test **********";
 		v["UART"]["serial"] = i++;
 		std::string str = v.write(false) + "\r\n";
-		const char *bufptr = str.c_str();
-		size_t size = str.length();
-		size_t ret = 0;
-		while (size) {
-			ret = uart2.transmit((uint8_t*)bufptr, size);
-			size -= ret;
-			bufptr += ret;
-		}
+		uart2.write(v.write(false) + "\n");
 		HAL_Delay(250);
 	}
 }
@@ -384,7 +377,7 @@ void main_task(void *pvParameters)
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
 	DroneState state;
-	UartRpcServer rpcserver;
+	UartRpcServer rpcserver(state);
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);

@@ -166,22 +166,23 @@ void UART::clear()
 	rxbuf_.reset();
 }
 
-void UART::transmit(const std::string& str)
+void UART::write(const std::string& str)
 {
-	transmit((uint8_t*)str.c_str(), str.size());
+	write(str.c_str(), str.size());
 }
 
-size_t UART::transmit(const uint8_t* buf, size_t size)
+size_t UART::write(const char* buf, size_t size)
 {
-	while (!txbuf_.empty())
-		;
-	txbuf_.reset();
-	size_t writesize = txbuf_.write_size() < size ? txbuf_.write_size() : size;
-	memcpy((uint8_t*)txbuf_.get_write_ptr(), buf, writesize);
-	txbuf_.write_update(writesize);
-	size -= writesize;
-	HAL_UART_Transmit_DMA(&handle_, (uint8_t*)txbuf_.get_read_ptr(), txbuf_.read_size());
-	return writesize;
+	const char *bufptr = buf;
+	size_t ret = 0, retsize = 0;
+
+	while (size) {
+		ret = transmit((uint8_t*)bufptr, size);
+		size -= ret;
+		bufptr += ret;
+		retsize += ret;
+	}
+	return retsize;
 }
 
 std::string UART::readline()
@@ -198,7 +199,7 @@ std::string UART::readline()
 	return ret;
 }
 
-size_t UART::readline(uint8_t* buf, size_t size)
+size_t UART::readline(char* buf, size_t size)
 {
 	size_t linesize = 0;
 
@@ -206,13 +207,13 @@ size_t UART::readline(uint8_t* buf, size_t size)
 	linesize = rxbuf_.line_size();
 	if (size < linesize)
 		size = linesize;
-	return receive(buf, size);
+	return receive((uint8_t*)buf, size);
 }
 
-size_t UART::read(uint8_t* buf, size_t size)
+size_t UART::read(char* buf, size_t size)
 {
 	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
-	return receive(buf, size);
+	return receive((uint8_t*)buf, size);
 }
 
 
@@ -238,6 +239,19 @@ size_t UART::receive(uint8_t* buf, size_t size)
 		ret += readsize;
 	}
 	return ret;
+}
+
+size_t UART::transmit(const uint8_t* buf, size_t size)
+{
+	while (!txbuf_.empty())
+		;
+	txbuf_.reset();
+	size_t writesize = txbuf_.write_size() < size ? txbuf_.write_size() : size;
+	memcpy((uint8_t*)txbuf_.get_write_ptr(), buf, writesize);
+	txbuf_.write_update(writesize);
+	size -= writesize;
+	HAL_UART_Transmit_DMA(&handle_, (uint8_t*)txbuf_.get_read_ptr(), txbuf_.read_size());
+	return writesize;
 }
 
 void UART::uart_irq_handler(unsigned int device)

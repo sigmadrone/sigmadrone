@@ -4,11 +4,14 @@
  *  Created on: Jul 21, 2015
  *      Author: mkstoilo
  */
-
+#include "trimstr.h"
 #include "uartrpcserver.h"
 #include "librexjsonrpc/jsonserialization.h"
 
-UartRpcServer::UartRpcServer()
+
+UartRpcServer::UartRpcServer(DroneState& dronestate)
+	: rpc_server<UartRpcServer, UART*>()
+	, dronestate_(dronestate)
 {
 	add("sd_get_attitude", &UartRpcServer::rpc_get_attitude);
 
@@ -19,7 +22,7 @@ UartRpcServer::~UartRpcServer()
 
 }
 
-rexjson::value UartRpcServer::rpc_get_attitude(UART* uart, rexjson::array& params, rpc_exec_mode mode)
+rexjson::value UartRpcServer::rpc_get_attitude(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
 	static unsigned int types[] = {rpc_null_type};
 	if (mode != execute) {
@@ -35,7 +38,7 @@ rexjson::value UartRpcServer::rpc_get_attitude(UART* uart, rexjson::array& param
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return quaternion_to_json_value(QuaternionF::identity);
+	return quaternion_to_json_value(dronestate_.attitude_);
 }
 
 
@@ -44,8 +47,9 @@ void UartRpcServer::jsonrpc_request_handler(UART* uart)
 	rexjson::value response;
 	std::string request = uart->readline();
 
+	trim(request);
 	if (request.empty())
 		return;
 	response = call(uart, request);
-	uart->transmit(response.write(false, false, 0, 8) + "\n");
+	uart->write(response.write(false, false, 0, 8) + "\n");
 }

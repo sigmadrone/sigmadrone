@@ -484,6 +484,7 @@ void output::write_stream(const value& v, std::ostream& os, size_t level)
 		escape_str_val(v, os);
 		os << '"';
 	} else if (v.value_type_ == obj_type) {
+		size_t elems = 0;
 		os << '{';
 		if (pretty_ && !v.get_obj().empty())
 			os << crlf_;
@@ -491,12 +492,13 @@ void output::write_stream(const value& v, std::ostream& os, size_t level)
 			if (it->second.is_null() && nullprop_ == false) {
 				continue;
 			}
-			if (it != v.get_obj().begin()) {
+			if (elems) {
 				os << ',';
 				if (pretty_)
 					os << crlf_;
 			}
 			write_stream_namevalue(it->first, it->second, os, level + 1);
+			++elems;
 		}
 		if (pretty_)
 			os << crlf_ << indent;

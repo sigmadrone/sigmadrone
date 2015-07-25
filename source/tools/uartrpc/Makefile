@@ -14,11 +14,14 @@ endif
 xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(CFLAGS) $(DEBUGFLAGS)
 xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(CXXFLAGS) $(DEBUGFLAGS)
 xLDFLAGS 	= $(LDFLAGS)
-LIBS		= -lattitude -llogger -ldevice -lhttp -lrexjson -lcmdargs -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-LIBS		+= -L../../libattitude/$(OUTDIR) -L../../libdevice/$(OUTDIR) -L../../libcmdargs/$(OUTDIR) -L../../liblogger/$(OUTDIR) -L../../libhttp/$(OUTDIR) -L../../librexjson/$(OUTDIR)
-TARGET 		= $(OUTDIR)/attifilt
+LIBS		= -lrexjson -lrexjsonrpc -lattitude -llogger -ldevice -lhttp -lrexjson -lcmdargs 
+LIBS		+= -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
+LIBS		+= -L../../libattitude/$(OUTDIR) -L../../libdevice/$(OUTDIR) -L../../libcmdargs/$(OUTDIR) 
+LIBS		+= -L../../liblogger/$(OUTDIR) -L../../libhttp/$(OUTDIR) -L../../librexjson/$(OUTDIR)
+LIBS		+= -L../../librexjson/$(OUTDIR) -L../../librexjsonrpc/$(OUTDIR)
+TARGET 		= $(OUTDIR)/uartrpc
 OBJS		= \
-		$(OUTDIR)/main.o \
+		$(OUTDIR)/uartrpc.o \
 
 
 all: $(OUTDIR) $(TARGET)
