@@ -1,6 +1,7 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <cstring>
+#include <stdio.h>
 #include "uart.h"
 #include "diag/Trace.h"
 #include "colibritrace.h"
@@ -67,8 +68,10 @@ UART::UART(const std::vector<GPIOPin>& data_pins,
 		uint32_t tx_dma_channel,
 		DMA_Stream_TypeDef *rx_dma_stream,
 		uint32_t rx_dma_channel,
-		uint32_t timeout,
-		uint32_t baudrate)
+		uint32_t hwflowctrl,
+		uint32_t baudrate,
+		uint32_t timeout
+		)
 	: dma_device_(dma_device)
 	, tx_dma_stream_(tx_dma_stream)
 	, tx_dma_channel_(tx_dma_channel)
@@ -78,6 +81,8 @@ UART::UART(const std::vector<GPIOPin>& data_pins,
 	, data_pins_(data_pins)
 	, txbuf_(12)
 	, rxbuf_(12)
+	, cache_head_(cache_)
+	, cache_tail_(cache_)
 {
 	for (auto& data_pin : data_pins_)
 		data_pin.init();
@@ -96,7 +101,7 @@ UART::UART(const std::vector<GPIOPin>& data_pins,
 	handle_.Init.WordLength = UART_WORDLENGTH_8B;
 	handle_.Init.StopBits = UART_STOPBITS_1;
 	handle_.Init.Parity = UART_PARITY_NONE;
-	handle_.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	handle_.Init.HwFlowCtl = hwflowctrl;
 	handle_.Init.Mode = UART_MODE_TX_RX;
 	handle_.Init.OverSampling = USART_CR1_OVER8;
 	if (uart_device == USART1) {
@@ -185,60 +190,75 @@ size_t UART::write(const char* buf, size_t size)
 	return retsize;
 }
 
-std::string UART::readline()
+size_t UART::readcache(char *buf, size_t size)
 {
-	size_t linesize = 0;
-	std::string ret;
+	int ret = 0;
 
-	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
-	linesize = rxbuf_.line_size();
-	if (!linesize)
-		return ret;
-	ret.resize(linesize);
-	receive((uint8_t*)ret.c_str(), ret.size());
+	for (size_t i = 0; i < size && cache_tail_ < cache_head_; i++) {
+		buf[i] = *cache_tail_++;
+		ret++;
+		if (buf[i] == '\n')
+			break;
+	}
 	return ret;
-}
-
-size_t UART::readline(char* buf, size_t size)
-{
-	size_t linesize = 0;
-
-	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
-	linesize = rxbuf_.line_size();
-	if (size < linesize)
-		size = linesize;
-	return receive((uint8_t*)buf, size);
 }
 
 size_t UART::read(char* buf, size_t size)
 {
-	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
-	return receive((uint8_t*)buf, size);
+	if (__HAL_USART_GET_FLAG(&handle_, USART_FLAG_ORE) ||
+			__HAL_USART_GET_FLAG(&handle_, USART_FLAG_NE) ||
+			__HAL_USART_GET_FLAG(&handle_, USART_FLAG_FE) ||
+			__HAL_USART_GET_FLAG(&handle_, USART_FLAG_PE)) {
+#if 0
+		if (__HAL_USART_GET_FLAG(&handle_, USART_FLAG_ORE))
+			printf("UART: OVERRUN ERROR DETECTED\n");
+		if (__HAL_USART_GET_FLAG(&handle_, USART_FLAG_FE))
+			printf("UART: FRAME ERROR DETECTED\n");
+		if (__HAL_USART_GET_FLAG(&handle_, USART_FLAG_PE))
+			printf("UART: PARITY ERROR DETECTED\n");
+		if (__HAL_USART_GET_FLAG(&handle_, USART_FLAG_NE))
+			printf("UART: NOISE ERROR DETECTED\n");
+#endif
+		HAL_UART_DMAStop(&handle_);
+		__HAL_USART_CLEAR_PEFLAG(&handle_);
+		rxbuf_.reset();
+		uart_dmarx_start();
+		return 0;
+	}
+
+	if (cache_tail_ != cache_head_)
+		return readcache(buf, size);
+	receive();
+	return readcache(buf, size);
 }
 
-
-size_t UART::receive(uint8_t* buf, size_t size)
+std::string UART::read()
 {
-	size_t ret = 0;
-	if (!size || rxbuf_.empty())
-		return 0;
-	size_t readsize = rxbuf_.read_size() < size ? rxbuf_.read_size() : size;
-	if (readsize) {
-		memcpy(buf, (uint8_t*)rxbuf_.get_read_ptr(), readsize);
-		memset((uint8_t*)rxbuf_.get_read_ptr(), '-', readsize);
-		rxbuf_.read_update(readsize);
-	}
-	ret += readsize;
-	buf += readsize;
-	size -= readsize;
-	readsize = rxbuf_.read_size() < size ? rxbuf_.read_size() : size;
-	if (readsize) {
-		memcpy(buf, (uint8_t*)rxbuf_.get_read_ptr(), readsize);
-		memset((uint8_t*)rxbuf_.get_read_ptr(), '-', readsize);
-		rxbuf_.read_update(readsize);
-		ret += readsize;
+	char buf[32];
+	std::string ret;
+	size_t count;
+
+	while ((count = read(buf, sizeof(buf))) > 0) {
+		ret.append(buf, count);
+		if (buf[count - 1] == '\n')
+			break;
 	}
 	return ret;
+}
+
+void UART::receive()
+{
+	rxbuf_.reset_wp((rxbuf_.buffer_size() - handle_.hdmarx->Instance->NDTR) % rxbuf_.buffer_size());
+	if (rxbuf_.empty())
+		return;
+	size_t readsize = rxbuf_.read_size() < sizeof(cache_) ? rxbuf_.read_size() : sizeof(cache_);
+	if (readsize) {
+		cache_tail_ = cache_head_ = cache_;
+		memcpy(cache_, (uint8_t*)rxbuf_.get_read_ptr(), readsize);
+		memset((uint8_t*)rxbuf_.get_read_ptr(), '-', readsize);
+		rxbuf_.read_update(readsize);
+		cache_head_ += readsize;
+	}
 }
 
 size_t UART::transmit(const uint8_t* buf, size_t size)

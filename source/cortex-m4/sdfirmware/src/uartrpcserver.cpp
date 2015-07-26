@@ -45,8 +45,14 @@ rexjson::value UartRpcServer::rpc_get_attitude(UART* , rexjson::array& params, r
 void UartRpcServer::jsonrpc_request_handler(UART* uart)
 {
 	rexjson::value response;
-	std::string request = uart->readline();
+	std::string request;
 
+	cached_request_ += uart->read();
+	if (*cached_request_.rbegin() != '\n')
+		return;
+	request = cached_request_;
+	cached_request_.clear();
+//	request = uart->read();
 	trim(request);
 	if (request.empty())
 		return;
