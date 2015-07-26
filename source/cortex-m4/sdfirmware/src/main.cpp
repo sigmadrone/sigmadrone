@@ -367,7 +367,7 @@ void main_task(void *pvParameters)
 			});
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi5, 1);
-	uint8_t gyr_wtm = 2;
+	uint8_t gyr_wtm = 3;
 	uint8_t acc_wtm = 17;
 	uint8_t bias_iterations = 100;
 	L3GD20::AxesDPS_t gyr_axes;
@@ -430,7 +430,7 @@ void main_task(void *pvParameters)
 	gyro.GetFifoAngRateDPS(&gyr_axes); // Drain the fifo
 	for (int i = 0; i < bias_iterations; i++) {
 		uint32_t msg;
-		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
+		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
 		}
 		gyro.GetFifoAngRateDPS(&gyr_axes);
 		gyr_bias.at(0) += gyr_axes.AXIS_X;
@@ -455,7 +455,7 @@ void main_task(void *pvParameters)
 	while (1) {
 		uint32_t msg;
 
-		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 5000 ) ) {
+		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
 		}
 		ctx_switch_time = isr_ts.elapsed();
 		state.dt_ = sample_dt.elapsed();
@@ -483,6 +483,7 @@ void main_task(void *pvParameters)
 		state.attitude_ = att.get_attitude();
 
 		flight_ctl.process_servo_start_stop_command();
+		flight_ctl.safety_check(state);
 		flight_ctl.pilot().set_target_thrust(flight_ctl.base_throttle().get());
 		flight_ctl.pilot().update_state(state, flight_ctl.target_q());
 		flight_ctl.update_throttle();
@@ -499,9 +500,14 @@ void main_task(void *pvParameters)
 			printf("Thro : %.8f\n", flight_ctl.base_throttle().get());
 			printf("Moto : %1.3f %1.3f %1.3f %1.3f\n", state.motors_.at(0,0), state.motors_.at(1,0),
 					state.motors_.at(2,0), state.motors_.at(3,0));
-			printf("Torq :  %1.3f %1.3f %1.3f\n", state.pid_torque_.at(0,0), state.pid_torque_.at(1,0),
-					state.pid_torque_.at(2,0));
+			//printf("Torq :  %1.3f %1.3f %1.3f\n", state.pid_torque_.at(0,0), state.pid_torque_.at(1,0),
+				//	state.pid_torque_.at(2,0));
 			printf("Servo: %s\n", flight_ctl.servo().is_started() ? "armed" : "disarmed");
+			if (!state.alarm_.is_none()) {
+				printf("%s %s, data: %d, @%5.3f sec\n", state.alarm_.to_string(),
+						state.alarm_.severity_to_string(), (int)state.alarm_.data(),
+						state.alarm_.when().seconds_float());
+			}
 			printf("\n");
 
 #if 0

@@ -12,16 +12,15 @@
 #include "matrix.h"
 #include "rcreceiver.h"
 
-struct Throttle {
+struct Throttle: public ScaledUnit<float> {
 	static const float MIN_VALUE;// = 0.0;
 	static const float MAX_VALUE;// = 1.0;
-	inline Throttle(float throttle = 0.0) : throttle_(throttle) {}
+	inline Throttle(float throttle = 0.0) : ScaledUnit<float>(throttle) {}
 	inline float get(float min = MIN_VALUE, float max = MAX_VALUE) const {
-		return (throttle_ < min ? min : (throttle_ > max ? max : throttle_));
+		return (unit() < min ? min : (unit() > max ? max : unit()));
 	}
-	float get_unbound() const { return throttle_; }
+	float get_unbound() const { return unit(); }
 private:
-	float throttle_;
 };
 
 struct PwmPulse {
@@ -54,7 +53,7 @@ public:
 			float scale_factor = 1.0,
 			const TimeSpan& min_duty_cycle = TimeSpan::from_milliseconds(1),
 			const TimeSpan& max_duty_cycle = TimeSpan::from_milliseconds(2));
-	QuaternionD target_quaternion() const;
+	QuaternionF target_quaternion() const;
 	Throttle base_throttle() const;
 	bool motors_armed() const;
 	void update();

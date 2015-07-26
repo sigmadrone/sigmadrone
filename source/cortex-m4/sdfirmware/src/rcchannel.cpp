@@ -34,3 +34,8 @@ void RcChannel::stop_receive() {
 const PwmDecoder& RcChannel::decoder() const  {
 	return decoder_;
 }
+
+bool RcChannel::is_live() const {
+	TimeSpan elapsed = decoder_.last_capture_ts().elapsed();
+	return elapsed < decoder_.decoded_period() * 4;
+}

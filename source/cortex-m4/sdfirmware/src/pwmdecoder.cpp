@@ -90,6 +90,7 @@ void PwmDecoder::capture_callback() {
 		TimeSpan new_period = TimeSpan::from_ticks(period_value, timer_.timer_clock());
 		TimeSpan new_duty_cycle = new_period * duty_cycle_value / period_value;
 		bool do_call = true;
+		last_capture_ts_.time_stamp();
 		if (callback_on_change_only_) {
 			if (ts_within_range(last_period, new_period) &&
 					ts_within_range(last_duty_cycle, new_duty_cycle)) {
