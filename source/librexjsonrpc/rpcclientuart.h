@@ -17,7 +17,38 @@ public:
 	~rpc_client_uart();
 	void request(const std::string& str);
 	std::string response();
-	rexjson::value call(const std::string& method, const rexjson::array& params = rexjson::array()) throw(std::exception);
+	rexjson::value call(const std::string& method, const rexjson::array& params) throw(std::exception);
+
+	rexjson::value call(
+		const std::string& method
+	) throw(std::exception);
+
+	rexjson::value call(
+		const std::string& method,
+		const rexjson::value& val1
+	) throw(std::exception);
+
+	rexjson::value call(
+		const std::string& method,
+		const rexjson::value& val1,
+		const rexjson::value& val2
+	) throw(std::exception);
+
+	rexjson::value call(
+		const std::string& method,
+		const rexjson::value& val1,
+		const rexjson::value& val2,
+		const rexjson::value& val3
+	) throw(std::exception);
+
+	rexjson::value call(
+		const std::string& method,
+		const rexjson::value& val1,
+		const rexjson::value& val2,
+		const rexjson::value& val3,
+		const rexjson::value& val4
+	) throw(std::exception);
+
 	int get_fd() { return fd_; }
 
 public:

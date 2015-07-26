@@ -155,7 +155,6 @@ rexjson::value rpc_client_uart::call(const std::string& method, const rexjson::a
 	rpc_request["id"] = (int)++serial_;
 	rpc_request["method"] = rexjson::value(method);
 	rpc_request["params"] = params;
-	tcflush(fd_, TCIOFLUSH);
 	request(rexjson::write(rpc_request));
 	rpc_response.read(response());
 	if (rpc_response.get_obj()["error"].type() == rexjson::obj_type)
@@ -163,4 +162,61 @@ rexjson::value rpc_client_uart::call(const std::string& method, const rexjson::a
 	return rpc_response.get_obj()["result"];
 }
 
+rexjson::value rpc_client_uart::call(const std::string& method) throw(std::exception)
+{
+	rexjson::array params;
+	return call(method, params);
+}
 
+
+rexjson::value rpc_client_uart::call(
+		const std::string& method,
+		const rexjson::value& val1
+		) throw(std::exception)
+{
+	rexjson::array params;
+	params.push_back(val1);
+	return call(method, params);
+}
+
+rexjson::value rpc_client_uart::call(
+		const std::string& method,
+		const rexjson::value& val1,
+		const rexjson::value& val2
+		) throw(std::exception)
+{
+	rexjson::array params;
+	params.push_back(val1);
+	params.push_back(val2);
+	return call(method, params);
+}
+
+rexjson::value rpc_client_uart::call(
+		const std::string& method,
+		const rexjson::value& val1,
+		const rexjson::value& val2,
+		const rexjson::value& val3
+		) throw(std::exception)
+{
+	rexjson::array params;
+	params.push_back(val1);
+	params.push_back(val2);
+	params.push_back(val3);
+	return call(method, params);
+}
+
+rexjson::value rpc_client_uart::call(
+		const std::string& method,
+		const rexjson::value& val1,
+		const rexjson::value& val2,
+		const rexjson::value& val3,
+		const rexjson::value& val4
+		) throw(std::exception)
+{
+	rexjson::array params;
+	params.push_back(val1);
+	params.push_back(val2);
+	params.push_back(val3);
+	params.push_back(val4);
+	return call(method, params);
+}
