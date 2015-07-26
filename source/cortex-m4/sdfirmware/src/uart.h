@@ -36,16 +36,16 @@ public:
 			uint32_t tx_dma_channel = DMA_CHANNEL_4,
 			DMA_Stream_TypeDef *rx_dma_stream = DMA2_Stream5,
 			uint32_t rx_dma_channel = DMA_CHANNEL_4,
-			uint32_t timeout = 250,
-			uint32_t baudrate = 115200
+			uint32_t hwflowctrl = UART_HWCONTROL_NONE,
+			uint32_t baudrate = 115200,
+			uint32_t timeout = 250
 			);
 	~UART();
 	void clear();
 	void write(const std::string& str);
 	size_t write(const char* buf, size_t size);
 	size_t read(char* buf, size_t size);
-	size_t readline(char* buf, size_t size);
-	std::string readline();
+	std::string read();
 	static void uart_irq_handler(unsigned int device);
 	static void uart_dmatx_handler(unsigned int device);
 	static void uart_dmarx_handler(unsigned int device);
@@ -59,8 +59,13 @@ public:
 
 protected:
 	void dma_config();
-	size_t receive(uint8_t* buf, size_t size);
+	void receive();
 	size_t transmit(const uint8_t* buf, size_t size);
+	size_t readcache(char* buf, size_t size);
+
+protected:
+	char cache_[128];
+	char *cache_head_, *cache_tail_;
 };
 
 #endif

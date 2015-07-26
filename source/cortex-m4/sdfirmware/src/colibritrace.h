@@ -17,8 +17,10 @@ struct UartTrace {
 		GPIOPin tx_gpio(PG_14, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF8_USART6);
 		GPIOPin rx_gpio(PG_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF8_USART6);
 		static UART uart6({tx_gpio, rx_gpio}, USART6, 0,
-				DMA2_Stream7, DMA_CHANNEL_4, DMA2_Stream5, DMA_CHANNEL_4, 250,
-				baudrate);
+				DMA2_Stream7, DMA_CHANNEL_4, DMA2_Stream5, DMA_CHANNEL_4,
+				UART_HWCONTROL_NONE,
+				baudrate,
+				250);
 	}
 };
 

@@ -59,8 +59,9 @@ UART uart3({
 		DMA_CHANNEL_4,
 		DMA1_Stream1,
 		DMA_CHANNEL_4,
-		250,
-		9600
+		UART_HWCONTROL_NONE,
+		9600,
+		250
 );
 
 
@@ -74,8 +75,9 @@ UART uart2({
 		DMA_CHANNEL_4,		/* TX DMA channel */
 		DMA1_Stream5,		/* RX DMA stream */
 		DMA_CHANNEL_4,		/* RX DMA channel */
-		250,
-		921600
+		UART_HWCONTROL_RTS_CTS,
+		460800,
+		250
 );
 
 

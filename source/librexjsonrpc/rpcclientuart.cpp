@@ -23,32 +23,55 @@ rpc_client_uart::rpc_client_uart(const std::string& filename, speed_t speed, siz
 	, timeout_(usec)
 	, jsonrpc_version_(jsonrpc_version)
 	, serial_(0)
+	, cache_head_(cache_)
+	, cache_tail_(cache_)
 {
 	struct termios tio;
 
 	fd_ = ::open(filename.c_str(), O_RDWR);
 	if (fd_ < 0)
-		throw std::runtime_error(std::string("Failed to open file: " + filename));
+		throw std::runtime_error(
+				std::string("Failed to open file: " + filename));
 	if (!::isatty(fd_)) {
 		::close(fd_);
 		throw std::runtime_error(std::string(filename + " : Not a tty device"));
 	}
 
-    /* Set the funny terminal modes. */
-    tcgetattr(fd_, &tio);
-    tio.c_lflag &= ~(ECHO); /* Clear ICANON and ECHO. */
-    tio.c_lflag |= ICANON;
-    tio.c_cc[VMIN] = 1;
-    tio.c_cc[VTIME] = 0;
-    cfsetospeed(&tio, speed);
-    cfsetispeed(&tio, speed);
-    tcsetattr(fd_, TCSANOW, &tio);
-    tcsetattr(fd_, TCSAFLUSH, &tio);
+	/* Set the funny terminal modes. */
+	tcgetattr(fd_, &tio);
+	tio.c_lflag &= ~(ECHO | ICANON); /* Clear ICANON and ECHO. */
+	tio.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR
+			| ICRNL | IXON);
+	tio.c_oflag &= ~OPOST;
+	tio.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
+	tio.c_cflag &= ~(CSIZE | PARENB);
+	tio.c_cflag &= ~CRTSCTS;
+	tio.c_cflag |= (CS8);
+	tio.c_cc[VMIN] = 1;
+	tio.c_cc[VTIME] = 0;
+	cfsetospeed(&tio, speed);
+	cfsetispeed(&tio, speed);
+	tcsetattr(fd_, TCSANOW, &tio);
+	tcflush(fd_, TCIOFLUSH);
 }
 
 rpc_client_uart::~rpc_client_uart()
 {
+	tcflush(fd_, TCIOFLUSH);
 	::close(fd_);
+}
+
+int rpc_client_uart::readcache(char *buf, size_t size)
+{
+	int ret = 0;
+
+	for (size_t i = 0; i < size && cache_tail_ < cache_head_; i++) {
+		buf[i] = *cache_tail_++;
+		ret++;
+		if (buf[i] == '\n')
+			break;
+	}
+	return ret;
 }
 
 int rpc_client_uart::readtimeout(char *buf, size_t size)
@@ -56,6 +79,10 @@ int rpc_client_uart::readtimeout(char *buf, size_t size)
 	fd_set rfds;
 	struct timeval tv;
 	int retval;
+
+	if (cache_head_ != cache_tail_)
+		return readcache(buf, size);
+	cache_head_ = cache_tail_ = cache_;
 
 	/* Watch fd to see when it has input. */
 	FD_ZERO(&rfds);
@@ -74,11 +101,32 @@ int rpc_client_uart::readtimeout(char *buf, size_t size)
 		return -1;
 	} else if (retval) {
 		/* FD_ISSET(0, &rfds) will be true. */
-		return ::read(fd_, buf, size);
+		ssize_t ret = ::read(fd_, cache_, sizeof(cache_));
+		if (ret < 0)
+			return ret;
+		cache_head_ += ret;
+		return readcache(buf, size);
 	}
 
 	/* No data within timeout value */
 	return 0;
+}
+
+std::string rpc_client_uart::response()
+{
+	char buf[256];
+	int count = 0;
+
+	response_.clear();
+	while ((count = readtimeout(buf, sizeof(buf))) > 0) {
+		std::string ret(buf, count);
+		response_ += ret;
+		if (buf[count - 1] == '\n')
+			break;
+	}
+	if (count < 0)
+		throw std::runtime_error("rpc_client_uart::response timed out");
+	return response_;
 }
 
 void rpc_client_uart::request(const std::string& req)
@@ -97,23 +145,6 @@ void rpc_client_uart::request(const std::string& req)
 	}
 }
 
-std::string rpc_client_uart::response()
-{
-	std::string resp;
-	char buf[256];
-	int count = 0;
-
-	while ((count = readtimeout(buf, sizeof(buf))) > 0) {
-		std::string ret(buf, count);
-		resp += ret;
-		if (buf[count - 1] == '\n')
-			break;
-	}
-	if (count < 0)
-		throw std::runtime_error("rpc_client_uart::response timed out");
-	return resp;
-}
-
 rexjson::value rpc_client_uart::call(const std::string& method, const rexjson::array& params) throw(std::exception)
 {
 	rexjson::value rpc_response;
@@ -124,6 +155,7 @@ rexjson::value rpc_client_uart::call(const std::string& method, const rexjson::a
 	rpc_request["id"] = (int)++serial_;
 	rpc_request["method"] = rexjson::value(method);
 	rpc_request["params"] = params;
+	tcflush(fd_, TCIOFLUSH);
 	request(rexjson::write(rpc_request));
 	rpc_response.read(response());
 	if (rpc_response.get_obj()["error"].type() == rexjson::obj_type)

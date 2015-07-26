@@ -21,7 +21,7 @@ public:
 	size_t data_space();
 	size_t write_size();
 	size_t read_size();
-	size_t line_size();
+//	size_t line_size();
 	uint8_t *get_read_ptr();
 	uint8_t *get_write_ptr();
 	uint8_t *get_buffer_ptr();
