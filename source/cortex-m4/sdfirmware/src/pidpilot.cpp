@@ -18,10 +18,14 @@ void PidPilot::reset(float kp, float ki, float kd) {
 	target_thrust_ = 0.0;
 
 	Vector3f thrust_dir(0, 0, 1);
-	m0_ = Vector3f::cross(Vector3f(-1.0, 1.0, 0.0), thrust_dir).normalize();
-	m1_ = Vector3f::cross(Vector3f(-1.0, -1.0, 0.0), thrust_dir).normalize();
-	m2_ = Vector3f::cross(Vector3f(1.0,  -1.0, 0.0), thrust_dir).normalize();
-	m3_ = Vector3f::cross(Vector3f(1.0, 1.0, 0.0), thrust_dir).normalize();
+	m0_ = Vector3f::cross(Vector3f(-1.0, 1.0, 0), thrust_dir).normalize();
+	m1_ = Vector3f::cross(Vector3f(-1.0, -1.0, 0), thrust_dir).normalize();
+	m2_ = Vector3f::cross(Vector3f(1.0,  -1.0, 0), thrust_dir).normalize();
+	m3_ = Vector3f::cross(Vector3f(1.0, 1.0, 0), thrust_dir).normalize();
+	m0_.at(2,0) = 0.5;
+	m1_.at(2,0) = -0.5;
+	m2_.at(2,0) = 0.5;
+	m3_.at(2,0) = -0.5;
 
 	pid_.reset(kp * 1000.0, ki * 1000.0, kd * 1000.0);
 }
