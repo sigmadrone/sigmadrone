@@ -34,9 +34,12 @@
 #include "flightcontrol.h"
 #include "uartrpcserver.h"
 #include "librexjson/rexjson++.h"
+#include "bmp180.h"
 
 void* __dso_handle = 0;
 extern unsigned int __relocated_vectors;
+
+static struct bmp180_t bmp180;
 
 DigitalOut ledusb(PC_4);
 //DigitalOut module_rstn(PA_4, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
@@ -353,6 +356,7 @@ void lcd_update()
 
 #define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
 
+
 void main_task(void *pvParameters)
 {
 	vTaskDelay(500 / portTICK_RATE_MS);
@@ -387,7 +391,7 @@ void main_task(void *pvParameters)
 	HAL_NVIC_EnableIRQ (DMA1_Stream5_IRQn);
 	uart2.uart_dmarx_start();
 
-
+	bmp180_init();
 	printf("Priority Group: %lu\n", NVIC_GetPriorityGrouping());
 	printf("SysTick_IRQn priority: %lu\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
 	printf("configKERNEL_INTERRUPT_PRIORITY: %d\n", configKERNEL_INTERRUPT_PRIORITY);
@@ -500,6 +504,9 @@ void main_task(void *pvParameters)
 			printf("Thro : %.8f\n", flight_ctl.base_throttle().get());
 			printf("Moto : %1.3f %1.3f %1.3f %1.3f\n", state.motors_.at(0,0), state.motors_.at(1,0),
 					state.motors_.at(2,0), state.motors_.at(3,0));
+			printf("Pressure: %u\n", (unsigned int)bmp180_get_pressure(bmp180_get_uncomp_pressure()));
+			printf("Temperature: %5.1f\n", (float)bmp180_get_temperature(bmp180_get_uncomp_temperature()) * 0.1);
+
 			//printf("Torq :  %1.3f %1.3f %1.3f\n", state.pid_torque_.at(0,0), state.pid_torque_.at(1,0),
 				//	state.pid_torque_.at(2,0));
 			printf("Servo: %s\n", flight_ctl.servo().is_started() ? "armed" : "disarmed");

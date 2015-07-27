@@ -24,6 +24,8 @@ protected:
 	rexjson::value rpc_spec(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_help(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_get_attitude(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_get_pressure(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+
 
 protected:
 	std::string cached_request_;

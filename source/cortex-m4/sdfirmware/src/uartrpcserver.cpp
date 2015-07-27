@@ -7,6 +7,7 @@
 #include "trimstr.h"
 #include "uartrpcserver.h"
 #include "librexjsonrpc/jsonserialization.h"
+#include "bmp180.h"
 
 
 UartRpcServer::UartRpcServer(DroneState& dronestate)
@@ -39,6 +40,25 @@ rexjson::value UartRpcServer::rpc_get_attitude(UART* , rexjson::array& params, r
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	return quaternion_to_json_value(dronestate_.attitude_);
+}
+
+rexjson::value UartRpcServer::rpc_get_pressure(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_pressure\n"
+	            "\nGet the current pressure."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return bmp180_get_uncomp_temperature();
 }
 
 
