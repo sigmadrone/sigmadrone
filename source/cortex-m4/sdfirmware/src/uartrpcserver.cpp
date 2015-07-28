@@ -15,7 +15,8 @@ UartRpcServer::UartRpcServer(DroneState& dronestate)
 	, dronestate_(dronestate)
 {
 	add("sd_get_attitude", &UartRpcServer::rpc_get_attitude);
-
+	add("sd_get_pressure", &UartRpcServer::rpc_get_pressure);
+	add("sd_get_temperature", &UartRpcServer::rpc_get_temperature);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -58,7 +59,26 @@ rexjson::value UartRpcServer::rpc_get_pressure(UART* , rexjson::array& params, r
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return bmp180_get_uncomp_temperature();
+	return bmp180_get_pressure(bmp180_get_uncomp_pressure());
+}
+
+rexjson::value UartRpcServer::rpc_get_temperature(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "rpc_get_temperature\n"
+	            "\nGet the current temperature."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return (float)bmp180_get_temperature(bmp180_get_uncomp_temperature()) * 0.1;
 }
 
 
