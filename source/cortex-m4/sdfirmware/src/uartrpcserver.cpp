@@ -7,7 +7,6 @@
 #include "trimstr.h"
 #include "uartrpcserver.h"
 #include "librexjsonrpc/jsonserialization.h"
-#include "bmp180.h"
 
 
 UartRpcServer::UartRpcServer(DroneState& dronestate)
@@ -53,13 +52,32 @@ rexjson::value UartRpcServer::rpc_get_pressure(UART* , rexjson::array& params, r
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
 	            "sd_get_pressure\n"
-	            "\nGet the current pressure."
+	            "\nGet the current pressure in hPa."
 				"\n"
 				"Arguments:\n"
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return bmp180_get_pressure(bmp180_get_uncomp_pressure());
+	return dronestate_.pressure_hpa_;
+}
+
+rexjson::value UartRpcServer::rpc_get_altitude(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_altitude\n"
+	            "\nGet the current altitude in meters."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return dronestate_.altitude_meters_;
 }
 
 rexjson::value UartRpcServer::rpc_get_temperature(UART* , rexjson::array& params, rpc_exec_mode mode)
@@ -71,14 +89,14 @@ rexjson::value UartRpcServer::rpc_get_temperature(UART* , rexjson::array& params
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "rpc_get_temperature\n"
-	            "\nGet the current temperature."
+	            "sd_get_temperature\n"
+	            "\nGet the current temperature in Celsius."
 				"\n"
 				"Arguments:\n"
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return (float)bmp180_get_temperature(bmp180_get_uncomp_temperature()) * 0.1;
+	return dronestate_.temperature_;
 }
 
 

@@ -487,7 +487,7 @@ void main_task(void *pvParameters)
 		state.attitude_ = att.get_attitude();
 
 		state.altitude_meters_ = Bmp180Reader::altitude_meters(true);
-		state.pressure_hpa = Bmp180Reader::pressure_hpa();
+		state.pressure_hpa_ = Bmp180Reader::pressure_hpa();
 		state.temperature_ = Bmp180Reader::temperature_celsius(true);
 
 		flight_ctl.process_servo_start_stop_command();
