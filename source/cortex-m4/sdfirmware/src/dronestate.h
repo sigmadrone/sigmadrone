@@ -22,6 +22,9 @@ struct DroneState {
 	Vector3f gyro_;
 	Vector3f accel_;
 	Vector3f mag_;
+	float altitude_meters_;
+	float pressure_hpa;
+	float temperature_;
 	/*more to add here*/
 
 	/*

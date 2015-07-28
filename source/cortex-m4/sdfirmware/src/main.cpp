@@ -34,12 +34,10 @@
 #include "flightcontrol.h"
 #include "uartrpcserver.h"
 #include "librexjson/rexjson++.h"
-#include "bmp180.h"
+#include "bmp180reader.h"
 
 void* __dso_handle = 0;
 extern unsigned int __relocated_vectors;
-
-static struct bmp180_t bmp180;
 
 DigitalOut ledusb(PC_4);
 //DigitalOut module_rstn(PA_4, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
@@ -391,7 +389,6 @@ void main_task(void *pvParameters)
 	HAL_NVIC_EnableIRQ (DMA1_Stream5_IRQn);
 	uart2.uart_dmarx_start();
 
-	bmp180_init();
 	printf("Priority Group: %lu\n", NVIC_GetPriorityGrouping());
 	printf("SysTick_IRQn priority: %lu\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
 	printf("configKERNEL_INTERRUPT_PRIORITY: %d\n", configKERNEL_INTERRUPT_PRIORITY);
@@ -431,6 +428,9 @@ void main_task(void *pvParameters)
 	Vector3f gyr_bias;
 
 	printf("Calibrating...\n");
+
+	Bmp180Reader::calibrate();
+
 	gyro.GetFifoAngRateDPS(&gyr_axes); // Drain the fifo
 	for (int i = 0; i < bias_iterations; i++) {
 		uint32_t msg;
@@ -486,30 +486,34 @@ void main_task(void *pvParameters)
 
 		state.attitude_ = att.get_attitude();
 
+		state.altitude_meters_ = Bmp180Reader::altitude_meters(true);
+		state.pressure_hpa = Bmp180Reader::pressure_hpa();
+		state.temperature_ = Bmp180Reader::temperature_celsius(true);
+
 		flight_ctl.process_servo_start_stop_command();
 		flight_ctl.safety_check(state);
 		flight_ctl.pilot().set_target_thrust(flight_ctl.base_throttle().get());
 		flight_ctl.pilot().update_state(state, flight_ctl.target_q());
 		flight_ctl.update_throttle();
 
-		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(200)) {
+		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
 			console_update_time.time_stamp();
-			printf("Gyro : %5.3f %5.3f %5.3f\n", state.gyro_.at(0), state.gyro_.at(1), state.gyro_.at(2));
-			printf("Acc  : %5.3f %5.3f %5.3f\n", state.accel_.at(0), state.accel_.at(1), state.accel_.at(2));
-			printf("dT   : %lu uSec\n", (uint32_t)state.dt_.microseconds());
-			printf("Q    : %5.3f %5.3f %5.3f %5.3f\n", state.attitude_.w, state.attitude_.x, state.attitude_.y,
+			printf("Gyro      : %5.3f %5.3f %5.3f\n", state.gyro_.at(0), state.gyro_.at(1), state.gyro_.at(2));
+			printf("Accel     : %5.3f %5.3f %5.3f\n", state.accel_.at(0), state.accel_.at(1), state.accel_.at(2));
+			printf("dT        : %lu uSec\n", (uint32_t)state.dt_.microseconds());
+			printf("Q         : %5.3f %5.3f %5.3f %5.3f\n", state.attitude_.w, state.attitude_.x, state.attitude_.y,
 					state.attitude_.z);
 			QuaternionF tq = flight_ctl.target_q();
-			printf("TQ   : %5.3f %5.3f %5.3f %5.3f\n", tq.w, tq.x, tq.y, tq.z);
-			printf("Thro : %.8f\n", flight_ctl.base_throttle().get());
-			printf("Moto : %1.3f %1.3f %1.3f %1.3f\n", state.motors_.at(0,0), state.motors_.at(1,0),
+			printf("Target Q  : %5.3f %5.3f %5.3f %5.3f\n", tq.w, tq.x, tq.y, tq.z);
+			printf("Throttle  : %.8f\n", flight_ctl.base_throttle().get());
+			printf("Motors    : %1.3f %1.3f %1.3f %1.3f\n", state.motors_.at(0,0), state.motors_.at(1,0),
 					state.motors_.at(2,0), state.motors_.at(3,0));
-			printf("Pressure: %u\n", (unsigned int)bmp180_get_pressure(bmp180_get_uncomp_pressure()));
-			printf("Temperature: %5.1f\n", (float)bmp180_get_temperature(bmp180_get_uncomp_temperature()) * 0.1);
+			printf("Altit, m  : %5.3f\n", state.altitude_meters_);
+			printf("Temper, C :%5.1f\n", state.temperature_);
 
 			//printf("Torq :  %1.3f %1.3f %1.3f\n", state.pid_torque_.at(0,0), state.pid_torque_.at(1,0),
 				//	state.pid_torque_.at(2,0));
-			printf("Servo: %s\n", flight_ctl.servo().is_started() ? "armed" : "disarmed");
+			printf("Servo      : %s\n", flight_ctl.servo().is_started() ? "armed" : "disarmed");
 			if (!state.alarm_.is_none()) {
 				printf("%s %s, data: %d, @%5.3f sec\n", state.alarm_.to_string(),
 						state.alarm_.severity_to_string(), (int)state.alarm_.data(),
