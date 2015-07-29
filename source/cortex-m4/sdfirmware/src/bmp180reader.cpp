@@ -6,16 +6,12 @@
  */
 
 #include "bmp180reader.h"
-#include "bmp180.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
-Bmp180Reader* Bmp180Reader::instance_ = 0;
-
-
-Bmp180Reader::Bmp180Reader() {
-	assert(instance_ == 0);
-
+Bmp180Reader::Bmp180Reader(BMP180& bmp)
+	: bmp_(bmp)
+{
 	static float filt_coeff[fir_filter_order];
 	static const float single_coeff = 1.0f/(float)fir_filter_order;
 
@@ -26,14 +22,10 @@ Bmp180Reader::Bmp180Reader() {
 	pressure_filter_.init_coeff(filt_coeff);
 	temperature_filter_.init_coeff(filt_coeff);
 
-	bmp180_init();
-
-	instance_ = this;
 }
 
 Bmp180Reader::~Bmp180Reader() {
-	assert(instance_ == this);
-	instance_ = 0;
+
 }
 
 float Bmp180Reader::altitude_meters(bool do_read_sensor) {
@@ -45,14 +37,14 @@ float Bmp180Reader::pressure_hpa(bool do_read_sensor) {
 	if (do_read_sensor) {
 		read_pressure();
 	}
-	return *instance()->pressure_filter_.get_output();
+	return *pressure_filter_.get_output();
 }
 
 float Bmp180Reader::temperature_celsius(bool do_read_sensor) {
 	if (do_read_sensor) {
 		read_temperature();
 	}
-	return *instance()->temperature_filter_.get_output();
+	return *temperature_filter_.get_output();
 }
 
 float Bmp180Reader::convert_hpa_to_altitude(float hpa) {
@@ -60,15 +52,23 @@ float Bmp180Reader::convert_hpa_to_altitude(float hpa) {
 }
 
 void Bmp180Reader::read_pressure() {
-	instance();
-	float pressure = (float)bmp180_get_pressure(bmp180_get_uncomp_pressure()) / 100.0f;
-	instance()->pressure_filter_.do_filter(&pressure);
+	try {
+		bmp_.update_pressure();
+		float pressure = (float)bmp_.get_pressure() / 100.0f;
+		pressure_filter_.do_filter(&pressure);
+	} catch (std::exception& e) {
+
+	}
 }
 
 void Bmp180Reader::read_temperature() {
-	instance();
-	float temperature = (float)bmp180_get_temperature(bmp180_get_uncomp_temperature()) * 0.1f;
-	instance()->temperature_filter_.do_filter(&temperature);
+	try {
+		bmp_.update_temperature();
+		float temperature = (float)bmp_.get_temperature();
+		temperature_filter_.do_filter(&temperature);
+	} catch (std::exception& e) {
+
+	}
 }
 
 void Bmp180Reader::calibrate() {
@@ -80,17 +80,6 @@ void Bmp180Reader::calibrate() {
 }
 
 void Bmp180Reader::cleanup() {
-	if (Bmp180Reader::instance_) {
-		delete Bmp180Reader::instance_;
-		Bmp180Reader::instance_ = 0;
-	}
-}
 
-Bmp180Reader* Bmp180Reader::instance() {
-	if (instance_ == 0) {
-		instance_ = new Bmp180Reader();
-	}
-	return instance_;
 }
-
 

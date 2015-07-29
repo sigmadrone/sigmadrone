@@ -29,6 +29,7 @@ public:
 	~GPIOPin();
 
 	void init();
+	void cleanup();
 public:
 	GPIO_TypeDef* gpio_port_;
 	uint16_t pinnum_;

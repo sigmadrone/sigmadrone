@@ -359,6 +359,11 @@ void main_task(void *pvParameters)
 {
 	vTaskDelay(500 / portTICK_RATE_MS);
 
+	I2CMaster i2c(I2C1, 400000, I2C_DUTYCYCLE_2, I2C_ADDRESSINGMODE_7BIT, 250, {
+			{PB_8, GPIO_MODE_AF_OD, GPIO_PULLUP, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
+			{PB_9, GPIO_MODE_AF_OD, GPIO_PULLUP, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
+	});
+
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
 				{PF_8, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_MISO_PIN */
@@ -367,6 +372,7 @@ void main_task(void *pvParameters)
 				{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},					/* GYRO_CS_PIN */
 				{PD_7, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},					/* ACCEL_CS_PIN */
 			});
+	BMP180 bmp(i2c);
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi5, 1);
 	uint8_t gyr_wtm = 3;
@@ -429,7 +435,9 @@ void main_task(void *pvParameters)
 
 	printf("Calibrating...\n");
 
-	Bmp180Reader::calibrate();
+	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
+
+	bmp_reader->calibrate();
 
 	gyro.GetFifoAngRateDPS(&gyr_axes); // Drain the fifo
 	for (int i = 0; i < bias_iterations; i++) {
@@ -486,9 +494,9 @@ void main_task(void *pvParameters)
 
 		state.attitude_ = att.get_attitude();
 
-		state.altitude_meters_ = Bmp180Reader::altitude_meters(true);
-		state.pressure_hpa_ = Bmp180Reader::pressure_hpa();
-		state.temperature_ = Bmp180Reader::temperature_celsius(true);
+		state.altitude_meters_ = bmp_reader->altitude_meters(true);
+		state.pressure_hpa_ = bmp_reader->pressure_hpa();
+		state.temperature_ = bmp_reader->temperature_celsius(true);
 
 		flight_ctl.process_servo_start_stop_command();
 		flight_ctl.safety_check(state);

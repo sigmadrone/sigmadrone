@@ -91,3 +91,8 @@ void GPIOPin::init()
 	}
 	HAL_GPIO_Init(gpio_port_, (GPIO_InitTypeDef*)this);
 }
+
+void GPIOPin::cleanup()
+{
+	HAL_GPIO_DeInit(gpio_port_, pinnum_);
+}

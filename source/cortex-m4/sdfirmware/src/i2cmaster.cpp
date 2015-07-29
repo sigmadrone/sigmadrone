@@ -20,6 +20,14 @@ I2CMaster::I2CMaster(
 	for (auto& data_pin : data_pins)
 		data_pin.init();
 
+	if (i2c_device == I2C1) {
+		__HAL_RCC_I2C1_CLK_ENABLE();
+	} else if (i2c_device == I2C2) {
+		__HAL_RCC_I2C2_CLK_ENABLE();
+	} else if (i2c_device == I2C3) {
+		__HAL_RCC_I2C3_CLK_ENABLE();
+	}
+
 	// TODO Auto-generated constructor stub
 	handle_.Instance = i2c_device;
 
@@ -49,4 +57,40 @@ void I2CMaster::write(uint16_t dev_addr, uint16_t reg_addr, uint8_t* buffer, uin
 {
 	if (HAL_I2C_Mem_Write(&handle_, (uint16_t)dev_addr, (uint16_t)reg_addr, I2C_MEMADD_SIZE_8BIT, (uint8_t *)buffer, nbytes, timeout_) != HAL_OK)
 		throw std::runtime_error("HAL_I2C_Mem_Write failed");
+}
+
+uint8_t I2CMaster::read8(uint16_t dev_addr, uint16_t reg_addr) throw (std::exception)
+{
+	uint8_t ret = 0;
+	read(dev_addr, reg_addr, &ret, sizeof(ret));
+	return ret;
+}
+
+uint16_t I2CMaster::read16(uint16_t dev_addr, uint16_t reg_addr) throw (std::exception)
+{
+	uint16_t ret = 0;
+	read(dev_addr, reg_addr, (uint8_t*)&ret, sizeof(ret));
+	return ret;
+}
+
+uint32_t I2CMaster::read32(uint16_t dev_addr, uint16_t reg_addr) throw (std::exception)
+{
+	uint32_t ret = 0;
+	read(dev_addr, reg_addr, (uint8_t*)&ret, sizeof(ret));
+	return ret;
+}
+
+void I2CMaster::write8(uint16_t dev_addr, uint16_t reg_addr, uint8_t data) throw (std::exception)
+{
+	write(dev_addr, reg_addr, (uint8_t*)&data, sizeof(data));
+}
+
+void I2CMaster::write16(uint16_t dev_addr, uint16_t reg_addr, uint16_t data) throw (std::exception)
+{
+	write(dev_addr, reg_addr, (uint8_t*)&data, sizeof(data));
+}
+
+void I2CMaster::write32(uint16_t dev_addr, uint16_t reg_addr, uint32_t data) throw (std::exception)
+{
+	write(dev_addr, reg_addr, (uint8_t*)&data, sizeof(data));
 }

@@ -24,11 +24,17 @@ public:
 		uint32_t clock_speed = 400000,
 		uint32_t duty_cycle = I2C_DUTYCYCLE_2,
 		uint32_t addressing_mode = I2C_ADDRESSINGMODE_7BIT,
-		uint32_t timeout = 1250,
+		uint32_t timeout = 250,
 		std::vector<GPIOPin> data_pins = {});
 	virtual ~I2CMaster();
 	void read(uint16_t dev_addr, uint16_t reg_addr, uint8_t* buffer, uint16_t nbytes) throw (std::exception);
+	uint8_t read8(uint16_t dev_addr, uint16_t reg_addr) throw (std::exception);
+	uint16_t read16(uint16_t dev_addr, uint16_t reg_addr) throw (std::exception);
+	uint32_t read32(uint16_t dev_addr, uint16_t reg_addr) throw (std::exception);
 	void write(uint16_t dev_addr, uint16_t reg_addr, uint8_t* buffer, uint16_t nbytes) throw (std::exception);
+	void write8(uint16_t dev_addr, uint16_t reg_addr, uint8_t data) throw (std::exception);
+	void write16(uint16_t dev_addr, uint16_t reg_addr, uint16_t data) throw (std::exception);
+	void write32(uint16_t dev_addr, uint16_t reg_addr, uint32_t data) throw (std::exception);
 
 protected:
 	I2C_HandleTypeDef handle_;
