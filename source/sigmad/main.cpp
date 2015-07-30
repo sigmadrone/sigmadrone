@@ -40,6 +40,7 @@ static cmd_arg_spec g_argspec2[] = {
 		{"bias-samples",	"",		"The number of samples to be used to calculate sensors bias", CMD_ARG_STRING},
 		{"acc-preiod",		"",		"The accelerometer period used in attitude tracker.", CMD_ARG_STRING},
 		{"fps",				"",		"Frames per second. How often to output. Default: 1000", CMD_ARG_STRING},
+		{"firmware-uart",	"",		"Firmware uart device. Default: /dev/ttymxc0", CMD_ARG_STRING},
 		{"gyr-disable",		"",		"Disable reading gyroscope", CMD_ARG_BOOL},
 		{"acc-disable",		"",		"Disable reading accelerometer", CMD_ARG_BOOL},
 		{"mag-disable",		"",		"Disable reading magnetometer", CMD_ARG_BOOL},

@@ -194,7 +194,7 @@ rexjson::value user_rpcserver::rpc_get_attitude(http::server::connection_ptr con
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return quaternion_to_json_value(app_.ctrl_thread_.get_attitude());
+	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("sd_get_attitude");
 }
 
 rexjson::value user_rpcserver::rpc_get_accelerometer(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
@@ -486,13 +486,7 @@ rexjson::value user_rpcserver::rpc_get_motors(http::server::connection_ptr conne
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	rexjson::array ret;
-	for (size_t i = 0; i < app_.servoctrl_->channelcount(); i++) {
-		if (app_.servoctrl_->motor(0).valid()) {
-			ret.push_back(app_.servoctrl_->motor(i).offset());
-		}
-	}
-	return ret;
+	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("sd_get_motors");
 }
 
 

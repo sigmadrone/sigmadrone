@@ -27,6 +27,8 @@ protected:
 	rexjson::value rpc_get_altitude(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_get_pressure(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_get_temperature(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_get_motors(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+
 
 
 protected:

@@ -13,9 +13,12 @@ UartRpcServer::UartRpcServer(DroneState& dronestate)
 	: rpc_server<UartRpcServer, UART*>()
 	, dronestate_(dronestate)
 {
+	add("sd_get_altitude", &UartRpcServer::rpc_get_altitude);
 	add("sd_get_attitude", &UartRpcServer::rpc_get_attitude);
 	add("sd_get_pressure", &UartRpcServer::rpc_get_pressure);
 	add("sd_get_temperature", &UartRpcServer::rpc_get_temperature);
+	add("sd_get_motors", &UartRpcServer::rpc_get_motors);
+
 }
 
 UartRpcServer::~UartRpcServer()
@@ -97,6 +100,29 @@ rexjson::value UartRpcServer::rpc_get_temperature(UART* , rexjson::array& params
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	return dronestate_.temperature_;
+}
+
+rexjson::value UartRpcServer::rpc_get_motors(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_motors\n"
+	            "\nGet motors state."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	rexjson::array ret;
+	for (size_t i = 0; i < 4; i++) {
+		ret.push_back(dronestate_.motors_.at(i));
+	}
+	return ret;
 }
 
 

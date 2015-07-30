@@ -185,7 +185,7 @@
                                     <property name="hexpand">True</property>
                                     <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkLabel" id="label_m1">
+                                      <object class="GtkLabel" id="label_m4">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="label" translatable="yes">0.000</property>
@@ -197,7 +197,7 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="spinbutton_m1">
+                                      <object class="GtkSpinButton" id="spinbutton_m4">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="adjustment">adjustment5</property>
@@ -218,7 +218,7 @@
                               <object class="GtkLabel" id="label3">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">M1</property>
+                                <property name="label" translatable="yes">M4</property>
                               </object>
                             </child>
                           </object>
@@ -247,7 +247,7 @@
                                     <property name="hexpand">True</property>
                                     <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkLabel" id="label_m2">
+                                      <object class="GtkLabel" id="label_m1">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="label" translatable="yes">0.000</property>
@@ -259,7 +259,7 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="spinbutton_m2">
+                                      <object class="GtkSpinButton" id="spinbutton_m1">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="adjustment">adjustment6</property>
@@ -280,7 +280,7 @@
                               <object class="GtkLabel" id="label5">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">M2</property>
+                                <property name="label" translatable="yes">M1</property>
                               </object>
                             </child>
                           </object>
@@ -309,7 +309,7 @@
                                     <property name="hexpand">True</property>
                                     <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkLabel" id="label_m3">
+                                      <object class="GtkLabel" id="label_m2">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="label" translatable="yes">0.000</property>
@@ -321,7 +321,7 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="spinbutton_m3">
+                                      <object class="GtkSpinButton" id="spinbutton_m2">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="adjustment">adjustment8</property>
@@ -342,7 +342,7 @@
                               <object class="GtkLabel" id="label6">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">M3</property>
+                                <property name="label" translatable="yes">M2</property>
                               </object>
                             </child>
                           </object>
@@ -371,7 +371,7 @@
                                     <property name="hexpand">True</property>
                                     <property name="orientation">vertical</property>
                                     <child>
-                                      <object class="GtkLabel" id="label_m4">
+                                      <object class="GtkLabel" id="label_m3">
                                         <property name="visible">True</property>
                                         <property name="can_focus">False</property>
                                         <property name="label" translatable="yes">0.000</property>
@@ -383,7 +383,7 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkSpinButton" id="spinbutton_m4">
+                                      <object class="GtkSpinButton" id="spinbutton_m3">
                                         <property name="visible">True</property>
                                         <property name="can_focus">True</property>
                                         <property name="adjustment">adjustment7</property>
@@ -404,7 +404,7 @@
                               <object class="GtkLabel" id="label7">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
-                                <property name="label" translatable="yes">M4</property>
+                                <property name="label" translatable="yes">M3</property>
                               </object>
                             </child>
                           </object>

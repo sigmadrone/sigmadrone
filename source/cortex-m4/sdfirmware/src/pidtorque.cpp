@@ -58,6 +58,14 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt)
 	error = error_q;
 #endif
 
+#if 0
+	Vector3f Xset = set_Q_.rotate(Vector3f(1.0, 0.0, 0.0));
+	Vector3f Xin = (~in_Q).rotate(Vector3f(1.0, 0.0, 0.0));
+	QuaternionF Qtorq_z = QuaternionF::fromVectors(Xin, Xset);
+	Vector3f error_z = Qtorq_z.axis().normalize() * Qtorq_z.angle() * -1.0;
+	error = error + error_z;
+#endif
+
 	torq = pid_controller_.get_pid(error,dt.seconds_float());
 
 	last_error_ = error;

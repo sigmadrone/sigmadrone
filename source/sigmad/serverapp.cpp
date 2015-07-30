@@ -13,6 +13,7 @@
 server_app::server_app(const cmd_args& args)
 	: logger("server_app: ")
 	, logfile_(new logfile("sigmad.log", 1024*1024*10, logfile::none))
+	, firmware_uart_speed_(B460800)
 	, ctrl_thread_(*this)
 	, io_service_()
 	, signals_(io_service_)
@@ -143,6 +144,8 @@ int server_app::run(int argc, const char *argv[])
 		dup2(get_log_file()->get_fd(), 2);
 		setlinebuf(stdout);
 		setlinebuf(stderr);
+
+		firmware_uart_ = args_.get_value("firmware-uart", "/dev/ttymxc0");
 	}
 	get_log_file()->log_level(args_.get_value("loglevel", "info"));
 	log_info_message("Server starting.");

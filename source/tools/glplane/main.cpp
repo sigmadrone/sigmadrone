@@ -44,6 +44,7 @@ GlShape gPlane;
 GLuint gProgram;
 void IdleFunction(void);
 void RpcIdleFunction(void);
+QuaternionD remapQ = QuaternionD::fromAxisRot(Vector3d(0,0,1), M_PI/2);
 
 Vector4f applyW(const Vector4f &v)
 {
@@ -154,6 +155,7 @@ again:
 				goto again;
 			}
 			sscanf(buffer, "%lf %lf %lf %lf", &q.w, &q.x, &q.y, &q.z);
+			q = q * remapQ;
 			M = q.rotMatrix4();
 			if (gDebug) {
 				fprintf(stdout, "%5.9lf %5.9lf %5.9lf %5.9lf\n", q.w, q.x, q.y, q.z);
@@ -182,6 +184,8 @@ void RpcIdleFunction(void)
 	} catch (std::exception& e) {
 		std::cout << "Error: " << e.what() << std::endl;
 	}
+
+	q = q * remapQ;
 	M = q.rotMatrix4();
 	GLuint mLoc;
 	Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(0), DEG2RAD(180)) * M);

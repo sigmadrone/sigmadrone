@@ -12,6 +12,7 @@
 #include "libdevice/pca9685controller.h"
 #include "libdevice/sampler.h"
 #include "libattitude/attitudetracker.h"
+#include "librexjsonrpc/rpcclientuart.h"
 
 #include "userrpcserver.h"
 #include "attcontroller.h"
@@ -36,6 +37,8 @@ public:
 	boost::scoped_ptr<sampler> ssampler_;
 	boost::scoped_ptr<attitudetracker> attitude_tracker_;
 	attcontroller ctrl_thread_;
+	std::string firmware_uart_;
+	uint32_t firmware_uart_speed_;
 
 protected:
 	void signal_handler_terminate();
