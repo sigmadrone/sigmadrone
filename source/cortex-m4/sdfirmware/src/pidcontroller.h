@@ -47,13 +47,15 @@ public:
 	PidVector get_d(const PidVector& err, float dt)
 	{
 		PidVector derivative;
-		float filter = dt / (filter_ + dt);
 		if (!after_reset_) {
 			derivative = (err - last_input_) / dt;
 		} else {
 			after_reset_ = false;
 		}
-		derivative = last_der_err_ + (derivative - last_der_err_) * filter;
+		if (filter_ != 0.0) {
+			float filter = dt / (filter_ + dt);
+			derivative = last_der_err_ + (derivative - last_der_err_) * filter;
+		}
 		last_input_ = err;
 		last_der_err_ = derivative;
 		return derivative * kd_;
