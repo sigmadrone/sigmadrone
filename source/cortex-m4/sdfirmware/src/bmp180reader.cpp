@@ -72,7 +72,7 @@ void Bmp180Reader::read_temperature() {
 }
 
 void Bmp180Reader::calibrate() {
-	for (size_t i = 0; i < fir_filter_order; ++i) {
+	for (size_t i = 0; i < fir_filter_order * 4; ++i) {
 		read_pressure();
 		read_temperature();
 		vTaskDelay(50 / portTICK_RATE_MS);
