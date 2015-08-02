@@ -12,7 +12,6 @@
 #include "digitalin.h"
 #include "digitalout.h"
 #include "stm32f4xx_hal.h"
-#include "FreeRTOS.h"
 #include "spimaster.h"
 #include "spislave.h"
 #include "uart.h"
