@@ -37,11 +37,8 @@
 #include "bmp180reader.h"
 
 void* __dso_handle = 0;
-extern unsigned int __relocated_vectors;
 
 DigitalOut ledusb(PC_4);
-//DigitalOut module_rstn(PA_4, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
-//DigitalOut module_onoff(PA_7, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0);
 DigitalOut gpspwr(PB_0, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
 DigitalIn gyro_int2(PA_2, DigitalIn::PullNone, DigitalIn::InterruptRising);
 DigitalIn user_sw5(PG_2, DigitalIn::PullNone, DigitalIn::InterruptDefault);
@@ -49,6 +46,10 @@ DigitalIn user_sw1(PG_3, DigitalIn::PullNone, DigitalIn::InterruptFalling);
 DigitalIn user_sw2(PG_6, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw3(PG_7, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw4(PG_11, DigitalIn::PullNone, DigitalIn::InterruptDefault);
+
+TaskHandle_t hMain;
+QueueHandle_t hGyroQueue;
+TimeStamp isr_ts;
 
 UART uart3({
 	{PC_10, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},		/* USART3_TX_PIN */
@@ -81,85 +82,6 @@ UART uart2({
 		250
 );
 
-
-TaskHandle_t hMain;
-QueueHandle_t hGyroQueue;
-TimeStamp isr_ts;
-
-extern "C" void EXTI0_IRQHandler(void)
-{
-	uint32_t mask = portDISABLE_INTERRUPTS();
-	DigitalIn::vector_handler(0);
-	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
-}
-
-extern "C" void EXTI2_IRQHandler(void)
-{
-	uint32_t mask = portDISABLE_INTERRUPTS();
-	DigitalIn::vector_handler(2);
-	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
-}
-
-extern "C" void EXTI4_IRQHandler(void)
-{
-	SPISlave::spi_chipselect_handler(4);
-}
-
-extern "C" void DMA2_Stream0_IRQHandler(void)
-{
-	SPISlave::spi_dmarx_handler(4);
-}
-
-extern "C" void DMA2_Stream1_IRQHandler(void)
-{
-	SPISlave::spi_dmatx_handler(4);
-}
-
-extern "C" void DMA2_Stream5_IRQHandler(void)
-{
-	UART::uart_dmarx_handler(1);
-}
-
-extern "C" void DMA2_Stream7_IRQHandler(void)
-{
-	UART::uart_dmatx_handler(1);
-}
-
-extern "C" void USART1_IRQHandler(void)
-{
-	UART::uart_irq_handler(1);
-}
-
-extern "C" void DMA1_Stream1_IRQHandler(void)
-{
-	UART::uart_dmarx_handler(3);
-}
-
-extern "C" void DMA1_Stream3_IRQHandler(void)
-{
-	UART::uart_dmatx_handler(3);
-}
-
-extern "C" void USART3_IRQHandler(void)
-{
-	UART::uart_irq_handler(3);
-}
-
-extern "C" void DMA1_Stream5_IRQHandler(void)
-{
-	UART::uart_dmarx_handler(2);
-}
-
-extern "C" void DMA1_Stream6_IRQHandler(void)
-{
-	UART::uart_dmatx_handler(2);
-}
-
-extern "C" void USART2_IRQHandler(void)
-{
-	UART::uart_irq_handler(2);
-}
-
 void gyro_isr()
 {
 	if (gyro_int2) {
@@ -170,190 +92,6 @@ void gyro_isr()
 		portEND_SWITCHING_ISR(true);
 	}
 }
-
-void secondary_task(void *pvParameters)
-{
-	// Infinite loop
-	printf("Secondary task...\n");
-	while (1) {
-		vTaskDelay(250 / portTICK_RATE_MS);
-	}
-}
-
-/* Definition for SPIx's NVIC */
-#define SPIx_DMA_TX_IRQn                 DMA2_Stream1_IRQn
-#define SPIx_DMA_RX_IRQn                 DMA2_Stream0_IRQn
-
-void uart2_tx_task(void *pvParameters)
-{
-	int i = 0;
-	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
-	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
-	HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 1, 0);
-	HAL_NVIC_EnableIRQ (DMA1_Stream5_IRQn);
-	uart2.uart_dmarx_start();
-	HAL_Delay(7000);
-	rexjson::value v = rexjson::object();
-	v["UART"] = rexjson::object();
-	while (1) {
-		v["UART"]["message"] = "************ Test **********";
-		v["UART"]["serial"] = i++;
-		std::string str = v.write(false) + "\r\n";
-		uart2.write(v.write(false) + "\n");
-		HAL_Delay(250);
-	}
-}
-
-
-#if 0
-struct PwmDecoderCallback {
-	PwmDecoderCallback(uint32_t id) :
-			decoder_(colibri::PWM_RX_CONSTS[id].timer_id_,
-					colibri::PWM_RX_CONSTS[id].pin_,
-					TimeSpan::from_milliseconds(30),
-					FunctionPointer(this, &PwmDecoderCallback::callback)), id_(id) {}
-	void callback(void) {
-		printf("PWM %lu: period %lu uS, duty: %.4f %lu uS\n", id_,
-				(uint32_t)decoder_.decoded_period().microseconds(),
-				decoder_.duty_cycle_rel(),
-				(uint32_t)decoder_.duty_cycle().microseconds());
-	}
-	void start_decoder() {
-		decoder_.start_on_ch1_ch2();
-	}
-	uint32_t decoder_id() { return id_; }
-
-private:
-	PwmDecoderCallback(const PwmDecoderCallback&);
-
-	PwmDecoder decoder_;
-	uint32_t id_;
-};
-
-static PwmEncoder pwmEncoder1(colibri::PWM_OUT_TIMER_1, TimeSpan::from_microseconds(2500),
-		{colibri::PWM_OUT_PINS_1_4}, {1, 2, 3, 4});
-
-static PwmEncoder pwmEncoder2(colibri::PWM_OUT_TIMER_2, TimeSpan::from_milliseconds(2),
-		colibri::PWM_OUT_PINS_5_8, {1, 2, 3, 4});
-
-void tim10_isr() {
-	static float duty_cycle[] = {0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
-	static int index = 0;
-	for (uint32_t i = 0; i < 4; ++i) {
-		pwmEncoder1.set_duty_cycle(i, duty_cycle[index]);
-		pwmEncoder2.set_duty_cycle(i, duty_cycle[index]);
-	}
-	index = (index + 1) % (sizeof(duty_cycle)/sizeof(duty_cycle[1]));
-}
-
-void StartPwmTest() {
-	static HwTimer tim10(HwTimer::TIMER_10, TimeSpan::from_seconds(2),
-				Frequency::from_kilohertz(10000), FunctionPointer(tim10_isr));
-
-	tim10.start();
-
-	static std::vector<PwmDecoderCallback*> pwm_callbacks;
-	for (uint32_t i = 0; i < 4; ++i) {
-		pwm_callbacks.push_back(new PwmDecoderCallback(i));
-	}
-
-	for (auto decoder: pwm_callbacks) {
-		decoder->start_decoder();
-	}
-
-	pwmEncoder1.start();
-	pwmEncoder2.start();
-	for (uint32_t i = 0; i < 4; ++i) {
-		pwmEncoder1.set_duty_cycle(i, TimeSpan::from_milliseconds(1));
-		pwmEncoder2.set_duty_cycle(i, TimeSpan::from_milliseconds(1));
-	}
-}
-#endif
-
-#if 0
-int lcd_init(void)
-{
-
-	//Initialize ILI9341
-	TM_ILI9341_Init();
-	//Rotate LCD for 90 degrees
-	TM_ILI9341_Rotate(TM_ILI9341_Orientation_Portrait_2);
-	//FIll lcd with color
-	TM_ILI9341_Fill(ILI9341_COLOR_WHITE);
-	//Draw white circle
-	TM_ILI9341_DrawCircle(60, 60, 40, ILI9341_COLOR_GREEN);
-	//Draw red filled circle
-	TM_ILI9341_DrawFilledCircle(60, 60, 35, ILI9341_COLOR_RED);
-	//Draw blue rectangle
-	TM_ILI9341_DrawRectangle(120, 20, 220, 100, ILI9341_COLOR_BLUE);
-	//Draw black filled rectangle
-	TM_ILI9341_DrawFilledRectangle(130, 30, 210, 90, ILI9341_COLOR_BLACK);
-	//Draw line with custom color 0x0005
-	TM_ILI9341_DrawLine(10, 120, 310, 120, 0x0005);
-
-	//Put string with black foreground color and blue background with 11x18px font
-	TM_ILI9341_Puts(65, 130, "STM32F4 Colibri", &TM_Font_11x18, ILI9341_COLOR_BLACK, ILI9341_COLOR_BLUE2);
-	//Put string with black foreground color and blue background with 11x18px font
-	TM_ILI9341_Puts(60, 150, "ILI9341 LCD Module", &TM_Font_11x18, ILI9341_COLOR_BLACK, ILI9341_COLOR_BLUE2);
-	//Put string with black foreground color and red background with 11x18px font
-	TM_ILI9341_Puts(190, 225, "www.sigmadrone.org", &TM_Font_7x10, ILI9341_COLOR_BLACK, ILI9341_COLOR_ORANGE);
-	TM_ILI9341_Fill(ILI9341_COLOR_WHITE);
-
-	return 0;
-}
-
-void DisplayStringAt(uint16_t x, uint16_t y, const char *str)
-{
-	return;
-	TM_ILI9341_Puts(x, y, str, &TM_Font_11x18, ILI9341_COLOR_BLACK, ILI9341_COLOR_WHITE);
-}
-
-void lcd_update()
-{
-#if 0
-			sprintf(disp,"SAMPLES: %d           ", gyr_samples);
-			DisplayStringAt(0, 60, disp);
-
-			sprintf(disp,"PWM: %u mS", (unsigned)pwmDecoder.decoded_period().milliseconds());
-			DisplayStringAt(0, 100, disp);
-			sprintf(disp,"PWM duty: %1.3f", pwmDecoder.duty_cycle_rel());
-			DisplayStringAt(0, 120, disp);
-			sprintf(disp,"ACCL X: %6.2f", acc_axes.AXIS_X);
-			DisplayStringAt(0, 100, disp);
-			sprintf(disp,"ACCL Y: %6.2f", acc_axes.AXIS_Y);
-			DisplayStringAt(0, 120, disp);
-			sprintf(disp,"ACCL Z: %6.2f", acc_axes.AXIS_Z);
-			DisplayStringAt(0, 140, disp);
-			sprintf(disp,"SAMPLES: %d           ", acc_samples);
-			DisplayStringAt(0, 160, disp);
-
-			sprintf(disp,"CTXSW: %u uS          ", (unsigned int)ctx_switch_time.microseconds());
-			DisplayStringAt(0, 140, disp);
-
-			sprintf(disp,"dT: %u uS             ", (unsigned int)dt.microseconds());
-			DisplayStringAt(0, 160, disp);
-
-			sprintf(disp,"Attitude:             ");
-			DisplayStringAt(0, 180, disp);
-			sprintf(disp,"W:      %6.3f              ", q.w);
-			DisplayStringAt(0, 200, disp);
-			sprintf(disp,"X:      %6.3f              ", q.x);
-			DisplayStringAt(0, 220, disp);
-			sprintf(disp,"Y:      %6.3f              ", q.y);
-			DisplayStringAt(0, 240, disp);
-			sprintf(disp,"Z:      %6.3f              ", q.z);
-			DisplayStringAt(0, 260, disp);
-
-			memset(disp, 0, sizeof(disp));
-			spi5.read(2, (uint8_t*)disp, 15);
-			DisplayStringAt(0, 300, disp);
-#endif
-
-}
-#endif
-
-#define portNVIC_SYSPRI2_REG				( * ( ( volatile uint32_t * ) 0xe000ed20 ) )
-
 
 void main_task(void *pvParameters)
 {
@@ -548,28 +286,7 @@ void main_task(void *pvParameters)
 	}
 }
 
-
-void relocate_interrupt_table()
-{
-	volatile unsigned int* newtable = &__relocated_vectors;
-	volatile unsigned int* oldtable = 0;
-
-	for (size_t i = 0; i < 256; i++) {
-		newtable[i] = oldtable[i];
-	}
-
-	newtable[SVCall_IRQn + 16] = (unsigned int)vPortSVCHandler;
-	newtable[PendSV_IRQn + 16] = (unsigned int)xPortPendSVHandler;
-	newtable[SysTick_IRQn + 16] = (unsigned int)xPortSysTickHandler;
-
-	__DMB();
-	SCB->VTOR = ((unsigned int)newtable);
-	__DSB();
-}
-
-
-
-
+extern void relocate_interrupt_table();
 
 int main(int argc, char* argv[])
 {
@@ -602,25 +319,5 @@ int main(int argc, char* argv[])
 		&hMain /* Task handle */
 		);
 
-
-#if 0
-	xTaskCreate(
-		uart2_tx_task, /* Function pointer */
-		"UART2 TX Task", /* Task name - for debugging only*/
-		configMINIMAL_STACK_SIZE, /* Stack depth in words */
-		(void*) NULL, /* Pointer to tasks arguments (parameter) */
-		tskIDLE_PRIORITY + 2UL, /* Task priority*/
-		NULL /* Task handle */
-		);
-#endif
-
-//	vTaskList(buffer);
-//	printf("Tasks: \n%s\n\n", buffer);
-	vTaskStartScheduler();
-
-	// Infinite loop
-	while (1) {
-		printf("Hello world, freq: %lu, f=%f\n", freq, 0.75);
-	}
-	// Infinite loop, never return.
+	vTaskStartScheduler(); // this call will never return
 }
