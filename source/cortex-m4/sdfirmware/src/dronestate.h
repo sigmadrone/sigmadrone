@@ -13,6 +13,8 @@
 #include "alarm.h"
 
 struct DroneState {
+	DroneState() : altitude_meters_(0.0f), pressure_hpa_(0.0f), temperature_(0.0f) {}
+
 	/*
 	 * Sensors - input attributes
 	 */

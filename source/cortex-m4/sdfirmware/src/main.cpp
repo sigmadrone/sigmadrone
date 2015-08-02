@@ -47,9 +47,11 @@ DigitalIn user_sw2(PG_6, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw3(PG_7, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw4(PG_11, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 
-TaskHandle_t hMain;
+TaskHandle_t main_task_handle = 0;
+TaskHandle_t bmp180_task_handle = 0;
 QueueHandle_t hGyroQueue;
 TimeStamp isr_ts;
+DroneState* drone_state = 0;
 
 UART uart3({
 	{PC_10, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},		/* USART3_TX_PIN */
@@ -93,14 +95,30 @@ void gyro_isr()
 	}
 }
 
+void bmp180_task(void *pvParameters) {
+	vTaskDelay(600 / portTICK_RATE_MS);
+
+	I2CMaster i2c(I2C1, 400000, I2C_DUTYCYCLE_2, I2C_ADDRESSINGMODE_7BIT, 25, {
+				{PB_8, GPIO_MODE_AF_OD, GPIO_PULLUP, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
+				{PB_9, GPIO_MODE_AF_OD, GPIO_PULLUP, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
+		});
+	BMP180 bmp(i2c);
+	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
+
+	bmp_reader->calibrate();
+	while (1) {
+
+		drone_state->altitude_meters_ = bmp_reader->altitude_meters(true);
+		drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
+		drone_state->temperature_ = bmp_reader->temperature_celsius(true);
+
+		vTaskDelay(10 / portTICK_RATE_MS);
+	}
+}
+
 void main_task(void *pvParameters)
 {
 	vTaskDelay(500 / portTICK_RATE_MS);
-
-	I2CMaster i2c(I2C1, 400000, I2C_DUTYCYCLE_2, I2C_ADDRESSINGMODE_7BIT, 25, {
-			{PB_8, GPIO_MODE_AF_OD, GPIO_PULLUP, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
-			{PB_9, GPIO_MODE_AF_OD, GPIO_PULLUP, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
-	});
 
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
 				{PF_7, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},		/* DISCOVERY_SPIx_SCK_PIN */
@@ -110,7 +128,6 @@ void main_task(void *pvParameters)
 				{PC_1, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},					/* GYRO_CS_PIN */
 				{PD_7, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},					/* ACCEL_CS_PIN */
 			});
-	BMP180 bmp(i2c);
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi5, 1);
 	uint8_t gyr_wtm = 3;
@@ -124,8 +141,7 @@ void main_task(void *pvParameters)
 	TimeSpan ctx_switch_time;
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
-	DroneState state;
-	UartRpcServer rpcserver(state);
+	UartRpcServer rpcserver(*drone_state);
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
@@ -140,8 +156,6 @@ void main_task(void *pvParameters)
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	gyro_int2.callback(gyro_isr);
-
-//	module_rstn.write(0);
 
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
 	vTaskDelay(500 / portTICK_RATE_MS);
@@ -172,10 +186,6 @@ void main_task(void *pvParameters)
 	Vector3f gyr_bias;
 
 	printf("Calibrating...\n");
-
-	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
-
-	bmp_reader->calibrate();
 
 	gyro.GetFifoAngRateDPS(&gyr_axes); // Drain the fifo
 	for (int i = 0; i < bias_iterations; i++) {
@@ -208,7 +218,7 @@ void main_task(void *pvParameters)
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
 		}
 		ctx_switch_time = isr_ts.elapsed();
-		state.dt_ = sample_dt.elapsed();
+		drone_state->dt_ = sample_dt.elapsed();
 		sample_dt.time_stamp();
 
 		uint8_t gyr_samples = gyro.GetFifoSourceReg() & 0x1F;
@@ -217,53 +227,49 @@ void main_task(void *pvParameters)
 		static const Matrix3f gyro_align(-1,0,0,0,-1,0,0,0,1);
 		if (gyr_samples >= gyr_wtm) {
 			gyro.GetFifoAngRateDPS(&gyr_axes);
-			state.gyro_raw_ = Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
-			state.gyro_raw_ = gyro_align * state.gyro_raw_ * 1.0;
-			state.gyro_ = state.gyro_raw_;
-			att.track_gyroscope(DEG2RAD(state.gyro_), state.dt_.seconds_float());
+			drone_state->gyro_raw_ = Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
+			drone_state->gyro_raw_ = gyro_align * drone_state->gyro_raw_ * 1.0;
+			drone_state->gyro_ = drone_state->gyro_raw_;
+			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
 
 		if (acc_samples > acc_wtm) {
 			accel.GetFifoAcc(&acc_axes);
-			state.accel_raw_ = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z).normalize();
-			state.accel_ = state.accel_raw_;
+			drone_state->accel_raw_ = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z).normalize();
+			drone_state->accel_ = drone_state->accel_raw_;
 		}
-		att.track_accelerometer(state.accel_, state.dt_.seconds_float());
+		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
 
-		state.attitude_ = att.get_attitude();
-
-		state.altitude_meters_ = bmp_reader->altitude_meters(true);
-		state.pressure_hpa_ = bmp_reader->pressure_hpa();
-		state.temperature_ = bmp_reader->temperature_celsius(true);
+		drone_state->attitude_ = att.get_attitude();
 
 		flight_ctl.process_servo_start_stop_command();
-		flight_ctl.safety_check(state);
+		flight_ctl.safety_check(*drone_state);
 		flight_ctl.pilot().set_target_thrust(flight_ctl.base_throttle().get());
-		flight_ctl.pilot().update_state(state, flight_ctl.target_q());
+		flight_ctl.pilot().update_state(*drone_state, flight_ctl.target_q());
 		flight_ctl.update_throttle();
 
 		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
 			console_update_time.time_stamp();
-			printf("Gyro      : %5.3f %5.3f %5.3f\n", state.gyro_.at(0), state.gyro_.at(1), state.gyro_.at(2));
-			printf("Accel     : %5.3f %5.3f %5.3f\n", state.accel_.at(0), state.accel_.at(1), state.accel_.at(2));
-			printf("dT        : %lu uSec\n", (uint32_t)state.dt_.microseconds());
-			printf("Q         : %5.3f %5.3f %5.3f %5.3f\n", state.attitude_.w, state.attitude_.x, state.attitude_.y,
-					state.attitude_.z);
+			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));
+			printf("Accel     : %5.3f %5.3f %5.3f\n", drone_state->accel_.at(0), drone_state->accel_.at(1), drone_state->accel_.at(2));
+			printf("dT        : %lu uSec\n", (uint32_t)drone_state->dt_.microseconds());
+			printf("Q         : %5.3f %5.3f %5.3f %5.3f\n", drone_state->attitude_.w, drone_state->attitude_.x, drone_state->attitude_.y,
+					drone_state->attitude_.z);
 			QuaternionF tq = flight_ctl.target_q();
 			printf("Target Q  : %5.3f %5.3f %5.3f %5.3f\n", tq.w, tq.x, tq.y, tq.z);
 			printf("Throttle  : %.8f\n", flight_ctl.base_throttle().get());
-			printf("Motors    : %1.3f %1.3f %1.3f %1.3f\n", state.motors_.at(0,0), state.motors_.at(1,0),
-					state.motors_.at(2,0), state.motors_.at(3,0));
-			printf("Altit, m  : %5.3f\n", state.altitude_meters_);
-			printf("Temper, C :%5.1f\n", state.temperature_);
+			printf("Motors    : %1.3f %1.3f %1.3f %1.3f\n", drone_state->motors_.at(0,0), drone_state->motors_.at(1,0),
+					drone_state->motors_.at(2,0), drone_state->motors_.at(3,0));
+			printf("Altit, m  : %5.3f\n", drone_state->altitude_meters_);
+			printf("Temper, C :%5.1f\n", drone_state->temperature_);
 
 			//printf("Torq :  %1.3f %1.3f %1.3f\n", state.pid_torque_.at(0,0), state.pid_torque_.at(1,0),
 				//	state.pid_torque_.at(2,0));
 			printf("Servo      : %s\n", flight_ctl.servo().is_started() ? "armed" : "disarmed");
-			if (!state.alarm_.is_none()) {
-				printf("%s %s, data: %d, @%5.3f sec\n", state.alarm_.to_string(),
-						state.alarm_.severity_to_string(), (int)state.alarm_.data(),
-						state.alarm_.when().seconds_float());
+			if (!drone_state->alarm_.is_none()) {
+				printf("%s %s, data: %d, @%5.3f sec\n", drone_state->alarm_.to_string(),
+						drone_state->alarm_.severity_to_string(), (int)drone_state->alarm_.data(),
+						drone_state->alarm_.when().seconds_float());
 			}
 			printf("\n");
 
@@ -305,19 +311,29 @@ int main(int argc, char* argv[])
 
 	TimeStamp::init();
 	colibri::UartTrace::init(115200*2);
+	drone_state = new DroneState();
 
 	printf("Starting main_task:, CPU freq: %lu, PCLK1 freq: %lu, PCLK2 freq: %lu\n",
 			freq, pclk1, pclk2);
 
-	  /* Create tasks */
+	/* Create tasks */
 	xTaskCreate(
 		main_task, /* Function pointer */
-		"Task1", /* Task name - for debugging only*/
+		"main_task", /* Task name - for debugging only*/
 		configMINIMAL_STACK_SIZE, /* Stack depth in words */
 		(void*) NULL, /* Pointer to tasks arguments (parameter) */
 		tskIDLE_PRIORITY + 3UL, /* Task priority*/
-		&hMain /* Task handle */
+		&main_task_handle /* Task handle */
 		);
+
+	xTaskCreate(
+		bmp180_task, /* Function pointer */
+		"bmp180_task", /* Task name - for debugging only*/
+		configMINIMAL_STACK_SIZE, /* Stack depth in words */
+		(void*) NULL, /* Pointer to tasks arguments (parameter) */
+		tskIDLE_PRIORITY + 2UL, /* Task priority*/
+		&bmp180_task_handle /* Task handle */
+	);
 
 	vTaskStartScheduler(); // this call will never return
 }
