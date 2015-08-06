@@ -47,28 +47,43 @@ int client_app::run(int argc, const char *argv[])
 		logfile_->log_level(args_.get_value("loglevel", "info"));
 		client.set_log_file(logfile_);
 		http::headers headers;
-		headers["Authorization"] = std::string("Basic ") + http::base64::encode(rpcuser + ":" + rpcpassword);
-		std::vector<std::string> parsed_cmd_line = parse_command_line(argc, argv);
+		headers["Authorization"] = std::string("Basic ")
+				+ http::base64::encode(rpcuser + ":" + rpcpassword);
+		std::vector<std::string> parsed_cmd_line = parse_command_line(argc,
+				argv);
 		if (!parsed_cmd_line.size())
 			throw std::runtime_error("no RPC method");
 		std::string method = parsed_cmd_line[0];
 		std::vector<std::string> params(parsed_cmd_line.size() - 1);
-		std::copy(parsed_cmd_line.begin() + 1, parsed_cmd_line.end(), params.begin());
-		client.request(response, "POST", url, create_rpc_specrequest(method), headers);
+		std::copy(parsed_cmd_line.begin() + 1, parsed_cmd_line.end(),
+				params.begin());
+		client.request(response, "POST", url, create_rpc_specrequest(method),
+				headers);
 		rexjson::value spec_result;
 		spec_result.read(response.content);
-		std::vector<unsigned int> rpc_types = rpc_server<>::rpc_types(spec_result.get_obj()["result"].get_array());
-		client.request(response, "POST", url, create_rpc_request(method, params, rpc_types), headers);
+		if (spec_result.get_obj()["error"].type() == rexjson::obj_type) {
+					std::cout << "Error: "
+							<< spec_result.get_obj()["error"].get_obj()["message"].get_str()
+							<< std::endl;
+					return 1;
+		}
+		std::vector<unsigned int> rpc_types = rpc_server<>::rpc_types(
+				spec_result.get_obj()["result"].get_array());
+		client.request(response, "POST", url,
+				create_rpc_request(method, params, rpc_types), headers);
 //		std::cout << "Raw RPC response(DEBUG): " << response.content << std::endl;
 		rexjson::value val;
 		val.read(response.content);
-		if (val.get_obj()["error"].type() == rexjson::obj_type ) {
-			std::cout << "Error: " << val.get_obj()["error"].get_obj()["message"].get_str() << std::endl;
+		if (val.get_obj()["error"].type() == rexjson::obj_type) {
+			std::cout << "Error: "
+					<< val.get_obj()["error"].get_obj()["message"].get_str()
+					<< std::endl;
 		} else if (val.get_obj()["result"].type() == rexjson::str_type) {
 			std::cout << val.get_obj()["result"].get_str() << std::endl;
 		} else {
 			std::cout << val.get_obj()["result"].write(true) << std::endl;
-		}	} catch (std::exception& e) {
+		}
+	} catch (std::exception& e) {
 		std::cout << "RPC command failed! " << e.what() << std::endl;
 	}
 	return 0;

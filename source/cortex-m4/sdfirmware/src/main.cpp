@@ -23,7 +23,6 @@
 #include "l3gd20.h"
 #include "lsm303d.h"
 #include "matrix.h"
-#include "attitudetracker.h"
 #include "hwtimer.h"
 #include "pwmencoder.h"
 #include "pwmdecoder.h"
@@ -34,6 +33,7 @@
 #include "flightcontrol.h"
 #include "uartrpcserver.h"
 #include "librexjson/rexjson++.h"
+#include "libattitude/attitudetracker.h"
 #include "bmp180reader.h"
 
 void* __dso_handle = 0;
@@ -107,7 +107,6 @@ void bmp180_task(void *pvParameters) {
 
 	bmp_reader->calibrate();
 	while (1) {
-
 		drone_state->altitude_meters_ = bmp_reader->altitude_meters(true);
 		drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
 		drone_state->temperature_ = bmp_reader->temperature_celsius(true);

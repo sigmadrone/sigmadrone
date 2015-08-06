@@ -18,6 +18,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate)
 	add("sd_get_pressure", &UartRpcServer::rpc_get_pressure);
 	add("sd_get_temperature", &UartRpcServer::rpc_get_temperature);
 	add("sd_get_motors", &UartRpcServer::rpc_get_motors);
+	add("sd_get_dronestate", &UartRpcServer::rpc_get_dronestate);
 
 }
 
@@ -123,6 +124,25 @@ rexjson::value UartRpcServer::rpc_get_motors(UART* , rexjson::array& params, rpc
 		ret.push_back(dronestate_.motors_.at(i));
 	}
 	return ret;
+}
+
+rexjson::value UartRpcServer::rpc_get_dronestate(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_dronestate\n"
+	            "\nGet the current drone state."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return dronestate_.to_json();
 }
 
 

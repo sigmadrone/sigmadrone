@@ -145,6 +145,12 @@ void rpc_client_uart::request(const std::string& req)
 	}
 }
 
+std::string rpc_client_uart::json_rpc_request(const std::string& json)
+{
+	request(json);
+	return response();
+}
+
 rexjson::value rpc_client_uart::call(const std::string& method, const rexjson::array& params) throw(std::exception)
 {
 	rexjson::value rpc_response;
@@ -155,8 +161,9 @@ rexjson::value rpc_client_uart::call(const std::string& method, const rexjson::a
 	rpc_request["id"] = (int)++serial_;
 	rpc_request["method"] = rexjson::value(method);
 	rpc_request["params"] = params;
-	request(rexjson::write(rpc_request));
-	rpc_response.read(response());
+//	request(rexjson::write(rpc_request));
+//	rpc_response.read(response());
+	rpc_response.read(json_rpc_request(rexjson::write(rpc_request)));
 	if (rpc_response.get_obj()["error"].type() == rexjson::obj_type)
 		throw std::runtime_error(rpc_response.get_obj()["error"].get_obj()["message"].get_str());
 	return rpc_response.get_obj()["result"];

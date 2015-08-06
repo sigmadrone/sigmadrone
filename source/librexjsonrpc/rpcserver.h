@@ -214,7 +214,9 @@ public:
 		return ret;
 	}
 
-	static rexjson::object create_rpc_error(rpc_error_code code, const std::string& message)
+	static rexjson::object create_rpc_error(
+			rpc_error_code code,
+			const std::string& message)
 	{
 		rexjson::object error;
 		error["code"] = code;

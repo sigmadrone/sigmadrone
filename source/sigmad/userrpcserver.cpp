@@ -35,6 +35,7 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("kd", &user_rpcserver::rpc_kd);
 	add("kp", &user_rpcserver::rpc_kp);
 
+	add_uri_handler("/firmware", boost::bind(&user_rpcserver::firmware_jsonrpc_request_handler, this, _1, _2, _3));
 	add_uri_handler("/jsonrpc", boost::bind(&user_rpcserver::jsonrpc_request_handler, this, _1, _2, _3));
 	add_uri_handler("/", boost::bind(&user_rpcserver::jsonrpc_request_handler, this, _1, _2, _3));
 	add_uri_handler("/echo", boost::bind(&user_rpcserver::echo_request_handler, this, _1, _2, _3));
@@ -615,5 +616,22 @@ void user_rpcserver::jsonrpc_request_handler(http::server::connection& connectio
 
 	result = call(connection.shared_from_this(), req.content);
 	rep.content = rexjson::write(result) + "\n";
+	rep.status = http::server::reply::ok;
+}
+
+void user_rpcserver::firmware_jsonrpc_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
+{
+	rexjson::value jsonreq, result;
+
+	try {
+		rpc_client_uart uartcli(app_.firmware_uart_, app_.firmware_uart_speed_);
+		rep.content = uartcli.json_rpc_request(req.content) + "\n";
+
+	} catch (std::exception& e) {
+		jsonreq.read(req.content);
+		result = create_rpc_error(RPC_MISC_ERROR, e.what());
+		result.get_obj()["id"] = jsonreq.get_obj()["id"];
+		rep.content = rexjson::write(result) + "\n";
+	}
 	rep.status = http::server::reply::ok;
 }

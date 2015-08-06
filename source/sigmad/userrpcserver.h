@@ -42,6 +42,7 @@ public:
 	rexjson::value rpc_get_motors(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
 
 protected:
+	void firmware_jsonrpc_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);
 	void jsonrpc_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);
 	void echo_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);
 	void headers_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep);

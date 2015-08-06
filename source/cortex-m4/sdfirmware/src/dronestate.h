@@ -11,9 +11,27 @@
 #include "units.h"
 #include "matrix.h"
 #include "alarm.h"
+#include "librexjsonrpc/jsonserialization.h"
 
 struct DroneState {
 	DroneState() : altitude_meters_(0.0f), pressure_hpa_(0.0f), temperature_(0.0f) {}
+	rexjson::value to_json() {
+		rexjson::object ret;
+		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
+		ret["accel_raw"] = matrix_to_json_value(accel_raw_);
+		ret["mag_raw"] = matrix_to_json_value(mag_raw_);
+		ret["gyro"] = matrix_to_json_value(gyro_);
+		ret["accel"] = matrix_to_json_value(accel_);
+		ret["mag"] = matrix_to_json_value(mag_);
+		ret["altitude_meters"] = altitude_meters_;
+		ret["pressure_hpa"] = pressure_hpa_;
+		ret["temperature"] = temperature_;
+		ret["dt"] = static_cast<float>(dt_.microseconds());
+		ret["attitude"] = quaternion_to_json_value(attitude_);
+		ret["motors"] = matrix_to_json_value(motors_);
+		ret["pid_torque"] = matrix_to_json_value(pid_torque_);
+		return ret;
+	}
 
 	/*
 	 * Sensors - input attributes
