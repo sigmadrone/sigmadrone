@@ -95,7 +95,8 @@ void gyro_isr()
 	}
 }
 
-void bmp180_task(void *pvParameters) {
+void bmp180_task(void *pvParameters)
+{
 	vTaskDelay(600 / portTICK_RATE_MS);
 
 	I2CMaster i2c(I2C1, 400000, I2C_DUTYCYCLE_2, I2C_ADDRESSINGMODE_7BIT, 25, {
@@ -103,6 +104,33 @@ void bmp180_task(void *pvParameters) {
 				{PB_9, GPIO_MODE_AF_OD, GPIO_PULLUP, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
 		});
 	BMP180 bmp(i2c);
+
+#if 1
+	TimeStamp led_toggle_ts;
+
+	while (1) {
+		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
+			led_toggle_ts.time_stamp();
+			ledusb.toggle();
+		}
+		try {
+			bmp.update_pressure();
+			drone_state->altitude_meters_ = bmp.get_pressure()/1000.0;
+			drone_state->pressure_hpa_ = bmp.get_pressure();
+			drone_state->temperature_ = bmp.get_temperature();
+			vTaskDelay(10 / portTICK_RATE_MS);
+		} catch (std::exception& e) {
+
+		}
+
+	}
+
+
+
+
+
+
+#else
 	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
 
 	bmp_reader->calibrate();
@@ -113,6 +141,7 @@ void bmp180_task(void *pvParameters) {
 
 		vTaskDelay(10 / portTICK_RATE_MS);
 	}
+#endif
 }
 
 void main_task(void *pvParameters)
@@ -282,10 +311,12 @@ void main_task(void *pvParameters)
 
 		}
 
+#if 0
 		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
 			led_toggle_ts.time_stamp();
 			ledusb.toggle();
 		}
+#endif
 
 		rpcserver.jsonrpc_request_handler(&uart2);
 	}
