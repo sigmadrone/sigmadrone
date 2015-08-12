@@ -39,16 +39,12 @@ void relocate_interrupt_table()
 
 extern "C" void EXTI0_IRQHandler(void)
 {
-	uint32_t mask = portDISABLE_INTERRUPTS();
 	DigitalIn::vector_handler(0);
-	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
 }
 
 extern "C" void EXTI2_IRQHandler(void)
 {
-	uint32_t mask = portDISABLE_INTERRUPTS();
 	DigitalIn::vector_handler(2);
-	portCLEAR_INTERRUPT_MASK_FROM_ISR(mask);
 }
 
 extern "C" void EXTI4_IRQHandler(void)

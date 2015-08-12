@@ -8,9 +8,13 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "stm32f4xx_hal.h"
 
 extern "C" void vApplicationTickHook(void)
 {
+    /* Increment hal counter */
+    HAL_IncTick();
+
 #if 0
 	{
 		/* Just to verify that the interrupt nesting behaves as expected,
