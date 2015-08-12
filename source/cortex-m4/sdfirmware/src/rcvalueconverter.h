@@ -26,12 +26,17 @@ private:
 struct PwmPulse {
 	PwmPulse(const TimeSpan& min_duty, const TimeSpan& max_duty) : min_(min_duty), max_(max_duty) {
 		assert(min_ < max_);
+		assert(!min_.is_null());
 	}
-	inline float to_float(const TimeSpan& duty_cycle) {
-		if (duty_cycle <= min_) {
+	inline float to_float(const TimeSpan& _duty_cycle) {
+		TimeSpan duty_cycle = _duty_cycle;
+		if (duty_cycle.is_null()) {
 			return 0.0;
-		} else if (duty_cycle >= max_) {
-			return 1.0;
+		}
+		if (duty_cycle <= min_) {
+			duty_cycle = min_ + TimeSpan::from_microseconds(1);
+		} else if (duty_cycle > max_) {
+			duty_cycle = max_;
 		}
 		return static_cast<float>((duty_cycle-min_).microseconds()) /
 				static_cast<float>((max_-min_).microseconds());
