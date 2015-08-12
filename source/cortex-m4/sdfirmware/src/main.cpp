@@ -97,6 +97,8 @@ void gyro_isr()
 
 void bmp180_task(void *pvParameters)
 {
+	(void)pvParameters;
+
 	vTaskDelay(600 / portTICK_RATE_MS);
 
 	I2CMaster i2c(I2C1, 400000, I2C_DUTYCYCLE_2, I2C_ADDRESSINGMODE_7BIT, 25, {
@@ -146,6 +148,8 @@ void bmp180_task(void *pvParameters)
 
 void main_task(void *pvParameters)
 {
+	(void) pvParameters;
+
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
@@ -329,6 +333,9 @@ int main(int argc, char* argv[])
 	uint32_t freq = HAL_RCC_GetSysClockFreq();
 	uint32_t pclk1 = HAL_RCC_GetPCLK1Freq();
 	uint32_t pclk2 = HAL_RCC_GetPCLK2Freq();
+
+	(void)argc;
+	(void)argv;
 
 	relocate_interrupt_table();
 
