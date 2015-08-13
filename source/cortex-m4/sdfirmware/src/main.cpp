@@ -106,9 +106,9 @@ void bmp180_task(void *pvParameters)
 				{PB_9, GPIO_MODE_AF_OD, GPIO_PULLUP, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
 		});
 	BMP180 bmp(i2c);
-
-#if 1
 	TimeStamp led_toggle_ts;
+
+#if 0
 
 	while (1) {
 		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
@@ -127,16 +127,16 @@ void bmp180_task(void *pvParameters)
 
 	}
 
-
-
-
-
-
 #else
 	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
 
 	bmp_reader->calibrate();
 	while (1) {
+		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
+			led_toggle_ts.time_stamp();
+			ledusb.toggle();
+		}
+
 		drone_state->altitude_meters_ = bmp_reader->altitude_meters(true);
 		drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
 		drone_state->temperature_ = bmp_reader->temperature_celsius(true);
