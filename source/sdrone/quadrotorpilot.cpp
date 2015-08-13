@@ -72,8 +72,8 @@ int QuadRotorPilot::Start(const SdDroneConfig* config)
 	assert(config);
 	assert(m_Runtime);
 	m_Config = config->Quad;
-	m_PidCtl.Reset(m_Config.Kp,m_Config.Ki,m_Config.Kd,30);
-	m_OmegaPidCtl.Reset(0,m_Config.Ki/2,m_Config.Kd/4,10);
+	m_PidCtl.reset(m_Config.Kp,m_Config.Ki,m_Config.Kd,30);
+	m_OmegaPidCtl.reset(0,m_Config.Ki/2,m_Config.Kd/4,10);
 	m_Counter = 0;
 	m_Motors.clear();
 	m_PrevQ = QuaternionD(1, 0, 0, 0);
@@ -260,14 +260,14 @@ int QuadRotorPilot::UpdateState(
 	//
 	// Feed the error into the pid controller
 	//
-	m_ErrorP = m_PidCtl.GetP(errAxis);
-	m_ErrorI = m_PidCtl.GetI(
+	m_ErrorP = m_PidCtl.get_p(errAxis);
+	m_ErrorI = m_PidCtl.get_i(
 			errAxis,
 			ioPacket->DeltaTime(),
 			ioPacket->DeltaTime(),
 			Vector3d(0.5,0.5,0.5));
 #if 1
-	m_ErrorD = m_PidCtl.GetD(
+	m_ErrorD = m_PidCtl.get_d(
 			errAxis,
 			ioPacket->DeltaTime());
 	m_ErrorAxisPid  = m_ErrorP+m_ErrorI+m_ErrorD;

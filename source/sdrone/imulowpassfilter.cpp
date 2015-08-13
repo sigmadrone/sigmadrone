@@ -75,8 +75,8 @@ int ImuLowPassFilter::ExecuteCommand(
 		runtime_->SetIoFilters(
 				SD_DEVICEID_TO_FLAG(SD_DEVICEID_IMU),
 				SD_IOCODE_TO_FLAG(SD_IOCODE_RECEIVE));
-		accelfilt_38_.Reset();
-		accelfilt_200_.Reset();
+		accelfilt_38_.reset();
+		accelfilt_200_.reset();
 		gyrofilt_.Reset();
 		break;
 	case SD_COMMAND_EXIT:
@@ -128,9 +128,9 @@ const char* ImuLowPassFilter::GetDlFileName()
 int ImuLowPassFilter::IoCallback(
 	SdIoPacket* ioPacket)
 {
-	filtered_accel3d_= accelfilt_200_.DoFilter(ioPacket->AccelData());
+	filtered_accel3d_= accelfilt_200_.do_filter(ioPacket->AccelData());
 	ioPacket->SetAttribute(SDIO_ATTR_ACCEL, SdIoData(filtered_accel3d_));
-	//Vector3d filteredGyro=gyrofilt_.DoFilter(ioPacket->GyroData());
+	//Vector3d filteredGyro=gyrofilt_.do_filter(ioPacket->GyroData());
 	//ioPacket->SetAttribute(SDIO_ATTR_GYRO, SdIoData(filteredGyro));
 	return SD_ESUCCESS;
 }

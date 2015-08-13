@@ -12,119 +12,121 @@
 
 #include "matrix.h"
 
-template <int M>
+template <class FLOAT, int M>
 class PidController
 {
 public:
 
-	typedef MatrixMN<double, M, 1> PidVector;
+	typedef MatrixMN<FLOAT, M, 1> PidVector;
 
 	PidController(
-			double kp,
-			double ki,
-			double kd,
-			double fCutoff = -1)
+			FLOAT kp,
+			FLOAT ki,
+			FLOAT kd,
+			FLOAT fCutoff = -1)
 	{
-		Reset(kp,ki,kd,fCutoff);
+		reset(kp,ki,kd,fCutoff);
 	}
-	void Reset(
-			double kp,
-			double ki,
-			double kd,
-			double fCutoff = -1)
+	void reset(
+			FLOAT kp,
+			FLOAT ki,
+			FLOAT kd,
+			FLOAT fCutoff = -1)
 	{
-		m_Kp = kp;
-		m_Ki = ki;
-		m_Kd = kd;
-		m_Err.clear();
-		m_IntegralErr.clear();
-		m_LastDErr.clear();
-		m_LastInput.clear();
-		m_Filter = (fCutoff > 0.0) ? (1 / (2 * M_PI * fCutoff)) : 0;
-		m_AfterReset = true;
+		kp_ = kp;
+		ki_ = ki;
+		kd_ = kd;
+		err_.clear();
+		integral_err_.clear();
+		last_der_err_.clear();
+		last_input_.clear();
+		filter_ = (fCutoff > 0.0) ? (1 / (2 * M_PI * fCutoff)) : 0;
+		after_reset_ = true;
 	}
 
-	PidVector GetD(const PidVector& err, double dt)
+	PidVector get_d(const PidVector& err, FLOAT dt)
 	{
 		PidVector derivative;
-		double filter = dt / (m_Filter + dt);
-		if (!m_AfterReset) {
-			derivative = (err - m_LastInput) / dt;
+		if (!after_reset_) {
+			derivative = (err - last_input_) / dt;
 		} else {
-			m_AfterReset = false;
+			after_reset_ = false;
 		}
-		derivative = m_LastDErr + (derivative - m_LastDErr) * filter;
-		m_LastInput = err;
-		m_LastDErr = derivative;
-		return derivative * m_Kd;
+		if (filter_ != 0.0) {
+			FLOAT filter = dt / (filter_ + dt);
+			derivative = last_der_err_ + (derivative - last_der_err_) * filter;
+		}
+		last_input_ = err;
+		last_der_err_ = derivative;
+		return derivative * kd_;
 	}
 
-	PidVector GetP(const PidVector& err)
+	PidVector get_p(const PidVector& err)
 	{
-		return err * m_Kp;
+		return err * kp_;
 	}
 
-	PidVector GetI(
+	PidVector get_i(
 			const PidVector& err,
-			double dt)
+			FLOAT dt)
 	{
-		return _GetI(err,dt,0);
+		return _get_i(err,dt,0);
 	}
 
 
-	PidVector GetI(
+	PidVector get_i(
 			const PidVector& err,
-			double dt,
+			FLOAT dt,
 			const PidVector& limit)
 	{
-		return _GetI(err,dt,&limit);
+		return _get_i(err,dt,&limit);
 	}
 
-	PidVector GetI(
+	PidVector get_i(
 			const PidVector& err,
-			double dt,
-			double leakRate) // 0..1
+			FLOAT dt,
+			FLOAT leakRate) // 0..1
 	{
-		return _GetI(err,dt,leakRate,0);
+		return _get_i(err,dt,leakRate,0);
 	}
 
-	PidVector GetI(
+	PidVector get_i(
 			const PidVector& err,
-			double dt,
-			double leakRate, // 0..1
+			FLOAT dt,
+			FLOAT leakRate, // 0..1
 			const PidVector& limit)
 	{
-		m_IntegralErr = m_IntegralErr - m_IntegralErr*leakRate;
-		return _GetI(err,dt,&limit);
+		integral_err_ = integral_err_ - integral_err_*leakRate;
+		return _get_i(err,dt,&limit);
 	}
 
-	PidVector GetPid(const PidVector& err, double dt)
+	PidVector get_pid(const PidVector& err, FLOAT dt)
 	{
-		return GetP(err) + GetD(err, dt) + GetI(err,dt);
+		return get_p(err) + get_d(err, dt) + get_i(err,dt);
 	}
 
-	PidVector GetPid(
+	PidVector get_pid(
 			const PidVector& err,
-			double dt,
-			double leakRate)
+			FLOAT dt,
+			FLOAT leakRate)
 	{
-		return GetP(err) + GetD(err, dt) + GetI(err,dt,leakRate);
+		return get_p(err) + get_d(err, dt) + get_i(err,dt,leakRate);
 	}
 
-	const PidVector& IntegralError() const { return m_IntegralErr; }
+	const PidVector& integral_error() const { return integral_err_; }
 
 private:
-	PidVector _GetI(
+	PidVector _get_i(
 			const PidVector& err,
-			double dt,
+			FLOAT dt,
 			const PidVector* limit)
 	{
-		m_IntegralErr = m_IntegralErr + err * dt;
-		LimitVector(&m_IntegralErr,limit);
-		return m_IntegralErr * m_Ki;
+		integral_err_ = integral_err_ + err * dt;
+		limit_vector(&integral_err_,limit);
+		return integral_err_ * ki_;
 	}
 
-	static void LimitVector(PidVector* v, const PidVector* limit)
+	static void limit_vector(PidVector* v, const PidVector* limit)
 	{
 		if (!!limit) {
 			for (size_t i = 0; i < 3; i++) {
@@ -135,26 +137,29 @@ private:
 	}
 
 private:
-	PidVector m_Err;
-	PidVector m_IntegralErr;   // accumulated integral error
-	PidVector m_LastDErr; // last derivative err
-	PidVector m_LastInput;
-	double m_Kp; /*proportional gain*/
-	double m_Ki; /*integral gain*/
-	double m_Kd; /*derivative gain*/
+	PidVector err_;
+	PidVector integral_err_;   // accumulated integral error
+	PidVector last_der_err_; // last derivative err
+	PidVector last_input_;
+	FLOAT kp_; /*proportional gain*/
+	FLOAT ki_; /*integral gain*/
+	FLOAT kd_; /*derivative gain*/
 
 	//
 	// Low pass derivative filter, filtering out sudden jumps in the derivative
 	// err. Calculated as 1 / (2 * PI * Fc)
 	//
-	double m_Filter;
+	FLOAT filter_;
 
-	bool m_AfterReset;
+	bool after_reset_;
 };
 
 
 
-typedef PidController<3> PidController3d;
-typedef PidController<4> PidController4d;
+typedef PidController<float, 3> PidController3f;
+typedef PidController<float, 4> PidController4f;
+
+typedef PidController<double, 3> PidController3d;
+typedef PidController<double, 4> PidController4d;
 
 #endif /* PIDCONTROLLER_H_ */

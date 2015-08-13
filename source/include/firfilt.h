@@ -1,14 +1,18 @@
 /*
- * Copyright (C) 2013 Svetoslav Vassilev
+ * firfilt.h
+ *
+ *  Created on: Jul 25, 2015
+ *      Author: svassilev
  */
 
 #ifndef __FIRFILT_H__
 #define __FIRFILT_H__
 
+#include <string.h>
 #include "matrix.h"
 
 template<typename T, int N>
-struct Vector{
+struct FiltVector{
 	typedef MatrixMN<T, N, 1> type;
 };
 
@@ -18,65 +22,70 @@ class FirFilter
 public:
 	FirFilter()
 	{
-		Reset();
-		memset(m_Coeff,0,sizeof(m_Coeff));
-		m_Coeff[0] = 1.0;
+		reset();
+		memset(coeff_,0,sizeof(coeff_));
+		coeff_[0] = 1.0;
 	}
 	FirFilter(const T coeff[N])
 	{
-		Reset();
-		memcpy(m_Coeff,coeff,sizeof(m_Coeff));
+		reset();
+		memcpy(coeff_,coeff,sizeof(coeff_));
 	}
 	__inline ~FirFilter() {}
-	__inline void Reset()
+	__inline void reset()
 	{
-		memset(m_State,0,sizeof(m_State));
-		memset(m_Output,0,sizeof(m_Output));
-		m_Ptr = 0;
+		memset(state_,0,sizeof(state_));
+		memset(output_,0,sizeof(output_));
+		ptr_ = 0;
 	}
-	void InitCoeff(const T coeff[N])
+	void init_coeff(const T coeff[N])
 	{
-		memcpy(m_Coeff,coeff,sizeof(m_Coeff));
-		Reset();
+		memcpy(coeff_,coeff,sizeof(coeff_));
+		reset();
 	}
-	const T* DoFilter(const T in[DIM])
+	const T* do_filter(const T in[DIM])
 	{
 		for (size_t i = 0; i < DIM; i++)
 		{
-			m_Output[i] = 0.0;
-			m_State[i][m_Ptr] = in[i];
+			output_[i] = 0.0;
+			state_[i][ptr_] = in[i];
 			for (size_t j = 0; j < N; j++)
 			{
-				m_Output[i] += m_State[i][m_Ptr] * m_Coeff[j];
-				RetreatPtr();
+				output_[i] += state_[i][ptr_] * coeff_[j];
+				retreat_ptr();
 			}
 		}
-		AdvancePtr();  /*prepare for the next input sample*/
-		return m_Output;
+		advance_ptr();  /*prepare for the next input sample*/
+		return output_;
 	}
 
-	typename Vector<T,DIM>::type
-	DoFilter(const typename Vector<T,DIM>::type& in)
+	typename FiltVector<T,DIM>::type
+	do_filter(const typename FiltVector<T,DIM>::type& in)
 	{
-		typename Vector<T,DIM>::type out;
-		DoFilter((const T*)in.data);
+		typename FiltVector<T,DIM>::type out;
+		do_filter((const T*)in.data);
 		for (size_t i = 0; i < DIM; ++i) {
-			out.at(i,0) = m_Output[i];
+			out.at(i,0) = output_[i];
 		}
 		return out;
 	}
-	const T* /*[N]*/ GetCoeff() const { return m_Coeff; }
-	const T* /*[DIM]*/ GetOutput() const { return m_Output; }
+	const T* /*[N]*/ get_coeff() const { return coeff_; }
+	const T* /*[DIM]*/ get_output() const { return output_; }
 
 private:
-	__inline void AdvancePtr() { m_Ptr = (m_Ptr + 1) % N; }
-	__inline void RetreatPtr() { m_Ptr = (0 == m_Ptr) ? N-1 : m_Ptr-1; }
+	__inline void advance_ptr() { ptr_ = (ptr_ + 1) % N; }
+	__inline void retreat_ptr() { ptr_ = (0 == ptr_) ? N-1 : ptr_-1; }
 
 private:
-	T m_State[DIM][N];
-	T m_Coeff[N];
-	T m_Output[DIM];
-	size_t m_Ptr;
+	T state_[DIM][N];
+	T coeff_[N];
+	T output_[DIM];
+	size_t ptr_;
+};
+
+template<const size_t N>
+struct FirFilter3f {
+  typedef FirFilter<float, N, 3> type;
 };
 
 template<const size_t N>
@@ -97,43 +106,43 @@ struct FirFilter3d {
 class LpPreFilter3d
 {
 public:
-	LpPreFilter3d(): m_FirFilter()
+	LpPreFilter3d(): fir_filter_()
 	{
 		static double s_Coeff[] = {
 			0.0143f, 0.0303f, 0.0723f, 0.1245f, 0.1670f, 0.1833f,
 			0.1670f, 0.1245f, 0.0723f, 0.0303f, 0.0143f
 		};
-		m_FirFilter.InitCoeff(s_Coeff);
+		fir_filter_.init_coeff(s_Coeff);
 	}
 
-	__inline void Reset() { m_FirFilter.Reset(); }
+	__inline void Reset() { fir_filter_.reset(); }
 	const double* DoFilter(double in[3])
 	{
-		return m_FirFilter.DoFilter(in);
+		return fir_filter_.do_filter(in);
 	}
 	const double* DoFilter(double a, double b, double c)
 	{
 		double in[3] = {a,b,c};
-		return m_FirFilter.DoFilter(in);
+		return fir_filter_.do_filter(in);
 	}
 	Vector3d DoFilter(const Vector3d& in)
 	{
 		Vector3d out;
 		double inArr[3] = {in.at(0,0),in.at(1,0),in.at(2,0)};
 		DoFilter(inArr);
-		out.at(0,0) = m_FirFilter.GetOutput()[0];
-		out.at(1,0) = m_FirFilter.GetOutput()[1];
-		out.at(2,0) = m_FirFilter.GetOutput()[2];
+		out.at(0,0) = fir_filter_.get_output()[0];
+		out.at(1,0) = fir_filter_.get_output()[1];
+		out.at(2,0) = fir_filter_.get_output()[2];
 		return out;
 	}
-	const double* GetCoeff() { return m_FirFilter.GetCoeff(); }
-	const double* GetOutput() { return m_FirFilter.GetOutput(); }
+	const double* GetCoeff() { return fir_filter_.get_coeff(); }
+	const double* GetOutput() { return fir_filter_.get_output(); }
 
 	static const size_t s_Order = 11;
 	static const size_t s_Dim = 3;
 
 private:
-	FirFilter<double, s_Order, s_Dim> m_FirFilter;
+	FirFilter<double, s_Order, s_Dim> fir_filter_;
 };
 
 #endif // __FIRFILT_H__
