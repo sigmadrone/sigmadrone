@@ -70,4 +70,5 @@ source/sigmad/sigmad
 source/tests/matrix/testmatrix
 source/tests/quaternion/testquat
 source/tools/flightdeck/flightdeck
+source/**/bin-x86
 
