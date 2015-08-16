@@ -108,26 +108,6 @@ void bmp180_task(void *pvParameters)
 	BMP180 bmp(i2c);
 	TimeStamp led_toggle_ts;
 
-#if 0
-
-	while (1) {
-		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
-			led_toggle_ts.time_stamp();
-			ledusb.toggle();
-		}
-		try {
-			bmp.update_pressure();
-			drone_state->altitude_meters_ = bmp.get_pressure()/1000.0;
-			drone_state->pressure_hpa_ = bmp.get_pressure();
-			drone_state->temperature_ = bmp.get_temperature();
-			vTaskDelay(10 / portTICK_RATE_MS);
-		} catch (std::exception& e) {
-
-		}
-
-	}
-
-#else
 	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
 
 	bmp_reader->calibrate();
@@ -137,13 +117,15 @@ void bmp180_task(void *pvParameters)
 			ledusb.toggle();
 		}
 
-		drone_state->altitude_meters_ = bmp_reader->altitude_meters(true);
-		drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
-		drone_state->temperature_ = bmp_reader->temperature_celsius(true);
+		try {
+			drone_state->altitude_ = bmp_reader->altitude_meters(true);
+			drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
+			drone_state->temperature_ = bmp_reader->temperature_celsius(true);
+		} catch (std::exception& e) {
+		}
 
 		vTaskDelay(10 / portTICK_RATE_MS);
 	}
-#endif
 }
 
 void main_task(void *pvParameters)
@@ -275,10 +257,11 @@ void main_task(void *pvParameters)
 		drone_state->attitude_ = att.get_attitude();
 
 		flight_ctl.process_servo_start_stop_command();
-		flight_ctl.safety_check(*drone_state);
 		flight_ctl.pilot().set_target_thrust(flight_ctl.base_throttle().get());
 		flight_ctl.pilot().update_state(*drone_state, flight_ctl.target_q());
-		flight_ctl.update_throttle();
+		flight_ctl.altitude_tracker().update_state(*drone_state);
+		flight_ctl.safety_check(*drone_state);
+		flight_ctl.send_throttle_to_motors();
 
 		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
 			console_update_time.time_stamp();
@@ -292,7 +275,7 @@ void main_task(void *pvParameters)
 			printf("Throttle  : %.8f\n", flight_ctl.base_throttle().get());
 			printf("Motors    : %1.3f %1.3f %1.3f %1.3f\n", drone_state->motors_.at(0,0), drone_state->motors_.at(1,0),
 					drone_state->motors_.at(2,0), drone_state->motors_.at(3,0));
-			printf("Altit, m  : %5.3f\n", drone_state->altitude_meters_);
+			printf("Altit, m  : %5.3f\n", drone_state->altitude_.meters());
 			printf("Temper, C :%5.1f\n", drone_state->temperature_);
 
 			//printf("Torq :  %1.3f %1.3f %1.3f\n", state.pid_torque_.at(0,0), state.pid_torque_.at(1,0),

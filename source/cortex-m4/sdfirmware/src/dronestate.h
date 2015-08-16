@@ -14,7 +14,7 @@
 #include "librexjsonrpc/jsonserialization.h"
 
 struct DroneState {
-	DroneState() : altitude_meters_(0.0f), pressure_hpa_(0.0f), temperature_(0.0f) {}
+	DroneState() : altitude_(INVALID_ALTITUDE), pressure_hpa_(0.0f), temperature_(0.0f) {}
 	rexjson::value to_json() {
 		rexjson::object ret;
 		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
@@ -23,7 +23,7 @@ struct DroneState {
 		ret["gyro"] = matrix_to_json_value(gyro_);
 		ret["accel"] = matrix_to_json_value(accel_);
 		ret["mag"] = matrix_to_json_value(mag_);
-		ret["altitude_meters"] = altitude_meters_;
+		ret["altitude_meters"] = altitude_.meters();
 		ret["pressure_hpa"] = pressure_hpa_;
 		ret["temperature"] = temperature_;
 		ret["dt"] = static_cast<float>(dt_.microseconds());
@@ -42,7 +42,7 @@ struct DroneState {
 	Vector3f gyro_;
 	Vector3f accel_;
 	Vector3f mag_;
-	float altitude_meters_;
+	Altitude altitude_;
 	float pressure_hpa_;
 	float temperature_;
 	/*more to add here*/

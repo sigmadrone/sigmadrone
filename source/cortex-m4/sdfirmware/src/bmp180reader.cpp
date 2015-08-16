@@ -28,7 +28,7 @@ Bmp180Reader::~Bmp180Reader() {
 
 }
 
-float Bmp180Reader::altitude_meters(bool do_read_sensor) {
+Distance Bmp180Reader::altitude_meters(bool do_read_sensor) {
 	float hpa = pressure_hpa(do_read_sensor);
 	return convert_hpa_to_altitude(hpa);
 }
@@ -47,8 +47,8 @@ float Bmp180Reader::temperature_celsius(bool do_read_sensor) {
 	return *temperature_filter_.get_output();
 }
 
-float Bmp180Reader::convert_hpa_to_altitude(float hpa) {
-	return (1.0f - powf(hpa/1013.25f,0.19284f)) * 145366.45f;
+Distance Bmp180Reader::convert_hpa_to_altitude(float hpa) {
+	return Distance::from_feet((1.0f - powf(hpa/1013.25f,0.19284f)) * 145366.45f);
 }
 
 void Bmp180Reader::read_pressure() {
@@ -72,7 +72,7 @@ void Bmp180Reader::read_temperature() {
 }
 
 void Bmp180Reader::calibrate() {
-	for (size_t i = 0; i < fir_filter_order * 4; ++i) {
+	for (size_t i = 0; i < fir_filter_order; ++i) {
 		read_pressure();
 		read_temperature();
 		vTaskDelay(50 / portTICK_RATE_MS);

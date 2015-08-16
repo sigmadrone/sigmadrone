@@ -7,9 +7,6 @@
 
 #include "flightcontrol.h"
 #include "colibripwm.h"
-#include <stdio.h>
-
-static const Throttle emergency_throttle(0.4);
 
 FlightControl::FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
 		FunctionPointer(this, &FlightControl::rc_callback)),
@@ -17,7 +14,7 @@ FlightControl::FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
 		rc_values_(ch_mapper_, rc_receiver_, RC_VALUE_SCALE_FACTOR, TimeSpan::from_microseconds(1100),
 				TimeSpan::from_microseconds(1910)),
 		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)),
-		motor_power_(PB_2) {
+		motor_power_(PB_2), altitude_track_() {
 }
 
 void FlightControl::start_receiver() {
@@ -33,10 +30,10 @@ QuaternionF FlightControl::target_q() const {
 }
 
 Throttle FlightControl::base_throttle() const {
-	if (alarm_.is_none() || rc_values_.base_throttle() < emergency_throttle) {
+	if (alarm_.is_none() || rc_values_.base_throttle() < EMERGENCY_THROTTLE) {
 		return rc_values_.base_throttle();
 	}
-	return emergency_throttle;
+	return EMERGENCY_THROTTLE;
 }
 
 void FlightControl::set_throttle(const std::vector<Throttle>& thrVec) {
@@ -47,7 +44,7 @@ void FlightControl::set_throttle(const std::vector<Throttle>& thrVec) {
 	}
 }
 
-void FlightControl::update_throttle() {
+void FlightControl::send_throttle_to_motors() {
 	set_throttle({pilot_.motors().at(0,0), pilot_.motors().at(1,0),
 		pilot_.motors().at(2,0), pilot_.motors().at(3,0)});
 }
@@ -70,13 +67,17 @@ void FlightControl::motor_power_on_off(bool power_on) {
 }
 
 void FlightControl::safety_check(DroneState& drone_state) {
-#ifndef TEST_NO_RC
+
 	if (!rc_values_.motors_armed()) {
 		/*
 		 * motors are not armed, we will still perform the rest of the checks
 		 * so the alarm will persist if the underlying problem was not fixed
 		 */
-		alarm_ = Alarm();
+		clear_alarm();
+	}
+
+	if (altitude_track_.is_flight_ceiling_hit()) {
+		record_alarm(Alarm(Alarm::ALARM_CEILING_HIT));
 	}
 
 	/*
@@ -92,9 +93,13 @@ void FlightControl::safety_check(DroneState& drone_state) {
 	/*
 	 * More checks to be added
 	 */
-#endif
+
 	drone_state.alarm_ = alarm_;
 	drone_state.most_critical_alarm_ = most_critical_alarm_;
+}
+
+void FlightControl::clear_alarm() {
+	alarm_ = Alarm();
 }
 
 void FlightControl::record_alarm(const Alarm& alarm) {

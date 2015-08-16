@@ -81,7 +81,7 @@ rexjson::value UartRpcServer::rpc_get_altitude(UART* , rexjson::array& params, r
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return dronestate_.altitude_meters_;
+	return dronestate_.altitude_.meters();
 }
 
 rexjson::value UartRpcServer::rpc_get_temperature(UART* , rexjson::array& params, rpc_exec_mode mode)

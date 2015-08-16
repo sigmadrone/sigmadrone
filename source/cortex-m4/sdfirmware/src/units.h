@@ -9,6 +9,7 @@
 #define UNITS_H_
 
 #include <stdint.h>
+#include <limits>
 
 template <typename UnitType>
 struct ScaledUnit {
@@ -26,6 +27,7 @@ struct ScaledUnit {
 	static ScaledUnit from_nanounit(UnitType nano)   { return ScaledUnit( nano/1000/1000/1000); }
 	static ScaledUnit from_microunit(UnitType micro) { return ScaledUnit(micro/1000/1000); }
 	static ScaledUnit from_milliunit(UnitType milli) { return ScaledUnit(milli/1000); }
+	static ScaledUnit from_centiunit(UnitType cent) { return ScaledUnit(cent/100); }
 	static ScaledUnit from_baseunit(UnitType unit)   { return ScaledUnit( unit); }
 	static ScaledUnit from_kilounit(UnitType kilo)   { return ScaledUnit( kilo*1000); }
 	static ScaledUnit from_megaunit(UnitType mega)   { return ScaledUnit( mega*1000*1000); }
@@ -52,11 +54,13 @@ protected:
 	inline UnitType nanounit() const { return microunit() / 1000; }
 	inline UnitType microunit() const { return milliunit() / 1000; }
 	inline UnitType milliunit() const { return unit() / 1000; }
+	inline UnitType centiunit() const { return unit() / 100; }
 	inline UnitType kilounit() const { return unit() * 1000; }
 	inline UnitType megaunit() const { return kilounit() * 1000; }
 	inline UnitType gigaunit() const { return megaunit() * 1000; }
 	inline UnitType teraunit() const { return gigaunit() * 1000; }
 	inline UnitType pentaunit() const { return teraunit() * 1000; }
+
 	inline ScaledUnit(UnitType units) : units_(units) {}
 
 private:
@@ -132,5 +136,43 @@ TimeSpan Frequency::period() const {
 Frequency Frequency::from_timespan(const TimeSpan& ts) {
 	return from_microhertz(TimeSpan::from_seconds(1000*1000).nanoseconds() / ts.nanoseconds());
 }
+
+struct Distance: public ScaledUnit<float> {
+	static constexpr float INVALID_VALUE = std::numeric_limits<float>::infinity();
+	static constexpr float ONE_INCH_IN_MM = 25.4f;
+	static constexpr float ONE_INCH_IN_CM = ONE_INCH_IN_MM / 10.0f;
+	static constexpr float ONE_FOOT_IN_CM = 12.0f * ONE_INCH_IN_CM;
+	static Distance from_micrometers(float um) { return Distance(from_microunit(um).unit()); }
+	static Distance from_millimeters(float mm) { return Distance(from_milliunit(mm).unit()); }
+	static Distance from_centimeters(float cm) { return Distance(from_centiunit(cm).unit()); }
+	static Distance from_inches(float inch) { return Distance(from_centiunit(inch * ONE_INCH_IN_CM).unit()); }
+	static Distance from_feet(float feet) { return Distance(from_centiunit(feet * ONE_FOOT_IN_CM).unit()); }
+	static Distance from_meters(float m) { return Distance(from_baseunit(m).unit()); }
+	static Distance from_kilometers(float km) { return Distance(from_kilounit(km).unit()); }
+	Distance() : ScaledUnit(0) {}
+	~Distance() {}
+	float micrometers() const { return megaunit(); }
+	float millimeters() const { return kilounit(); }
+	float centimeters() const { return centiunit(); }
+	float meters() const { return unit(); }
+	float kilometers() const { return milliunit(); }
+	float feet() const { return centimeters() / ONE_FOOT_IN_CM; }
+	float inches() const { return centimeters() / ONE_INCH_IN_CM; }
+
+	inline Distance operator*(float rhs) const { return Distance(unit() * rhs); }
+	inline Distance operator/(float rhs) const { return Distance(unit() / rhs); }
+	inline Distance operator+(const Distance& rhs) const { return Distance(unit() + rhs.unit()); }
+	inline Distance operator-(const Distance& rhs) const { return Distance(unit() - rhs.unit()); }
+	inline float operator/(const Distance& rhs) const { return unit()/rhs.unit(); }
+	inline bool is_null() const { return unit() != 0.0f; }
+	inline bool is_valid() const { return unit() != INVALID_VALUE; }
+
+private:
+	Distance(float meters) : ScaledUnit(meters) {}
+};
+
+typedef Distance Altitude;
+
+static const Altitude INVALID_ALTITUDE = Altitude::from_meters(Altitude::INVALID_VALUE);
 
 #endif /* UNITS_H_ */

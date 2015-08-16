@@ -17,14 +17,14 @@ public:
 	Bmp180Reader(BMP180& bmp);
 	~Bmp180Reader();
 
-	float altitude_meters(bool read_sensor=false);
+	Distance altitude_meters(bool read_sensor=false);
 	float pressure_hpa(bool read_sensor=false);
 	float temperature_celsius(bool read_sensor=false);
 	void read_pressure();
 	void read_temperature();
 	void calibrate();
 	void cleanup();
-	float convert_hpa_to_altitude(float hpa);
+	static Distance convert_hpa_to_altitude(float hpa);
 
 private:
 	static const size_t fir_filter_order = 25;
