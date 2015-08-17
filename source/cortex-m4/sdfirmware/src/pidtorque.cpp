@@ -2,7 +2,7 @@
 #include "pidtorque.h"
 
 PidTorque::PidTorque() :
-	set_Q_(1), pid_controller_(0.0,0.0,0.0)
+	set_Q_(1), pid_controller_(0.0,0.0,0.0), pid_controller_z_(0.0,0.0,0.0)
 {
 	reset(0.0, 0.0, 0.0);
 }
@@ -16,7 +16,13 @@ void PidTorque::reset(float kp, float ki, float kd)
 	kp_ = kp / 1000.0 * 22.5 / 100.0 / (3.1415/2);
 	ki_ = ki / 1000.0 * 22.5 / 100.0 / (3.1415/2);
 	kd_ = kd / 1000.0 * 22.5 / 100.0 / (3.1415/2);
-	pid_controller_.reset(kp_,0,kd_,0);
+	pid_controller_.reset(kp_,ki_,kd_,0);
+
+	/*
+	 * Use separate pid controller for Z compensation, mostly in order to have
+	 * smaller Kp. Hmmm... do we need separate PIDs for X and Y as well?!?
+	 */
+	pid_controller_z_.reset(kp_/3.0f, ki_, kd_/2.0, 0);
 	last_error_ = Vector3f();
 }
 
@@ -32,13 +38,6 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt)
 	Vector3f Zin = (~in_Q).rotate(Vector3f(0.0, 0.0, 1.0));
 	QuaternionF Qtorq = QuaternionF::fromVectors(Zin, Zset);
 	Vector3f error = Qtorq.axis().normalize() * Qtorq.angle() * -1.0;
-
-#if 0
-	Vector3f Xset = set_Q_.rotate(Vector3f(1.0, 0.0, 0.0));
-	Vector3f Xin = (~in_Q).rotate(Vector3f(1.0, 0.0, 0.0));
-	QuaternionF QtorqX = QuaternionF::fromVectors(Xin, Xset);
-	Vector3f errorX = QtorqX.axis().normalize() * QtorqX.angle() * -1.0;
-#endif
 
 	// undef the code below to test Z compensation
 #if 0
@@ -58,15 +57,17 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt)
 	error = error_q;
 #endif
 
-#if 0
+	torq = pid_controller_.get_pid(error,dt.seconds_float());
+
+#if 1
 	Vector3f Xset = set_Q_.rotate(Vector3f(1.0, 0.0, 0.0));
 	Vector3f Xin = (~in_Q).rotate(Vector3f(1.0, 0.0, 0.0));
 	QuaternionF Qtorq_z = QuaternionF::fromVectors(Xin, Xset);
 	Vector3f error_z = Qtorq_z.axis().normalize() * Qtorq_z.angle() * -1.0;
-	error = error + error_z;
+	error_z.at(0,0) = error_z.at(1,0) = 0.0;
+	torq.at(2,0) = pid_controller_z_.get_pid(error_z, dt.seconds_float()).at(2,0);
+	error.at(2,0) = error_z.at(2,0);
 #endif
-
-	torq = pid_controller_.get_pid(error,dt.seconds_float());
 
 	last_error_ = error;
 
