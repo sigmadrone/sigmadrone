@@ -35,6 +35,7 @@
 #include "librexjson/rexjson++.h"
 #include "libattitude/attitudetracker.h"
 #include "bmp180reader.h"
+#include "accellowpassfilter.h"
 
 void* __dso_handle = 0;
 
@@ -156,6 +157,7 @@ void main_task(void *pvParameters)
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
 	UartRpcServer rpcserver(*drone_state);
+	AccelLowPassFilter* accel_lpf = new AccelLowPassFilter();
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
@@ -250,7 +252,7 @@ void main_task(void *pvParameters)
 		if (acc_samples > acc_wtm) {
 			accel.GetFifoAcc(&acc_axes);
 			drone_state->accel_raw_ = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z).normalize();
-			drone_state->accel_ = drone_state->accel_raw_;
+			drone_state->accel_ = accel_lpf->do_filter(drone_state->accel_raw_);
 		}
 		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
 
