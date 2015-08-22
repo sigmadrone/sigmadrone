@@ -1090,8 +1090,13 @@ public:
 	{
 		double sa2 = std::sin(rad / 2);
 		double ca2 = std::cos(rad / 2);
-		axis = axis * sa2;
-		Quaternion<T> temp(ca2, axis.at(0,0), axis.at(1,0), axis.at(2,0));
+
+		/*
+		 * Constructing quaternion from vector and angle requires the vector portion to be the unit vector.
+		 * q = cos(a/2) + i ( x * sin(a/2)) + j (y * sin(a/2)) + k ( z * sin(a/2))
+		 */
+		axis = axis.normalize() * sa2;
+		Quaternion<T> temp(ca2, axis.at(0), axis.at(1), axis.at(2));
 		return temp;
 	}
 
@@ -1119,7 +1124,6 @@ public:
 			MatrixMN<T, 3, 1> axis = MatrixMN<T, 3, 1>::cross(MatrixMN<T, 3, 1>(1, 0, 0), v0);
 			if (axis.lengthSq() < EPSILON * EPSILON) // pick another if colinear
 				axis = MatrixMN<T, 3, 1>::cross(MatrixMN<T, 3, 1>(0, 1, 0), v0);
-			axis.normalize();
 			q = fromAxisRot(axis, M_PI);
 		} else {
 			double s = std::sqrt((1 + d) * 2);
