@@ -39,6 +39,7 @@ struct DroneState {
 		ret["temperature"] = temperature_;
 		ret["dt"] = static_cast<float>(dt_.microseconds());
 		ret["attitude"] = quaternion_to_json_value(attitude_);
+		ret["target"] = quaternion_to_json_value(target_);
 		ret["motors"] = matrix_to_json_value(motors_);
 		ret["pid_torque"] = matrix_to_json_value(pid_torque_);
 		ret["last_twist"] = quaternion_to_json_value(last_twist_);
@@ -80,6 +81,7 @@ struct DroneState {
 	 * Calculated state attributes
 	 */
 	QuaternionF attitude_;
+	QuaternionF target_;
 	Vector4f motors_;
 	Vector3f pid_torque_;
 	QuaternionF last_twist_;

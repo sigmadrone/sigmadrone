@@ -258,7 +258,7 @@ void main_task(void *pvParameters)
 		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
 
 		drone_state->attitude_ = att.get_attitude();
-
+		drone_state->target_ = flight_ctl.target_q();
 		flight_ctl.process_servo_start_stop_command();
 		flight_ctl.pilot().set_target_thrust(flight_ctl.base_throttle().get());
 		flight_ctl.pilot().update_state(*drone_state, flight_ctl.target_q());
