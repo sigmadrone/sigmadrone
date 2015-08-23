@@ -14,6 +14,7 @@ FlightControl::FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
 		rc_values_(ch_mapper_, rc_receiver_, RC_VALUE_SCALE_FACTOR, TimeSpan::from_microseconds(1100),
 				TimeSpan::from_microseconds(1910)),
 		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)),
+		pilot_(0.0, 0.0, 0.0),
 		motor_power_(PB_2), altitude_track_() {
 }
 
@@ -64,6 +65,11 @@ void FlightControl::process_servo_start_stop_command() {
 
 void FlightControl::motor_power_on_off(bool power_on) {
 	motor_power_.write(power_on ? 1 : 0);
+}
+
+void FlightControl::reset_pid(DroneState& state)
+{
+	pilot_.reset_pid(state.kp_, state.ki_, state.kd_);
 }
 
 void FlightControl::safety_check(DroneState& drone_state) {

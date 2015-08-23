@@ -19,7 +19,10 @@ UartRpcServer::UartRpcServer(DroneState& dronestate)
 	add("sd_get_temperature", &UartRpcServer::rpc_get_temperature);
 	add("sd_get_motors", &UartRpcServer::rpc_get_motors);
 	add("sd_get_dronestate", &UartRpcServer::rpc_get_dronestate);
-
+	add("ki", &UartRpcServer::rpc_ki);
+	add("kd", &UartRpcServer::rpc_kd);
+	add("kp", &UartRpcServer::rpc_kp);
+	add("sd_set_accelerometer_correction_period", &UartRpcServer::rpc_set_accelerometer_correction_period);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -124,6 +127,101 @@ rexjson::value UartRpcServer::rpc_get_motors(UART* , rexjson::array& params, rpc
 		ret.push_back(dronestate_.motors_.at(i));
 	}
 	return ret;
+}
+
+rexjson::value UartRpcServer::rpc_kp(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "kp\n"
+	            "\nGet/Set Kp."
+				"\nIf the new coefficient is not specified, the current Kp will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kp          (real, optional) The Kp of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == rexjson::real_type))
+		dronestate_.kp_ = params[0].get_real();
+	return dronestate_.kp_;
+}
+
+rexjson::value UartRpcServer::rpc_kd(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "kd\n"
+	            "\nGet/Set Kd."
+				"\nIf the new coefficient is not specified, the current Kd will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kd          (real, optional) The Kd of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == rexjson::real_type))
+		dronestate_.kd_ = params[0].get_real();
+	return dronestate_.kd_;
+}
+
+rexjson::value UartRpcServer::rpc_ki(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "ki\n"
+	            "\nGet/Set Ki."
+				"\nIf the new coefficient is not specified, the current Ki will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Ki          (real, optional) The Ki of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == rexjson::real_type))
+		dronestate_.ki_ = params[0].get_real();
+	return dronestate_.ki_;
+}
+
+rexjson::value UartRpcServer::rpc_set_accelerometer_correction_period(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_set_accelerometer_correction_period\n"
+				"\nSet the correction period for the accelerometer."
+				"\nThe attitude tracker will try to correct the attitude error for the"
+				"\nspecified period. Shorter period means the error will be corrected"
+				"\nfaster, but this will introduce noise from the accelerometer sensor."
+				"\nLonger periods will suppress the noise, but it will take longer time"
+				"\nto correct the error."
+				"\n"
+				"Arguments:\n"
+				"1. n          (real) correction period\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	dronestate_.accelerometer_correction_period_ = params[0].get_real();
+	return params[0].get_real();
 }
 
 rexjson::value UartRpcServer::rpc_get_dronestate(UART* , rexjson::array& params, rpc_exec_mode mode)

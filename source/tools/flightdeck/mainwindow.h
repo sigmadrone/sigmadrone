@@ -24,6 +24,7 @@ protected:
 	void on_change_correction_thrust();
 	bool on_rpc_update();
 	void rpc_update_attitude();
+	void rpc_update_twist();
 	void rpc_update_motors();
 	void rpc_update_g();
 	void rpc_update_correction_thurst();
@@ -32,6 +33,7 @@ protected:
 	void rpc_update_armed();
 	std::string double_to_str(double val, size_t precision = 3);
 
+	rexjson::value drone_state_;
 	sigc::connection timer_conn_;
 	int timer_number_;
 	std::string rpcuri_;
@@ -61,6 +63,10 @@ protected:
 	Gtk::Label *label_accelerometer_y_;
 	Gtk::Label *label_accelerometer_z_;
 	Gtk::Label *label_accelerometer_length_;
+	Gtk::Label *label_twist_w_;
+	Gtk::Label *label_twist_x_;
+	Gtk::Label *label_twist_y_;
+	Gtk::Label *label_twist_z_;
 
 };
 

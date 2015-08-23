@@ -23,6 +23,7 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("sd_set_thrust", &user_rpcserver::rpc_set_thrust);
 	add("sd_set_accelerometer_correction_period", &user_rpcserver::rpc_set_accelerometer_correction_period);
 	add("sd_get_motors", &user_rpcserver::rpc_get_motors);
+	add("sd_get_dronestate", &user_rpcserver::rpc_get_dronestate);
 	add("sd_get_earth_g_vector", &user_rpcserver::rpc_get_earth_g);
 	add("sd_set_earth_g_vector", &user_rpcserver::rpc_set_earth_g);
 	add("sd_set_correction_thrust", &user_rpcserver::rpc_set_correction_thrust);
@@ -420,9 +421,7 @@ rexjson::value user_rpcserver::rpc_kp(http::server::connection_ptr connection, r
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type))
-		app_.ctrl_thread_.pid_.Kp_ = params[0].get_real();
-	return app_.ctrl_thread_.pid_.Kp_;
+	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("kp", params);
 }
 
 rexjson::value user_rpcserver::rpc_kd(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
@@ -443,9 +442,7 @@ rexjson::value user_rpcserver::rpc_kd(http::server::connection_ptr connection, r
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type))
-		app_.ctrl_thread_.pid_.Kd_ = params[0].get_real();
-	return app_.ctrl_thread_.pid_.Kd_;
+	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("kd", params);
 }
 
 rexjson::value user_rpcserver::rpc_ki(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
@@ -466,9 +463,7 @@ rexjson::value user_rpcserver::rpc_ki(http::server::connection_ptr connection, r
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type))
-		app_.ctrl_thread_.pid_.Ki_ = params[0].get_real();
-	return app_.ctrl_thread_.pid_.Ki_;
+	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("ki", params);
 }
 
 rexjson::value user_rpcserver::rpc_get_motors(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
@@ -488,6 +483,25 @@ rexjson::value user_rpcserver::rpc_get_motors(http::server::connection_ptr conne
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("sd_get_motors");
+}
+
+rexjson::value user_rpcserver::rpc_get_dronestate(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_dronestate\n"
+	            "\nGet drone state."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("sd_get_dronestate");
 }
 
 
@@ -556,8 +570,7 @@ rexjson::value user_rpcserver::rpc_set_accelerometer_correction_period(http::ser
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	app_.attitude_tracker_->accelerometer_correction_period_ = params[0].get_real();
-	return params[0].get_real();
+	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("sd_set_accelerometer_correction_period", params);
 }
 
 rexjson::value user_rpcserver::rpc_set_thrust(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)

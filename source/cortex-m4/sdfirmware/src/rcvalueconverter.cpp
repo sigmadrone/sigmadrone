@@ -35,7 +35,7 @@ void RcValueConverter::update() {
 		yaw = (yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 	}
 	if (pitch > 0.0) {
-		pitch = (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
+		pitch = -1.0 * (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 	}
 	if (roll > 0.0) {
 		roll = (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_;

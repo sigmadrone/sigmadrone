@@ -240,6 +240,7 @@ void main_task(void *pvParameters)
 		uint8_t gyr_samples = gyro.GetFifoSourceReg() & 0x1F;
 		uint8_t acc_samples = accel.GetFifoSourceFSS();
 
+		att.accelerometer_correction_period(drone_state->accelerometer_correction_period_);
 		static const Matrix3f gyro_align(-1,0,0,0,-1,0,0,0,1);
 		if (gyr_samples >= gyr_wtm) {
 			gyro.GetFifoAngRateDPS(&gyr_axes);
