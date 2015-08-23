@@ -27,6 +27,10 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	, label_attitude_x_(NULL)
 	, label_attitude_y_(NULL)
 	, label_attitude_z_(NULL)
+	, label_target_w_(NULL)
+	, label_target_x_(NULL)
+	, label_target_y_(NULL)
+	, label_target_z_(NULL)
 	, label_accelerometer_x_(NULL)
 	, label_accelerometer_y_(NULL)
 	, label_accelerometer_z_(NULL)
@@ -58,6 +62,10 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	ref_glade_->get_widget("label_attitude_x", label_attitude_x_);
 	ref_glade_->get_widget("label_attitude_y", label_attitude_y_);
 	ref_glade_->get_widget("label_attitude_z", label_attitude_z_);
+	ref_glade_->get_widget("label_target_w", label_target_w_);
+	ref_glade_->get_widget("label_target_x", label_target_x_);
+	ref_glade_->get_widget("label_target_y", label_target_y_);
+	ref_glade_->get_widget("label_target_z", label_target_z_);
 	ref_glade_->get_widget("label_accelerometer_x", label_accelerometer_x_);
 	ref_glade_->get_widget("label_accelerometer_y", label_accelerometer_y_);
 	ref_glade_->get_widget("label_accelerometer_z", label_accelerometer_z_);
@@ -184,6 +192,20 @@ void mainwindow::rpc_update_attitude()
 	}
 }
 
+void mainwindow::rpc_update_target()
+{
+	try {
+		QuaternionD q;
+		q = quaternion_from_json_value<double>(drone_state_["target"]);
+		label_target_w_->set_text(double_to_str(q.w));
+		label_target_x_->set_text(double_to_str(q.x));
+		label_target_y_->set_text(double_to_str(q.y));
+		label_target_z_->set_text(double_to_str(q.z));
+	} catch (std::exception& e) {
+		std::cout << "rpc_update_target exception: " << e.what() << std::endl;
+	}
+}
+
 void mainwindow::rpc_update_twist()
 {
 	try {
@@ -277,6 +299,7 @@ bool mainwindow::on_rpc_update()
 		rpc_update_twist();
 		rpc_update_armed();
 		rpc_update_attitude();
+		rpc_update_target();
 		rpc_update_accelerometer();
 		rpc_update_motors();
 		rpc_update_g();

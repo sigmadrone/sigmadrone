@@ -24,6 +24,7 @@ protected:
 	void on_change_correction_thrust();
 	bool on_rpc_update();
 	void rpc_update_attitude();
+	void rpc_update_target();
 	void rpc_update_twist();
 	void rpc_update_motors();
 	void rpc_update_g();
@@ -59,6 +60,10 @@ protected:
 	Gtk::Label *label_attitude_x_;
 	Gtk::Label *label_attitude_y_;
 	Gtk::Label *label_attitude_z_;
+	Gtk::Label *label_target_w_;
+	Gtk::Label *label_target_x_;
+	Gtk::Label *label_target_y_;
+	Gtk::Label *label_target_z_;
 	Gtk::Label *label_accelerometer_x_;
 	Gtk::Label *label_accelerometer_y_;
 	Gtk::Label *label_accelerometer_z_;
