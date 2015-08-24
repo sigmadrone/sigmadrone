@@ -45,6 +45,7 @@ public:
 	void motor_power_on_off(bool power_on);
 
 	void safety_check(DroneState& state);
+	void reset_pid(DroneState& state);
 
 	inline RcReceiver& rc_receiver() { return rc_receiver_; }
 	inline ServoController& servo() { return servo_ctrl_; }

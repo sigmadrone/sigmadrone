@@ -15,6 +15,7 @@ public:
 	void track_gyroscope(const Vector3d& omega, double dtime);
 	void track_accelerometer(const Vector3d& g, double dtime);
 	void track_magnetometer(const Vector3d& m, double dtime);
+	void accelerometer_correction_period(double accelerometer_correction_period);
 	/*
 	 * Return our attitude in the world coordinate system
 	 */

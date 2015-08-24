@@ -13,8 +13,19 @@
 #include "alarm.h"
 #include "librexjsonrpc/jsonserialization.h"
 
+/*
+ * PID coefficients for big props on DJI F450
+ * Kp = 1.0 <-> 1.3
+ * Ki = 1.2, with leak rate dT
+ * Kd = 0.3 <-> 0.45
+ *
+ * PID coefficients for small props on DJI F450
+ * Kp = 1.0 <-> 1.3
+ * Ki = 0 - still not a measurable impact of Ki
+ * Kd = 0.35
+ */
 struct DroneState {
-	DroneState() : altitude_(INVALID_ALTITUDE), pressure_hpa_(0.0f), temperature_(0.0f) {}
+	DroneState() : altitude_(INVALID_ALTITUDE), pressure_hpa_(0.0f), temperature_(0.0f), kp_(1.0), ki_(0.0), kd_(3.5), accelerometer_correction_period_(4.0) {}
 	rexjson::value to_json() {
 		rexjson::object ret;
 		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
@@ -28,8 +39,14 @@ struct DroneState {
 		ret["temperature"] = temperature_;
 		ret["dt"] = static_cast<float>(dt_.microseconds());
 		ret["attitude"] = quaternion_to_json_value(attitude_);
+		ret["target"] = quaternion_to_json_value(target_);
 		ret["motors"] = matrix_to_json_value(motors_);
 		ret["pid_torque"] = matrix_to_json_value(pid_torque_);
+		ret["last_twist"] = quaternion_to_json_value(last_twist_);
+		ret["kp"] = kp_;
+		ret["ki"] = ki_;
+		ret["kd"] = kd_;
+		ret["accelerometer_correction_period"] = accelerometer_correction_period_;
 		return ret;
 	}
 
@@ -48,6 +65,14 @@ struct DroneState {
 	/*more to add here*/
 
 	/*
+	 * Control
+	 */
+	float kp_;
+	float ki_;
+	float kd_;
+	float accelerometer_correction_period_;
+
+	/*
 	 * Time it took to read sensors
 	 */
 	TimeSpan dt_;
@@ -56,8 +81,10 @@ struct DroneState {
 	 * Calculated state attributes
 	 */
 	QuaternionF attitude_;
+	QuaternionF target_;
 	Vector4f motors_;
 	Vector3f pid_torque_;
+	QuaternionF last_twist_;
 
 	/*
 	 * Safety...

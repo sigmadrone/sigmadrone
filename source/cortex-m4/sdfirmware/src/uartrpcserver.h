@@ -30,6 +30,10 @@ protected:
 	rexjson::value rpc_get_motors(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_get_dronestate(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
+	rexjson::value rpc_kp(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_ki(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_set_accelerometer_correction_period(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 
 protected:

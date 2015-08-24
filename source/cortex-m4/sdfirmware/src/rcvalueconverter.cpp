@@ -38,12 +38,13 @@ void RcValueConverter::update() {
 		yaw = (yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 	}
 	if (pitch > 0.0) {
-		pitch = (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
+		pitch = -1.0 * (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 	}
 	if (roll > 0.0) {
 		roll = (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 	}
-	quaternion_ = QuaternionF::fromEulerAngles(roll, pitch, yaw);
+//	quaternion_ = QuaternionF::fromEulerAngles(roll, pitch, yaw);
+	quaternion_ = QuaternionF::fromAngularVelocity(Vector3f(roll, pitch, 0), 1.0);
 
 	/*
 	 * Note: on Spektrum DX8 by _default_ GEAR switch set to 0 results in max pulse and

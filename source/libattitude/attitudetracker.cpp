@@ -34,6 +34,11 @@ void attitudetracker::set_earth_m(Vector3d earth_m)
 	earth_m_ = earth_m;
 }
 
+void attitudetracker::accelerometer_correction_period(double accelerometer_correction_period)
+{
+	accelerometer_correction_period_ = accelerometer_correction_period;
+}
+
 void attitudetracker::track_gyroscope(const Vector3d& omega, double dtime)
 {
 	QuaternionD deltaq = QuaternionD::fromAngularVelocity(omega, dtime);
@@ -47,8 +52,10 @@ void attitudetracker::track_accelerometer(const Vector3d& g, double dtime)
 	 * don't use it.
 	 *
 	 */
+#if 0
 	if (g.length() < 0.85 || g.length() > 1.15)
 		return;
+#endif
 	/*
 	 * Estimate after rotating the initial vector with the
 	 * world attitude quaternion.

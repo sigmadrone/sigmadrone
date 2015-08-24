@@ -27,10 +27,19 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	, label_attitude_x_(NULL)
 	, label_attitude_y_(NULL)
 	, label_attitude_z_(NULL)
+	, label_target_w_(NULL)
+	, label_target_x_(NULL)
+	, label_target_y_(NULL)
+	, label_target_z_(NULL)
 	, label_accelerometer_x_(NULL)
 	, label_accelerometer_y_(NULL)
 	, label_accelerometer_z_(NULL)
 	, label_accelerometer_length_(NULL)
+	, label_twist_w_(NULL)
+	, label_twist_x_(NULL)
+	, label_twist_y_(NULL)
+	, label_twist_z_(NULL)
+
 {
 	//Get the Glade-instantiated Button, and connect a signal handler:
 	ref_glade_->get_widget("button_quit", button_quit_);
@@ -53,10 +62,18 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	ref_glade_->get_widget("label_attitude_x", label_attitude_x_);
 	ref_glade_->get_widget("label_attitude_y", label_attitude_y_);
 	ref_glade_->get_widget("label_attitude_z", label_attitude_z_);
+	ref_glade_->get_widget("label_target_w", label_target_w_);
+	ref_glade_->get_widget("label_target_x", label_target_x_);
+	ref_glade_->get_widget("label_target_y", label_target_y_);
+	ref_glade_->get_widget("label_target_z", label_target_z_);
 	ref_glade_->get_widget("label_accelerometer_x", label_accelerometer_x_);
 	ref_glade_->get_widget("label_accelerometer_y", label_accelerometer_y_);
 	ref_glade_->get_widget("label_accelerometer_z", label_accelerometer_z_);
 	ref_glade_->get_widget("label_accelerometer_length", label_accelerometer_length_);
+	ref_glade_->get_widget("label_twist_w", label_twist_w_);
+	ref_glade_->get_widget("label_twist_x", label_twist_x_);
+	ref_glade_->get_widget("label_twist_y", label_twist_y_);
+	ref_glade_->get_widget("label_twist_z", label_twist_z_);
 
 
 	button_quit_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_quit));
@@ -165,8 +182,7 @@ void mainwindow::rpc_update_attitude()
 {
 	try {
 		QuaternionD q;
-		rexjson::value val = rpc_client_->call(rpcuri_, "sd_get_attitude");
-		q = quaternion_from_json_value<double>(val);
+		q = quaternion_from_json_value<double>(drone_state_["attitude"]);
 		label_attitude_w_->set_text(double_to_str(q.w));
 		label_attitude_x_->set_text(double_to_str(q.x));
 		label_attitude_y_->set_text(double_to_str(q.y));
@@ -176,10 +192,38 @@ void mainwindow::rpc_update_attitude()
 	}
 }
 
+void mainwindow::rpc_update_target()
+{
+	try {
+		QuaternionD q;
+		q = quaternion_from_json_value<double>(drone_state_["target"]);
+		label_target_w_->set_text(double_to_str(q.w));
+		label_target_x_->set_text(double_to_str(q.x));
+		label_target_y_->set_text(double_to_str(q.y));
+		label_target_z_->set_text(double_to_str(q.z));
+	} catch (std::exception& e) {
+		std::cout << "rpc_update_target exception: " << e.what() << std::endl;
+	}
+}
+
+void mainwindow::rpc_update_twist()
+{
+	try {
+		QuaternionD q;
+		q = quaternion_from_json_value<double>(drone_state_["last_twist"]);
+		label_twist_w_->set_text(double_to_str(q.w));
+		label_twist_x_->set_text(double_to_str(q.x));
+		label_twist_y_->set_text(double_to_str(q.y));
+		label_twist_z_->set_text(double_to_str(q.z));
+	} catch (std::exception& e) {
+		std::cout << "rpc_update_twist exception: " << e.what() << std::endl;
+	}
+}
+
 void mainwindow::rpc_update_motors()
 {
 	try {
-		rexjson::value val = rpc_client_->call(rpcuri_, "sd_get_motors");
+		rexjson::value val = drone_state_["motors"];
 		label_m1_->set_text(double_to_str(val.get_array().at(0).get_real()));
 		label_m2_->set_text(double_to_str(val.get_array().at(1).get_real()));
 		label_m3_->set_text(double_to_str(val.get_array().at(2).get_real()));
@@ -218,7 +262,7 @@ void mainwindow::rpc_update_g()
 void mainwindow::rpc_update_accelerometer()
 {
 	try {
-		rexjson::value val = rpc_client_->call(rpcuri_, "sd_get_accelerometer");
+		rexjson::value val = drone_state_["accel"];
 		Vector3d G = matrix_from_json_value<double, 3, 1>(val);
 		label_accelerometer_x_->set_text(double_to_str(val.get_array().at(0).get_real()));
 		label_accelerometer_y_->set_text(double_to_str(val.get_array().at(1).get_real()));
@@ -251,8 +295,11 @@ void mainwindow::rpc_update_armed()
 bool mainwindow::on_rpc_update()
 {
 	try {
+		drone_state_ = rpc_client_->call(rpcuri_, "sd_get_dronestate");
+		rpc_update_twist();
 		rpc_update_armed();
 		rpc_update_attitude();
+		rpc_update_target();
 		rpc_update_accelerometer();
 		rpc_update_motors();
 		rpc_update_g();

@@ -13,24 +13,14 @@
 #include "pidtorque.h"
 #include "pidcontroller.h"
 
-/*
- * PID coefficients for big props on DJI F450
- * Kp = 1.0 <-> 1.3
- * Ki = 1.2, with leak rate dT
- * Kd = 0.3 <-> 0.45
- *
- * PID coefficients for small props on DJI F450
- * Kp = 1.0 <-> 1.3
- * Ki = 0 - still not a measurable impact of Ki
- * Kd = 0.35
- */
 
 class PidPilot
 {
 public:
-	PidPilot(float kp = 1.0, float ki = 0.0, float kd = 0.35);
+	PidPilot(float kp, float ki, float kd);
 	~PidPilot();
 	void reset(float kp, float ki, float kd);
+	void reset_pid(float kp, float ki, float kd);
 	void update_state(DroneState& state, const QuaternionF& target_attitude);
 
 	void set_min_thrust(float minRev);

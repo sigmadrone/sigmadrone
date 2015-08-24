@@ -12,6 +12,11 @@ PidPilot::PidPilot(float kp, float ki, float kd) {
 PidPilot::~PidPilot() {
 }
 
+void PidPilot::reset_pid(float kp, float ki, float kd)
+{
+	pid_.reset(kp * 1000.0, ki * 1000.0, kd * 1000.0);
+}
+
 void PidPilot::reset(float kp, float ki, float kd) {
 	min_thrust_ = 0.0;
 	max_thrust_ = 1.0;
@@ -26,8 +31,7 @@ void PidPilot::reset(float kp, float ki, float kd) {
 	m1_.at(2,0) = -0.5;
 	m2_.at(2,0) = 0.5;
 	m3_.at(2,0) = -0.5;
-
-	pid_.reset(kp * 1000.0, ki * 1000.0, kd * 1000.0);
+	reset_pid(kp, ki, kd);
 }
 
 void PidPilot::update_state(DroneState& state, const QuaternionF& target_attitude)
@@ -36,6 +40,9 @@ void PidPilot::update_state(DroneState& state, const QuaternionF& target_attitud
 
 	pid_.set_target(target_attitude);
 	torque_correction_ = pid_.get_torque(state.attitude_, state.dt_);
+	state.last_twist_ = pid_.last_twist_;
+
+
 
 	//  From the motor trust measurement:
 	//  0.6 --> 450g * 22.5cm
