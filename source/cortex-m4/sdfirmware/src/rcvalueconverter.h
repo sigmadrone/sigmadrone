@@ -67,12 +67,12 @@ private:
 private:
 	PwmPulse pwm_converter_;
 	QuaternionF quaternion_;
+	QuaternionF quaternion_yaw_;
 	Throttle throttle_;
 	const RcChannelMapper& mapper_;
 	RcReceiver& receiver_;
 	float scale_factor_;
 	float last_gear_;
-	float integrated_yaw_;
 	bool motors_armed_;
 };
 
