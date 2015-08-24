@@ -129,7 +129,7 @@ private:
 	static void limit_vector(PidVector* v, const PidVector* limit)
 	{
 		if (!!limit) {
-			for (size_t i = 0; i < 3; i++) {
+			for (size_t i = 0; i < M; i++) {
 				v->at(i,0) = fmin(v->at(i,0),limit->at(i,0));
 				v->at(i,0) = fmax(v->at(i,0),-limit->at(i,0));
 			}
