@@ -14,7 +14,7 @@
 class RcChannel {
 public:
 	RcChannel(const PwmRxConsts& pwmRxConsts, FunctionPointer callback);
-	const PwmDecoder& decoder() const;
+	PwmDecoder& decoder();
 	void start_receive();
 	void stop_receive();
 	bool is_live() const;

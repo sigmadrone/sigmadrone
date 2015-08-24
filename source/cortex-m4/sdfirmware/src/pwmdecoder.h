@@ -94,6 +94,10 @@ public:
 
 	TimeStamp last_capture_ts() const { return last_capture_ts_; }
 
+	void callback_on_change_only(bool on_change_only) {
+		callback_on_change_only_ = on_change_only;
+	}
+
 private:
 	static Frequency timer_clock_from_pwm_period(const TimeSpan& max_period);
 	void capture_callback();

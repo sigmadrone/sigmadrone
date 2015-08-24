@@ -31,7 +31,7 @@ void RcChannel::stop_receive() {
 	decoder_.stop();
 }
 
-const PwmDecoder& RcChannel::decoder() const  {
+PwmDecoder& RcChannel::decoder() {
 	return decoder_;
 }
 

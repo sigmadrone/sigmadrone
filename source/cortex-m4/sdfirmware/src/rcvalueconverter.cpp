@@ -14,12 +14,13 @@ static const float MAX_EULER_FROM_RC = M_PI / 4.0;
 
 RcValueConverter::RcValueConverter(
 		const RcChannelMapper& mapper,
-		const RcReceiver& receiver,
+		RcReceiver& receiver,
 		float scale_factor,
 		const TimeSpan& min_duty_cycle,
 		const TimeSpan& max_duty_cycle) : pwm_converter_(min_duty_cycle, max_duty_cycle),
 				mapper_(mapper), receiver_(receiver), scale_factor_(scale_factor),
-				last_gear_(0.0), motors_armed_(false) {
+				last_gear_(0.0), integrated_yaw_(0.0f), motors_armed_(false) {
+	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
 	update();
 }
 
@@ -31,7 +32,9 @@ void RcValueConverter::update() {
 	float gear = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR));
 
 	throttle_ = Throttle(throttle * scale_factor_);
-	if (yaw > 0.0) {
+	if (yaw > 0.0) {// && (fabs(yaw-0.5f) > 0.05)) {
+		TimeSpan dt = receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().decoded_period();
+		integrated_yaw_ += (yaw - 0.5) * (MAX_EULER_FROM_RC/4) * scale_factor_ * dt.seconds_float();
 		yaw = (yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 	}
 	if (pitch > 0.0) {

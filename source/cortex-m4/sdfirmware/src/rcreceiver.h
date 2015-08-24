@@ -13,7 +13,7 @@
 class RcReceiver {
 public:
 	RcReceiver(const std::vector<PwmRxConsts> rxConsts, FunctionPointer callback = FunctionPointer());
-	const RcChannel* channel(uint32_t channelno) const;
+	RcChannel* channel(uint32_t channelno);
 	void start();
 	void stop();
 	size_t channel_count() { return channels_.size(); }

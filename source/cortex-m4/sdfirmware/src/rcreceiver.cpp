@@ -24,7 +24,7 @@ void RcReceiver::stop() {
 	}
 }
 
-const RcChannel* RcReceiver::channel(uint32_t channelno) const {
+RcChannel* RcReceiver::channel(uint32_t channelno) {
 	assert(channelno < channels_.size());
 	return channels_[channelno];
 }
