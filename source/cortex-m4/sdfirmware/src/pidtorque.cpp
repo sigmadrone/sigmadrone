@@ -2,30 +2,12 @@
 #include "pidtorque.h"
 
 PidTorque::PidTorque() :
-	set_Q_(1), pid_controller_(0.0,0.0,0.0), pid_controller_z_(0.0,0.0,0.0)
+	set_Q_(1), pid_controller_(0.0,0.0,0.0), pid_controller_yaw_(0.0,0.0,0.0)
 {
-	reset(0.0, 0.0, 0.0);
 }
 
 PidTorque::~PidTorque()
 {
-}
-
-/*
- * 	kp_ = kp / 1000.0 * 22.5 / 100.0 / (3.1415/2);
- *	ki_ = ki / 1000.0 * 22.5 / 100.0 / (3.1415/2);
- *	kd_ = kd / 1000.0 * 22.5 / 100.0 / (3.1415/2);
- *
- */
-void PidTorque::reset(float kp, float ki, float kd)
-{
-	pid_controller_.reset(kp, ki, kd,0);
-
-	/*
-	 * Use separate pid controller for Z compensation, mostly in order to have
-	 * smaller Kp. Hmmm... do we need separate PIDs for X and Y as well?!?
-	 */
-	pid_controller_z_.reset(kp/3.0f/5.0f, ki, 0 * kd/2.0, 0);
 }
 
 void PidTorque::set_target(const QuaternionF &setQ)
@@ -69,7 +51,7 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt)
 	Vector3f error_z = Qtorq_z.axis().normalize() * Qtorq_z.angle() * -1.0;
 	error_z.at(0,0) = error_z.at(1,0) = 0.0;
 	torq.at(0) = torq.at(1) = 0;
-	torq.at(2,0) = pid_controller_z_.get_pid(error_z, dt.seconds_float()).at(2,0);
+	torq.at(2,0) = pid_controller_yaw_.get_pid(error_z, dt.seconds_float()).at(2,0);
 	error.at(2,0) = error_z.at(2,0);
 #endif
 
@@ -81,7 +63,7 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt)
 	QuaternionF::decomposeTwistSwing(Qtorq, Vector3d(0,0,1), swing, last_twist_);
 	Vector3f error_z = last_twist_.axis().normalize() * last_twist_.angle() * -1.0;
 	error_z.at(0) = error_z.at(1) = 0.0;
-	torq.at(2) = pid_controller_z_.get_pid(error_z, dt.seconds_float()).at(2);
+	torq.at(2) = pid_controller_yaw_.get_pid(error_z, dt.seconds_float()).at(2);
 	error.at(2) = error_z.at(2);
 
 #endif

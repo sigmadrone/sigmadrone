@@ -121,6 +121,11 @@ public:
 	float get_kp() const { return kp_; }
 	float get_ki() const { return ki_; }
 	float get_kd() const { return kd_; }
+	void set_kp_ki_kd(float kp, float ki, float kd) {
+		set_kp(kp);
+		set_ki(ki);
+		set_kd(kd);
+	}
 
 private:
 	PidVector _get_i(

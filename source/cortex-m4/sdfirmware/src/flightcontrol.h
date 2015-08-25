@@ -46,7 +46,6 @@ public:
 
 	void update_state(DroneState& state);
 	void safety_check(DroneState& state);
-	void reset_pid(DroneState& state);
 
 	inline RcReceiver& rc_receiver() { return rc_receiver_; }
 	inline ServoController& servo() { return servo_ctrl_; }
