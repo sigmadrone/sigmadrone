@@ -216,9 +216,6 @@ void main_task(void *pvParameters)
 	gyr_bias = gyr_bias / (float)bias_iterations;
 
 	flight_ctl.start_receiver();
-
-	flight_ctl.pilot().reset(1.0,0.0,0.35);
-
 	HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream3_IRQn);
 	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);

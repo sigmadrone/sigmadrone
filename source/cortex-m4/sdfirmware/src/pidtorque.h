@@ -19,7 +19,6 @@ public:
 public:
 	QuaternionF last_twist_;
 	QuaternionF set_Q_;
-	float kp_, ki_, kd_;
 	PidController3f pid_controller_;
 	PidController3f pid_controller_z_;
 };

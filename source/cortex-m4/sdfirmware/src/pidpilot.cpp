@@ -12,9 +12,11 @@ PidPilot::PidPilot(float kp, float ki, float kd) {
 PidPilot::~PidPilot() {
 }
 
-void PidPilot::reset_pid(float kp, float ki, float kd)
+void PidPilot::reset_coefficents(float kp, float ki, float kd)
 {
-	pid_.reset(kp * 1000.0, ki * 1000.0, kd * 1000.0);
+	pid_.pid_controller_.set_kp(kp);
+	pid_.pid_controller_.set_ki(ki);
+	pid_.pid_controller_.set_kd(kd);
 }
 
 void PidPilot::reset(float kp, float ki, float kd) {
@@ -31,7 +33,7 @@ void PidPilot::reset(float kp, float ki, float kd) {
 	m1_.at(2,0) = -0.5;
 	m2_.at(2,0) = 0.5;
 	m3_.at(2,0) = -0.5;
-	reset_pid(kp, ki, kd);
+	reset_coefficents(kp, ki, kd);
 }
 
 void PidPilot::update_state(DroneState& state, const QuaternionF& target_attitude)

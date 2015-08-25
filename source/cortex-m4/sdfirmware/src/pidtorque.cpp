@@ -11,18 +11,21 @@ PidTorque::~PidTorque()
 {
 }
 
+/*
+ * 	kp_ = kp / 1000.0 * 22.5 / 100.0 / (3.1415/2);
+ *	ki_ = ki / 1000.0 * 22.5 / 100.0 / (3.1415/2);
+ *	kd_ = kd / 1000.0 * 22.5 / 100.0 / (3.1415/2);
+ *
+ */
 void PidTorque::reset(float kp, float ki, float kd)
 {
-	kp_ = kp / 1000.0 * 22.5 / 100.0 / (3.1415/2);
-	ki_ = ki / 1000.0 * 22.5 / 100.0 / (3.1415/2);
-	kd_ = kd / 1000.0 * 22.5 / 100.0 / (3.1415/2);
-	pid_controller_.reset(kp_,ki_,kd_,0);
+	pid_controller_.reset(kp, ki, kd,0);
 
 	/*
 	 * Use separate pid controller for Z compensation, mostly in order to have
 	 * smaller Kp. Hmmm... do we need separate PIDs for X and Y as well?!?
 	 */
-	pid_controller_z_.reset(kp_/3.0f/5.0f, ki_, 0 * kd_/2.0, 0);
+	pid_controller_z_.reset(kp/3.0f/5.0f, ki, 0 * kd/2.0, 0);
 }
 
 void PidTorque::set_target(const QuaternionF &setQ)

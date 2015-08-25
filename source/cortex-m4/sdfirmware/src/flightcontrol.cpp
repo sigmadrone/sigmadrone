@@ -69,7 +69,7 @@ void FlightControl::motor_power_on_off(bool power_on) {
 
 void FlightControl::reset_pid(DroneState& state)
 {
-	pilot_.reset_pid(state.kp_, state.ki_, state.kd_);
+	pilot_.reset_coefficents(state.kp_, state.ki_, state.kd_);
 }
 
 void FlightControl::update_state(DroneState& state)

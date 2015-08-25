@@ -115,6 +115,13 @@ public:
 
 	const PidVector& integral_error() const { return integral_err_; }
 
+	void set_kp(float kp) { kp_ = kp; }
+	void set_ki(float ki) { ki_ = ki; }
+	void set_kd(float kd) { kd_ = kd; }
+	float get_kp() const { return kp_; }
+	float get_ki() const { return ki_; }
+	float get_kd() const { return kd_; }
+
 private:
 	PidVector _get_i(
 			const PidVector& err,
