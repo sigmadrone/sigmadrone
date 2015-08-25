@@ -5,21 +5,7 @@
  */
 #include "pidpilot.h"
 
-PidPilot::PidPilot(float kp, float ki, float kd) {
-	reset(kp, ki, kd);
-}
-
-PidPilot::~PidPilot() {
-}
-
-void PidPilot::reset_coefficents(float kp, float ki, float kd)
-{
-	pid_.pid_controller_.set_kp(kp);
-	pid_.pid_controller_.set_ki(ki);
-	pid_.pid_controller_.set_kd(kd);
-}
-
-void PidPilot::reset(float kp, float ki, float kd) {
+PidPilot::PidPilot() {
 	min_thrust_ = 0.0;
 	max_thrust_ = 1.0;
 	target_thrust_ = 0.0;
@@ -33,14 +19,25 @@ void PidPilot::reset(float kp, float ki, float kd) {
 	m1_.at(2,0) = -0.5;
 	m2_.at(2,0) = 0.5;
 	m3_.at(2,0) = -0.5;
-	reset_coefficents(kp, ki, kd);
 }
 
-void PidPilot::update_state(DroneState& state, const QuaternionF& target_attitude)
+PidPilot::~PidPilot() {
+}
+
+void PidPilot::set_pid_coefficents(const DroneState& state)
+{
+	pid_.pid_controller_.set_kp_ki_kd(state.kp_, state.ki_, state.kd_);
+	pid_.pid_controller_yaw_.set_kp_ki_kd(state.yaw_kp_, state.yaw_ki_, state.yaw_kd_);
+}
+
+void PidPilot::update_state(DroneState& state)
 {
 	Vector3f torque_rpm;
 
-	pid_.set_target(target_attitude);
+	pid_.set_target(state.target_);
+	set_target_thrust(state.base_throttle_);
+	set_pid_coefficents(state);
+
 	torque_correction_ = pid_.get_torque(state.attitude_, state.dt_);
 	state.last_twist_ = pid_.last_twist_;
 

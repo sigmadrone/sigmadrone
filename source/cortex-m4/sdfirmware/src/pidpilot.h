@@ -17,11 +17,10 @@
 class PidPilot
 {
 public:
-	PidPilot(float kp, float ki, float kd);
+	PidPilot();
 	~PidPilot();
-	void reset(float kp, float ki, float kd);
-	void reset_coefficents(float kp, float ki, float kd);
-	void update_state(DroneState& state, const QuaternionF& target_attitude);
+	void set_pid_coefficents(const DroneState&);
+	void update_state(DroneState& state);
 
 	void set_min_thrust(float minRev);
 	void set_max_thrust(float maxRev);

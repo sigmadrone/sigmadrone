@@ -38,7 +38,8 @@ struct DroneState {
 		, accelerometer_correction_period_(4.0)
 		, yaw_(0.0)
 		, pitch_(0.0)
-		, roll_(0.0) { }
+		, roll_(0.0)
+		, base_throttle_(0.0) { }
 	rexjson::value to_json() {
 		rexjson::object ret;
 		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
@@ -96,6 +97,7 @@ struct DroneState {
 	float yaw_;
 	float pitch_;
 	float roll_;
+	float base_throttle_;
 
 	/*
 	 * Time it took to read sensors

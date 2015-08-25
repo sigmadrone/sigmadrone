@@ -14,13 +14,12 @@ public:
 
 	void set_target(const QuaternionF &set_q);
 	Vector3f get_torque(const QuaternionF &in_q, const TimeSpan& dt);
-	void reset(float kp, float ki, float kd);
 
 public:
 	QuaternionF last_twist_;
 	QuaternionF set_Q_;
 	PidController3f pid_controller_;
-	PidController3f pid_controller_z_;
+	PidController3f pid_controller_yaw_;
 };
 
 #endif
