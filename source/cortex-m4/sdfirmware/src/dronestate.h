@@ -25,7 +25,17 @@
  * Kd = 0.35
  */
 struct DroneState {
-	DroneState() : altitude_(INVALID_ALTITUDE), pressure_hpa_(0.0f), temperature_(0.0f), kp_(1.0), ki_(0.0), kd_(3.5), accelerometer_correction_period_(4.0) {}
+	DroneState()
+		: altitude_(INVALID_ALTITUDE)
+		, pressure_hpa_(0.0f)
+		, temperature_(0.0f)
+		, kp_(1.0)
+		, ki_(0.0)
+		, kd_(3.5)
+		, accelerometer_correction_period_(4.0)
+		, yaw_(0.0)
+		, pitch_(0.0)
+		, roll_(0.0) { }
 	rexjson::value to_json() {
 		rexjson::object ret;
 		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
@@ -47,6 +57,9 @@ struct DroneState {
 		ret["ki"] = ki_;
 		ret["kd"] = kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_period_;
+		ret["yaw"] = yaw_;
+		ret["pitch"] = pitch_;
+		ret["roll"] = roll_;
 		return ret;
 	}
 
@@ -71,6 +84,9 @@ struct DroneState {
 	float ki_;
 	float kd_;
 	float accelerometer_correction_period_;
+	float yaw_;
+	float pitch_;
+	float roll_;
 
 	/*
 	 * Time it took to read sensors

@@ -19,7 +19,7 @@ RcValueConverter::RcValueConverter(
 		const TimeSpan& min_duty_cycle,
 		const TimeSpan& max_duty_cycle) : pwm_converter_(min_duty_cycle, max_duty_cycle), quaternion_yaw_(1,0,0,0),
 				mapper_(mapper), receiver_(receiver), scale_factor_(scale_factor),
-				last_gear_(0.0), motors_armed_(false) {
+				last_gear_(0.0), motors_armed_(false), yaw_(0.0), pitch_(0.0), roll_(0.0) {
 	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
 	update();
 }
@@ -33,18 +33,19 @@ void RcValueConverter::update() {
 
 	throttle_ = Throttle(throttle * scale_factor_);
 	if (yaw > 0.0 && (fabs(yaw-0.5f) > 0.05)) {
+		yaw_ = (yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 		TimeSpan dt = receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().decoded_period();
-		Vector3f ang_vel(0.0f, 0.0f, (yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_);
+		Vector3f ang_vel(0.0f, 0.0f, yaw_);
 		quaternion_yaw_ *= QuaternionF::fromAngularVelocity(ang_vel, dt.seconds_float());
 	}
 	if (pitch > 0.0) {
-		pitch = -1.0 * (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
+		pitch_ = -1.0 * (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 	}
 	if (roll > 0.0) {
-		roll = (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
+		roll_ = (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
 	}
 
-	quaternion_ = QuaternionF::fromAngularVelocity(Vector3f(roll, pitch, 0), 1.0) * quaternion_yaw_;
+	quaternion_ = QuaternionF::fromAngularVelocity(Vector3f(roll_, pitch_, 0), 1.0) * quaternion_yaw_;
 
 	/*
 	 * Note: on Spektrum DX8 by _default_ GEAR switch set to 0 results in max pulse and
@@ -74,4 +75,19 @@ Throttle RcValueConverter::base_throttle() const {
 
 bool RcValueConverter::motors_armed() const {
 	return motors_armed_;
+}
+
+float RcValueConverter::get_yaw() const
+{
+	return yaw_;
+}
+
+float RcValueConverter::get_pitch() const
+{
+	return pitch_;
+}
+
+float RcValueConverter::get_roll() const
+{
+	return roll_;
 }

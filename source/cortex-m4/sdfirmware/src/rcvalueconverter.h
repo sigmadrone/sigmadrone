@@ -62,6 +62,10 @@ public:
 	Throttle base_throttle() const;
 	bool motors_armed() const;
 	void update();
+	float get_yaw() const;
+	float get_pitch() const;
+	float get_roll() const;
+
 private:
 	float get_value_as_float(uint32_t channelno);
 private:
@@ -74,6 +78,10 @@ private:
 	float scale_factor_;
 	float last_gear_;
 	bool motors_armed_;
+	float yaw_;
+	float pitch_;
+	float roll_;
+
 };
 
 #endif /* RCVALUECONVERTER_H_ */

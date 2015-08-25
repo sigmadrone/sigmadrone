@@ -72,6 +72,14 @@ void FlightControl::reset_pid(DroneState& state)
 	pilot_.reset_pid(state.kp_, state.ki_, state.kd_);
 }
 
+void FlightControl::update_state(DroneState& state)
+{
+	safety_check(state);
+	state.yaw_ = rc_values_.get_yaw();
+	state.pitch_ = rc_values_.get_pitch();
+	state.roll_ = rc_values_.get_roll();
+}
+
 void FlightControl::safety_check(DroneState& drone_state) {
 
 	if (!rc_values_.motors_armed()) {

@@ -259,11 +259,12 @@ void main_task(void *pvParameters)
 
 		drone_state->attitude_ = att.get_attitude();
 		drone_state->target_ = flight_ctl.target_q();
+		flight_ctl.reset_pid(*drone_state);
+		flight_ctl.update_state(*drone_state);
 		flight_ctl.process_servo_start_stop_command();
 		flight_ctl.pilot().set_target_thrust(flight_ctl.base_throttle().get());
 		flight_ctl.pilot().update_state(*drone_state, flight_ctl.target_q());
 		flight_ctl.altitude_tracker().update_state(*drone_state);
-		flight_ctl.safety_check(*drone_state);
 		flight_ctl.send_throttle_to_motors();
 
 		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {

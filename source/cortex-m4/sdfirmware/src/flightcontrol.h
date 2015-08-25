@@ -44,6 +44,7 @@ public:
 	 */
 	void motor_power_on_off(bool power_on);
 
+	void update_state(DroneState& state);
 	void safety_check(DroneState& state);
 	void reset_pid(DroneState& state);
 
