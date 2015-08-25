@@ -33,6 +33,9 @@ protected:
 	rexjson::value rpc_kp(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_ki(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_kp_yaw(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_kd_yaw(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_ki_yaw(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_set_accelerometer_correction_period(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 
