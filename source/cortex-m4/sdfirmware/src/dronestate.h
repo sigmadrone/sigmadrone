@@ -32,6 +32,9 @@ struct DroneState {
 		, kp_(0.2)
 		, ki_(0.0)
 		, kd_(0.04)
+		, yaw_kp_(0.02)
+		, yaw_ki_(0.0)
+		, yaw_kd_(0.01)
 		, accelerometer_correction_period_(4.0)
 		, yaw_(0.0)
 		, pitch_(0.0)
@@ -56,6 +59,9 @@ struct DroneState {
 		ret["kp"] = kp_;
 		ret["ki"] = ki_;
 		ret["kd"] = kd_;
+		ret["yaw_kp"] = yaw_kp_;
+		ret["yaw_ki"] = yaw_ki_;
+		ret["yaw_kd"] = yaw_kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_period_;
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
@@ -83,6 +89,9 @@ struct DroneState {
 	float kp_;
 	float ki_;
 	float kd_;
+	float yaw_kp_;
+	float yaw_ki_;
+	float yaw_kd_;
 	float accelerometer_correction_period_;
 	float yaw_;
 	float pitch_;

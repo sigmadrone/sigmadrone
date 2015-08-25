@@ -35,6 +35,9 @@ user_rpcserver::user_rpcserver(server_app& app, boost::asio::io_service& io_serv
 	add("ki", &user_rpcserver::rpc_ki);
 	add("kd", &user_rpcserver::rpc_kd);
 	add("kp", &user_rpcserver::rpc_kp);
+	add("yaw_ki", &user_rpcserver::rpc_yaw_ki);
+	add("yaw_kd", &user_rpcserver::rpc_yaw_kd);
+	add("yaw_kp", &user_rpcserver::rpc_yaw_kp);
 
 	add_uri_handler("/firmware", boost::bind(&user_rpcserver::firmware_jsonrpc_request_handler, this, _1, _2, _3));
 	add_uri_handler("/jsonrpc", boost::bind(&user_rpcserver::jsonrpc_request_handler, this, _1, _2, _3));
@@ -414,7 +417,7 @@ rexjson::value user_rpcserver::rpc_kp(http::server::connection_ptr connection, r
 		return
 	            "kp\n"
 	            "\nGet/Set Kp."
-				"\nIf the new coeficient is not specified, the current Kp will be returned."
+				"\nIf the new coefficient is not specified, the current Kp will be returned."
 				"\n"
 				"Arguments:\n"
 				"1. Kp          (real, optional) The Kp of the PID controller.\n"
@@ -435,7 +438,7 @@ rexjson::value user_rpcserver::rpc_kd(http::server::connection_ptr connection, r
 		return
 	            "kd\n"
 	            "\nGet/Set Kd."
-				"\nIf the new coeficient is not specified, the current Kd will be returned."
+				"\nIf the new coefficient is not specified, the current Kd will be returned."
 				"\n"
 				"Arguments:\n"
 				"1. Kd          (real, optional) The Kd of the PID controller.\n"
@@ -456,7 +459,7 @@ rexjson::value user_rpcserver::rpc_ki(http::server::connection_ptr connection, r
 		return
 	            "ki\n"
 	            "\nGet/Set Ki."
-				"\nIf the new coeficient is not specified, the current Ki will be returned."
+				"\nIf the new coefficient is not specified, the current Ki will be returned."
 				"\n"
 				"Arguments:\n"
 				"1. Ki          (real, optional) The Ki of the PID controller.\n"
@@ -465,6 +468,70 @@ rexjson::value user_rpcserver::rpc_ki(http::server::connection_ptr connection, r
 	verify_parameters(params, types, ARRAYSIZE(types));
 	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("ki", params);
 }
+
+rexjson::value user_rpcserver::rpc_yaw_kp(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "yaw_kp\n"
+	            "\nGet/Set yaw_kp."
+				"\nIf the new coefficient is not specified, the current yaw_kp will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. yaw_kp          (real, optional) The yaw_kp of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("yaw_kp", params);
+}
+
+rexjson::value user_rpcserver::rpc_yaw_kd(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "yaw_kd\n"
+	            "\nGet/Set yaw_kd."
+				"\nIf the new coefficient is not specified, the current yaw_kd will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. yaw_kd          (real, optional) The yaw_kd of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("yaw_kd", params);
+}
+
+rexjson::value user_rpcserver::rpc_yaw_ki(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "yaw_ki\n"
+	            "\nGet/Set yaw_ki."
+				"\nIf the new coefficient is not specified, the current yaw_ki will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. yaw_ki          (real, optional) The yaw_ki of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("yaw_ki", params);
+}
+
 
 rexjson::value user_rpcserver::rpc_get_motors(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode)
 {

@@ -35,6 +35,9 @@ public:
 	rexjson::value rpc_ki(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_kd(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_kp(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_yaw_ki(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_yaw_kd(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_yaw_kp(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_thrust(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_get_thrust(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_set_thrust(http::server::connection_ptr connection, rexjson::array& params, rpc_exec_mode mode = execute);

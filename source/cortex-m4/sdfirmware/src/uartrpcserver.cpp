@@ -22,6 +22,9 @@ UartRpcServer::UartRpcServer(DroneState& dronestate)
 	add("ki", &UartRpcServer::rpc_ki);
 	add("kd", &UartRpcServer::rpc_kd);
 	add("kp", &UartRpcServer::rpc_kp);
+	add("yaw_ki", &UartRpcServer::rpc_yaw_ki);
+	add("yaw_kd", &UartRpcServer::rpc_yaw_kd);
+	add("yaw_kp", &UartRpcServer::rpc_yaw_kp);
 	add("sd_set_accelerometer_correction_period", &UartRpcServer::rpc_set_accelerometer_correction_period);
 }
 
@@ -197,6 +200,77 @@ rexjson::value UartRpcServer::rpc_ki(UART* , rexjson::array& params, rpc_exec_mo
 		dronestate_.ki_ = params[0].get_real();
 	return dronestate_.ki_;
 }
+
+
+rexjson::value UartRpcServer::rpc_yaw_kp(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "yaw_kp\n"
+	            "\nGet/Set yaw_kp."
+				"\nIf the new coefficient is not specified, the current yaw_kp will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. yaw_kp          (real, optional) The yaw_kp of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == rexjson::real_type))
+		dronestate_.yaw_kp_ = params[0].get_real();
+	return dronestate_.yaw_kp_;
+}
+
+rexjson::value UartRpcServer::rpc_yaw_kd(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "yaw_kd\n"
+	            "\nGet/Set yaw_kd."
+				"\nIf the new coefficient is not specified, the current yaw_kd will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. yaw_kd          (real, optional) The yaw_kd of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == rexjson::real_type))
+		dronestate_.yaw_kd_ = params[0].get_real();
+	return dronestate_.yaw_kd_;
+}
+
+rexjson::value UartRpcServer::rpc_yaw_ki(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "yaw_ki\n"
+	            "\nGet/Set yaw_ki."
+				"\nIf the new coefficient is not specified, the current yaw_ki will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. yaw_ki          (real, optional) The yaw_ki of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == rexjson::real_type))
+		dronestate_.yaw_ki_ = params[0].get_real();
+	return dronestate_.yaw_ki_;
+}
+
 
 rexjson::value UartRpcServer::rpc_set_accelerometer_correction_period(UART* , rexjson::array& params, rpc_exec_mode mode)
 {

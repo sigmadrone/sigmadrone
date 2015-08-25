@@ -39,7 +39,12 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	, label_twist_x_(NULL)
 	, label_twist_y_(NULL)
 	, label_twist_z_(NULL)
-
+	, spinbutton_xy_kp_(NULL)
+	, spinbutton_xy_ki_(NULL)
+	, spinbutton_xy_kd_(NULL)
+	, spinbutton_z_kp_(NULL)
+	, spinbutton_z_ki_(NULL)
+	, spinbutton_z_kd_(NULL)
 {
 	//Get the Glade-instantiated Button, and connect a signal handler:
 	ref_glade_->get_widget("button_quit", button_quit_);
@@ -74,6 +79,12 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	ref_glade_->get_widget("label_twist_x", label_twist_x_);
 	ref_glade_->get_widget("label_twist_y", label_twist_y_);
 	ref_glade_->get_widget("label_twist_z", label_twist_z_);
+	ref_glade_->get_widget("spinbutton_xy_kp", spinbutton_xy_kp_);
+	ref_glade_->get_widget("spinbutton_xy_ki", spinbutton_xy_ki_);
+	ref_glade_->get_widget("spinbutton_xy_kd", spinbutton_xy_kd_);
+	ref_glade_->get_widget("spinbutton_z_kp", spinbutton_z_kp_);
+	ref_glade_->get_widget("spinbutton_z_ki", spinbutton_z_ki_);
+	ref_glade_->get_widget("spinbutton_z_kd", spinbutton_z_kd_);
 
 
 	button_quit_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_quit));
@@ -88,6 +99,14 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	spinbutton_m3_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust));
 	spinbutton_m4_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust));
 	spinbutton_thrust_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_thrust));
+
+	spinbutton_xy_kp_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_xy_kp));
+	spinbutton_xy_ki_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_xy_ki));
+	spinbutton_xy_kd_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_xy_kd));
+	spinbutton_z_kp_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_kp));
+	spinbutton_z_ki_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_ki));
+	spinbutton_z_kd_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_kd));
+
 }
 
 mainwindow::~mainwindow()
@@ -128,6 +147,7 @@ void mainwindow::on_button_lock_g()
 	spinbutton_g_z_->set_sensitive(!button_lock_g_->get_active());
 }
 
+
 void mainwindow::on_change_thrust()
 {
 	try {
@@ -138,6 +158,66 @@ void mainwindow::on_change_thrust()
 	}
 }
 
+
+void mainwindow::on_change_xy_kp()
+{
+	try {
+		rpc_client_->call(rpcuri_, "kp", spinbutton_xy_kp_->get_value());
+		rpc_update_thrust();
+	} catch (std::exception& e) {
+		std::cout << "on_change_xy_kp exception: " << e.what() << std::endl;
+	}
+}
+
+void mainwindow::on_change_xy_ki()
+{
+	try {
+		rpc_client_->call(rpcuri_, "ki", spinbutton_xy_ki_->get_value());
+		rpc_update_thrust();
+	} catch (std::exception& e) {
+		std::cout << "on_change_xy_ki exception: " << e.what() << std::endl;
+	}
+}
+
+void mainwindow::on_change_xy_kd()
+{
+	try {
+		rpc_client_->call(rpcuri_, "kd", spinbutton_xy_kd_->get_value());
+		rpc_update_thrust();
+	} catch (std::exception& e) {
+		std::cout << "on_change_xy_kd exception: " << e.what() << std::endl;
+	}
+}
+
+void mainwindow::on_change_yaw_kp()
+{
+	try {
+		rpc_client_->call(rpcuri_, "yaw_kp", spinbutton_z_kp_->get_value());
+		rpc_update_thrust();
+	} catch (std::exception& e) {
+		std::cout << "on_change_yaw_kp exception: " << e.what() << std::endl;
+	}
+}
+
+void mainwindow::on_change_yaw_ki()
+{
+	try {
+		rpc_client_->call(rpcuri_, "yaw_ki", spinbutton_z_ki_->get_value());
+		rpc_update_thrust();
+	} catch (std::exception& e) {
+		std::cout << "on_change_yaw_ki exception: " << e.what() << std::endl;
+	}
+}
+
+void mainwindow::on_change_yaw_kd()
+{
+	try {
+		rpc_client_->call(rpcuri_, "yaw_kd", spinbutton_z_kd_->get_value());
+		rpc_update_thrust();
+	} catch (std::exception& e) {
+		std::cout << "on_change_yaw_kd exception: " << e.what() << std::endl;
+	}
+}
 
 void mainwindow::on_change_g()
 {
@@ -246,6 +326,27 @@ void mainwindow::rpc_update_correction_thurst()
 	}
 }
 
+void mainwindow::rpc_update_xy_pid()
+{
+	try {
+		spinbutton_xy_kp_->set_value(drone_state_["kp"].get_real());
+		spinbutton_xy_ki_->set_value(drone_state_["ki"].get_real());
+		spinbutton_xy_kd_->set_value(drone_state_["kd"].get_real());
+	} catch (std::exception& e) {
+		std::cout << "rpc_update_xy_pid exception: " << e.what() << std::endl;
+	}
+}
+
+void mainwindow::rpc_update_yaw_pid()
+{
+	try {
+		spinbutton_z_kp_->set_value(drone_state_["yaw_kp"].get_real());
+		spinbutton_z_ki_->set_value(drone_state_["yaw_ki"].get_real());
+		spinbutton_z_kd_->set_value(drone_state_["yaw_kd"].get_real());
+	} catch (std::exception& e) {
+		std::cout << "rpc_update_xy_pid exception: " << e.what() << std::endl;
+	}
+}
 
 void mainwindow::rpc_update_g()
 {
@@ -304,6 +405,8 @@ bool mainwindow::on_rpc_update()
 		rpc_update_motors();
 		rpc_update_g();
 		rpc_update_thrust();
+		rpc_update_xy_pid();
+		rpc_update_yaw_pid();
 	} catch (std::exception& e) {
 		std::cout << "on_rpc_update exception: " << e.what() << std::endl;
 	}

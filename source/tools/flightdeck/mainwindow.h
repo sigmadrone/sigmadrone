@@ -32,6 +32,15 @@ protected:
 	void rpc_update_accelerometer();
 	void rpc_update_thrust();
 	void rpc_update_armed();
+	void rpc_update_xy_pid();
+	void rpc_update_yaw_pid();
+	void on_change_xy_kp();
+	void on_change_xy_ki();
+	void on_change_xy_kd();
+	void on_change_yaw_kp();
+	void on_change_yaw_ki();
+	void on_change_yaw_kd();
+
 	std::string double_to_str(double val, size_t precision = 3);
 
 	rexjson::value drone_state_;
@@ -72,6 +81,13 @@ protected:
 	Gtk::Label *label_twist_x_;
 	Gtk::Label *label_twist_y_;
 	Gtk::Label *label_twist_z_;
+	Gtk::SpinButton* spinbutton_xy_kp_;
+	Gtk::SpinButton* spinbutton_xy_ki_;
+	Gtk::SpinButton* spinbutton_xy_kd_;
+	Gtk::SpinButton* spinbutton_z_kp_;
+	Gtk::SpinButton* spinbutton_z_ki_;
+	Gtk::SpinButton* spinbutton_z_kd_;
+
 
 };
 
