@@ -14,8 +14,7 @@ FlightControl::FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
 		rc_values_(ch_mapper_, rc_receiver_, RC_VALUE_SCALE_FACTOR, TimeSpan::from_microseconds(1100),
 				TimeSpan::from_microseconds(1910)),
 		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)),
-		pilot_(0.0, 0.0, 0.0),
-		motor_power_(PB_2), altitude_track_() {
+		motor_power_(PB_2), pilot_(0.0, 0.0, 0.0), altitude_track_() {
 }
 
 void FlightControl::start_receiver() {
