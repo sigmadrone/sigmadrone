@@ -60,8 +60,8 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt)
 	// ==> errQ = (~attitudeQ) * targetQ;
 	Qtorq = (~in_Q) * set_Q_;
 	QuaternionF swing;
-	QuaternionF::decomposeTwistSwing(Qtorq, Vector3d(0,0,1), swing, last_twist_);
-	Vector3f error_z = last_twist_.axis().normalize() * last_twist_.angle() * -1.0;
+	QuaternionF::decomposeTwistSwing(Qtorq, Vector3d(0,0,1), swing, twist_);
+	Vector3f error_z = twist_.axis().normalize() * twist_.angle() * -1.0;
 	error_z.at(0) = error_z.at(1) = 0.0;
 	torq.at(2) = pid_controller_yaw_.get_pid(error_z, dt.seconds_float()).at(2);
 	error.at(2) = error_z.at(2);

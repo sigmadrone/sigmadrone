@@ -32,10 +32,11 @@ struct DroneState {
 		, kp_(0.2)
 		, ki_(0.0)
 		, kd_(0.04)
-		, yaw_kp_(0.02)
+		, yaw_kp_(0.0)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.01)
 		, accelerometer_correction_period_(4.0)
+		, gyro_factor_(1.15)
 		, yaw_(0.0)
 		, pitch_(0.0)
 		, roll_(0.0)
@@ -56,7 +57,7 @@ struct DroneState {
 		ret["target"] = quaternion_to_json_value(target_);
 		ret["motors"] = matrix_to_json_value(motors_);
 		ret["pid_torque"] = matrix_to_json_value(pid_torque_);
-		ret["last_twist"] = quaternion_to_json_value(last_twist_);
+		ret["twist"] = quaternion_to_json_value(twist_);
 		ret["kp"] = kp_;
 		ret["ki"] = ki_;
 		ret["kd"] = kd_;
@@ -64,6 +65,7 @@ struct DroneState {
 		ret["yaw_ki"] = yaw_ki_;
 		ret["yaw_kd"] = yaw_kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_period_;
+		ret["gyro_factor"] = gyro_factor_;
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
@@ -94,6 +96,7 @@ struct DroneState {
 	float yaw_ki_;
 	float yaw_kd_;
 	float accelerometer_correction_period_;
+	float gyro_factor_;
 	float yaw_;
 	float pitch_;
 	float roll_;
@@ -111,7 +114,7 @@ struct DroneState {
 	QuaternionF target_;
 	Vector4f motors_;
 	Vector3f pid_torque_;
-	QuaternionF last_twist_;
+	QuaternionF twist_;
 
 	/*
 	 * Safety...

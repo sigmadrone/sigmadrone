@@ -149,8 +149,6 @@ int server_app::run(int argc, const char *argv[])
 	}
 	get_log_file()->log_level(args_.get_value("loglevel", "info"));
 	log_info_message("Server starting.");
-	init_servo_controller();
-	init_sensors_sampler();
 	init_attitude_tracker();
 	init_user_rpcserver();
 	boost::thread rpc_thread(boost::bind(&boost::asio::io_service::run, &io_service_));

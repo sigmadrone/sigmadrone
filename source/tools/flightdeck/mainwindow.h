@@ -18,20 +18,19 @@ protected:
 	void on_button_quit();
 	void on_button_arm_motors();
 	void on_button_lock_motors();
-	void on_button_lock_g();
 	void on_change_thrust();
-	void on_change_g();
 	void on_change_correction_thrust();
 	bool on_rpc_update();
 	void rpc_update_attitude();
 	void rpc_update_target();
 	void rpc_update_twist();
 	void rpc_update_motors();
-	void rpc_update_g();
+	void rpc_update_coefficients();
 	void rpc_update_correction_thurst();
 	void rpc_update_accelerometer();
 	void rpc_update_thrust();
 	void rpc_update_armed();
+	void rpc_update_controls();
 	void rpc_update_xy_pid();
 	void rpc_update_yaw_pid();
 	void on_change_xy_kp();
@@ -40,6 +39,8 @@ protected:
 	void on_change_yaw_kp();
 	void on_change_yaw_ki();
 	void on_change_yaw_kd();
+	void on_change_acc_period();
+	void on_change_gyro_factor();
 
 	std::string double_to_str(double val, size_t precision = 3);
 
@@ -47,20 +48,19 @@ protected:
 	sigc::connection timer_conn_;
 	int timer_number_;
 	std::string rpcuri_;
+	std::string firmware_rpcuri_;
 	boost::scoped_ptr<rpc_client_http> rpc_client_;
 	Glib::RefPtr<Gtk::Builder> ref_glade_;
 	Gtk::Button* button_quit_;
 	Gtk::CheckButton* button_arm_motors_;
 	Gtk::CheckButton* button_lock_motors_;
 	Gtk::SpinButton* spinbutton_thrust_;
-	Gtk::SpinButton* spinbutton_g_x_;
-	Gtk::SpinButton* spinbutton_g_y_;
-	Gtk::SpinButton* spinbutton_g_z_;
 	Gtk::SpinButton* spinbutton_m1_;
 	Gtk::SpinButton* spinbutton_m2_;
 	Gtk::SpinButton* spinbutton_m3_;
 	Gtk::SpinButton* spinbutton_m4_;
-	Gtk::CheckButton* button_lock_g_;
+	Gtk::SpinButton* spinbutton_acc_period_;
+	Gtk::SpinButton* spinbutton_gyro_factor_;
 	Gtk::Label *label_m1_;
 	Gtk::Label *label_m2_;
 	Gtk::Label *label_m3_;
@@ -87,6 +87,9 @@ protected:
 	Gtk::SpinButton* spinbutton_z_kp_;
 	Gtk::SpinButton* spinbutton_z_ki_;
 	Gtk::SpinButton* spinbutton_z_kd_;
+	Gtk::Label *label_yaw_;
+	Gtk::Label *label_pitch_;
+	Gtk::Label *label_roll_;
 
 
 };

@@ -17,7 +17,8 @@ static cmd_arg_spec g_argspec[] = {
 		{"loglevel",		"",		"Valid loglevels: none, critical, error, info, debug. Default: info", CMD_ARG_STRING},
 		{"rpc-server",		"",		"Remote RPC server. Default: localhost", CMD_ARG_STRING},
 		{"rpc-port",		"",		"Remote RPC port. Default: 18222", CMD_ARG_STRING},
-		{"rpc-uri",			"",		"Remote RPC url. Default: /jsonrpc", CMD_ARG_STRING},
+		{"rpc-uri",			"",		"Remote RPC uri. Default: /jsonrpc", CMD_ARG_STRING},
+		{"firmware",		"f",	"Use firmware uri for json rpc calls. This is the same as setting --rpc-uri=/firmware", CMD_ARG_BOOL},
 };
 
 static cmd_arg_spec g_argspec2[] = {

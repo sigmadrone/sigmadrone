@@ -16,7 +16,7 @@ public:
 	Vector3f get_torque(const QuaternionF &in_q, const TimeSpan& dt);
 
 public:
-	QuaternionF last_twist_;
+	QuaternionF twist_;
 	QuaternionF set_Q_;
 	PidController3f pid_controller_;
 	PidController3f pid_controller_yaw_;

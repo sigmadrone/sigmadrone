@@ -241,9 +241,8 @@ void main_task(void *pvParameters)
 		static const Matrix3f gyro_align(-1,0,0,0,-1,0,0,0,1);
 		if (gyr_samples >= gyr_wtm) {
 			gyro.GetFifoAngRateDPS(&gyr_axes);
-			drone_state->gyro_raw_ = Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias;
-			drone_state->gyro_raw_ = gyro_align * drone_state->gyro_raw_ * 1.0;
-			drone_state->gyro_ = drone_state->gyro_raw_;
+			drone_state->gyro_raw_ = gyro_align * (Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias);
+			drone_state->gyro_ = drone_state->gyro_raw_ * drone_state->gyro_factor_;
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
 

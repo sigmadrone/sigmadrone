@@ -26,6 +26,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate)
 	add("yaw_kd", &UartRpcServer::rpc_yaw_kd);
 	add("yaw_kp", &UartRpcServer::rpc_yaw_kp);
 	add("sd_set_accelerometer_correction_period", &UartRpcServer::rpc_set_accelerometer_correction_period);
+	add("sd_set_gyro_factor", &UartRpcServer::rpc_set_gyro_factor);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -295,6 +296,27 @@ rexjson::value UartRpcServer::rpc_set_accelerometer_correction_period(UART* , re
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	dronestate_.accelerometer_correction_period_ = params[0].get_real();
+	return params[0].get_real();
+}
+
+rexjson::value UartRpcServer::rpc_set_gyro_factor(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_set_gyro_factor\n"
+				"\nSet the correction factor for the gyro sensor."
+				"\n"
+				"Arguments:\n"
+				"1. n          (real) correction period\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	dronestate_.gyro_factor_ = params[0].get_real();
 	return params[0].get_real();
 }
 

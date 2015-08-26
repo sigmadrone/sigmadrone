@@ -37,9 +37,11 @@ int client_app::run(int argc, const char *argv[])
 {
 	std::string host = args_.get_value("rpc-server", "127.0.0.1");
 	std::string port = args_.get_value("rpc-port", "18222");
-	std::string url = args_.get_value("rpc-uri", "/jsonrpc");
+	std::string url = (args_.get_value("/firmware") == "1") ? "/firmware" : args_.get_value("rpc-uri", "/jsonrpc");
 	std::string rpcuser = args_.get_value("rpcuser", "m");
 	std::string rpcpassword = args_.get_value("rpcpassword", "x");
+
+	if (args_.get_value("daemon") == "1")
 
 	try {
 		http::client::response response;
@@ -47,10 +49,8 @@ int client_app::run(int argc, const char *argv[])
 		logfile_->log_level(args_.get_value("loglevel", "info"));
 		client.set_log_file(logfile_);
 		http::headers headers;
-		headers["Authorization"] = std::string("Basic ")
-				+ http::base64::encode(rpcuser + ":" + rpcpassword);
-		std::vector<std::string> parsed_cmd_line = parse_command_line(argc,
-				argv);
+		headers["Authorization"] = std::string("Basic ") + http::base64::encode(rpcuser + ":" + rpcpassword);
+		std::vector<std::string> parsed_cmd_line = parse_command_line(argc, argv);
 		if (!parsed_cmd_line.size())
 			throw std::runtime_error("no RPC method");
 		std::string method = parsed_cmd_line[0];
@@ -62,10 +62,10 @@ int client_app::run(int argc, const char *argv[])
 		rexjson::value spec_result;
 		spec_result.read(response.content);
 		if (spec_result.get_obj()["error"].type() == rexjson::obj_type) {
-					std::cout << "Error: "
-							<< spec_result.get_obj()["error"].get_obj()["message"].get_str()
-							<< std::endl;
-					return 1;
+			std::cout << "Error: "
+					<< spec_result.get_obj()["error"].get_obj()["message"].get_str()
+					<< std::endl;
+			return 1;
 		}
 		std::vector<unsigned int> rpc_types = rpc_server<>::rpc_types(
 				spec_result.get_obj()["result"].get_array());
