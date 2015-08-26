@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <gtkmm.h>
+#include <vector>
 #include "rpcclienthttp.h"
 #include "jsonserialization.h"
 
@@ -13,6 +14,7 @@ public:
 	virtual ~mainwindow();
 	void set_rpc_connection(const std::string& rpcserver, const std::string& port, size_t updaterate);
 
+	sigc::connection timer_conn_;
 protected:
 	//Signal handlers:
 	void on_button_quit();
@@ -45,7 +47,6 @@ protected:
 	std::string double_to_str(double val, size_t precision = 3);
 
 	rexjson::value drone_state_;
-	sigc::connection timer_conn_;
 	int timer_number_;
 	std::string rpcuri_;
 	std::string firmware_rpcuri_;
@@ -91,7 +92,7 @@ protected:
 	Gtk::Label *label_pitch_;
 	Gtk::Label *label_roll_;
 
-
+	std::vector<sigc::connection> connections_;
 };
 
 #endif //MAINWINDOW_H

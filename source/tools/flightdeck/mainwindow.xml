@@ -33,6 +33,7 @@
     <property name="page_increment">0.0050000000000000001</property>
   </object>
   <object class="GtkAdjustment" id="adjustment15">
+    <property name="lower">0.25</property>
     <property name="upper">10</property>
     <property name="step_increment">0.01</property>
     <property name="page_increment">0.050000000000000003</property>

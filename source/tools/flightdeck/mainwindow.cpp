@@ -57,8 +57,6 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	ref_glade_->get_widget("spinbutton_m2", spinbutton_m2_);
 	ref_glade_->get_widget("spinbutton_m3", spinbutton_m3_);
 	ref_glade_->get_widget("spinbutton_m4", spinbutton_m4_);
-	ref_glade_->get_widget("spinbutton_acc_period", spinbutton_acc_period_);
-	ref_glade_->get_widget("spinbutton_gyro_factor", spinbutton_gyro_factor_);
 	ref_glade_->get_widget("label_m1", label_m1_);
 	ref_glade_->get_widget("label_m2", label_m2_);
 	ref_glade_->get_widget("label_m3", label_m3_);
@@ -88,29 +86,34 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	ref_glade_->get_widget("label_yaw", label_yaw_);
 	ref_glade_->get_widget("label_pitch", label_pitch_);
 	ref_glade_->get_widget("label_roll", label_roll_);
+	ref_glade_->get_widget("spinbutton_acc_period", spinbutton_acc_period_);
+	ref_glade_->get_widget("spinbutton_gyro_factor", spinbutton_gyro_factor_);
 
 
-	button_quit_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_quit));
-	button_lock_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_lock_motors));
-	button_arm_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_arm_motors));
-	spinbutton_m1_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust));
-	spinbutton_m2_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust));
-	spinbutton_m3_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust));
-	spinbutton_m4_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust));
-	spinbutton_thrust_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_thrust));
-	spinbutton_acc_period_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_acc_period));
-	spinbutton_gyro_factor_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_gyro_factor));
-	spinbutton_xy_kp_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_xy_kp));
-	spinbutton_xy_ki_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_xy_ki));
-	spinbutton_xy_kd_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_xy_kd));
-	spinbutton_z_kp_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_kp));
-	spinbutton_z_ki_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_ki));
-	spinbutton_z_kd_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_kd));
+	connections_.push_back(button_quit_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_quit)));
+	connections_.push_back(spinbutton_acc_period_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_acc_period)));
+	connections_.push_back(spinbutton_gyro_factor_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_gyro_factor)));
+	connections_.push_back(button_lock_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_lock_motors)));
+	connections_.push_back(button_arm_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_arm_motors)));
+	connections_.push_back(spinbutton_m1_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust)));
+	connections_.push_back(spinbutton_m2_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust)));
+	connections_.push_back(spinbutton_m3_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust)));
+	connections_.push_back(spinbutton_m4_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust)));
+	connections_.push_back(spinbutton_thrust_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_thrust)));
+	connections_.push_back(spinbutton_xy_kp_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_xy_kp)));
+	connections_.push_back(spinbutton_xy_ki_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_xy_ki)));
+	connections_.push_back(spinbutton_xy_kd_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_xy_kd)));
+	connections_.push_back(spinbutton_z_kp_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_kp)));
+	connections_.push_back(spinbutton_z_ki_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_ki)));
+	connections_.push_back(spinbutton_z_kd_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_kd)));
 
 }
 
 mainwindow::~mainwindow()
 {
+	for (size_t i = 0; i < connections_.size(); i++) {
+		connections_[i].disconnect();
+	}
 }
 
 void mainwindow::on_button_quit()
@@ -315,6 +318,12 @@ void mainwindow::rpc_update_yaw_pid()
 
 void mainwindow::rpc_update_coefficients()
 {
+	try {
+		spinbutton_acc_period_->set_value(drone_state_["accelerometer_correction_period"].get_real());
+		spinbutton_gyro_factor_->set_value(drone_state_["gyro_factor"].get_real());
+	} catch (std::exception& e) {
+		std::cout << "rpc_update_coefficients exception: " << e.what() << std::endl;
+	}
 
 }
 
@@ -361,11 +370,12 @@ bool mainwindow::on_rpc_update()
 		rpc_update_target();
 		rpc_update_accelerometer();
 		rpc_update_motors();
-		rpc_update_coefficients();
 		rpc_update_thrust();
 		rpc_update_xy_pid();
 		rpc_update_yaw_pid();
 		rpc_update_controls();
+		rpc_update_coefficients();
+
 	} catch (std::exception& e) {
 		std::cout << "on_rpc_update exception: " << e.what() << std::endl;
 	}

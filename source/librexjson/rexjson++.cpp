@@ -19,6 +19,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <cstdlib>
+#include <limits>
 #include "rexjson++.h"
 #include "rexjsondfa.h"
 
@@ -476,9 +477,13 @@ void output::write_stream(const value& v, std::ostream& os, size_t level)
 	} else if (v.value_type_ == int_type) {
 		os << v.get_int64();
 	} else if (v.value_type_ == real_type) {
-		os.precision(precision_);
-		os.setf(std::ios::fixed, std:: ios::floatfield);
-		os << v.get_real();
+		if (v.get_real() != std::numeric_limits<double>::infinity() && v.get_real() != std::numeric_limits<double>::quiet_NaN()) {
+			os.precision(precision_);
+			os.setf(std::ios::fixed, std:: ios::floatfield);
+			os << v.get_real();
+		} else {
+			os << "null";
+		}
 	} else if (v.value_type_ == str_type) {
 		os << '"';
 		escape_str_val(v, os);

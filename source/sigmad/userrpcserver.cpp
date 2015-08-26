@@ -568,7 +568,9 @@ rexjson::value user_rpcserver::rpc_get_dronestate(http::server::connection_ptr c
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return rpc_client_uart(app_.firmware_uart_, app_.firmware_uart_speed_).call("sd_get_dronestate");
+	rpc_client_uart client(app_.firmware_uart_, app_.firmware_uart_speed_);
+	client.set_log_file(get_log_file());
+	return client.call("sd_get_dronestate");
 }
 
 
@@ -705,6 +707,7 @@ void user_rpcserver::firmware_jsonrpc_request_handler(http::server::connection& 
 
 	try {
 		rpc_client_uart uartcli(app_.firmware_uart_, app_.firmware_uart_speed_);
+		uartcli.set_log_file(get_log_file());
 		rep.content = uartcli.json_rpc_request(req.content) + "\n";
 
 	} catch (std::exception& e) {

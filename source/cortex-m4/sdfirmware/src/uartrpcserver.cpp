@@ -295,8 +295,11 @@ rexjson::value UartRpcServer::rpc_set_accelerometer_correction_period(UART* , re
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	dronestate_.accelerometer_correction_period_ = params[0].get_real();
-	return params[0].get_real();
+	float period = params[0].get_real();
+	if (period < 0.25)
+		throw std::range_error("Invalid value");
+	dronestate_.accelerometer_correction_period_ = period;
+	return dronestate_.accelerometer_correction_period_;
 }
 
 rexjson::value UartRpcServer::rpc_set_gyro_factor(UART* , rexjson::array& params, rpc_exec_mode mode)
@@ -316,8 +319,11 @@ rexjson::value UartRpcServer::rpc_set_gyro_factor(UART* , rexjson::array& params
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	dronestate_.gyro_factor_ = params[0].get_real();
-	return params[0].get_real();
+	float factor = params[0].get_real();
+	if (factor < 0.25 || factor > 2.0)
+		throw std::range_error("Invalid value");
+	dronestate_.gyro_factor_ = factor;
+	return dronestate_.gyro_factor_;
 }
 
 rexjson::value UartRpcServer::rpc_get_dronestate(UART* , rexjson::array& params, rpc_exec_mode mode)

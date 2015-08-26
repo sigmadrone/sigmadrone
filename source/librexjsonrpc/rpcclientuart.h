@@ -10,8 +10,9 @@
 
 #include <termios.h>
 #include "librexjson/rexjson++.h"
+#include "liblogger/logger.h"
 
-class rpc_client_uart {
+class rpc_client_uart : public ::logger<logfile_base> {
 public:
 	rpc_client_uart(const std::string& filename, speed_t speed = B115200, size_t usec = 100000, const std::string& jsonrpc_version = "1.0");
 	~rpc_client_uart();
