@@ -27,6 +27,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate)
 	add("yaw_kp", &UartRpcServer::rpc_yaw_kp);
 	add("sd_set_accelerometer_correction_period", &UartRpcServer::rpc_set_accelerometer_correction_period);
 	add("sd_set_gyro_factor", &UartRpcServer::rpc_set_gyro_factor);
+	add("sd_set_yaw_throttle_factor", &UartRpcServer::rpc_set_yaw_throttle_factor);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -315,7 +316,7 @@ rexjson::value UartRpcServer::rpc_set_gyro_factor(UART* , rexjson::array& params
 				"\nSet the correction factor for the gyro sensor."
 				"\n"
 				"Arguments:\n"
-				"1. n          (real) correction period\n"
+				"1. n          (real) gyro factor\n"
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
@@ -325,6 +326,32 @@ rexjson::value UartRpcServer::rpc_set_gyro_factor(UART* , rexjson::array& params
 	dronestate_.gyro_factor_ = factor;
 	return dronestate_.gyro_factor_;
 }
+
+rexjson::value UartRpcServer::rpc_set_yaw_throttle_factor(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_set_yaw_throttle_factor\n"
+				"\nSet the maximum percentage modification that can be"
+				"applied to the current throttle to generate yaw torque."
+				"\n"
+				"Arguments:\n"
+				"1. n          (real) maximum percentage modification of the throttle\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	float factor = params[0].get_real();
+	if (factor > 0.75 || factor < -0.75)
+		throw std::range_error("Invalid value");
+	dronestate_.yaw_throttle_factor_ = factor;
+	return dronestate_.yaw_throttle_factor_;
+}
+
 
 rexjson::value UartRpcServer::rpc_get_dronestate(UART* , rexjson::array& params, rpc_exec_mode mode)
 {

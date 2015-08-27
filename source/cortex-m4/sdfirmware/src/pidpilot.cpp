@@ -51,13 +51,13 @@ void PidPilot::update_state(DroneState& state)
 	torque_rpm.at(0,0) = torque_correction_.at(0,0) * rpm_coeff;
 	torque_rpm.at(1,0) = torque_correction_.at(1,0) * rpm_coeff;
 	torque_rpm.at(2,0) = torque_correction_.at(2,0) * rpm_coeff;
-	Vector3f yaw_thrust(0.0, 0.0, 0.0 * target_thrust_ * state.yaw_ / 10.0);
+	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * state.yaw_ * target_thrust_);
 
 	motors_ = Vector4f(
-			target_thrust_ + Vector3f::dot(torque_rpm, m0_) + Vector3f::dot(yaw_thrust, m0_),
-			target_thrust_ + Vector3f::dot(torque_rpm, m1_) + Vector3f::dot(yaw_thrust, m1_),
-			target_thrust_ + Vector3f::dot(torque_rpm, m2_) + Vector3f::dot(yaw_thrust, m2_),
-			target_thrust_ + Vector3f::dot(torque_rpm, m3_) + Vector3f::dot(yaw_thrust, m3_));
+			target_thrust_ + Vector3f::dot(torque_rpm, m0_) + Vector3f::dot(torque_yaw, m0_),
+			target_thrust_ + Vector3f::dot(torque_rpm, m1_) + Vector3f::dot(torque_yaw, m1_),
+			target_thrust_ + Vector3f::dot(torque_rpm, m2_) + Vector3f::dot(torque_yaw, m2_),
+			target_thrust_ + Vector3f::dot(torque_rpm, m3_) + Vector3f::dot(torque_yaw, m3_));
 
 	set_and_scale_motors(
 			motors_.at(0,0),

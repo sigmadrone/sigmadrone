@@ -18,6 +18,7 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	, spinbutton_m4_(NULL)
 	, spinbutton_acc_period_(NULL)
 	, spinbutton_gyro_factor_(NULL)
+	, spinbutton_yaw_throttle_factor_(NULL)
 	, label_m1_(NULL)
 	, label_m2_(NULL)
 	, label_m3_(NULL)
@@ -88,11 +89,13 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	ref_glade_->get_widget("label_roll", label_roll_);
 	ref_glade_->get_widget("spinbutton_acc_period", spinbutton_acc_period_);
 	ref_glade_->get_widget("spinbutton_gyro_factor", spinbutton_gyro_factor_);
+	ref_glade_->get_widget("spinbutton_yaw_throttle_factor", spinbutton_yaw_throttle_factor_);
 
 
 	connections_.push_back(button_quit_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_quit)));
 	connections_.push_back(spinbutton_acc_period_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_acc_period)));
 	connections_.push_back(spinbutton_gyro_factor_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_gyro_factor)));
+	connections_.push_back(spinbutton_yaw_throttle_factor_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_factor)));
 	connections_.push_back(button_lock_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_lock_motors)));
 	connections_.push_back(button_arm_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_arm_motors)));
 	connections_.push_back(spinbutton_m1_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust)));
@@ -208,6 +211,14 @@ void mainwindow::on_change_gyro_factor()
 	}
 }
 
+void mainwindow::on_change_yaw_factor()
+{
+	try {
+		rpc_client_->call(firmware_rpcuri_, "sd_set_yaw_throttle_factor", spinbutton_yaw_throttle_factor_->get_value());
+	} catch (std::exception& e) {
+		std::cout << "on_change_yaw_factor exception: " << e.what() << std::endl;
+	}
+}
 
 void mainwindow::on_change_correction_thrust()
 {
@@ -321,6 +332,7 @@ void mainwindow::rpc_update_coefficients()
 	try {
 		spinbutton_acc_period_->set_value(drone_state_["accelerometer_correction_period"].get_real());
 		spinbutton_gyro_factor_->set_value(drone_state_["gyro_factor"].get_real());
+		spinbutton_yaw_throttle_factor_->set_value(drone_state_["yaw_throttle_factor"].get_real());
 	} catch (std::exception& e) {
 		std::cout << "rpc_update_coefficients exception: " << e.what() << std::endl;
 	}

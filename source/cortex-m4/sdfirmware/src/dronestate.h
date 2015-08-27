@@ -37,6 +37,7 @@ struct DroneState {
 		, yaw_kd_(0.01)
 		, accelerometer_correction_period_(4.0)
 		, gyro_factor_(1.15)
+		, yaw_throttle_factor_(0.0)
 		, yaw_(0.0)
 		, pitch_(0.0)
 		, roll_(0.0)
@@ -66,6 +67,7 @@ struct DroneState {
 		ret["yaw_kd"] = yaw_kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_period_;
 		ret["gyro_factor"] = gyro_factor_;
+		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
@@ -101,6 +103,7 @@ struct DroneState {
 	float pitch_;
 	float roll_;
 	float base_throttle_;
+	float yaw_throttle_factor_;
 
 	/*
 	 * Time it took to read sensors

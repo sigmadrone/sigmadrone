@@ -43,6 +43,7 @@ protected:
 	void on_change_yaw_kd();
 	void on_change_acc_period();
 	void on_change_gyro_factor();
+	void on_change_yaw_factor();
 
 	std::string double_to_str(double val, size_t precision = 3);
 
@@ -62,6 +63,7 @@ protected:
 	Gtk::SpinButton* spinbutton_m4_;
 	Gtk::SpinButton* spinbutton_acc_period_;
 	Gtk::SpinButton* spinbutton_gyro_factor_;
+	Gtk::SpinButton* spinbutton_yaw_throttle_factor_;
 	Gtk::Label *label_m1_;
 	Gtk::Label *label_m2_;
 	Gtk::Label *label_m3_;
