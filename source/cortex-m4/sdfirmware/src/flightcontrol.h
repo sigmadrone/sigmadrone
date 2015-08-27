@@ -19,7 +19,7 @@
 
 static const float RC_VALUE_SCALE_FACTOR = 1.0;
 
-static const Throttle EMERGENCY_THROTTLE(0.5f);
+static const Throttle EMERGENCY_THROTTLE(0.3f);
 
 class FlightControl
 {
