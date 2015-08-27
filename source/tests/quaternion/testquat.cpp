@@ -95,6 +95,47 @@ void test_quaternion_nlerp()
 
 }
 
+void test_delta_quaternion()
+{
+	Vector3d v(1.0, 0.0, 0.0);
+	QuaternionD q1 = QuaternionD::fromAxisRot(Vector3d(0,0,1), M_PI/3);
+	QuaternionD q2 = QuaternionD::fromAxisRot(Vector3d(0,0,1), M_PI/2);
+	QuaternionD dQ;
+
+	/*
+	 * Example using absolute frame
+	 * What is the dQ between q1 and q2. So that q2 = dQ * q1;
+	 * q2 * (~q1) = dQ * q1 * (~q1);
+	 * q2 * (~q1) = dQ
+	 */
+	std::cout << "q1:                 " << q1 << std::endl;
+	std::cout << "q2:                 " << q2 << std::endl;
+	dQ = q2 * (~q1);
+	std::cout << "dQ:                 " << dQ << std::endl;
+	std::cout << "q2 = dQ * q1:       " << dQ * q1 << std::endl;
+
+	/*
+	 * Example using frame of reference of rotating object
+	 * What is the dQ between q1 and q2. So that q2 = q1 * dQ
+	 * q2 = q1 * dQ
+	 * (~q1) * q2 = (~q1) * q1 * dQ;
+	 * (~q1) * q2 = dQ;
+	 */
+	std::cout << "q1:                 " << q1 << std::endl;
+	std::cout << "q2:                 " << q2 << std::endl;
+	dQ = (~q1) * q2;
+	std::cout << "dQ:                 " << dQ << std::endl;
+	std::cout << "q2 = q1 * dQ:       " << q1 * dQ << std::endl;
+
+	std::cout << "q2 = q1 * dQ(W):    " << q1
+			* QuaternionD::fromAngularVelocity(Vector3d(0,0,M_PI/6), 1.0/4.0)
+			* QuaternionD::fromAngularVelocity(Vector3d(0,0,M_PI/6), 1.0/2.0)
+			* QuaternionD::fromAngularVelocity(Vector3d(0,0,M_PI/6), 1.0/4.0)
+			<< std::endl;
+
+}
+
+
 int main(int argc, char *argv[])
 {
 	Vector3f Xi(1.00,    0.00,    0.00);
@@ -170,6 +211,9 @@ int main(int argc, char *argv[])
 	test_quaternion_nlerp();
 	test_quaternion_decompostion_twist_swing();
 	test_quaternion_decompostion_swing_twist();
+
+	std::cout << "Test Delta" << std::endl;
+	test_delta_quaternion();
 
 	return 0;
 }
