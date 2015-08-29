@@ -41,7 +41,7 @@ struct DroneState {
 		, pitch_(0.0)
 		, roll_(0.0)
 		, base_throttle_(0.0)
-	    , yaw_throttle_factor_(0.75) { }
+        , yaw_throttle_factor_(0.75) { }
 	rexjson::value to_json() {
 		rexjson::object ret;
 		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);

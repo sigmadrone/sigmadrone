@@ -346,7 +346,7 @@ rexjson::value UartRpcServer::rpc_set_yaw_throttle_factor(UART* , rexjson::array
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	float factor = params[0].get_real();
-	if (factor > 0.75 || factor < -0.75)
+	if (factor > 0.90 || factor < 0)
 		throw std::range_error("Invalid value");
 	dronestate_.yaw_throttle_factor_ = factor;
 	return dronestate_.yaw_throttle_factor_;
