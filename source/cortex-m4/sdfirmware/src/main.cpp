@@ -147,7 +147,7 @@ void main_task(void *pvParameters)
 	LSM303D accel(spi5, 1);
 	uint8_t gyr_wtm = 3;
 	uint8_t acc_wtm = 17;
-	uint8_t bias_iterations = 100;
+	uint8_t bias_iterations = 800;
 	L3GD20::AxesDPS_t gyr_axes;
 	LSM303D::AxesAcc_t acc_axes;
 	attitudetracker att;
