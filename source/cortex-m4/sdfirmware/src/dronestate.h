@@ -29,19 +29,19 @@ struct DroneState {
 		: altitude_(INVALID_ALTITUDE)
 		, pressure_hpa_(0.0f)
 		, temperature_(0.0f)
-		, kp_(0.2)
+		, kp_(0.125)
 		, ki_(0.0)
-		, kd_(0.04)
+		, kd_(0.03)
 		, yaw_kp_(0.0)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.03)
-		, accelerometer_correction_period_(3.8)
+		, accelerometer_correction_period_(5.0)
 		, gyro_factor_(1.25)
-		, yaw_throttle_factor_(0.5)
 		, yaw_(0.0)
 		, pitch_(0.0)
 		, roll_(0.0)
-		, base_throttle_(0.0) { }
+		, base_throttle_(0.0)
+	    , yaw_throttle_factor_(0.75) { }
 	rexjson::value to_json() {
 		rexjson::object ret;
 		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
