@@ -30,6 +30,8 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata)
 	add("sd_set_accelerometer_correction_period", &UartRpcServer::rpc_set_accelerometer_correction_period);
 	add("sd_set_gyro_factor", &UartRpcServer::rpc_set_gyro_factor);
 	add("sd_set_yaw_throttle_factor", &UartRpcServer::rpc_set_yaw_throttle_factor);
+	add("sd_get_configdata", &UartRpcServer::rpc_get_configdata);
+	add("sd_set_configdata", &UartRpcServer::rpc_set_configdata);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -390,7 +392,7 @@ rexjson::value UartRpcServer::rpc_get_configdata(UART* , rexjson::array& params,
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return std::string((char*)configdata_.data(), configdata_.size());
+	return std::string((char*)configdata_.mem_);
 }
 
 rexjson::value UartRpcServer::rpc_set_configdata(UART* , rexjson::array& params, rpc_exec_mode mode)
@@ -410,9 +412,8 @@ rexjson::value UartRpcServer::rpc_set_configdata(UART* , rexjson::array& params,
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	std::string configstr(params[0].get_str());
-	configdata_.erase();
 	configdata_.program((void*)configstr.c_str(), configstr.size());
-	return configstr;
+	return std::string((char*)configdata_.mem_);
 }
 
 

@@ -14,7 +14,8 @@ public:
 	size_t size();
 
 protected:
-	void* mem_;
+public:
+	uint8_t* mem_;
 	size_t nbytes_;
 	size_t sector_;
 	size_t nsectors_;

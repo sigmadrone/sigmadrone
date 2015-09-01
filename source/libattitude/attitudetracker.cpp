@@ -52,7 +52,7 @@ void attitudetracker::track_accelerometer(const Vector3d& g, double dtime)
 	 * don't use it.
 	 *
 	 */
-#if 0
+#if 1
 	if (g.length() < 0.85 || g.length() > 1.15)
 		return;
 #endif

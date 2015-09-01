@@ -14,7 +14,7 @@
 
 class rpc_client_uart : public ::logger<logfile_base> {
 public:
-	rpc_client_uart(const std::string& filename, speed_t speed = B115200, size_t usec = 100000, const std::string& jsonrpc_version = "1.0");
+	rpc_client_uart(const std::string& filename, speed_t speed = B115200, size_t usec = 1500000, const std::string& jsonrpc_version = "1.0");
 	~rpc_client_uart();
 	std::string json_rpc_request(const std::string& json);
 	rexjson::value call(const std::string& method, const rexjson::array& params) throw(std::exception);

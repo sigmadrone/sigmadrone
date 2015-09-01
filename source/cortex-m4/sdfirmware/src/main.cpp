@@ -38,7 +38,7 @@
 #include "accellowpassfilter.h"
 #include "flashmemory.h"
 
-__attribute__((__section__(".user_data"))) uint8_t flashregion[128 * 1024];
+__attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
 
 DigitalOut ledusb(PC_4);
