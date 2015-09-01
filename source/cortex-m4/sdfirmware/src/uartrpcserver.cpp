@@ -4,14 +4,16 @@
  *  Created on: Jul 21, 2015
  *      Author: mkstoilo
  */
+#include <memory>
 #include "trimstr.h"
 #include "uartrpcserver.h"
 #include "librexjsonrpc/jsonserialization.h"
 
 
-UartRpcServer::UartRpcServer(DroneState& dronestate)
+UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata)
 	: rpc_server<UartRpcServer, UART*>()
 	, dronestate_(dronestate)
+	, configdata_(configdata)
 {
 	add("sd_get_altitude", &UartRpcServer::rpc_get_altitude);
 	add("sd_get_attitude", &UartRpcServer::rpc_get_attitude);
@@ -370,6 +372,47 @@ rexjson::value UartRpcServer::rpc_get_dronestate(UART* , rexjson::array& params,
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	return dronestate_.to_json();
+}
+
+rexjson::value UartRpcServer::rpc_get_configdata(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "rpc_get_config\n"
+	            "\nGet the current firmware configuration data."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return std::string((char*)configdata_.data(), configdata_.size());
+}
+
+rexjson::value UartRpcServer::rpc_set_configdata(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_str_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "rpc_get_config\n"
+	            "\nSaves the firmware configuration data in the flash."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	std::string configstr(params[0].get_str());
+	configdata_.erase();
+	configdata_.program((void*)configstr.c_str(), configstr.size());
+	return configstr;
 }
 
 

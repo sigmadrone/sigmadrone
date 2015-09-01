@@ -10,12 +10,13 @@
 
 #include "uart.h"
 #include "dronestate.h"
+#include "flashmemory.h"
 #include "librexjsonrpc/rpcserver.h"
 
 class UartRpcServer : public rpc_server<UartRpcServer, UART*>
 {
 public:
-	UartRpcServer(DroneState& dronestate);
+	UartRpcServer(DroneState& dronestate, FlashMemory& configdata);
 	virtual ~UartRpcServer();
 
 	void jsonrpc_request_handler(UART* uart);
@@ -29,6 +30,9 @@ protected:
 	rexjson::value rpc_get_temperature(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_get_motors(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_get_dronestate(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_get_configdata(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_set_configdata(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+
 
 	rexjson::value rpc_kp(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
@@ -43,6 +47,7 @@ protected:
 protected:
 	std::string cached_request_;
 	DroneState& dronestate_;
+	FlashMemory& configdata_;
 
 };
 

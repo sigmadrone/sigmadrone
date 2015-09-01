@@ -77,6 +77,13 @@ SECTIONS
 
     } >FLASH
 
+	.user_data :
+	{
+	  . = ALIGN(4);
+	     *(.user_data)
+	  . = ALIGN(4);
+	} > FLASHMEM
+
     .inits : ALIGN(4)
     {
         /* 

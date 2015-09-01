@@ -36,7 +36,9 @@
 #include "libattitude/attitudetracker.h"
 #include "bmp180reader.h"
 #include "accellowpassfilter.h"
+#include "flashmemory.h"
 
+__attribute__((__section__(".user_data"))) uint8_t flashregion[128 * 1024];
 void* __dso_handle = 0;
 
 DigitalOut ledusb(PC_4);
@@ -53,6 +55,8 @@ TaskHandle_t bmp180_task_handle = 0;
 QueueHandle_t hGyroQueue;
 TimeStamp isr_ts;
 DroneState* drone_state = 0;
+
+FlashMemory configdata(&flashregion, sizeof(flashregion), FLASH_SECTOR_23, 1);
 
 UART uart3({
 	{PC_10, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},		/* USART3_TX_PIN */
@@ -156,7 +160,7 @@ void main_task(void *pvParameters)
 	TimeSpan ctx_switch_time;
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
-	UartRpcServer rpcserver(*drone_state);
+	UartRpcServer rpcserver(*drone_state, configdata);
 	AccelLowPassFilter* accel_lpf = new AccelLowPassFilter();
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
