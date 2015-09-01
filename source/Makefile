@@ -5,10 +5,8 @@ SUBDIRS += libcmdargs
 SUBDIRS += liblogger
 SUBDIRS += librexjson
 SUBDIRS += librexjsonrpc
-SUBDIRS += libjsonrpc
 SUBDIRS += tools
 SUBDIRS += plugins
-SUBDIRS += sdrone
 SUBDIRS += sigmad
 SUBDIRS += tests
 
