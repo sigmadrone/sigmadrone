@@ -339,7 +339,7 @@ int main(int argc, char* argv[])
 	xTaskCreate(
 		main_task, /* Function pointer */
 		"main_task", /* Task name - for debugging only*/
-		configMINIMAL_STACK_SIZE, /* Stack depth in words */
+		4 * configMINIMAL_STACK_SIZE, /* Stack depth in words */
 		(void*) NULL, /* Pointer to tasks arguments (parameter) */
 		tskIDLE_PRIORITY + 3UL, /* Task priority*/
 		&main_task_handle /* Task handle */
