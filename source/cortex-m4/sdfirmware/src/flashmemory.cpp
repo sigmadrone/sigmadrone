@@ -47,7 +47,7 @@ void FlashMemory::erase()
 	HAL_FLASH_Lock();
 }
 
-void FlashMemory::program(void *data, size_t nbytes)
+void FlashMemory::program(void *data, size_t datasize)
 {
 	uint8_t* memptr = (uint8_t*)mem_;
 	uint8_t* dataptr = (uint8_t*)data;
@@ -60,37 +60,29 @@ void FlashMemory::program(void *data, size_t nbytes)
 	EraseInitStruct.Sector = sector_;
 	EraseInitStruct.NbSectors = nsectors_;
 
-	if (nbytes + 1 > nbytes_) {
+	if (datasize > nbytes_) {
 		std::runtime_error("FlashMemory::program failed, the specified data size is too large.");
 	}
 	HAL_FLASH_Unlock();
 	__HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
 	if (HAL_FLASHEx_Erase(&EraseInitStruct, &SectorError) != HAL_OK) {
 		HAL_FLASH_Lock();
-		HAL_FLASH_Lock();
 		std::stringstream oss;
 		oss << "Failed to erase sector: " << SectorError;
 		throw std::runtime_error(oss.str());
 	}
 
-	while (nbytes) {
+	while (datasize) {
 		if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, (uint32_t)memptr, *dataptr) != HAL_OK) {
 			HAL_FLASH_Lock();
 			std::runtime_error("FlashMemory::program failed");
 		}
-		nbytes--;
+		datasize--;
 		memptr++;
 		dataptr++;
 	}
-	if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_BYTE, (uint32_t)memptr, 0) != HAL_OK) {
-		HAL_FLASH_Lock();
-		std::runtime_error("FlashMemory::program failed");
-	}
 	HAL_FLASH_Lock();
 }
-
-
-
 
 void* FlashMemory::data()
 {

@@ -392,12 +392,14 @@ rexjson::value UartRpcServer::rpc_get_configdata(UART* , rexjson::array& params,
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	return std::string((char*)configdata_.mem_);
+	rexjson::value v;
+	v.read((char*)configdata_.mem_, configdata_.size());
+	return v.write(false, true, 0, 8);
 }
 
 rexjson::value UartRpcServer::rpc_set_configdata(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_str_type};
+	static unsigned int types[] = {rpc_obj_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -411,11 +413,10 @@ rexjson::value UartRpcServer::rpc_set_configdata(UART* , rexjson::array& params,
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	std::string configstr(params[0].get_str());
+	std::string configstr = params[0].write(false, true, 0, 8);
 	configdata_.program((void*)configstr.c_str(), configstr.size());
-	return std::string((char*)configdata_.mem_);
+	return configstr;
 }
-
 
 void UartRpcServer::jsonrpc_request_handler(UART* uart)
 {
@@ -427,7 +428,6 @@ void UartRpcServer::jsonrpc_request_handler(UART* uart)
 		return;
 	request = cached_request_;
 	cached_request_.clear();
-//	request = uart->read();
 	trim(request);
 	if (request.empty())
 		return;
