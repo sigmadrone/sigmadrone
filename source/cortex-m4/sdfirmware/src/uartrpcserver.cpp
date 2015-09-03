@@ -32,6 +32,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata)
 	add("sd_set_yaw_throttle_factor", &UartRpcServer::rpc_set_yaw_throttle_factor);
 	add("sd_get_configdata", &UartRpcServer::rpc_get_configdata);
 	add("sd_set_configdata", &UartRpcServer::rpc_set_configdata);
+	add("sd_accelerometer_adjustment", &UartRpcServer::rpc_accelerometer_adjustment);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -137,6 +138,31 @@ rexjson::value UartRpcServer::rpc_get_motors(UART* , rexjson::array& params, rpc
 	}
 	return ret;
 }
+
+rexjson::value UartRpcServer::rpc_accelerometer_adjustment(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_array_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_accelerometer_adjustment\n"
+	            "\nGet/Set accelerometer adjustment values"
+				"\nIf no parameters are specified, the current accelerometer_adjustment will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. accelerometer_adjustment          (array, optional) Array of adjustment values for X,Y,Z\n"
+				"   to be added to the current reading of the accelerometer sensor."
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == rexjson::array_type))
+		dronestate_.accelerometer_adjustment_ = matrix_from_json_value<float, 3, 1>(params[0]);
+	return matrix_to_json_value(dronestate_.accelerometer_adjustment_);
+}
+
 
 rexjson::value UartRpcServer::rpc_kp(UART* , rexjson::array& params, rpc_exec_mode mode)
 {

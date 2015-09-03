@@ -49,6 +49,7 @@ struct DroneState {
 		ret["mag_raw"] = matrix_to_json_value(mag_raw_);
 		ret["gyro"] = matrix_to_json_value(gyro_);
 		ret["accel"] = matrix_to_json_value(accel_);
+		ret["accel_adjustment"] = matrix_to_json_value(accelerometer_adjustment_);
 		ret["mag"] = matrix_to_json_value(mag_);
 		ret["altitude_meters"] = altitude_.meters();
 		ret["pressure_hpa"] = pressure_hpa_;
@@ -84,6 +85,7 @@ struct DroneState {
 	Vector3f accel_;
 	Vector3f mag_;
 	Altitude altitude_;
+	Vector3f accelerometer_adjustment_;
 	float pressure_hpa_;
 	float temperature_;
 	/*more to add here*/

@@ -33,7 +33,7 @@ protected:
 	rexjson::value rpc_get_configdata(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_set_configdata(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
-
+	rexjson::value rpc_accelerometer_adjustment(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_kp(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_ki(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);

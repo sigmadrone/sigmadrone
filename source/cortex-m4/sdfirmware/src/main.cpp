@@ -100,6 +100,26 @@ void gyro_isr()
 	}
 }
 
+void dronestate_boot_config(DroneState& state)
+{
+	rexjson::value bootconfig;
+
+	try {
+		bootconfig.read((char*)configdata.mem_, configdata.size());
+		try { state.accelerometer_adjustment_ = matrix_from_json_value<float, 3, 1>(bootconfig["accelerometer_adjustment"]); } catch (std::exception& e) {}
+		try { state.kp_ = bootconfig["kp"].get_real(); } catch (std::exception& e) {}
+		try { state.ki_ = bootconfig["ki"].get_real(); } catch (std::exception& e) {}
+		try { state.kd_ = bootconfig["kd"].get_real(); } catch (std::exception& e) {}
+		try { state.yaw_kp_ = bootconfig["yaw_kp"].get_real(); } catch (std::exception& e) {}
+		try { state.yaw_ki_ = bootconfig["yaw_ki"].get_real(); } catch (std::exception& e) {}
+		try { state.yaw_kd_ = bootconfig["yaw_kd"].get_real(); } catch (std::exception& e) {}
+		try { state.gyro_factor_ = bootconfig["gyro_factor"].get_real(); } catch (std::exception& e) {}
+		try { state.accelerometer_correction_period_ = bootconfig["accelerometer_correction_period"].get_real(); } catch (std::exception& e) {}
+	} catch (std::exception& e) {
+	}
+
+}
+
 void bmp180_task(void *pvParameters)
 {
 	(void)pvParameters;
@@ -228,6 +248,11 @@ void main_task(void *pvParameters)
 	uart3.uart_dmarx_start();
 	gpspwr.write(0);
 
+	/*
+	 * Apply the boot configuration from flash memory.
+	 */
+	dronestate_boot_config(*drone_state);
+
 	// Infinite loop
 	while (1) {
 		uint32_t msg;
@@ -252,8 +277,9 @@ void main_task(void *pvParameters)
 
 		if (acc_samples > acc_wtm) {
 			accel.GetFifoAcc(&acc_axes);
-			drone_state->accel_raw_ = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z).normalize();
-			drone_state->accel_ = accel_lpf->do_filter(drone_state->accel_raw_);
+			drone_state->accel_raw_ = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z);
+			Vector3f accel_adjusted = drone_state->accel_raw_ + drone_state->accelerometer_adjustment_;
+			drone_state->accel_ = accel_lpf->do_filter(accel_adjusted.normalize());
 		}
 		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
 
