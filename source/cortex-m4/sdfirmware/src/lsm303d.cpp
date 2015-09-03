@@ -582,7 +582,10 @@ void LSM303D::GetAcc(AxesAcc_t* buff)
 	buff->AXIS_Z = raw.AXIS_Z * fullscale / 32768.0;
 }
 
-void LSM303D::GetFifoAcc(AxesAcc_t* buff)
+/*
+ * Return the number of samples read from the FIFO
+ */
+u8_t LSM303D::GetFifoAcc(AxesAcc_t* buff)
 {
 	AxesRaw_t raw = {0, 0, 0};
 	uint8_t count = GetFifoSourceFSS();
@@ -595,6 +598,7 @@ void LSM303D::GetFifoAcc(AxesAcc_t* buff)
 		buff->AXIS_Y += raw.AXIS_Y * scale;
 		buff->AXIS_Z += raw.AXIS_Z * scale;
 	}
+	return count;
 }
 
 /*******************************************************************************

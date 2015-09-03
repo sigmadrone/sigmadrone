@@ -450,7 +450,7 @@ public:
 	void SetFullScaleMag(FullscaleMag_t fs);
 	void GetMagAxesRaw(AxesRaw_t* buff);
 	void GetAcc(AxesAcc_t* buff);
-	void GetFifoAcc(AxesAcc_t* buff);
+	u8_t GetFifoAcc(AxesAcc_t* buff);
 
 	u8_t ReadReg8(u8_t reg);
 	void ReadReg8(u8_t reg, u8_t* data);

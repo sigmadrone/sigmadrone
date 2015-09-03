@@ -264,7 +264,7 @@ void main_task(void *pvParameters)
 		sample_dt.time_stamp();
 
 		uint8_t gyr_samples = gyro.GetFifoSourceReg() & 0x1F;
-		uint8_t acc_samples = accel.GetFifoSourceFSS();
+//		uint8_t acc_samples = accel.GetFifoSourceFSS();
 
 		att.accelerometer_correction_period(drone_state->accelerometer_correction_period_);
 		static const Matrix3f gyro_align(-1,0,0,0,-1,0,0,0,1);
@@ -275,14 +275,12 @@ void main_task(void *pvParameters)
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
 
-		if (acc_samples > acc_wtm) {
-			accel.GetFifoAcc(&acc_axes);
+		if (accel.GetFifoAcc(&acc_axes)) {
 			drone_state->accel_raw_ = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z);
 			Vector3f accel_adjusted = drone_state->accel_raw_ + drone_state->accelerometer_adjustment_;
 			drone_state->accel_ = accel_lpf->do_filter(accel_adjusted.normalize());
 		}
 		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
-
 		drone_state->attitude_ = att.get_attitude();
 
 		flight_ctl.update_state(*drone_state);
