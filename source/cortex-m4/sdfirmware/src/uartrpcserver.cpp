@@ -411,8 +411,8 @@ rexjson::value UartRpcServer::rpc_get_configdata(UART* , rexjson::array& params,
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "rpc_get_config\n"
-	            "\nGet the current firmware configuration data."
+	            "sd_get_configdata\n"
+	            "\nGet the current boot time firmware configuration data."
 				"\n"
 				"Arguments:\n"
 				;
@@ -433,8 +433,8 @@ rexjson::value UartRpcServer::rpc_set_configdata(UART* , rexjson::array& params,
 		if (mode == helpspec)
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
-	            "rpc_get_config\n"
-	            "\nSaves the firmware configuration data in the flash."
+	            "sd_set_configdata\n"
+	            "\nSaves the boot time firmware configuration data in flash memory."
 				"\n"
 				"Arguments:\n"
 				;
