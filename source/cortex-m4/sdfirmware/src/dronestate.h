@@ -14,15 +14,16 @@
 #include "librexjsonrpc/jsonserialization.h"
 
 /*
- * PID coefficients for big props on DJI F450
- * Kp = 1.0 <-> 1.3
- * Ki = 1.2, with leak rate dT
- * Kd = 0.3 <-> 0.45
  *
- * PID coefficients for small props on DJI F450
- * Kp = 1.0 <-> 1.3
- * Ki = 0 - still not a measurable impact of Ki
- * Kd = 0.35
+ * PID coefficients for big 9" props on DJI F450
+ * Kp = 0.125
+ * Ki = 0
+ * Kd = 0.2 -- 0.3
+ *
+ * Kp_Yaw = 0.06
+ * Ki_Yaw = 0
+ * Kd_Yaw = 0.3
+ *
  */
 struct DroneState {
 	DroneState()
@@ -32,7 +33,7 @@ struct DroneState {
 		, kp_(0.125)
 		, ki_(0.0)
 		, kd_(0.03)
-		, yaw_kp_(0.0)
+		, yaw_kp_(0.06)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.03)
 		, accelerometer_correction_period_(5.0)

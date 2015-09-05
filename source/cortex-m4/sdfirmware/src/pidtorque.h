@@ -6,6 +6,8 @@
 #ifndef _PIDTORQUE_H_
 #define _PIDTORQUE_H_
 
+#define PILOT_Z_COMPENSATE
+
 class PidTorque
 {
 public:
