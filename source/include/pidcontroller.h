@@ -17,6 +17,8 @@ class PidController
 {
 public:
 
+	static constexpr FLOAT MAX_VALUE = std::numeric_limits<FLOAT>::infinity();
+
 	typedef MatrixMN<FLOAT, M, 1> PidVector;
 
 	PidController(
@@ -41,17 +43,11 @@ public:
 		last_der_err_.clear();
 		last_input_.clear();
 		filter_ = (fCutoff > 0.0) ? (1 / (2 * M_PI * fCutoff)) : 0;
-		after_reset_ = true;
 	}
 
 	PidVector get_d(const PidVector& err, FLOAT dt)
 	{
-		PidVector derivative;
-		if (!after_reset_) {
-			derivative = (err - last_input_) / dt;
-		} else {
-			after_reset_ = false;
-		}
+		PidVector derivative = (err - last_input_) / dt;
 		if (filter_ != 0.0) {
 			FLOAT filter = dt / (filter_ + dt);
 			derivative = last_der_err_ + (derivative - last_der_err_) * filter;
@@ -105,6 +101,20 @@ public:
 		return get_p(err) + get_d(err, dt) + get_i(err,dt);
 	}
 
+	PidVector get_pid(const PidVector& err, FLOAT dt, const PidVector& abs_limit)
+	{
+		return limit_vector(get_pid(err, dt), &abs_limit);
+	}
+
+	PidVector get_pid(
+				const PidVector& err,
+				FLOAT dt,
+				FLOAT leakRate,
+				const PidVector& abs_limit)
+	{
+		return limit_vector(get_pid(err,dt,leakRate),abs_limit);
+	}
+
 	PidVector get_pid(
 			const PidVector& err,
 			FLOAT dt,
@@ -133,19 +143,27 @@ private:
 			FLOAT dt,
 			const PidVector* limit)
 	{
-		integral_err_ = integral_err_ + err * dt;
-		limit_vector(&integral_err_,limit);
+		integral_err_ = limit_vector(integral_err_ + err * dt,limit);
 		return integral_err_ * ki_;
 	}
 
-	static void limit_vector(PidVector* v, const PidVector* limit)
+	static FLOAT min_value(FLOAT a, FLOAT b) {
+		return a < b ? a : b;
+	}
+	static FLOAT max_value(FLOAT a, FLOAT b) {
+		return a > b ? a : b;
+	}
+
+	static PidVector limit_vector(const PidVector& v, const PidVector* abs_limit)
 	{
-		if (!!limit) {
+		PidVector limited_vec;
+		if (!!abs_limit) {
 			for (size_t i = 0; i < M; i++) {
-				v->at(i,0) = fmin(v->at(i,0),limit->at(i,0));
-				v->at(i,0) = fmax(v->at(i,0),-limit->at(i,0));
+				limited_vec.at(i,0) = min_value(v.at(i,0),abs_limit->at(i,0));
+				limited_vec.at(i,0) = max_value(limited_vec.at(i,0),-abs_limit->at(i,0));
 			}
 		}
+		return limited_vec;
 	}
 
 private:
@@ -162,8 +180,6 @@ private:
 	// err. Calculated as 1 / (2 * PI * Fc)
 	//
 	FLOAT filter_;
-
-	bool after_reset_;
 };
 
 

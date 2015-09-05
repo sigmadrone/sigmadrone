@@ -20,9 +20,9 @@
  * Ki = 0
  * Kd = 0.2 -- 0.3
  *
- * Kp_Yaw = 0.06
+ * Kp_Yaw = 0.11
  * Ki_Yaw = 0
- * Kd_Yaw = 0.3
+ * Kd_Yaw = 0.45
  *
  */
 struct DroneState {
@@ -33,9 +33,9 @@ struct DroneState {
 		, kp_(0.125)
 		, ki_(0.0)
 		, kd_(0.03)
-		, yaw_kp_(0.06)
+		, yaw_kp_(0.11)
 		, yaw_ki_(0.0)
-		, yaw_kd_(0.03)
+		, yaw_kd_(0.45)
 		, accelerometer_correction_period_(5.0)
 		, gyro_factor_(1.25)
 		, yaw_(0.0)

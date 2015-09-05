@@ -39,7 +39,7 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt)
 		}
 	}
 	error_z = error_z * angle_rad;
-	torq.at(2,0) = pid_controller_yaw_.get_pid(error_z, dt.seconds_float()).at(2,0);
+	torq.at(2,0) = pid_controller_yaw_.get_pid(error_z, dt.seconds_float(), Vector3f(0,0,0.1)).at(2,0);
 #else
 	// targetQ = attitudeQ * errQ; ==> (~attitudeQ) * attitudeQ * errQ = (~attitudeQ) * targetQ;
 	// ==> errQ = (~attitudeQ) * targetQ;
