@@ -11,7 +11,7 @@
 #include <stdint.h>
 #include "dronestate.h"
 
-static const Altitude DEFAULT_FLIGHT_CEILING(Altitude::from_meters(5));
+static const Altitude DEFAULT_FLIGHT_CEILING(Altitude::from_meters(15));
 
 class AltitudeTracker
 {
