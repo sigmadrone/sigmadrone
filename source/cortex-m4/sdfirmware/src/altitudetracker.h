@@ -11,14 +11,14 @@
 #include <stdint.h>
 #include "dronestate.h"
 
-static const Altitude DEFAULT_FLIGHT_CEILING(Altitude::from_meters(15));
+static const Altitude DEFAULT_FLIGHT_CEILING(Altitude::from_meters(12));
 
 class AltitudeTracker
 {
 public:
 	AltitudeTracker(
 			const Altitude& flight_ceiling = DEFAULT_FLIGHT_CEILING,
-			float safe_threshold = 0.7f);
+			float safe_threshold = 0.8f);
 	~AltitudeTracker();
 	Altitude flight_ceiling() const;
 	void flight_ceiling(const Altitude& altitude);
