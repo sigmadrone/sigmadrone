@@ -33,17 +33,15 @@ void RcValueConverter::update() {
 
 	throttle_ = Throttle(throttle * scale_factor_);
 	if (yaw > 0.0 && (fabs(yaw-0.5f) > 0.05)) {
-		yaw_ = (yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
+		yaw_ = (yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_ * 2;
 		TimeSpan dt = receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().decoded_period();
 		Vector3f ang_vel(0.0f, 0.0f, yaw_);
 		quaternion_yaw_ *= QuaternionF::fromAngularVelocity(ang_vel, dt.seconds_float());
+	} else {
+		yaw_ = 0;
 	}
-	if (pitch > 0.0) {
-		pitch_ = -1.0 * (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
-	}
-	if (roll > 0.0) {
-		roll_ = (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_;
-	}
+	pitch_ = (pitch > 0.0) ? (-1.0 * (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_) : 0.0f;
+	roll_ = (roll > 0.0) ? (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_ : 0.0f;
 
 	quaternion_ = QuaternionF::fromAngularVelocity(Vector3f(roll_, pitch_, 0), 1.0) * quaternion_yaw_;
 
@@ -57,6 +55,10 @@ void RcValueConverter::update() {
 		motors_armed_ = (gear > 0.5) ? true : false;
 	}
 	last_gear_ = gear;
+}
+
+void RcValueConverter::reset_yaw_quaternion(const QuaternionF& current_q) {
+	quaternion_yaw_ = QuaternionF(current_q.w, 0, 0, current_q.z).normalize();
 }
 
 float RcValueConverter::get_value_as_float(uint32_t channelno)

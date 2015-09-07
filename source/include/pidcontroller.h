@@ -57,6 +57,11 @@ public:
 		return derivative * kd_;
 	}
 
+	PidVector get_d(const PidVector& err, FLOAT dt, const PidVector& abs_limit)
+	{
+		return limit_vector(get_d(err, dt), &abs_limit);
+	}
+
 	PidVector get_p(const PidVector& err)
 	{
 		return err * kp_;
@@ -112,7 +117,7 @@ public:
 				FLOAT leakRate,
 				const PidVector& abs_limit)
 	{
-		return limit_vector(get_pid(err,dt,leakRate),abs_limit);
+		return limit_vector(get_pid(err,dt,leakRate),&abs_limit);
 	}
 
 	PidVector get_pid(
@@ -121,6 +126,16 @@ public:
 			FLOAT leakRate)
 	{
 		return get_p(err) + get_d(err, dt) + get_i(err,dt,leakRate);
+	}
+
+	PidVector get_pd(const PidVector& err, FLOAT dt)
+	{
+		return get_p(err) + get_d(err, dt);
+	}
+
+	PidVector get_pd(const PidVector& err, FLOAT dt, const PidVector& abs_limit)
+	{
+		return limit_vector(get_pd(err,dt),&abs_limit);
 	}
 
 	const PidVector& integral_error() const { return integral_err_; }

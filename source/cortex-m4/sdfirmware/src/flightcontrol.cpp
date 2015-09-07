@@ -68,6 +68,10 @@ void FlightControl::motor_power_on_off(bool power_on) {
 
 void FlightControl::update_state(DroneState& state)
 {
+	if (rc_values_.base_throttle().get() < 0.1) {
+		rc_values_.reset_yaw_quaternion(state.attitude_);
+	}
+
 	state.target_ = target_q();
 
 	process_servo_start_stop_command();
