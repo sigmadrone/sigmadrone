@@ -39,7 +39,7 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt)
 		}
 	}
 	error_z = error_z * angle_rad;
-	torq.at(2,0) = pid_controller_yaw_.get_pid(error_z, dt.seconds_float(), Vector3f(0,0,0.1)).at(2,0);
+	torq.at(2,0) = pid_controller_yaw_.get_pid(error_z, dt.seconds_float(), Vector3f(0,0,0.15)).at(2,0);
 #else
 	// targetQ = attitudeQ * errQ; ==> (~attitudeQ) * attitudeQ * errQ = (~attitudeQ) * targetQ;
 	// ==> errQ = (~attitudeQ) * targetQ;
@@ -50,18 +50,6 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt)
 	error_z.at(0) = error_z.at(1) = 0.0;
 	torq.at(2) = pid_controller_yaw_.get_d(error_z, dt.seconds_float()).at(2);
 	error.at(2) = error_z.at(2);
-#endif
-
-#if 0
-	QuaternionF in_q = QuaternionF::fromAxisRot(in_Q.axis(), 0.5 * in_Q.angle());
-	Vector3f Xset = set_Q_.rotate(Vector3f(1.0, 0.0, 0.0));
-	Vector3f Xin = (~in_q).rotate(Vector3f(1.0, 0.0, 0.0));
-	QuaternionF Qtorq_z = QuaternionF::fromVectors(Xin, Xset);
-	Vector3f error_z = Qtorq_z.axis().normalize() * Qtorq_z.angle() * -1.0;
-	error_z.at(0,0) = error_z.at(1,0) = 0.0;
-	torq.at(0) = torq.at(1) = 0;
-	torq.at(2,0) = pid_controller_yaw_.get_pid(error_z, dt.seconds_float()).at(2,0);
-	error.at(2,0) = error_z.at(2,0);
 #endif
 
 	return torq;

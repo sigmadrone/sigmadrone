@@ -65,6 +65,7 @@ public:
 	float get_yaw() const;
 	float get_pitch() const;
 	float get_roll() const;
+	void reset_yaw_quaternion(const QuaternionF&);
 
 private:
 	float get_value_as_float(uint32_t channelno);
