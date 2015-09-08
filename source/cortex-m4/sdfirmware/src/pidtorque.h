@@ -15,7 +15,7 @@ public:
 	~PidTorque();
 
 	void set_target(const QuaternionF &set_q);
-	Vector3f get_torque(const QuaternionF &in_q, const TimeSpan& dt);
+	Vector3f get_torque(const QuaternionF &in_q, const TimeSpan& dt, float yaw_factor);
 
 public:
 	QuaternionF twist_;
