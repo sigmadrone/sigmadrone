@@ -40,7 +40,7 @@ void RcValueConverter::update() {
 	} else {
 		yaw_ = 0;
 	}
-	pitch_ = (pitch > 0.0) ? (-1.0 * (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_) : 0.0f;
+	pitch_ = (pitch > 0.0) ? ((pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_) : 0.0f;
 	roll_ = (roll > 0.0) ? (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_ : 0.0f;
 
 	quaternion_ = QuaternionF::fromAngularVelocity(Vector3f(roll_, pitch_, 0), 1.0) * quaternion_yaw_;
