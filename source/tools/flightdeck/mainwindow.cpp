@@ -228,14 +228,29 @@ void mainwindow::on_change_yaw_factor()
 
 void mainwindow::on_change_yaw_bias()
 {
+	try {
+		rpc_client_->call(firmware_rpcuri_, "yaw_bias", spinbutton_yaw_bias_->get_value());
+	} catch (std::exception& e) {
+		std::cout << "on_change_yaw_bias exception: " << e.what() << std::endl;
+	}
 }
 
 void mainwindow::on_change_pitch_bias()
 {
+	try {
+		rpc_client_->call(firmware_rpcuri_, "pitch_bias", spinbutton_pitch_bias_->get_value());
+	} catch (std::exception& e) {
+		std::cout << "on_change_pitch_bias exception: " << e.what() << std::endl;
+	}
 }
 
 void mainwindow::on_change_roll_bias()
 {
+	try {
+		rpc_client_->call(firmware_rpcuri_, "roll_bias", spinbutton_roll_bias_->get_value());
+	} catch (std::exception& e) {
+		std::cout << "on_change_roll_bias exception: " << e.what() << std::endl;
+	}
 }
 
 
@@ -358,6 +373,10 @@ void mainwindow::rpc_update_coefficients()
 		spinbutton_acc_period_->set_value(drone_state_["accelerometer_correction_period"].get_real());
 		spinbutton_gyro_factor_->set_value(drone_state_["gyro_factor"].get_real());
 		spinbutton_yaw_throttle_factor_->set_value(drone_state_["yaw_throttle_factor"].get_real());
+		spinbutton_yaw_bias_->set_value(drone_state_["yaw_bias"].get_real());
+		spinbutton_pitch_bias_->set_value(drone_state_["pitch_bias"].get_real());
+		spinbutton_roll_bias_->set_value(drone_state_["roll_bias"].get_real());
+
 	} catch (std::exception& e) {
 		std::cout << "rpc_update_coefficients exception: " << e.what() << std::endl;
 	}

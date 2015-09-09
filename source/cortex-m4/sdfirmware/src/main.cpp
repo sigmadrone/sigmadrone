@@ -111,6 +111,9 @@ void dronestate_boot_config(DroneState& state)
 		try { state.ki_ = bootconfig["ki"].get_real(); } catch (std::exception& e) {}
 		try { state.kd_ = bootconfig["kd"].get_real(); } catch (std::exception& e) {}
 		try { state.yaw_kp_ = bootconfig["yaw_kp"].get_real(); } catch (std::exception& e) {}
+		try { state.yaw_bias_ = bootconfig["yaw_bias"].get_real(); } catch (std::exception& e) {}
+		try { state.pitch_bias_ = bootconfig["pitch_bias"].get_real(); } catch (std::exception& e) {}
+		try { state.roll_bias_ = bootconfig["roll_bias"].get_real(); } catch (std::exception& e) {}
 		try { state.yaw_ki_ = bootconfig["yaw_ki"].get_real(); } catch (std::exception& e) {}
 		try { state.yaw_kd_ = bootconfig["yaw_kd"].get_real(); } catch (std::exception& e) {}
 		try { state.gyro_factor_ = bootconfig["gyro_factor"].get_real(); } catch (std::exception& e) {}

@@ -76,6 +76,9 @@ struct DroneState {
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
+		ret["yaw_bias"] = yaw_bias_;
+		ret["pitch_bias"] = pitch_bias_;
+		ret["roll_bias"] = roll_bias_;
 		return ret;
 	}
 
