@@ -27,6 +27,9 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata)
 	add("yaw_ki", &UartRpcServer::rpc_yaw_ki);
 	add("yaw_kd", &UartRpcServer::rpc_yaw_kd);
 	add("yaw_kp", &UartRpcServer::rpc_yaw_kp);
+	add("yaw_bias", &UartRpcServer::rpc_yaw_bias);
+	add("pitch_bias", &UartRpcServer::rpc_pitch_bias);
+	add("roll_bias", &UartRpcServer::rpc_roll_bias);
 	add("sd_set_accelerometer_correction_period", &UartRpcServer::rpc_set_accelerometer_correction_period);
 	add("sd_set_gyro_factor", &UartRpcServer::rpc_set_gyro_factor);
 	add("sd_set_yaw_throttle_factor", &UartRpcServer::rpc_set_yaw_throttle_factor);
@@ -301,6 +304,87 @@ rexjson::value UartRpcServer::rpc_yaw_ki(UART* , rexjson::array& params, rpc_exe
 	if ((params[0].type() == rexjson::real_type))
 		dronestate_.yaw_ki_ = params[0].get_real();
 	return dronestate_.yaw_ki_;
+}
+
+rexjson::value UartRpcServer::rpc_yaw_bias(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "yaw_bias\n"
+	            "\nGet/Set yaw_bias."
+				"\nIf the new coefficient is not specified, the current yaw_bias will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. yaw_bias          (real, optional) The new yaw_bias.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == rexjson::real_type)) {
+		float value = params[0].get_real();
+		if (value > 0.1 || value < -0.1)
+			throw std::range_error("Invalid yaw_bias value");
+		dronestate_.yaw_bias_ = value;
+	}
+	return dronestate_.yaw_bias_;
+}
+
+rexjson::value UartRpcServer::rpc_pitch_bias(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "pitch_bias\n"
+	            "\nGet/Set pitch_bias."
+				"\nIf the new coefficient is not specified, the current pitch_bias will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. pitch_bias          (real, optional) The new pitch_bias.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == rexjson::real_type)) {
+		float value = params[0].get_real();
+		if (value > 0.1 || value < -0.1)
+			throw std::range_error("Invalid pitch_bias value");
+		dronestate_.pitch_bias_ = value;
+	}
+	return dronestate_.pitch_bias_;
+}
+
+rexjson::value UartRpcServer::rpc_roll_bias(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "roll_bias\n"
+	            "\nGet/Set roll_bias."
+				"\nIf the new coefficient is not specified, the current roll_bias will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. roll_bias          (real, optional) The new roll_bias.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == rexjson::real_type)) {
+		float value = params[0].get_real();
+		if (value > 0.1 || value < -0.1)
+			throw std::range_error("Invalid roll_bias value");
+		dronestate_.roll_bias_ = value;
+	}
+	return dronestate_.roll_bias_;
 }
 
 
