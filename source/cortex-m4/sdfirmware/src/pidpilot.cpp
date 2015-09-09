@@ -38,7 +38,7 @@ void PidPilot::update_state(DroneState& state)
 	set_target_thrust(state.base_throttle_);
 	set_pid_coefficents(state);
 
-	torque_correction_ = pid_.get_torque(state.attitude_, state.dt_);
+	torque_correction_ = pid_.get_torque(state.attitude_, state.dt_, state.yaw_throttle_factor_);
 	state.twist_ = pid_.twist_;
 
 
@@ -51,6 +51,9 @@ void PidPilot::update_state(DroneState& state)
 	torque_rpm.at(0,0) = torque_correction_.at(0,0) * rpm_coeff;
 	torque_rpm.at(1,0) = torque_correction_.at(1,0) * rpm_coeff;
 	torque_rpm.at(2,0) = torque_correction_.at(2,0) * rpm_coeff;
+
+	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
+	torque_rpm = torque_rpm + torque_bias;
 
 #ifndef PILOT_Z_COMPENSATE
 	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * state.yaw_ * target_thrust_);

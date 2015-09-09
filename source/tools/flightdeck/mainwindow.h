@@ -21,9 +21,12 @@ protected:
 	void on_button_arm_motors();
 	void on_button_lock_motors();
 	void on_change_thrust();
-	void on_change_correction_thrust();
+	void on_change_yaw_bias();
+	void on_change_pitch_bias();
+	void on_change_roll_bias();
 	bool on_rpc_update();
 	void rpc_update_attitude();
+	void rpc_update_altitude();
 	void rpc_update_target();
 	void rpc_update_twist();
 	void rpc_update_motors();
@@ -93,6 +96,10 @@ protected:
 	Gtk::Label *label_yaw_;
 	Gtk::Label *label_pitch_;
 	Gtk::Label *label_roll_;
+	Gtk::Label *label_altitude_meters_;
+	Gtk::SpinButton* spinbutton_yaw_bias_;
+	Gtk::SpinButton* spinbutton_pitch_bias_;
+	Gtk::SpinButton* spinbutton_roll_bias_;
 
 	std::vector<sigc::connection> connections_;
 };

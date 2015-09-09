@@ -33,13 +33,16 @@ struct DroneState {
 		, kp_(0.125)
 		, ki_(0.0)
 		, kd_(0.03)
-		, yaw_kp_(0.16)
+		, yaw_kp_(0.24)
 		, yaw_ki_(0.0)
-		, yaw_kd_(0.08)
+		, yaw_kd_(0.10)
 		, accelerometer_correction_period_(5.0)
 		, gyro_factor_(1.25)
 		, yaw_(0.0)
 		, pitch_(0.0)
+		, roll_bias_(0.0)
+		, yaw_bias_(0.0)
+		, pitch_bias_(0.0)
 		, roll_(0.0)
 		, base_throttle_(0.0)
         , yaw_throttle_factor_(0.75) { }
@@ -105,6 +108,9 @@ struct DroneState {
 	float yaw_;
 	float pitch_;
 	float roll_;
+	float yaw_bias_;
+	float pitch_bias_;
+	float roll_bias_;
 	float base_throttle_;
 	float yaw_throttle_factor_;
 

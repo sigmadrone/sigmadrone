@@ -48,6 +48,10 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	, label_yaw_(NULL)
 	, label_pitch_(NULL)
 	, label_roll_(NULL)
+	, label_altitude_meters_(NULL)
+	, spinbutton_yaw_bias_(NULL)
+	, spinbutton_pitch_bias_(NULL)
+	, spinbutton_roll_bias_(NULL)
 {
 	//Get the Glade-instantiated Button, and connect a signal handler:
 	ref_glade_->get_widget("button_quit", button_quit_);
@@ -87,9 +91,13 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	ref_glade_->get_widget("label_yaw", label_yaw_);
 	ref_glade_->get_widget("label_pitch", label_pitch_);
 	ref_glade_->get_widget("label_roll", label_roll_);
+	ref_glade_->get_widget("label_altitude_meters", label_altitude_meters_);
 	ref_glade_->get_widget("spinbutton_acc_period", spinbutton_acc_period_);
 	ref_glade_->get_widget("spinbutton_gyro_factor", spinbutton_gyro_factor_);
 	ref_glade_->get_widget("spinbutton_yaw_throttle_factor", spinbutton_yaw_throttle_factor_);
+	ref_glade_->get_widget("spinbutton_yaw_bias", spinbutton_yaw_bias_);
+	ref_glade_->get_widget("spinbutton_pitch_bias", spinbutton_pitch_bias_);
+	ref_glade_->get_widget("spinbutton_roll_bias", spinbutton_roll_bias_);
 
 
 	connections_.push_back(button_quit_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_quit)));
@@ -98,10 +106,9 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	connections_.push_back(spinbutton_yaw_throttle_factor_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_factor)));
 	connections_.push_back(button_lock_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_lock_motors)));
 	connections_.push_back(button_arm_motors_->signal_clicked().connect(sigc::mem_fun(*this, &mainwindow::on_button_arm_motors)));
-	connections_.push_back(spinbutton_m1_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust)));
-	connections_.push_back(spinbutton_m2_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust)));
-	connections_.push_back(spinbutton_m3_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust)));
-	connections_.push_back(spinbutton_m4_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_correction_thrust)));
+	connections_.push_back(spinbutton_yaw_bias_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_bias)));
+	connections_.push_back(spinbutton_pitch_bias_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_pitch_bias)));
+	connections_.push_back(spinbutton_roll_bias_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_roll_bias)));
 	connections_.push_back(spinbutton_thrust_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_thrust)));
 	connections_.push_back(spinbutton_xy_kp_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_xy_kp)));
 	connections_.push_back(spinbutton_xy_ki_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_xy_ki)));
@@ -109,7 +116,6 @@ mainwindow::mainwindow(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>
 	connections_.push_back(spinbutton_z_kp_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_kp)));
 	connections_.push_back(spinbutton_z_ki_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_ki)));
 	connections_.push_back(spinbutton_z_kd_->signal_value_changed().connect(sigc::mem_fun(*this, &mainwindow::on_change_yaw_kd)));
-
 }
 
 mainwindow::~mainwindow()
@@ -220,9 +226,18 @@ void mainwindow::on_change_yaw_factor()
 	}
 }
 
-void mainwindow::on_change_correction_thrust()
+void mainwindow::on_change_yaw_bias()
 {
 }
+
+void mainwindow::on_change_pitch_bias()
+{
+}
+
+void mainwindow::on_change_roll_bias()
+{
+}
+
 
 void mainwindow::set_rpc_connection(const std::string& rpcserver, const std::string& rpcport, size_t updaterate)
 {
@@ -250,6 +265,16 @@ void mainwindow::rpc_update_attitude()
 		std::cout << "rpc_update_attitude(sd_get_attitude) exception: " << e.what() << std::endl;
 	}
 }
+
+void mainwindow::rpc_update_altitude()
+{
+	try {
+		label_altitude_meters_->set_text(double_to_str(drone_state_["altitude_meters"].get_real()));
+	} catch (std::exception& e) {
+		std::cout << "rpc_update_altitude exception: " << e.what() << std::endl;
+	}
+}
+
 
 void mainwindow::rpc_update_target()
 {

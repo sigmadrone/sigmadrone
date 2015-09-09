@@ -15,7 +15,7 @@ void PidTorque::set_target(const QuaternionF &setQ)
 	set_Q_ = setQ;
 }
 
-Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt)
+Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt, float yaw_factor)
 {
 	Vector3f torq;
 	Vector3f Zset = set_Q_.rotate(Vector3f(0.0, 0.0, 1.0));
@@ -39,7 +39,10 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt)
 		}
 	}
 	error_z = error_z * angle_rad;
-	torq.at(2,0) = pid_controller_yaw_.get_pid(error_z, dt.seconds_float(), Vector3f(0,0,0.15)).at(2,0);
+	torq.at(2,0) = pid_controller_yaw_.get_pid(
+			error_z,
+			dt.seconds_float(),
+			Vector3f(0,0,yaw_factor/3.0)).at(2,0);
 #else
 	// targetQ = attitudeQ * errQ; ==> (~attitudeQ) * attitudeQ * errQ = (~attitudeQ) * targetQ;
 	// ==> errQ = (~attitudeQ) * targetQ;
