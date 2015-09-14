@@ -10,15 +10,15 @@ PidPilot::PidPilot() {
 	max_thrust_ = 1.0;
 	target_thrust_ = 0.0;
 
-	Vector3f thrust_dir(0, 0, 1);
-	m0_ = Vector3f::cross(Vector3f(-1.0, 1.0, 0), thrust_dir).normalize();
-	m1_ = Vector3f::cross(Vector3f(-1.0, -1.0, 0), thrust_dir).normalize();
-	m2_ = Vector3f::cross(Vector3f(1.0,  -1.0, 0), thrust_dir).normalize();
-	m3_ = Vector3f::cross(Vector3f(1.0, 1.0, 0), thrust_dir).normalize();
-	m0_.at(2,0) = 0.5;
-	m1_.at(2,0) = -0.5;
-	m2_.at(2,0) = 0.5;
-	m3_.at(2,0) = -0.5;
+	Vector3f thrust_dir(0, 0, -1);
+	m0_ = Vector3f::cross(Vector3f(-1, -1,  0), thrust_dir).normalize();
+	m1_ = Vector3f::cross(Vector3f(-1,  1,  0), thrust_dir).normalize();
+	m2_ = Vector3f::cross(Vector3f( 1,  1,  0), thrust_dir).normalize();
+	m3_ = Vector3f::cross(Vector3f( 1, -1,  0), thrust_dir).normalize();
+	m0_.at(2,0) = -0.5;
+	m1_.at(2,0) = 0.5;
+	m2_.at(2,0) = -0.5;
+	m3_.at(2,0) = 0.5;
 }
 
 PidPilot::~PidPilot() {

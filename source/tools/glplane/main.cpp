@@ -44,7 +44,7 @@ GlShape gPlane;
 GLuint gProgram;
 void IdleFunction(void);
 void RpcIdleFunction(void);
-QuaternionD remapQ = QuaternionD::fromAxisRot(Vector3d(0,0,1), M_PI/2);
+QuaternionD remapQ = QuaternionD::fromAxisRot(Vector3d(1,0,0), M_PI) * QuaternionD::fromAxisRot(Vector3d(0,0,1), M_PI/2);
 
 Vector4f applyW(const Vector4f &v)
 {
@@ -161,7 +161,7 @@ again:
 				fprintf(stdout, "%5.9lf %5.9lf %5.9lf %5.9lf\n", q.w, q.x, q.y, q.z);
 			}
 			GLuint mLoc;
-			Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(0), DEG2RAD(180)) * M);
+			Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(180), DEG2RAD(90)) * M);
 
 			mLoc = glGetUniformLocation(gProgram, "M");
 			if (mLoc >= 0)
@@ -188,7 +188,7 @@ void RpcIdleFunction(void)
 	q = q * remapQ;
 	M = q.rotMatrix4();
 	GLuint mLoc;
-	Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(0), DEG2RAD(180)) * M);
+	Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(180), DEG2RAD(90)) * M);
 	mLoc = glGetUniformLocation(gProgram, "M");
 	if (mLoc >= 0)
 		glUniformMatrix4fv(mLoc, 1, GL_FALSE, m.data);

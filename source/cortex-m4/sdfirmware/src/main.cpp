@@ -284,10 +284,18 @@ void main_task(void *pvParameters)
 		sample_dt.time_stamp();
 
 		uint8_t gyr_samples = gyro.GetFifoSourceReg() & 0x1F;
-//		uint8_t acc_samples = accel.GetFifoSourceFSS();
-
 		att.accelerometer_correction_period(drone_state->accelerometer_correction_period_);
-		static const Matrix3f gyro_align(-1,0,0,0,-1,0,0,0,1);
+
+		static const Matrix3f gyro_align(
+				-1, 0, 0,
+				 0, 1, 0,
+				 0, 0,-1);
+
+		static const Matrix3f acc_align(
+				 1, 0, 0,
+				 0,-1, 0,
+				 0, 0,-1);
+
 		if (gyr_samples >= gyr_wtm) {
 			gyro.GetFifoAngRateDPS(&gyr_axes);
 			drone_state->gyro_raw_ = gyro_align * (Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias);
@@ -296,7 +304,7 @@ void main_task(void *pvParameters)
 		}
 
 		if (accel.GetFifoAcc(&acc_axes)) {
-			drone_state->accel_raw_ = Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z);
+			drone_state->accel_raw_ = acc_align * Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z);
 			Vector3f accel_adjusted = drone_state->accel_raw_ + drone_state->accelerometer_adjustment_;
 			drone_state->accel_ = accel_lpf->do_filter(accel_adjusted.normalize());
 		}
@@ -360,8 +368,8 @@ int main(int argc, char* argv[])
 	uint32_t pclk1 = HAL_RCC_GetPCLK1Freq();
 	uint32_t pclk2 = HAL_RCC_GetPCLK2Freq();
 
-	(void)argc;
-	(void)argv;
+	(void) argc;
+	(void) argv;
 
 	relocate_interrupt_table();
 
@@ -373,11 +381,10 @@ int main(int argc, char* argv[])
 	NVIC_SetPriority(SysTick_IRQn, 0);
 
 	TimeStamp::init();
-	colibri::UartTrace::init(115200*2);
+	colibri::UartTrace::init(115200 * 2);
 	drone_state = new DroneState();
 
-	printf("Starting main_task:, CPU freq: %lu, PCLK1 freq: %lu, PCLK2 freq: %lu\n",
-			freq, pclk1, pclk2);
+	printf("Starting main_task:, CPU freq: %lu, PCLK1 freq: %lu, PCLK2 freq: %lu\n", freq, pclk1, pclk2);
 
 	/* Create tasks */
 	xTaskCreate(

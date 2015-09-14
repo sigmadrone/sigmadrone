@@ -6,7 +6,7 @@
 class attitudetracker
 {
 public:
-	explicit attitudetracker(double accelerometer_correction_period = 1.5, Vector3d earth_g = Vector3d(0, 0, 1));
+	explicit attitudetracker(double accelerometer_correction_period = 1.5, Vector3d earth_g = Vector3d(0, 0, -1));
 	~attitudetracker();
 	Vector3d get_earth_g() const;
 	void set_earth_g(Vector3d earth_g);
