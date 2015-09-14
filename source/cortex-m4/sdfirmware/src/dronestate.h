@@ -30,6 +30,7 @@ struct DroneState {
 		: altitude_(INVALID_ALTITUDE)
 		, pressure_hpa_(0.0f)
 		, temperature_(0.0f)
+	    , battery_level_(0.0f)
 		, kp_(0.125)
 		, ki_(0.0)
 		, kd_(0.03)
@@ -58,6 +59,7 @@ struct DroneState {
 		ret["altitude_meters"] = altitude_.meters();
 		ret["pressure_hpa"] = pressure_hpa_;
 		ret["temperature"] = temperature_;
+		ret["battery"] = battery_level_;
 		ret["dt"] = static_cast<float>(dt_.microseconds());
 		ret["attitude"] = quaternion_to_json_value(attitude_);
 		ret["target"] = quaternion_to_json_value(target_);
@@ -95,6 +97,7 @@ struct DroneState {
 	Vector3f accelerometer_adjustment_;
 	float pressure_hpa_;
 	float temperature_;
+	float battery_level_;
 	/*more to add here*/
 
 	/*

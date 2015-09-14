@@ -37,6 +37,7 @@
 #include "bmp180reader.h"
 #include "accellowpassfilter.h"
 #include "flashmemory.h"
+#include "adc.h"
 
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
@@ -52,6 +53,7 @@ DigitalIn user_sw4(PG_11, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 
 TaskHandle_t main_task_handle = 0;
 TaskHandle_t bmp180_task_handle = 0;
+TaskHandle_t battery_task_handle = 0;
 QueueHandle_t hGyroQueue;
 TimeStamp isr_ts;
 DroneState* drone_state = 0;
@@ -153,6 +155,21 @@ void bmp180_task(void *pvParameters)
 		}
 
 		vTaskDelay(10 / portTICK_RATE_MS);
+	}
+}
+
+void battery_task(void *pvParameters)
+{
+	(void)pvParameters;
+
+	ADCHandle adc(ADC1, ADC_CHANNEL_9, PB_1);
+	while (1) {
+		uint32_t adc_val = adc.read_value();
+		if (adc_val != ADCHandle::INVALID_CONV_VALUE) {
+			float battery = (float)adc_val/(float)adc.max_value() * 3.3f * 125.1f / 25.1f;
+			drone_state->battery_level_ = battery;
+		}
+		vTaskDelay(1000 / portTICK_RATE_MS);
 	}
 }
 
@@ -364,21 +381,30 @@ int main(int argc, char* argv[])
 
 	/* Create tasks */
 	xTaskCreate(
-		main_task, /* Function pointer */
-		"main_task", /* Task name - for debugging only*/
-		4 * configMINIMAL_STACK_SIZE, /* Stack depth in words */
-		(void*) NULL, /* Pointer to tasks arguments (parameter) */
-		tskIDLE_PRIORITY + 3UL, /* Task priority*/
-		&main_task_handle /* Task handle */
-		);
+			main_task, /* Function pointer */
+			"main_task", /* Task name - for debugging only*/
+			4 * configMINIMAL_STACK_SIZE, /* Stack depth in words */
+			(void*) NULL, /* Pointer to tasks arguments (parameter) */
+			tskIDLE_PRIORITY + 3UL, /* Task priority*/
+			&main_task_handle /* Task handle */
+	);
 
 	xTaskCreate(
-		bmp180_task, /* Function pointer */
-		"bmp180_task", /* Task name - for debugging only*/
-		configMINIMAL_STACK_SIZE, /* Stack depth in words */
-		(void*) NULL, /* Pointer to tasks arguments (parameter) */
-		tskIDLE_PRIORITY + 2UL, /* Task priority*/
-		&bmp180_task_handle /* Task handle */
+			bmp180_task, /* Function pointer */
+			"bmp180_task", /* Task name - for debugging only*/
+			configMINIMAL_STACK_SIZE, /* Stack depth in words */
+			(void*) NULL, /* Pointer to tasks arguments (parameter) */
+			tskIDLE_PRIORITY + 2UL, /* Task priority*/
+			&bmp180_task_handle /* Task handle */
+	);
+
+	xTaskCreate(
+			battery_task, /* Function pointer */
+			"battery_task", /* Task name - for debugging only*/
+			configMINIMAL_STACK_SIZE, /* Stack depth in words */
+			(void*) NULL, /* Pointer to tasks arguments (parameter) */
+			tskIDLE_PRIORITY + 1UL, /* Task priority*/
+			&battery_task_handle /* Task handle */
 	);
 
 	vTaskStartScheduler(); // this call will never return
