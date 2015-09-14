@@ -38,6 +38,7 @@
 #include "accellowpassfilter.h"
 #include "flashmemory.h"
 #include "adc.h"
+#include "battery.h"
 
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
@@ -163,12 +164,10 @@ void battery_task(void *pvParameters)
 	(void)pvParameters;
 
 	ADCHandle adc(ADC1, ADC_CHANNEL_9, PB_1);
+	Battery battery;
 	while (1) {
-		uint32_t adc_val = adc.read_value();
-		if (adc_val != ADCHandle::INVALID_CONV_VALUE) {
-			float battery = (float)adc_val/(float)adc.max_value() * 3.3f * 125.1f / 25.1f;
-			drone_state->battery_level_ = battery;
-		}
+		battery.update(adc);
+		drone_state->battery_level_ = battery.voltage();
 		vTaskDelay(1000 / portTICK_RATE_MS);
 	}
 }

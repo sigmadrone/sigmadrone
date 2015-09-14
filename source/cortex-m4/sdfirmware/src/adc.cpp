@@ -14,18 +14,14 @@ ADCHandle* ADCHandle::adc_handles_[3] = {0};
 ADCHandle::ADCHandle(
 		ADC_TypeDef* adc_instance,
 		uint32_t adc_channel,
-		PinName pin) : gpio_(pin, GPIO_MODE_ANALOG, GPIO_NOPULL, GPIO_SPEED_MEDIUM, 0)
+		PinName pin,
+		float v_ref) :
+				gpio_(pin, GPIO_MODE_ANALOG, GPIO_NOPULL, GPIO_SPEED_MEDIUM, 0),
+				v_ref_(v_ref)
 {
 	init(adc_instance, adc_channel);
 }
 
-ADCHandle::ADCHandle(
-		ADC_TypeDef* adc_instance,
-		uint32_t adc_channel,
-		const GPIOPin& gpio) : gpio_(gpio)
-{
-	init(adc_instance, adc_channel);
-}
 
 uint32_t ADCHandle::read_value()
 {
@@ -37,9 +33,20 @@ uint32_t ADCHandle::read_value()
 	return HAL_ADC_GetValue(&adc_handle_);
 }
 
+float ADCHandle::read_value_as_voltage()
+{
+	uint32_t val = read_value();
+	return (val != INVALID_CONV_VALUE) ? ((float)val / (float)max_value() * v_ref()) : 0;
+}
+
 uint32_t ADCHandle::max_value()
 {
 	return 1 << 12;
+}
+
+float ADCHandle::v_ref()
+{
+	return v_ref_;
 }
 
 void ADCHandle::init(ADC_TypeDef* adc_instance, uint32_t adc_channel)

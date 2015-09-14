@@ -26,12 +26,14 @@ public:
 	/** Constructs and initializes a timer instance
 	 *  @param adc Pointert to the internal ADC_TypeDef struct to be used, one of ADC1, ADC2 or ADC3
 	 *  @param adc_channel ADC channel to be used, one of ADC_CHANNEL_0 .. ADC_CHANNEL_16
+	 *  @param v_ref Reference voltage
 	 */
-	ADCHandle(ADC_TypeDef* adc, uint32_t adc_channel, const GPIOPin& gpio);
-	ADCHandle(ADC_TypeDef* adc, uint32_t adc_channel, PinName pin);
+	ADCHandle(ADC_TypeDef* adc, uint32_t adc_channel, PinName pin, float v_ref = 3.3);
 	~ADCHandle();
 	uint32_t read_value();
 	uint32_t max_value();
+	float v_ref();
+	float read_value_as_voltage();
 
 private:
 	void init(ADC_TypeDef* adc, uint32_t adc_channel);
@@ -48,6 +50,7 @@ private:
 private:
 	ADC_HandleTypeDef adc_handle_;
 	GPIOPin gpio_;
+	float v_ref_;
 
 	static ADCHandle* adc_handles_[3];
 };
