@@ -163,11 +163,13 @@ void battery_task(void *pvParameters)
 {
 	(void)pvParameters;
 
-	ADCHandle adc(ADC1, ADC_CHANNEL_9, PB_1);
+	colibri::Voltmeter voltmeter;
 	Battery battery;
 	while (1) {
-		battery.update(adc);
-		drone_state->battery_level_ = battery.voltage();
+		battery.update(voltmeter.measure());
+		drone_state->battery_voltage_ = battery.voltage();
+		drone_state->battery_percentage_ = battery.charge_percentage();
+		drone_state->battery_type_ = battery.type_as_string();
 		vTaskDelay(1000 / portTICK_RATE_MS);
 	}
 }
@@ -327,6 +329,8 @@ void main_task(void *pvParameters)
 					drone_state->motors_.at(2,0), drone_state->motors_.at(3,0));
 			printf("Altit, m  : %5.3f\n", drone_state->altitude_.meters());
 			printf("Temper, C :%5.1f\n", drone_state->temperature_);
+			printf("Battery   : %2.2fV %2.2f%% %s\n", drone_state->battery_voltage_.volts(),
+					drone_state->battery_percentage_, drone_state->battery_type_.c_str());
 
 			//printf("Torq :  %1.3f %1.3f %1.3f\n", state.pid_torque_.at(0,0), state.pid_torque_.at(1,0),
 				//	state.pid_torque_.at(2,0));

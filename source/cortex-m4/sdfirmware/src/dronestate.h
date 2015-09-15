@@ -30,7 +30,8 @@ struct DroneState {
 		: altitude_(INVALID_ALTITUDE)
 		, pressure_hpa_(0.0f)
 		, temperature_(0.0f)
-	    , battery_level_(0.0f)
+	    , battery_voltage_()
+        , battery_percentage_(0.0f)
 		, kp_(0.125)
 		, ki_(0.0)
 		, kd_(0.03)
@@ -59,7 +60,9 @@ struct DroneState {
 		ret["altitude_meters"] = altitude_.meters();
 		ret["pressure_hpa"] = pressure_hpa_;
 		ret["temperature"] = temperature_;
-		ret["battery"] = battery_level_;
+		ret["battery_voltage"] = battery_voltage_.volts();
+		ret["battery_percentage"] = battery_percentage_;
+		ret["battery_type"] = battery_type_;
 		ret["dt"] = static_cast<float>(dt_.microseconds());
 		ret["attitude"] = quaternion_to_json_value(attitude_);
 		ret["target"] = quaternion_to_json_value(target_);
@@ -94,10 +97,11 @@ struct DroneState {
 	Vector3f accel_;
 	Vector3f mag_;
 	Altitude altitude_;
-	Vector3f accelerometer_adjustment_;
 	float pressure_hpa_;
 	float temperature_;
-	float battery_level_;
+	Voltage battery_voltage_;
+	float battery_percentage_;
+	std::string battery_type_;
 	/*more to add here*/
 
 	/*
@@ -109,6 +113,7 @@ struct DroneState {
 	float yaw_kp_;
 	float yaw_ki_;
 	float yaw_kd_;
+	Vector3f accelerometer_adjustment_;
 	float accelerometer_correction_period_;
 	float gyro_factor_;
 	float yaw_;

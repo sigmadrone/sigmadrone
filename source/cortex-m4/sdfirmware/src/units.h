@@ -46,7 +46,7 @@ struct ScaledUnit {
 
 	UnitType unit() const { return units_; }
 
-	bool is_null() const { return !unit(); }
+	bool is_null() const { return 0 == unit(); }
 
 protected:
 	inline UnitType femtounit() const { return picounit() / 1000; }
@@ -164,7 +164,6 @@ struct Distance: public ScaledUnit<float> {
 	inline Distance operator+(const Distance& rhs) const { return Distance(unit() + rhs.unit()); }
 	inline Distance operator-(const Distance& rhs) const { return Distance(unit() - rhs.unit()); }
 	inline float operator/(const Distance& rhs) const { return unit()/rhs.unit(); }
-	inline bool is_null() const { return unit() != 0.0f; }
 	inline bool is_valid() const { return unit() != INVALID_VALUE; }
 
 private:
@@ -174,5 +173,27 @@ private:
 typedef Distance Altitude;
 
 static const Altitude INVALID_ALTITUDE = Altitude::from_meters(Altitude::INVALID_VALUE);
+
+struct Voltage: public ScaledUnit<float> {
+	static Voltage from_microvolts(float uV) { return Voltage(from_microunit(uV).unit()); }
+	static Voltage from_millvolts(float mV) { return Voltage(from_milliunit(mV).unit()); }
+	static Voltage from_volts(float V) { return Voltage(from_baseunit(V).unit()); }
+	static Voltage from_kilovolts(float kV) { return Voltage(from_kilounit(kV).unit()); }
+	Voltage() : ScaledUnit(0) {}
+	~Voltage() {}
+	float microvolts() const { return megaunit(); }
+	float millivolts() const { return kilounit(); }
+	float volts() const { return unit(); }
+	float kilovolts() const { return milliunit(); }
+
+	inline Voltage operator*(float rhs) const { return Voltage(unit() * rhs); }
+	inline Voltage operator/(float rhs) const { return Voltage(unit() / rhs); }
+	inline Voltage operator+(const Voltage& rhs) const { return Voltage(unit() + rhs.unit()); }
+	inline Voltage operator-(const Voltage& rhs) const { return Voltage(unit() - rhs.unit()); }
+	inline float operator/(const Voltage& rhs) const { return unit()/rhs.unit(); }
+
+private:
+	Voltage(float volts) : ScaledUnit(volts) {}
+};
 
 #endif /* UNITS_H_ */

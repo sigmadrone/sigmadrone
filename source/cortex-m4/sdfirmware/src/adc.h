@@ -15,6 +15,7 @@
 #include "stm32f4xx_hal_i2c.h"
 #include "stm32f429xx.h"
 #include "gpiopin.h"
+#include "units.h"
 
 /*
  * Simple ADC class that supports only one regular channel, with data transfered over DMA
@@ -53,6 +54,23 @@ private:
 	float v_ref_;
 
 	static ADCHandle* adc_handles_[3];
+};
+
+namespace colibri {
+
+class Voltmeter {
+public:
+	static constexpr float r1_div_ = 100.0f;
+	static constexpr float r2_div_ = 21.5f;
+	Voltmeter() : adc_(ADC1, ADC_CHANNEL_9, PB_1) {}
+	Voltage measure()
+	{
+		return Voltage::from_volts(adc_.read_value_as_voltage() * (r1_div_+r2_div_) / r2_div_);
+	}
+private:
+	ADCHandle adc_;
+};
+
 };
 
 #endif /* ADC_H_ */
