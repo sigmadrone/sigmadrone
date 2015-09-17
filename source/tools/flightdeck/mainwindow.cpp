@@ -431,6 +431,7 @@ bool mainwindow::on_rpc_update()
 		rpc_update_yaw_pid();
 		rpc_update_controls();
 		rpc_update_coefficients();
+		rpc_update_altitude();
 
 	} catch (std::exception& e) {
 		std::cout << "on_rpc_update exception: " << e.what() << std::endl;
