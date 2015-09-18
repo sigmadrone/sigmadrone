@@ -72,6 +72,10 @@ void FlightControl::update_state(DroneState& state)
 		rc_values_.reset_yaw_quaternion(state.attitude_);
 	}
 
+	if (!rc_values_.motors_armed()) {
+		altitude_tracker().reset();
+	}
+
 	state.target_ = target_q();
 
 	process_servo_start_stop_command();

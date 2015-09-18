@@ -20,6 +20,7 @@ public:
 			const Altitude& flight_ceiling = DEFAULT_FLIGHT_CEILING,
 			float safe_threshold = 0.8f);
 	~AltitudeTracker();
+	void reset();
 	Altitude flight_ceiling() const;
 	void flight_ceiling(const Altitude& altitude);
 	Altitude highest_recorded_altitude() const;

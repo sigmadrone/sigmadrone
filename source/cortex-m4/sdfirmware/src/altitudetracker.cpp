@@ -9,11 +9,20 @@
 
 AltitudeTracker::AltitudeTracker(const Altitude& ceiling, float safe_threshold) :
 	flight_ceiling_(ceiling), starting_altitude_(INVALID_ALTITUDE), alarm_count_(0),
-	safe_threshold_(safe_threshold), flight_ceiling_hit_(false) {
+	safe_threshold_(safe_threshold), flight_ceiling_hit_(false)
+{
 	assert(safe_threshold >= 0.0f && safe_threshold_ <= 1.0f);
 }
 
-AltitudeTracker::~AltitudeTracker() {
+AltitudeTracker::~AltitudeTracker()
+{
+}
+
+void AltitudeTracker::reset()
+{
+	starting_altitude_ = INVALID_ALTITUDE;
+	alarm_count_ = 0;
+	flight_ceiling_hit_ = false;
 }
 
 Altitude AltitudeTracker::flight_ceiling() const {
