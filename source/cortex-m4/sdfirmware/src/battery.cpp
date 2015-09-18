@@ -57,7 +57,7 @@ float Battery::charge_percentage() const
 	if (type() == TYPE_UNKNOWN) {
 		return 0.0;
 	}
-	return (voltage() - min_voltage()) / (max_voltage() - min_voltage()) * 100.0;
+	return fmax((voltage() - min_voltage()) / (max_voltage() - min_voltage()) * 100.0, 0.0);
 }
 
 Battery::Type Battery::type() const
