@@ -23,8 +23,9 @@ Battery::~Battery() {}
 
 void Battery::update(Voltage new_measurement)
 {
-	if (fabs((voltage_ - new_measurement).volts()) > 0.1) {
-		// change is too big, have to try to re-detect the battery type
+	if (new_measurement > max_voltage()) {
+		// newly measured voltage is too big, have to try to re-detect the battery
+		// type
 		type_ = TYPE_AUTO_DETECT;
 	}
 	voltage_ = new_measurement;
