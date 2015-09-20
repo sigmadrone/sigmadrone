@@ -28,7 +28,6 @@ I2CMaster::I2CMaster(
 		__HAL_RCC_I2C3_CLK_ENABLE();
 	}
 
-	// TODO Auto-generated constructor stub
 	handle_.Instance = i2c_device;
 
 	handle_.Init.AddressingMode = addressing_mode;
@@ -39,12 +38,28 @@ I2CMaster::I2CMaster(
 	handle_.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 	handle_.Init.OwnAddress1 = 0x00;
 	handle_.Init.OwnAddress2 = 0xFE;
-	HAL_I2C_Init(&handle_);
+	init();
 }
 
 I2CMaster::~I2CMaster()
 {
 	HAL_I2C_DeInit(&handle_);
+}
+
+void I2CMaster::init()
+{
+	HAL_I2C_Init(&handle_);
+}
+
+void I2CMaster::deinit()
+{
+	HAL_I2C_DeInit(&handle_);
+}
+
+void I2CMaster::reinit()
+{
+	deinit();
+	init();
 }
 
 void I2CMaster::read(uint16_t dev_addr, uint16_t reg_addr, uint8_t* buffer, uint16_t nbytes) throw (std::exception)

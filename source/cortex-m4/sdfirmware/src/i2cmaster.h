@@ -27,6 +27,9 @@ public:
 		uint32_t timeout = 250,
 		std::vector<GPIOPin> data_pins = {});
 	virtual ~I2CMaster();
+	void init();
+	void deinit();
+	void reinit();
 	void read(uint16_t dev_addr, uint16_t reg_addr, uint8_t* buffer, uint16_t nbytes) throw (std::exception);
 	uint8_t read8(uint16_t dev_addr, uint16_t reg_addr) throw (std::exception);
 	uint16_t read16(uint16_t dev_addr, uint16_t reg_addr) throw (std::exception);

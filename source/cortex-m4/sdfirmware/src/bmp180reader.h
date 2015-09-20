@@ -23,7 +23,6 @@ public:
 	void read_pressure();
 	void read_temperature();
 	void calibrate();
-	void cleanup();
 	static Distance convert_hpa_to_altitude(float hpa);
 
 private:
