@@ -132,7 +132,7 @@ void bmp180_task(void *pvParameters)
 
 	vTaskDelay(600 / portTICK_RATE_MS);
 
-	I2CMaster i2c(I2C1, 100000, I2C_DUTYCYCLE_2, I2C_ADDRESSINGMODE_7BIT, 250, {
+	I2CMaster i2c(I2C1, 100000, I2C_DUTYCYCLE_2, I2C_ADDRESSINGMODE_7BIT, 750, {
 				{PB_8, GPIO_MODE_AF_OD, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
 				{PB_9, GPIO_MODE_AF_OD, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
 		});
@@ -153,7 +153,7 @@ void bmp180_task(void *pvParameters)
 			drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
 			drone_state->temperature_ = bmp_reader->temperature_celsius(true);
 		} catch (std::exception& e) {
-			i2c.reinit();
+//			i2c.reinit();
 		}
 
 		vTaskDelay(10 / portTICK_RATE_MS);
