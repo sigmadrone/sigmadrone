@@ -70,6 +70,12 @@ void server_app::init_user_rpcserver()
 	user_rpcserver_->set_log_file(logfile_);
 }
 
+void server_app::init_black_box()
+{
+	black_box_.reset(new black_box(*this));
+	black_box_->start_recording();
+}
+
 void server_app::init_servo_controller()
 {
 	if (args_.get_value("servo-ctrl") == "pca9685") {
@@ -151,6 +157,7 @@ int server_app::run(int argc, const char *argv[])
 	log_info_message("Server starting.");
 	init_attitude_tracker();
 	init_user_rpcserver();
+	init_black_box();
 	boost::thread rpc_thread(boost::bind(&boost::asio::io_service::run, &io_service_));
 	rpc_thread.join();
 	ctrl_thread_.stop();

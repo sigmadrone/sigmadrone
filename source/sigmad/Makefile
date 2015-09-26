@@ -28,6 +28,7 @@ OBJS		= \
 		$(OUTDIR)/userrpcserver.o \
 		$(OUTDIR)/attcontroller.o \
 		$(OUTDIR)/pidtorque.o \
+		$(OUTDIR)/blackbox.o \
 
 
 all: $(OUTDIR) $(TARGET)

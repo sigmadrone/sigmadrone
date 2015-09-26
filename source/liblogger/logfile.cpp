@@ -6,13 +6,14 @@
 #include "logfile.h"
 
 
-logfile::logfile(const std::string& path, size_t rotsize, message_type level)
+logfile::logfile(const std::string& path, size_t rotsize, message_type level, bool log_date_time)
 	: pfile_(NULL)
 	, logfile_(boost::filesystem::system_complete(boost::filesystem::path(path)).string())
 	, rotext_(".0")
 	, rotsize_(rotsize)
 	, msgcount_(default_msgcount)
 	, level_(level)
+	, log_date_time_(log_date_time)
 {
 	init();
 	if ((pfile_ = fopen(logfile_.c_str(), "a")) == NULL)
@@ -102,10 +103,12 @@ bool logfile::add_log_v(message_type type, const char *fmt, va_list args)
 {
 	if (type > none && type <= level_) {
 		boost::lock_guard<boost::mutex> lock(m_);
-		fprintf(pfile_, "%s; %s; ", get_time().c_str(), get_message_type(type).c_str());
+		if (log_date_time_) {
+			fprintf(pfile_, "%s; %s; ", get_time().c_str(), get_message_type(type).c_str());
+		}
 		vfprintf(pfile_, fmt, args);
 		fprintf(pfile_, "\n");
-		fflush(pfile_);
+		//fflush(pfile_);
 		if (--msgcount_ <= 0) {
 			msgcount_ = default_msgcount;
 			rotate();
@@ -148,4 +151,9 @@ void logfile::rotate()
 				fclose(truncfile);
 		}
 	}
+}
+
+void logfile::enable_disable_date_prefix(bool enable_date_prefix)
+{
+	log_date_time_ = enable_date_prefix;
 }

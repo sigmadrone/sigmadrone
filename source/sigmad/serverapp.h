@@ -16,6 +16,7 @@
 
 #include "userrpcserver.h"
 #include "attcontroller.h"
+#include "blackbox.h"
 
 
 class server_app : private boost::noncopyable, public logger<logfile>
@@ -36,6 +37,7 @@ public:
 	boost::scoped_ptr<servocontroller> servoctrl_;
 	boost::scoped_ptr<sampler> ssampler_;
 	boost::scoped_ptr<attitudetracker> attitude_tracker_;
+	boost::scoped_ptr<black_box> black_box_;
 	attcontroller ctrl_thread_;
 	std::string firmware_uart_;
 	uint32_t firmware_uart_speed_;
@@ -47,6 +49,7 @@ protected:
 	void init_servo_controller();
 	void init_sensors_sampler();
 	void init_attitude_tracker();
+	void init_black_box();
 
 	boost::shared_ptr<boost::thread> hwctrl_thread_;
 	boost::asio::io_service io_service_;
