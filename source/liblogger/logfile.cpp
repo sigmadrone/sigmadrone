@@ -108,7 +108,7 @@ bool logfile::add_log_v(message_type type, const char *fmt, va_list args)
 		}
 		vfprintf(pfile_, fmt, args);
 		fprintf(pfile_, "\n");
-		//fflush(pfile_);
+		fflush(pfile_);
 		if (--msgcount_ <= 0) {
 			msgcount_ = default_msgcount;
 			rotate();
