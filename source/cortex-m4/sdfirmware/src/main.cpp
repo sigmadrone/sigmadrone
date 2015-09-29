@@ -39,12 +39,12 @@
 #include "flashmemory.h"
 #include "adc.h"
 #include "battery.h"
+#include "gpsreader.h"
 
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
 
 DigitalOut ledusb(PC_4);
-DigitalOut gpspwr(PB_0, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
 DigitalIn gyro_int2(PA_2, DigitalIn::PullNone, DigitalIn::InterruptRising);
 DigitalIn user_sw5(PG_2, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw1(PG_3, DigitalIn::PullNone, DigitalIn::InterruptFalling);
@@ -60,22 +60,6 @@ TimeStamp isr_ts;
 DroneState* drone_state = 0;
 
 FlashMemory configdata(&flashregion, sizeof(flashregion), FLASH_SECTOR_23, 1);
-
-UART uart3({
-	{PC_10, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},		/* USART3_TX_PIN */
-	{PC_11, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},		/* USART3_RX_PIN */
-},
-		USART3,
-		DMA1,
-		DMA1_Stream3,
-		DMA_CHANNEL_4,
-		DMA1_Stream1,
-		DMA_CHANNEL_4,
-		UART_HWCONTROL_NONE,
-		9600,
-		250
-);
-
 
 UART uart2({
 	{PD_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART3_TX_PIN */
@@ -138,10 +122,13 @@ void bmp180_task(void *pvParameters)
 		});
 	BMP180 bmp(i2c);
 	TimeStamp led_toggle_ts;
+	GPSReader gps;
 
 	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
 
 	bmp_reader->calibrate();
+
+	gps.start();
 	while (1) {
 		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
 			led_toggle_ts.time_stamp();
@@ -152,6 +139,13 @@ void bmp180_task(void *pvParameters)
 			drone_state->altitude_ = bmp_reader->altitude_meters(true);
 			drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
 			drone_state->temperature_ = bmp_reader->temperature_celsius(true);
+			gps.update_state();
+			drone_state->latitude_ = gps.lattitude();
+			drone_state->longitude_ = gps.longitude();
+			drone_state->gps_altitude_ = gps.altitude();
+			drone_state->speed_over_ground_ = gps.speed();
+			drone_state->course_ = gps.course();
+			drone_state->satellite_count_ = gps.satellite_count();
 		} catch (std::exception& e) {
 //			i2c.reinit();
 		}
@@ -267,9 +261,6 @@ void main_task(void *pvParameters)
 	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);
 	HAL_NVIC_EnableIRQ (DMA1_Stream1_IRQn);
 
-	uart3.uart_dmarx_start();
-	gpspwr.write(0);
-
 	/*
 	 * Apply the boot configuration from flash memory.
 	 */
@@ -332,6 +323,9 @@ void main_task(void *pvParameters)
 			printf("Temper, C :%5.1f\n", drone_state->temperature_);
 			printf("Battery   : %2.2fV %2.2f%% %s\n", drone_state->battery_voltage_.volts(),
 					drone_state->battery_percentage_, drone_state->battery_type_.c_str());
+			printf("GPS       : SAT %lu LON %3.6f LAT %3.6f ALT %4.2f SPEED %3.2f kmph COURSE %3.6f\n", drone_state->satellite_count_,
+					drone_state->longitude_, drone_state->latitude_, drone_state->gps_altitude_.meters(),
+					drone_state->speed_over_ground_, drone_state->course_);
 
 			//printf("Torq :  %1.3f %1.3f %1.3f\n", state.pid_torque_.at(0,0), state.pid_torque_.at(1,0),
 				//	state.pid_torque_.at(2,0));
@@ -342,15 +336,6 @@ void main_task(void *pvParameters)
 						drone_state->alarm_.when().seconds_float());
 			}
 			printf("\n");
-
-#if 0
-			memset(buf, 0, sizeof(buf));
-			size_t retsize = uart3.receive((uint8_t*)buf, sizeof(buf));
-			if (retsize) {
-				printf("GPS: %s\n", buf);
-			}
-#endif
-
 		}
 
 #if 0
