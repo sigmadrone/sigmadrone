@@ -5,6 +5,7 @@ SUBDIRS += httpclient
 SUBDIRS += base64
 SUBDIRS += quaternion
 SUBDIRS += matrix
+SUBDIRS += gps
 
 all:
 	@for dir in $(SUBDIRS); do \
