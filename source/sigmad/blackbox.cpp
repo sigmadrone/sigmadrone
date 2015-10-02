@@ -49,26 +49,37 @@ void black_box::recorder_thread()
 	static const std::string port = "18222";
 	std::string drone_state;
 	http::client::http_client http_client(host, port, 30000);
+	get_drone_state(drone_state, http_client, true);
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+	bool get_ex_state = false;
 	while (recording_) {
 		try {
-			get_drone_state(drone_state, http_client);
+			get_drone_state(drone_state, http_client, get_ex_state);
 			record_new_state(drone_state);
 		} catch (std::exception& e) {
 			// log to the log file
 		}
 		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+		if (std::chrono::duration_cast<std::chrono::seconds>(end - start).count() > 10) {
+			get_ex_state = true;
+			start = end;
+		} else {
+			get_ex_state = false;
+		}
 	}
 }
 
 void black_box::get_drone_state(std::string& state,
-		http::client::http_client& http_client)
+		http::client::http_client& http_client,
+		bool extended_state)
 {
 	state = "";
 	try {
 		rexjson::value val;
 		http::client::response response;
 		http::headers headers;
-		http_client.request(response, "POST", "/firmware", create_rpc_request(), headers);
+		http_client.request(response, "POST", "/firmware", create_rpc_request(extended_state), headers);
 		val.read(response.content);
 		if (val.get_obj()["error"].type() != rexjson::obj_type) {
 			state = val.get_obj()["result"].write(true);
@@ -80,13 +91,13 @@ void black_box::get_drone_state(std::string& state,
 	}
 }
 
-std::string black_box::create_rpc_request()
+std::string black_box::create_rpc_request(bool ext_state)
 {
 	rexjson::object rpc_request;
 	rexjson::array parameters;
 	rpc_request["jsonrpc"] = "1.0";
 	rpc_request["id"] = "clientid";
-	rpc_request["method"] = rexjson::value("sd_get_dronestate");
+	rpc_request["method"] = rexjson::value(ext_state ? "sd_get_dronestate_ex" : "sd_get_dronestate");
 	rpc_request["params"] = parameters;
 	return rexjson::write(rpc_request);
 }

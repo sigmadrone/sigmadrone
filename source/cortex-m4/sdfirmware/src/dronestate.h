@@ -54,32 +54,44 @@ struct DroneState {
 		, roll_bias_(0.0)
 		, base_throttle_(0.0)
         , yaw_throttle_factor_(0.75) { }
+
 	rexjson::value to_json() {
-		rexjson::object ret;
-		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
-		ret["accel_raw"] = matrix_to_json_value(accel_raw_);
-		ret["mag_raw"] = matrix_to_json_value(mag_raw_);
-		ret["gyro"] = matrix_to_json_value(gyro_);
-		ret["accel"] = matrix_to_json_value(accel_);
+			rexjson::object ret;
+			ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
+			ret["accel_raw"] = matrix_to_json_value(accel_raw_);
+			ret["mag_raw"] = matrix_to_json_value(mag_raw_);
+			ret["gyro"] = matrix_to_json_value(gyro_);
+			ret["accel"] = matrix_to_json_value(accel_);
+			ret["mag"] = matrix_to_json_value(mag_);
+			ret["altitude_meters"] = altitude_.meters();
+			ret["pressure_hpa"] = pressure_hpa_;
+			ret["temperature"] = temperature_;
+			ret["battery_voltage"] = battery_voltage_.volts();
+			ret["gps_latitude"] = latitude_;
+			ret["gps_longitude"] = longitude_;
+			ret["gps_speed_kmph"] = speed_over_ground_;
+			ret["gps_course_deg"] = course_;
+			ret["gps_satellites"] = static_cast<int>(satellite_count_);
+			ret["gps_altitude"] = gps_altitude_.meters();
+			ret["dt"] = static_cast<float>(dt_.microseconds());
+			ret["attitude"] = quaternion_to_json_value(attitude_);
+			ret["target"] = quaternion_to_json_value(target_);
+			ret["motors"] = matrix_to_json_value(motors_);
+			ret["pid_torque"] = matrix_to_json_value(pid_torque_);
+			ret["yaw"] = yaw_;
+			ret["pitch"] = pitch_;
+			ret["roll"] = roll_;
+			if (!alarm_.is_none()) {
+				ret["alarm"] = alarm_.to_string();
+				ret["alarm_time_ms"] = static_cast<int>(alarm_.when().milliseconds());
+			}
+			return ret;
+		}
+	rexjson::value to_json_ex() {
+		rexjson::object ret = to_json().get_obj();
 		ret["accel_adjustment"] = matrix_to_json_value(accelerometer_adjustment_);
-		ret["mag"] = matrix_to_json_value(mag_);
-		ret["altitude_meters"] = altitude_.meters();
-		ret["pressure_hpa"] = pressure_hpa_;
-		ret["temperature"] = temperature_;
-		ret["battery_voltage"] = battery_voltage_.volts();
 		ret["battery_percentage"] = battery_percentage_;
 		ret["battery_type"] = battery_type_;
-		ret["gps_latitude"] = latitude_;
-		ret["gps_longitude"] = longitude_;
-		ret["gps_speed_kmph"] = speed_over_ground_;
-		ret["gps_course_deg"] = course_;
-		ret["gps_satellites"] = static_cast<int>(satellite_count_);
-		ret["gps_altitude"] = gps_altitude_.meters();
-		ret["dt"] = static_cast<float>(dt_.microseconds());
-		ret["attitude"] = quaternion_to_json_value(attitude_);
-		ret["target"] = quaternion_to_json_value(target_);
-		ret["motors"] = matrix_to_json_value(motors_);
-		ret["pid_torque"] = matrix_to_json_value(pid_torque_);
 		ret["twist"] = quaternion_to_json_value(twist_);
 		ret["kp"] = kp_;
 		ret["ki"] = ki_;
@@ -90,12 +102,13 @@ struct DroneState {
 		ret["accelerometer_correction_period"] = accelerometer_correction_period_;
 		ret["gyro_factor"] = gyro_factor_;
 		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
-		ret["yaw"] = yaw_;
-		ret["pitch"] = pitch_;
-		ret["roll"] = roll_;
 		ret["yaw_bias"] = yaw_bias_;
 		ret["pitch_bias"] = pitch_bias_;
 		ret["roll_bias"] = roll_bias_;
+		if (!most_critical_alarm_.is_none()) {
+			ret["crit_alarm"] = most_critical_alarm_.to_string();
+			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
+		}
 		return ret;
 	}
 

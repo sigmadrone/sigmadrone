@@ -21,6 +21,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata)
 	add("sd_get_temperature", &UartRpcServer::rpc_get_temperature);
 	add("sd_get_motors", &UartRpcServer::rpc_get_motors);
 	add("sd_get_dronestate", &UartRpcServer::rpc_get_dronestate);
+	add("sd_get_dronestate_ex", &UartRpcServer::rpc_get_dronestate_ex);
 	add("ki", &UartRpcServer::rpc_ki);
 	add("kd", &UartRpcServer::rpc_kd);
 	add("kp", &UartRpcServer::rpc_kp);
@@ -484,6 +485,25 @@ rexjson::value UartRpcServer::rpc_get_dronestate(UART* , rexjson::array& params,
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	return dronestate_.to_json();
+}
+
+rexjson::value UartRpcServer::rpc_get_dronestate_ex(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_get_dronestate_ex\n"
+	            "\nGet the extended drone state."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	return dronestate_.to_json_ex();
 }
 
 rexjson::value UartRpcServer::rpc_get_configdata(UART* , rexjson::array& params, rpc_exec_mode mode)

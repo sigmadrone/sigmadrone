@@ -24,10 +24,10 @@ public:
 	void stop_recording();
 private:
 	void recorder_thread();
-	void get_drone_state(std::string& state, http::client::http_client& client);
+	void get_drone_state(std::string& state, http::client::http_client& client, bool ext_state);
 	void record_new_state(const std::string& state);
 	static size_t desired_log_size();
-	static std::string create_rpc_request();
+	static std::string create_rpc_request(bool ext_state);
 private:
 	static const size_t default_log_size_ = 512 * 1024 * 1024;
 	server_app& server_app_;
