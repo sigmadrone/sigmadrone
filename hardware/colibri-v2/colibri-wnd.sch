@@ -156,21 +156,19 @@ F1 "sensors_pwr_ctrl.sch" 60
 F2 "V_SENS_CTRL" I R 5750 3900 60 
 F3 "V_SENS1" O R 5750 4000 60 
 $EndSheet
-Wire Wire Line
-	5750 4000 6150 4000
-Wire Wire Line
-	6150 4000 6150 5550
-Wire Wire Line
-	6150 5550 6150 6200
-Wire Wire Line
-	6150 6200 5750 6200
-Wire Wire Line
-	5750 5550 6150 5550
-Connection ~ 6150 5550
 $Sheet
 S 3900 7800 1850 1700
 U 5609F831
 F0 "Wandboard Connector" 60
 F1 "wb_connector.sch" 60
 $EndSheet
+Wire Wire Line
+	5750 4000 6150 4000
+Wire Wire Line
+	6150 4000 6150 6200
+Wire Wire Line
+	6150 6200 5750 6200
+Wire Wire Line
+	5750 5550 6150 5550
+Connection ~ 6150 5550
 $EndSCHEMATC
