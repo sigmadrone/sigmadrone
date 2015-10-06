@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 1 13
+Sheet 1 14
 Title "Colibri WND"
 Date ""
 Rev "A1"
@@ -173,4 +173,10 @@ Wire Wire Line
 Connection ~ 6150 5550
 Text Notes 1200 950  0    60   ~ 0
 PROBA
+$Sheet
+S 12850 4150 2050 1000
+U 56138561
+F0 "Test Sheet" 60
+F1 "test.sch" 60
+$EndSheet
 $EndSCHEMATC
