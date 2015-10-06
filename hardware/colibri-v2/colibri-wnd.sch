@@ -171,4 +171,6 @@ Wire Wire Line
 Wire Wire Line
 	5750 5550 6150 5550
 Connection ~ 6150 5550
+Text Notes 1200 950  0    60   ~ 0
+PROBA
 $EndSCHEMATC
