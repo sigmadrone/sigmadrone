@@ -1,19 +1,22 @@
 /*
- * Created on: Mar 10, 2015
- *     Author: Martin Stoilov
- *     License: MIT
+ *  Sigmadrone
+ *  Copyright (c) 2013-2015 The Sigmadrone Developers
  *
- * To generate the header file rexjsondfa.h from rexjsondfa.rexcc do:
- * # rexcc rexjsondfa.rexcc -o rexjsondfa.h
- * 
- * To build the test program:
- * # g++ -o testrexjson rexjson++.cpp -DREXJSON_TEST_MAIN
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * To use the library in your own project, add the following files to your project:
- * rexjson++.cpp
- * rexjson++.h
- * rexjsondfa.h  (generated from rexjsondfa.rexcc)
- * rexdfatypes.h
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ *  Martin Stoilov <martin@sigmadrone.org>
+ *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
 #include <sstream>
