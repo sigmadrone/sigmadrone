@@ -27,7 +27,6 @@
 #include "pwmencoder.h"
 #include "pwmdecoder.h"
 #include "timestamp.h"
-#include "tm_stm32f4_ili9341.h"
 #include "colibripwm.h"
 #include "colibritrace.h"
 #include "flightcontrol.h"
