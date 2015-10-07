@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 12 14
+Sheet 11 16
 Title ""
 Date ""
 Rev ""
@@ -80,4 +80,22 @@ F 3 "" H 9150 5850 60  0000 C CNN
 	2    9150 5600
 	1    0    0    -1  
 $EndComp
+$Sheet
+S 14050 1300 1550 1000
+U 5614B323
+F0 "Wandboard USB OTG" 60
+F1 "wnd_usb_otg.sch" 60
+F2 "VBUS_FS" B L 14050 1450 60 
+F3 "OTG_FS_DM" B L 14050 1550 60 
+F4 "OTG_FS_DP" B L 14050 1650 60 
+F5 "OTG_FS_ID" B L 14050 1750 60 
+F6 "OTG_FS_OC" O L 14050 1850 60 
+F7 "OTG_FS_PSO" I L 14050 1950 60 
+$EndSheet
+$Sheet
+S 14050 2650 1550 1000
+U 56152E00
+F0 "Wandboard SD Card" 60
+F1 "wnd_micro_sd.sch" 60
+$EndSheet
 $EndSCHEMATC

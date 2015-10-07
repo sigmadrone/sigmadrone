@@ -1,4 +1,4 @@
-update=Thu 01 Oct 2015 09:29:48 PM PDT
+update=Tue 06 Oct 2015 10:39:46 PM PDT
 version=1
 last_client=kicad
 [pcbnew]
@@ -57,8 +57,6 @@ LibName27=atmel
 LibName28=contrib
 LibName29=valves
 LibName30=sigmadrone
-[general]
-version=1
 [schematic_editor]
 version=1
 PageLayoutDescrFile=
@@ -69,3 +67,5 @@ NetFmtName=
 SpiceForceRefPrefix=0
 SpiceUseNetNumbers=0
 LabSize=60
+[general]
+version=1
