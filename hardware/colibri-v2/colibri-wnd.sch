@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 1 20
+Sheet 1 21
 Title "Colibri WND"
 Date ""
 Rev "A1"
@@ -205,5 +205,12 @@ F3 "RCV_PWM_1" O L 12850 6600 60
 F4 "RCV_PWM_2" O L 12850 6700 60 
 F5 "RCV_PWM_3" O L 12850 6800 60 
 F6 "RCV_PWM_4" O L 12850 6900 60 
+$EndSheet
+$Sheet
+S 12850 7300 1850 500 
+U 561992A7
+F0 "Voltage Regulators" 60
+F1 "voltage_regulators.sch" 60
+F2 "Vsys" I L 12850 7550 60 
 $EndSheet
 $EndSCHEMATC
