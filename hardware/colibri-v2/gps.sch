@@ -1,0 +1,322 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:sigmadrone
+LIBS:colibri-wnd-cache
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 17 20
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L R R?
+U 1 1 56139718
+P 4250 3650
+F 0 "R?" V 4200 3800 50  0000 C CNN
+F 1 "22" V 4250 3650 50  0000 C CNN
+F 2 "" V 4180 3650 30  0000 C CNN
+F 3 "" H 4250 3650 30  0000 C CNN
+	1    4250 3650
+	0    1    1    0   
+$EndComp
+$Comp
+L LEA-6S U?
+U 1 1 56186F54
+P 6400 3950
+F 0 "U?" H 6900 4900 60  0000 C CNN
+F 1 "LEA-6S" H 6800 3000 60  0000 C CNN
+F 2 "" H 6250 4050 60  0000 C CNN
+F 3 "" H 6250 4050 60  0000 C CNN
+	1    6400 3950
+	1    0    0    -1  
+$EndComp
+$Comp
+L R R?
+U 1 1 561870DD
+P 4250 3750
+F 0 "R?" V 4200 3900 50  0000 C CNN
+F 1 "22" V 4250 3750 50  0000 C CNN
+F 2 "" V 4180 3750 30  0000 C CNN
+F 3 "" H 4250 3750 30  0000 C CNN
+	1    4250 3750
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	4400 3650 5600 3650
+Wire Wire Line
+	4400 3750 5600 3750
+$Comp
+L GND #PWR?
+U 1 1 56187100
+P 5350 5300
+F 0 "#PWR?" H 5350 5050 50  0001 C CNN
+F 1 "GND" H 5350 5150 50  0000 C CNN
+F 2 "" H 5350 5300 60  0000 C CNN
+F 3 "" H 5350 5300 60  0000 C CNN
+	1    5350 5300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5600 4350 5350 4350
+Wire Wire Line
+	5600 4450 5350 4450
+Wire Wire Line
+	5350 4550 5600 4550
+Wire Wire Line
+	5350 4650 5600 4650
+Wire Wire Line
+	5350 4750 5600 4750
+Wire Wire Line
+	5350 4350 5350 5300
+Connection ~ 5350 4450
+Connection ~ 5350 4550
+Connection ~ 5350 4650
+Connection ~ 5350 4750
+$Comp
+L GND #PWR?
+U 1 1 5618714A
+P 7450 5300
+F 0 "#PWR?" H 7450 5050 50  0001 C CNN
+F 1 "GND" H 7450 5150 50  0000 C CNN
+F 2 "" H 7450 5300 60  0000 C CNN
+F 3 "" H 7450 5300 60  0000 C CNN
+	1    7450 5300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7200 3350 7450 3350
+Wire Wire Line
+	7450 3350 7450 5300
+Wire Wire Line
+	7200 3950 7450 3950
+Connection ~ 7450 3950
+NoConn ~ 7200 3250
+NoConn ~ 7200 3450
+NoConn ~ 7200 3550
+NoConn ~ 7200 3650
+NoConn ~ 7200 3750
+NoConn ~ 7200 3850
+NoConn ~ 7200 4050
+NoConn ~ 7200 4150
+NoConn ~ 7200 4250
+NoConn ~ 7200 4350
+NoConn ~ 5600 3450
+NoConn ~ 5600 3550
+NoConn ~ 5600 3950
+NoConn ~ 5600 4050
+NoConn ~ 5600 4150
+$Comp
+L 1575AT43A0040E A?
+U 1 1 561878D5
+P 9000 3050
+F 0 "A?" H 9300 3050 60  0000 C CNN
+F 1 "1575AT43A0040E" H 9650 2950 60  0000 C CNN
+F 2 "" H 9000 3050 60  0000 C CNN
+F 3 "" H 9000 3050 60  0000 C CNN
+	1    9000 3050
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7200 3150 8800 3150
+Text Notes 8300 3150 0    60   ~ 0
+50 Ohm
+Text Notes 8300 3550 0    60   ~ 0
+single 50 +/- 5 Ohm\ntrack 0.37(0.33 after bite)\nno GND copper in top
+Text HLabel 2100 3650 0    60   Output ~ 0
+GPS_TXD(3V3)
+Text HLabel 2100 3750 0    60   Input ~ 0
+GPS_RXD(3V3)
+$Comp
+L Q_PMOS_GSD Q?
+U 1 1 56187FA4
+P 3500 2000
+F 0 "Q?" H 3500 1850 50  0000 R CNN
+F 1 "IRLML6402TRPBF" V 3750 2300 50  0000 R CNN
+F 2 "" H 3700 2100 29  0000 C CNN
+F 3 "" H 3500 2000 60  0000 C CNN
+	1    3500 2000
+	1    0    0    1   
+$EndComp
+$Comp
+L INDUCTOR L?
+U 1 1 561881F0
+P 4200 3150
+F 0 "L?" V 4150 3150 50  0000 C CNN
+F 1 "60ohm/100MHz/300mA" V 4300 3150 50  0000 C CNN
+F 2 "" H 4200 3150 60  0000 C CNN
+F 3 "" H 4200 3150 60  0000 C CNN
+	1    4200 3150
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	3600 2200 3600 3150
+Wire Wire Line
+	3600 3150 3900 3150
+Wire Wire Line
+	4500 3150 5600 3150
+$Comp
+L +3V3 #PWR?
+U 1 1 56188264
+P 3600 1300
+F 0 "#PWR?" H 3600 1150 50  0001 C CNN
+F 1 "+3V3" H 3600 1440 50  0000 C CNN
+F 2 "" H 3600 1300 60  0000 C CNN
+F 3 "" H 3600 1300 60  0000 C CNN
+	1    3600 1300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3600 1300 3600 1800
+$Comp
+L C C?
+U 1 1 561882A0
+P 4950 2000
+F 0 "C?" H 4975 2100 50  0000 L CNN
+F 1 "10u/16V/X5R" V 5000 1400 50  0000 L CNN
+F 2 "" H 4988 1850 30  0000 C CNN
+F 3 "" H 4950 2000 60  0000 C CNN
+	1    4950 2000
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C?
+U 1 1 561883B9
+P 5200 2000
+F 0 "C?" H 5225 2100 50  0000 L CNN
+F 1 "100n/50V" V 5250 1550 50  0000 L CNN
+F 2 "" H 5238 1850 30  0000 C CNN
+F 3 "" H 5200 2000 60  0000 C CNN
+	1    5200 2000
+	1    0    0    -1  
+$EndComp
+$Comp
+L C C?
+U 1 1 561884B4
+P 4700 2000
+F 0 "C?" H 4725 2100 50  0000 L CNN
+F 1 "1u/25V/X7R" V 4750 1450 50  0000 L CNN
+F 2 "" H 4738 1850 30  0000 C CNN
+F 3 "" H 4700 2000 60  0000 C CNN
+	1    4700 2000
+	1    0    0    -1  
+$EndComp
+$Comp
+L GND #PWR?
+U 1 1 561885FB
+P 4950 1300
+F 0 "#PWR?" H 4950 1050 50  0001 C CNN
+F 1 "GND" H 4950 1150 50  0000 C CNN
+F 2 "" H 4950 1300 60  0000 C CNN
+F 3 "" H 4950 1300 60  0000 C CNN
+	1    4950 1300
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	4700 1850 4700 1650
+Wire Wire Line
+	4700 1650 5200 1650
+Wire Wire Line
+	5200 1650 5200 1850
+Wire Wire Line
+	4950 1300 4950 1850
+Connection ~ 4950 1650
+Wire Wire Line
+	5200 2150 5200 3150
+Connection ~ 5200 3150
+Wire Wire Line
+	4950 2150 4950 3150
+Connection ~ 4950 3150
+Wire Wire Line
+	4700 2150 4700 2600
+Wire Wire Line
+	4700 2600 3600 2600
+Connection ~ 3600 2600
+Text HLabel 2100 2000 0    60   Input ~ 0
+GPS_PWR_CTRL(3V3)
+$Comp
+L R R?
+U 1 1 5618877E
+P 2650 2000
+F 0 "R?" V 2600 2150 50  0000 C CNN
+F 1 "22" V 2650 2000 50  0000 C CNN
+F 2 "" V 2580 2000 30  0000 C CNN
+F 3 "" H 2650 2000 30  0000 C CNN
+	1    2650 2000
+	0    1    1    0   
+$EndComp
+$Comp
+L R R?
+U 1 1 561887E6
+P 3100 1650
+F 0 "R?" V 3050 1800 50  0000 C CNN
+F 1 "100K" V 3100 1650 50  0000 C CNN
+F 2 "" V 3030 1650 30  0000 C CNN
+F 3 "" H 3100 1650 30  0000 C CNN
+	1    3100 1650
+	1    0    0    -1  
+$EndComp
+$Comp
+L +3V3 #PWR?
+U 1 1 5618885F
+P 3100 1300
+F 0 "#PWR?" H 3100 1150 50  0001 C CNN
+F 1 "+3V3" H 3100 1440 50  0000 C CNN
+F 2 "" H 3100 1300 60  0000 C CNN
+F 3 "" H 3100 1300 60  0000 C CNN
+	1    3100 1300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3100 1300 3100 1500
+Wire Wire Line
+	2100 2000 2500 2000
+Wire Wire Line
+	2800 2000 3300 2000
+Wire Wire Line
+	3100 1800 3100 2000
+Connection ~ 3100 2000
+Wire Wire Line
+	2100 3650 4100 3650
+Wire Wire Line
+	2100 3750 4100 3750
+Text HLabel 2100 3250 0    60   Input ~ 0
+Vbak
+Wire Wire Line
+	2100 3250 5600 3250
+$EndSCHEMATC
