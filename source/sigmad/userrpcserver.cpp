@@ -687,6 +687,7 @@ rexjson::value user_rpcserver::rpc_set_thrust(http::server::connection_ptr conne
 void user_rpcserver::headers_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
 {
 	rep.headers.insert_header("Content-Type", "text/plain");
+	rep.headers.insert_header("Access-Control-Allow-Origin","*");
 
 	rep.content.append(req.request_line());
 	for (http::headers::const_iterator it = req.headers.begin(); it != req.headers.end(); it++) {
@@ -700,6 +701,7 @@ void user_rpcserver::headers_request_handler(http::server::connection& connectio
 void user_rpcserver::echo_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
 {
 	rep.headers.insert_header("Content-Type", "text/plain");
+	rep.headers.insert_header("Access-Control-Allow-Origin","*");
 
 	rep.content = req.content;
 	rep.status = http::server::reply::ok;
@@ -708,6 +710,7 @@ void user_rpcserver::echo_request_handler(http::server::connection& connection, 
 void user_rpcserver::method_request_handler(http::server::connection& connection, const http::server::request& req, http::server::reply& rep)
 {
 	rep.headers.insert_header("Content-Type", "text/plain");
+	rep.headers.insert_header("Access-Control-Allow-Origin","*");
 	rep.content = req.method + "\n";
 	rep.status = http::server::reply::ok;
 }
@@ -718,6 +721,7 @@ void user_rpcserver::jsonrpc_request_handler(http::server::connection& connectio
 
 	result = call(connection.shared_from_this(), req.content);
 	rep.content = rexjson::write(result) + "\n";
+	rep.headers.insert_header("Access-Control-Allow-Origin","*");
 	rep.status = http::server::reply::ok;
 }
 
@@ -736,5 +740,6 @@ void user_rpcserver::firmware_jsonrpc_request_handler(http::server::connection& 
 		result.get_obj()["id"] = jsonreq.get_obj()["id"];
 		rep.content = rexjson::write(result) + "\n";
 	}
+	rep.headers.insert_header("Access-Control-Allow-Origin","*");
 	rep.status = http::server::reply::ok;
 }
