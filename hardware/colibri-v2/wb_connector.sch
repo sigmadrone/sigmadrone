@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 11 21
+Sheet 11 22
 Title ""
 Date ""
 Rev ""
@@ -140,5 +140,11 @@ F10 "HDMI_CEC_IN" I L 14050 7400 60
 F11 "DDC_SCL(5V)" I L 14050 7500 60 
 F12 "DDC_SDA(5V)" B L 14050 7600 60 
 F13 "HDMI1_HPD" I L 14050 7700 60 
+$EndSheet
+$Sheet
+S 14050 8200 1550 1050
+U 5619F1D5
+F0 "Wandboard USB Host" 60
+F1 "wnd_usb_host.sch" 60
 $EndSheet
 $EndSCHEMATC
