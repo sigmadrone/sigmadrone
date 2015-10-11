@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>SigmaDrone JSON RPC</title>
+  <script src="jquery-2.1.1.min.js"></script>
+  <script>
+  var id = 0;
+
+  function isValidIpAddress(value) {
+    var pattern = /\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\:([0-9]{1,4}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])\b/;
+    return value.match(pattern);
+  }
+
+  function call_on_keypress(e){
+    if(e.keyCode==13) {
+      $('#button').click();
+      return false;
+    }
+    return true;
+  }
+
+  $(document).ready(function(){
+    $('#method').keypress(call_on_keypress);
+    $('#params').keypress(call_on_keypress);
+    $('#rpc_url').keypress(call_on_keypress);
+
+    $('#rpc_url').keyup(function(e) {
+    // TODO: URL validation
+  });
+  });
+
+  function rpcCall(url, method, params, successCallback, failCallback) {
+    var request = {id: ++id, jsonrpc: "2.0"};
+    request.method = method;
+    request.params = params;
+    if (request.params.length > 0) {
+      request.params = JSON.parse(request.params);
+    }
+    console.log(JSON.stringify(request));
+    $.post(url, JSON.stringify(request), successCallback, "json").fail(failCallback);
+  }
+
+  function displayResult(response) {
+    if (response.error != null) {
+      $("#answer").val(JSON.stringify(response, null, 2).replace(/\\n/g, "\n").replace(/\\"/g, "\""));  
+    } else {
+      $("#answer").val(JSON.stringify(response.result, null, 2).replace(/\\n/g, "\n").replace(/\\"/g, "\""));
+    }
+  }
+  </script>
+</head>
+
+<body>
+<form id="form">
+  <div style="float: left;">Rpc Url:</div>
+  <div style="margin-left: 60px;">
+  <input type="text" name="rpc_url" size="40" value="http://10.10.10.1:18222/firmware" id="rpc_url"/>
+  </div>
+  <div style="float: left;">Method: </div>
+  <div style="margin-left: 60px;"><input type="text" name="method" value="sd_get_dronestate" id="method"/></div>
+  <div style="float: left;">Params: </div>
+  <div style="margin-left: 60px;"><textarea name="params" id="params" cols="30" rows="5">[]</textarea>
+  </div>
+  <input type="button" id="button" value="Execute method"/>
+</form>
+<br/>
+
+<div style="float: left;">Answer:</div>
+<div style="margin-left: 70px;">
+ <textarea name="answer" id="answer" cols="50" rows="10">
+ </textarea>
+</div>
+
+<script>
+$("#button").on("click", function () {
+  $("#answer").val("Waiting for answer...");
+  rpcCall(
+    $('#rpc_url').val(),
+    $("#form")[0].elements['method'].value, 
+    $("#form")[0].elements['params'].value,
+    displayResult, 
+    function(xhr, textStatus, errorThrown) {
+      $("#answer").val("Failed to execute method");
+    }
+  );
+});
+</script>
+
+</body>
+</html>
