@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 11 22
+Sheet 10 23
 Title ""
 Date ""
 Rev ""
@@ -69,9 +69,7 @@ $EndComp
 Wire Wire Line
 	6500 3750 6500 3450
 Wire Wire Line
-	3250 3950 5600 3950
-Wire Wire Line
-	5600 3950 6200 3950
+	3250 3950 6200 3950
 $Comp
 L R R?
 U 1 1 55FF263D

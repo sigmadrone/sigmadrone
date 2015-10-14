@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 4 22
+Sheet 4 23
 Title ""
 Date ""
 Rev ""
@@ -93,9 +93,7 @@ $EndComp
 Wire Wire Line
 	3100 2950 3250 2950
 Wire Wire Line
-	3250 2600 3250 2950
-Wire Wire Line
-	3250 2950 3250 3100
+	3250 2600 3250 3100
 $Comp
 L C C?
 U 1 1 5585F7EE
@@ -124,9 +122,7 @@ Connection ~ 3250 2950
 Wire Wire Line
 	2350 3850 2350 3600
 Wire Wire Line
-	2050 2950 2350 2950
-Wire Wire Line
-	2350 2950 2500 2950
+	2050 2950 2500 2950
 Wire Wire Line
 	2350 3300 2350 2950
 Connection ~ 2350 2950
@@ -194,9 +190,7 @@ $EndComp
 Wire Wire Line
 	3100 4750 3250 4750
 Wire Wire Line
-	3250 4400 3250 4750
-Wire Wire Line
-	3250 4750 3250 4900
+	3250 4400 3250 4900
 $Comp
 L C C?
 U 1 1 558602AA
@@ -225,9 +219,7 @@ Connection ~ 3250 4750
 Wire Wire Line
 	2350 5650 2350 5400
 Wire Wire Line
-	2050 4750 2350 4750
-Wire Wire Line
-	2350 4750 2500 4750
+	2050 4750 2500 4750
 Wire Wire Line
 	2350 5100 2350 4750
 Connection ~ 2350 4750
@@ -295,9 +287,7 @@ $EndComp
 Wire Wire Line
 	3100 6600 3250 6600
 Wire Wire Line
-	3250 6250 3250 6600
-Wire Wire Line
-	3250 6600 3250 6750
+	3250 6250 3250 6750
 $Comp
 L C C?
 U 1 1 558604A9
@@ -326,9 +316,7 @@ Connection ~ 3250 6600
 Wire Wire Line
 	2350 7500 2350 7250
 Wire Wire Line
-	2050 6600 2350 6600
-Wire Wire Line
-	2350 6600 2500 6600
+	2050 6600 2500 6600
 Wire Wire Line
 	2350 6950 2350 6600
 Connection ~ 2350 6600
@@ -396,9 +384,7 @@ $EndComp
 Wire Wire Line
 	6050 2950 6200 2950
 Wire Wire Line
-	6200 2600 6200 2950
-Wire Wire Line
-	6200 2950 6200 3100
+	6200 2600 6200 3100
 $Comp
 L C C?
 U 1 1 558606C6
@@ -427,9 +413,7 @@ Connection ~ 6200 2950
 Wire Wire Line
 	5300 3850 5300 3600
 Wire Wire Line
-	5000 2950 5300 2950
-Wire Wire Line
-	5300 2950 5450 2950
+	5000 2950 5450 2950
 Wire Wire Line
 	5300 3300 5300 2950
 Connection ~ 5300 2950
@@ -497,9 +481,7 @@ $EndComp
 Wire Wire Line
 	6050 4750 6200 4750
 Wire Wire Line
-	6200 4400 6200 4750
-Wire Wire Line
-	6200 4750 6200 4900
+	6200 4400 6200 4900
 $Comp
 L C C?
 U 1 1 558609EA
@@ -528,9 +510,7 @@ Connection ~ 6200 4750
 Wire Wire Line
 	5300 5650 5300 5400
 Wire Wire Line
-	5000 4750 5300 4750
-Wire Wire Line
-	5300 4750 5450 4750
+	5000 4750 5450 4750
 Wire Wire Line
 	5300 5100 5300 4750
 Connection ~ 5300 4750
@@ -666,13 +646,9 @@ Wire Wire Line
 Wire Wire Line
 	3250 1200 3100 1200
 Wire Wire Line
-	2350 1100 2350 1200
+	2350 1100 2350 1300
 Wire Wire Line
-	2350 1200 2350 1300
-Wire Wire Line
-	1350 1200 2350 1200
-Wire Wire Line
-	2350 1200 2500 1200
+	1350 1200 2500 1200
 Connection ~ 2350 1200
 Wire Wire Line
 	2350 800  2350 700 
@@ -778,13 +754,7 @@ F 3 "" H 10100 1950 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	10100 850  10100 1150
-Wire Wire Line
-	10100 1150 10100 1450
-Wire Wire Line
-	10100 1450 10100 1750
-Wire Wire Line
-	10100 1750 10100 1950
+	10100 850  10100 1950
 Wire Wire Line
 	10100 850  9650 850 
 Wire Wire Line
@@ -873,9 +843,7 @@ Wire Wire Line
 Wire Wire Line
 	5300 1200 5300 1300
 Wire Wire Line
-	4300 1200 5300 1200
-Wire Wire Line
-	5300 1200 5450 1200
+	4300 1200 5450 1200
 Connection ~ 5300 1200
 Text HLabel 4300 1200 0    60   Output ~ 0
 BOOT0

@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 14 22
+Sheet 14 23
 Title ""
 Date ""
 Rev ""
@@ -96,42 +96,26 @@ $EndComp
 Wire Wire Line
 	5500 4550 5350 4550
 Wire Wire Line
-	5350 3950 5350 4550
+	5350 3950 5350 5050
 Wire Wire Line
-	5350 4550 5350 5050
-Wire Wire Line
-	6100 4850 6100 4950
-Wire Wire Line
-	6100 4950 6100 5050
+	6100 4850 6100 5050
 Wire Wire Line
 	6200 4850 6200 4950
 Wire Wire Line
 	6200 4950 6100 4950
 Connection ~ 6100 4950
 Wire Wire Line
-	3450 3450 4400 3450
+	3450 3450 5500 3450
 Wire Wire Line
-	4400 3450 5500 3450
+	3450 3550 5500 3550
 Wire Wire Line
-	3450 3550 4500 3550
+	3450 4050 5500 4050
 Wire Wire Line
-	4500 3550 5500 3550
+	3450 4150 5500 4150
 Wire Wire Line
-	3450 4050 4700 4050
+	3450 4250 5500 4250
 Wire Wire Line
-	4700 4050 5500 4050
-Wire Wire Line
-	3450 4150 4800 4150
-Wire Wire Line
-	4800 4150 5500 4150
-Wire Wire Line
-	3450 4250 4900 4250
-Wire Wire Line
-	4900 4250 5500 4250
-Wire Wire Line
-	3450 4350 4300 4350
-Wire Wire Line
-	4300 4350 5500 4350
+	3450 4350 5500 4350
 Wire Wire Line
 	5500 3950 5350 3950
 Connection ~ 5350 4550
@@ -147,9 +131,7 @@ F 3 "" H 3950 3850 30  0000 C CNN
 	0    1    1    0   
 $EndComp
 Wire Wire Line
-	4100 3850 4600 3850
-Wire Wire Line
-	4600 3850 5500 3850
+	4100 3850 5500 3850
 Wire Wire Line
 	3800 3850 3450 3850
 $Comp
@@ -164,9 +146,7 @@ F 3 "" H 5350 1550 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5350 1550 5350 1850
-Wire Wire Line
-	5350 1850 5350 3750
+	5350 1550 5350 3750
 Wire Wire Line
 	5350 3750 5500 3750
 $Comp
@@ -298,23 +278,7 @@ Connection ~ 4300 4350
 Wire Wire Line
 	4300 2050 4300 1850
 Wire Wire Line
-	4300 1850 4400 1850
-Wire Wire Line
-	4400 1850 4500 1850
-Wire Wire Line
-	4500 1850 4600 1850
-Wire Wire Line
-	4600 1850 4700 1850
-Wire Wire Line
-	4700 1850 4800 1850
-Wire Wire Line
-	4800 1850 4900 1850
-Wire Wire Line
-	4900 1850 5350 1850
-Wire Wire Line
-	5350 1850 5900 1850
-Wire Wire Line
-	5900 1850 6500 1850
+	4300 1850 6500 1850
 Connection ~ 5350 1850
 Wire Wire Line
 	4400 2050 4400 1850
@@ -373,9 +337,7 @@ Wire Wire Line
 	5900 2050 5900 1850
 Connection ~ 5900 1850
 Wire Wire Line
-	6500 2350 6500 2700
-Wire Wire Line
-	6500 2700 6500 2850
+	6500 2350 6500 2850
 Wire Wire Line
 	5900 2350 5900 2700
 Wire Wire Line

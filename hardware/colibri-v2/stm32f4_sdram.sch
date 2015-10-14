@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 6 22
+Sheet 6 23
 Title ""
 Date ""
 Rev ""
@@ -230,23 +230,11 @@ Wire Wire Line
 Wire Wire Line
 	5800 3250 6600 3250
 Wire Wire Line
-	5800 4400 6000 4400
-Wire Wire Line
-	6000 4400 6600 4400
+	5800 4400 6600 4400
 Wire Wire Line
 	5800 3800 6000 3800
 Wire Wire Line
-	6000 3800 6000 3900
-Wire Wire Line
-	6000 3900 6000 4000
-Wire Wire Line
-	6000 4000 6000 4100
-Wire Wire Line
-	6000 4100 6000 4200
-Wire Wire Line
-	6000 4200 6000 4300
-Wire Wire Line
-	6000 4300 6000 4400
+	6000 3800 6000 4400
 Connection ~ 6000 4400
 Wire Wire Line
 	5800 3900 6000 3900
@@ -264,23 +252,11 @@ Wire Wire Line
 Wire Wire Line
 	5800 4300 6000 4300
 Wire Wire Line
-	3500 4400 3950 4400
-Wire Wire Line
-	3950 4400 4200 4400
+	3500 4400 4200 4400
 Wire Wire Line
 	4200 3800 3950 3800
 Wire Wire Line
-	3950 3800 3950 3900
-Wire Wire Line
-	3950 3900 3950 4000
-Wire Wire Line
-	3950 4000 3950 4100
-Wire Wire Line
-	3950 4100 3950 4200
-Wire Wire Line
-	3950 4200 3950 4300
-Wire Wire Line
-	3950 4300 3950 4400
+	3950 3800 3950 4400
 Connection ~ 3950 4400
 Wire Wire Line
 	3950 3900 4200 3900
@@ -397,40 +373,16 @@ F 3 "" H 3400 6250 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	3400 5250 3400 5350
+	3400 5250 3400 5600
 Wire Wire Line
-	3400 5350 3400 5600
-Wire Wire Line
-	3400 5350 3700 5350
-Wire Wire Line
-	3700 5350 4000 5350
-Wire Wire Line
-	4000 5350 4300 5350
-Wire Wire Line
-	4300 5350 4600 5350
-Wire Wire Line
-	4600 5350 4900 5350
-Wire Wire Line
-	4900 5350 5200 5350
+	3400 5350 5200 5350
 Wire Wire Line
 	5200 5350 5200 5600
 Connection ~ 3400 5350
 Wire Wire Line
-	3400 5900 3400 6200
+	3400 5900 3400 6250
 Wire Wire Line
-	3400 6200 3400 6250
-Wire Wire Line
-	3400 6200 3700 6200
-Wire Wire Line
-	3700 6200 4000 6200
-Wire Wire Line
-	4000 6200 4300 6200
-Wire Wire Line
-	4300 6200 4600 6200
-Wire Wire Line
-	4600 6200 4900 6200
-Wire Wire Line
-	4900 6200 5200 6200
+	3400 6200 5200 6200
 Wire Wire Line
 	5200 6200 5200 5900
 Connection ~ 3400 6200
