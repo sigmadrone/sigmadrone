@@ -193,6 +193,92 @@ F 3 "" H 6700 3450 60  0000 C CNN
 	1    6700 3450
 	1    0    0    -1  
 $EndComp
+NoConn ~ 4000 5000
+Text HLabel 8500 2000 2    60   Output ~ 0
+TRST
+Text HLabel 8500 2500 2    60   Input ~ 0
+TDO/SWO
+Text HLabel 8500 2300 2    60   Output ~ 0
+TCK/SWCLK
+Text HLabel 8500 2200 2    60   BiDi ~ 0
+TMS/SWDIO
+Text HLabel 8500 2100 2    60   BiDi ~ 0
+TDI
+Text HLabel 8500 2600 2    60   Output ~ 0
+RESET#
+Text Label 4650 2600 2    60   ~ 0
+RESET#
+Text Label 4650 2500 2    60   ~ 0
+TDO/SWO
+Text Label 4650 2300 2    60   ~ 0
+TCK/SWCLK
+Text Label 4650 2200 2    60   ~ 0
+TMS/SWDTA
+Text Label 4650 2100 2    60   ~ 0
+TDI
+Text Label 4650 2000 2    60   ~ 0
+TRST
+$Comp
+L GND #PWR?
+U 1 1 5576A90F
+P 5900 2400
+F 0 "#PWR?" H 5900 2150 60  0001 C CNN
+F 1 "GND" H 5900 2250 60  0000 C CNN
+F 2 "" H 5900 2400 60  0000 C CNN
+F 3 "" H 5900 2400 60  0000 C CNN
+	1    5900 2400
+	0    -1   -1   0   
+$EndComp
+$Comp
+L GND #PWR?
+U 1 1 5576A932
+P 5900 2700
+F 0 "#PWR?" H 5900 2450 60  0001 C CNN
+F 1 "GND" H 5900 2550 60  0000 C CNN
+F 2 "" H 5900 2700 60  0000 C CNN
+F 3 "" H 5900 2700 60  0000 C CNN
+	1    5900 2700
+	0    -1   -1   0   
+$EndComp
+Text HLabel 8500 2800 2    60   Output ~ 0
+JTAG_POWER_ON
+$Comp
+L +3V3 #PWR?
+U 1 1 5576ACC9
+P 5400 1000
+F 0 "#PWR?" H 5400 850 60  0001 C CNN
+F 1 "+3V3" H 5400 1140 60  0000 C CNN
+F 2 "" H 5400 1000 60  0000 C CNN
+F 3 "" H 5400 1000 60  0000 C CNN
+	1    5400 1000
+	1    0    0    -1  
+$EndComp
+Text Label 4950 5100 2    60   ~ 0
+JTAG_POWER
+Text Label 4650 2800 2    60   ~ 0
+JTAG_POWER
+$Comp
+L R R1
+U 1 1 561EC379
+P 7550 1550
+F 0 "R1" V 7600 1750 50  0000 C CNN
+F 1 "10K" V 7557 1551 50  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 7480 1550 30  0000 C CNN
+F 3 "" H 7550 1550 30  0000 C CNN
+	1    7550 1550
+	-1   0    0    1   
+$EndComp
+$Comp
+L R R2
+U 1 1 561EC3BD
+P 7750 1550
+F 0 "R2" V 7800 1750 50  0000 C CNN
+F 1 "10K" V 7757 1551 50  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 7680 1550 30  0000 C CNN
+F 3 "" H 7750 1550 30  0000 C CNN
+	1    7750 1550
+	-1   0    0    1   
+$EndComp
 Wire Wire Line
 	3500 2000 3300 2000
 Wire Wire Line
@@ -267,53 +353,6 @@ Wire Wire Line
 Connection ~ 4150 3950
 Wire Wire Line
 	6700 3350 6700 3450
-NoConn ~ 4000 5000
-Text HLabel 8500 2000 2    60   Output ~ 0
-TRST
-Text HLabel 8500 2500 2    60   Input ~ 0
-TDO/SWO
-Text HLabel 8500 2300 2    60   Output ~ 0
-TCK/SWCLK
-Text HLabel 8500 2200 2    60   BiDi ~ 0
-TMS/SWDIO
-Text HLabel 8500 2100 2    60   BiDi ~ 0
-TDI
-Text HLabel 8500 2600 2    60   Output ~ 0
-RESET#
-Text Label 4650 2600 2    60   ~ 0
-RESET#
-Text Label 4650 2500 2    60   ~ 0
-TDO/SWO
-Text Label 4650 2300 2    60   ~ 0
-TCK/SWCLK
-Text Label 4650 2200 2    60   ~ 0
-TMS/SWDTA
-Text Label 4650 2100 2    60   ~ 0
-TDI
-Text Label 4650 2000 2    60   ~ 0
-TRST
-$Comp
-L GND #PWR?
-U 1 1 5576A90F
-P 5900 2400
-F 0 "#PWR?" H 5900 2150 60  0001 C CNN
-F 1 "GND" H 5900 2250 60  0000 C CNN
-F 2 "" H 5900 2400 60  0000 C CNN
-F 3 "" H 5900 2400 60  0000 C CNN
-	1    5900 2400
-	0    -1   -1   0   
-$EndComp
-$Comp
-L GND #PWR?
-U 1 1 5576A932
-P 5900 2700
-F 0 "#PWR?" H 5900 2450 60  0001 C CNN
-F 1 "GND" H 5900 2550 60  0000 C CNN
-F 2 "" H 5900 2700 60  0000 C CNN
-F 3 "" H 5900 2700 60  0000 C CNN
-	1    5900 2700
-	0    -1   -1   0   
-$EndComp
 Wire Wire Line
 	4000 2400 5300 2400
 Wire Wire Line
@@ -322,23 +361,10 @@ Wire Wire Line
 	4000 2700 5300 2700
 Wire Wire Line
 	5600 2700 5900 2700
-Text HLabel 8500 2800 2    60   Output ~ 0
-JTAG_POWER_ON
 Wire Wire Line
 	8150 2800 8500 2800
-$Comp
-L +3V3 #PWR?
-U 1 1 5576ACC9
-P 5400 1000
-F 0 "#PWR?" H 5400 850 60  0001 C CNN
-F 1 "+3V3" H 5400 1140 60  0000 C CNN
-F 2 "" H 5400 1000 60  0000 C CNN
-F 3 "" H 5400 1000 60  0000 C CNN
-	1    5400 1000
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
-	3300 1200 7300 1200
+	3300 1200 7950 1200
 Connection ~ 6700 2600
 Connection ~ 7000 2100
 Connection ~ 7300 2000
@@ -349,14 +375,39 @@ Wire Wire Line
 Connection ~ 5400 1200
 Wire Wire Line
 	7000 1400 7000 1200
-Text Label 4950 5100 2    60   ~ 0
-JTAG_POWER
 Wire Wire Line
 	4000 5100 4950 5100
-Text Label 4650 2800 2    60   ~ 0
-JTAG_POWER
 Wire Wire Line
 	4150 5300 4150 4800
 Wire Wire Line
 	4150 4800 4000 4800
+Wire Wire Line
+	7750 1700 7750 2200
+Connection ~ 7750 2200
+Wire Wire Line
+	7550 1700 7550 2300
+Connection ~ 7550 2300
+Wire Wire Line
+	7750 1200 7750 1400
+Connection ~ 7300 1200
+Wire Wire Line
+	7550 1400 7550 1200
+Connection ~ 7550 1200
+$Comp
+L R R3
+U 1 1 561ED2A0
+P 7950 1550
+F 0 "R3" V 8000 1750 50  0000 C CNN
+F 1 "10K" V 7957 1551 50  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 7880 1550 30  0000 C CNN
+F 3 "" H 7950 1550 30  0000 C CNN
+	1    7950 1550
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	7950 1700 7950 2500
+Connection ~ 7950 2500
+Wire Wire Line
+	7950 1200 7950 1400
+Connection ~ 7750 1200
 $EndSCHEMATC
