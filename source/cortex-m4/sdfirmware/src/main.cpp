@@ -377,13 +377,6 @@ int main(int argc, char* argv[])
 
 	relocate_interrupt_table();
 
-	/*
-	 * Disable the SysTick_IRQn and clean the priority
-	 * and let the scheduler configure and enable it.
-	 */
-	NVIC_DisableIRQ(SysTick_IRQn);
-	NVIC_SetPriority(SysTick_IRQn, 0);
-
 	TimeStamp::init();
 	colibri::UartTrace::init(115200 * 2);
 	drone_state = new DroneState();
@@ -417,6 +410,13 @@ int main(int argc, char* argv[])
 			tskIDLE_PRIORITY + 1UL, /* Task priority*/
 			&battery_task_handle /* Task handle */
 	);
+
+	/*
+	 * Disable the SysTick_IRQn and clean the priority
+	 * and let the scheduler configure and enable it.
+	 */
+	NVIC_DisableIRQ(SysTick_IRQn);
+	NVIC_SetPriority(SysTick_IRQn, 0);
 
 	vTaskStartScheduler(); // this call will never return
 }
