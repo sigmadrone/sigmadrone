@@ -100,17 +100,6 @@ F 3 "" H 7000 1550 30  0000 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L R R16
-U 1 1 55768A42
-P 6700 1550
-F 0 "R16" V 6750 1750 50  0000 C CNN
-F 1 "10K" V 6707 1551 50  0000 C CNN
-F 2 "Resistors_SMD:R_0603" V 6630 1550 30  0000 C CNN
-F 3 "" H 6700 1550 30  0000 C CNN
-	1    6700 1550
-	-1   0    0    1   
-$EndComp
-$Comp
 L R R18
 U 1 1 55768A49
 P 7300 1550
@@ -169,28 +158,6 @@ F 1 "+3V3" H 4150 4040 60  0000 C CNN
 F 2 "" H 4150 3900 60  0000 C CNN
 F 3 "" H 4150 3900 60  0000 C CNN
 	1    4150 3900
-	1    0    0    -1  
-$EndComp
-$Comp
-L C C27
-U 1 1 55768A89
-P 6700 3200
-F 0 "C27" H 6750 3300 50  0000 L CNN
-F 1 "100nF/50V" H 6750 3100 50  0000 L CNN
-F 2 "" H 6738 3050 30  0000 C CNN
-F 3 "" H 6700 3200 60  0000 C CNN
-	1    6700 3200
-	1    0    0    -1  
-$EndComp
-$Comp
-L GND #PWR014
-U 1 1 55768A90
-P 6700 3450
-F 0 "#PWR014" H 6700 3200 60  0001 C CNN
-F 1 "GND" H 6700 3300 60  0000 C CNN
-F 2 "" H 6700 3450 60  0000 C CNN
-F 3 "" H 6700 3450 60  0000 C CNN
-	1    6700 3450
 	1    0    0    -1  
 $EndComp
 Text HLabel 8500 2000 2    60   Output ~ 0
@@ -321,8 +288,6 @@ Wire Wire Line
 Wire Wire Line
 	4000 2800 7650 2800
 Wire Wire Line
-	6700 1700 6700 3050
-Wire Wire Line
 	7300 1700 7300 2000
 Wire Wire Line
 	7000 1700 7000 2100
@@ -332,9 +297,6 @@ Wire Wire Line
 	4050 1900 4050 1200
 Wire Wire Line
 	7300 1200 7300 1400
-Wire Wire Line
-	6700 1200 6700 1400
-Connection ~ 6700 1200
 Connection ~ 7000 1200
 Wire Wire Line
 	3500 1900 3300 1900
@@ -351,8 +313,6 @@ Wire Wire Line
 	4150 3900 4150 4500
 Connection ~ 4150 3950
 Wire Wire Line
-	6700 3350 6700 3450
-Wire Wire Line
 	4000 2400 5300 2400
 Wire Wire Line
 	5600 2400 5900 2400
@@ -364,7 +324,6 @@ Wire Wire Line
 	8150 2800 8500 2800
 Wire Wire Line
 	3300 1200 7950 1200
-Connection ~ 6700 2600
 Connection ~ 7000 2100
 Connection ~ 7300 2000
 Wire Wire Line
@@ -413,4 +372,6 @@ Text Label 4950 5000 2    60   ~ 0
 TDO/SWO
 Wire Wire Line
 	4000 5000 4950 5000
+Text Notes 9250 2650 0    60   ~ 12
+RESET# is pullud \nup on Buttons sheet
 $EndSCHEMATC

@@ -179,6 +179,6 @@ Wire Wire Line
 Wire Wire Line
 	4700 4900 4700 4750
 Connection ~ 4700 4750
-Text Notes 7000 3850 0    120  ~ 24
-To optimize the size
+Text Notes 7000 3850 0    60   ~ 12
+To optimize the size!!!\n(Zhoro will research)
 $EndSCHEMATC

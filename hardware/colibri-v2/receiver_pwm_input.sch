@@ -475,4 +475,6 @@ Text HLabel 3800 5550 0    60   Output ~ 0
 RCV_PWM_4
 Wire Wire Line
 	3800 5550 4300 5550
+Text Notes 4350 850  0    60   ~ 12
+Rework using buffer SN74LVC162244A\nwhich doesn't require pull-ups
 $EndSCHEMATC

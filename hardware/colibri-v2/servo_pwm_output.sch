@@ -744,4 +744,6 @@ F 3 "" H 2000 5000 60  0000 C CNN
 	1    2000 5000
 	0    1    1    0   
 $EndComp
+Text Notes 5200 900  0    60   ~ 12
+Rework using buffer SN74LVC162244A\nwhich doesn't require pull-ups
 $EndSCHEMATC
