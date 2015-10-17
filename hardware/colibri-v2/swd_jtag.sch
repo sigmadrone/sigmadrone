@@ -193,7 +193,6 @@ F 3 "" H 6700 3450 60  0000 C CNN
 	1    6700 3450
 	1    0    0    -1  
 $EndComp
-NoConn ~ 4000 5000
 Text HLabel 8500 2000 2    60   Output ~ 0
 TRST
 Text HLabel 8500 2500 2    60   Input ~ 0
@@ -410,4 +409,8 @@ Connection ~ 7950 2500
 Wire Wire Line
 	7950 1200 7950 1400
 Connection ~ 7750 1200
+Text Label 4950 5000 2    60   ~ 0
+TDO/SWO
+Wire Wire Line
+	4000 5000 4950 5000
 $EndSCHEMATC
