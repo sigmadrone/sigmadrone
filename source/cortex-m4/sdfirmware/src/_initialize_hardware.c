@@ -8,6 +8,7 @@
 #include "stm32f4xx.h"
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_cortex.h"
+#include "stm32f429i_discovery_sdram.h"
 
 // ----------------------------------------------------------------------------
 
@@ -38,6 +39,46 @@ __initialize_hardware(void);
 void
 configure_system_clock(void);
 
+void
+__initialize_hardware_early(void)
+{
+  // Call the CSMSIS system initialisation routine.
+  SystemInit();
+
+  // Initialise the HAL Library; it must be the first
+  // instruction to be executed in the main program.
+  HAL_Init();
+
+  // Warning: The HAL always initialises the system timer.
+  // For this to work, the default SysTick_Handler must not hang
+  // (see system/src/cortexm/exception_handlers.c)
+
+  // The current version of SystemInit() leaves the value of the clock
+  // in a RAM variable (SystemCoreClock), which will be cleared shortly,
+  // so it needs to be recomputed after the RAM initialisations
+  // are completed.
+
+#if defined(OS_INCLUDE_STARTUP_INIT_FP) || (defined (__VFP_FP__) && !defined (__SOFTFP__))
+
+  // Normally FP init is done by SystemInit(). In case this is not done
+  // there, it is possible to force its inclusion by defining
+  // OS_INCLUDE_STARTUP_INIT_FP.
+
+  // Enable the Cortex-M4 FPU only when -mfloat-abi=hard.
+  // Code taken from Section 7.1, Cortex-M4 TRM (DDI0439C)
+
+  // Set bits 20-23 to enable CP10 and CP11 coprocessor
+  SCB->CPACR |= (0xF << 20);
+
+#endif // (__VFP_FP__) && !(__SOFTFP__)
+
+#if defined(OS_DEBUG_SEMIHOSTING_FAULTS)
+  SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk;
+#endif
+
+  BSP_SDRAM_Init();
+}
+
 // ----------------------------------------------------------------------------
 
 // This is the application hardware initialisation routine,
@@ -65,23 +106,9 @@ __initialize_hardware(void)
 
 #endif // (__VFP_FP__) && !(__SOFTFP__)
 
-  // Initialise the HAL Library; it must be the first
-  // instruction to be executed in the main program.
-  HAL_Init();
-
-  // Warning: The HAL always initialises the system timer.
-  // For this to work, the default SysTick_Handler must not hang
-  // (see system/src/cortexm/exception_handlers.c)
-
-  // Unless explicitly enabled by the application, we prefer
-  // to keep the timer interrupts off.
-  HAL_SuspendTick();
-
   // Enable HSE Oscillator and activate PLL with HSE as source
   configure_system_clock();
 }
-
-#if 0
 
 // This is a sample SysTick handler, use it if you need HAL timings.
 void __attribute__ ((section(".after_vectors")))
@@ -89,8 +116,6 @@ SysTick_Handler(void)
 {
 	HAL_IncTick();
 }
-
-#endif
 
 // ----------------------------------------------------------------------------
 
