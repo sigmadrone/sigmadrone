@@ -343,4 +343,6 @@ Wire Wire Line
 Wire Wire Line
 	5900 2700 6500 2700
 Connection ~ 6500 2700
+Text Notes 7400 4100 0    120  ~ 24
+Do we need this?
 $EndSCHEMATC

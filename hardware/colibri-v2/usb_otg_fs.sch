@@ -436,4 +436,6 @@ Wire Wire Line
 Wire Wire Line
 	3950 4000 3950 4950
 Connection ~ 3950 4950
+Text Notes 4950 2500 0    60   ~ 0
+or use TPS2061CDBVT
 $EndSCHEMATC
