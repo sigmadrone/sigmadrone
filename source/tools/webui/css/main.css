@@ -60,6 +60,10 @@ body {
 	margin-left: 10px;
 }
 
+.footer {
+  color: #777; 
+}
+
 hr {
   margin-top: 40px;
   margin-bottom: 40px;
