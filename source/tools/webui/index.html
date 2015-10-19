@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <meta name="description" content="SigmaDrone Flight Deck">
+  <meta name="author" content="SigmaDrone Developers">
+  <link rel="icon" href="./images/logo.ico">
+
+  <title>SigmaDrone Flight Deck</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="./bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="./css/main.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <!--nav class="navbar navbar-default"-->
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#"><img alt="SigmaDrone" src="./images/logo.svg" height="40"></a>
+      </div>
+      <div id="navbar" class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+          <li class="active"><a href="#">Status</a></li>
+          <li><a href="#config">Config</a></li>
+          <!--<li><a href="#contact">Contact</a></li>-->
+        </ul>
+      </div><!--/.nav-collapse -->
+    </div><!-- container-fluid -->
+  </nav>
+
+  <hr class="featurette-divider">
+
+  <div class="container main">
+
+    <div class="row">
+      <div class="col-xs-3 attitude">Attitude</div>
+      <div class="col-xs-4 col-xs-offset-5 text-right">&#x26a1<span id="battery_percent">100</span>%</div>
+    </div>
+    <div class="row">
+      <div class="col-xs-10 col-data attitude"><span id="attQ">w:1.000 x:0.000 y:0.000 z:0.000</span></div>
+    </div>
+    <div class="row row-padded">
+      <div class="col-xs-12">
+        <div class="row"> <div class="col-xs-11">Altitude</div> </div>
+        <div class="row"> <div class="col-xs-10 col-data"><span id="altitude">100</span> m</div> </div>
+      </div>
+    </div>
+    <div class="row row-padded">
+      <div class="col-xs-12">
+        <div class="row"> <div class="col-xs-11">Speed</div> </div>
+        <div class="row"> <div class="col-xs-10 col-data"><span id="speed">0</span> km/h</div> </div>
+      </div>
+    </div>
+
+    <hr class="featurette-divider">  
+
+    <div class="row row-padded mems">
+      <div class="col-xs-12">
+        <div class="row row-padded"> <div class="col-xs-11">Accelerometer</div> </div>
+        <div class="row"> 
+          <div class="col-xs-11 col-data"><span id="accel">x:0.000 y:0.000 z:1.000</span></div> 
+        </div>
+        <div class="row row-padded"> <div class="col-xs-11">Gyroscope, deg/s</div> </div>
+        <div class="row"> 
+          <div class="col-xs-11 col-data"><span id="gyro">x:0.000 y:0.000 z:0.000</span></div> 
+        </div>
+        <div class="row row-padded"> <div class="col-xs-11">Magnetometer</div> </div>
+        <div class="row"> 
+          <div class="col-xs-11 col-data"><span id="mag">x:0.000 y:0.000 z:0.000</span></div> 
+        </div>
+      </div>
+    </div>
+
+    <hr class="featurette-divider">
+
+    <div class="row row-padded">
+      <div class="col-xs-12">
+        <div class="row"> <div class="col-xs-12">Motors</div> </div>
+        <div class="row"> 
+          <div class="col-md-2 col-xs-5 col-data">M4: <span id="motor4">50</span> %</div> 
+          <div class="col-md-2 col-xs-5">M3: <span id="motor3">50</span> %</div> 
+        </div>
+        <div class="row"> 
+          <div class="col-md-2 col-xs-5 col-data">M1: <span id="motor2">50</span> %</div> 
+          <div class="col-md-2 col-xs-5">M2: <span id="motor1">50</span> %</div> 
+        </div>
+      </div>
+    </div>
+
+    <hr class="featurette-divider">  
+
+    <footer class="footer">
+      <p>
+        &copy; Sigmadrone 2015
+      </p>
+    </footer>
+
+  </div><!-- /.container -->
+
+  <script>
+  var id = 0;
+
+
+  function rpcCall(url, method, params, successCallback, failCallback) {
+    var request = {id: ++id, jsonrpc: "2.0"};
+    request.method = method;
+    request.params = params;
+    if (request.params.length > 0) {
+      request.params = JSON.parse(request.params);
+    }
+    console.log(JSON.stringify(request));
+    $.post(url, JSON.stringify(request), successCallback, "json").fail(failCallback);
+  }
+
+  function quaternion2str(q) {
+    return 'w:' + q.w.toFixed(3) + ' x:' + q.x.toFixed(3) + ' y:' + q.y.toFixed(3) + ' z:' + q.z.toFixed(3);
+  }
+
+  function vector2str(v) {
+    return 'x:' + v[0].toFixed(3) + ' y:' + v[1].toFixed(3) + ' z:' + v[2].toFixed(3);
+  } 
+  
+  function updateDroneState(response) {
+    if (response.error != null) {
+      console.log(JSON.stringify(response.result)); 
+    } else {
+      $("#attQ").text(quaternion2str(response.result.attitude));
+      $("#accel").text(vector2str(response.result.accel));
+      $("#gyro").text(vector2str(response.result.gyro));
+      $("#mag").text(vector2str(response.result.mag));
+      $("#altitude").text(response.result.altitude_meters.toFixed(2));
+      $("#motor1").text(response.result.motors[0].toFixed(3));
+      $("#motor2").text(response.result.motors[1].toFixed(3));
+      $("#motor3").text(response.result.motors[2].toFixed(3));
+      $("#motor4").text(response.result.motors[3].toFixed(3));
+      $("#battery").text(response.result.battery_voltage.toFixed(2));
+      $("#battery_percent").text(response.result.battery_percentage.toFixed(2));
+      $("#temperature_val").text(response.result.temperature.toFixed(1) + ' ');
+      $("#location").text(response.result.gps_latitude + ', ' + response.result.gps_longitude + ' (SAT Count: ' + response.result.gps_satellites + ')');
+      if (response.result.gps_satellites > 5) {
+        $("#velocity").text(response.result.gps_speed_kmph.toFixed(1));
+        $("#course").text(response.result.gps_course_deg.toFixed(2));
+      } else {
+        $("#velocity").text('0');
+        $("#course").text( 'None');
+      }
+      $("#dt").text(response.result.dt/1000);
+    }
+  }
+
+  var url = "http://10.10.10.1:18222/firmware";
+
+  function getDroneState() {
+    rpcCall(url, "sd_get_dronestate_ex", JSON.parse("[]"), updateDroneState);
+  }
+
+  window.setInterval(getDroneState, 500);
+
+  </script>
+
+  <!-- Bootstrap core JavaScript
+  ================================================== -->
+  <!-- Placed at the end of the document so the pages load faster -->
+  <script src="./jquery/jquery-2.1.1.min.js"></script>
+  <script src="./bootstrap/js/bootstrap.min.js"></script>
+  </body>
+  </html>
