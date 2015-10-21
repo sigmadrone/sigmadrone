@@ -63,7 +63,7 @@
     <div class="row row-padded">
       <div class="col-xs-12">
         <div class="row"> <div class="col-xs-11">Speed</div> </div>
-        <div class="row"> <div class="col-xs-10 col-data"><span id="speed">0</span> km/h</div> </div>
+        <div class="row"> <div class="col-xs-10 col-data"><span id="gps-speed">0</span> km/h</div> </div>
       </div>
     </div>
 
@@ -106,6 +106,37 @@
         </div>
       </div>
     </div>
+
+    <hr class="featurette-divider">
+
+    <div class="row row-padded">
+      <a href="#gps-id" id="gps-btn" class="btn btn-link" data-toggle="collapse">
+        <span class="glyphicon glyphicon-triangle-right"></span>GPS
+      </a>
+      <div id = "gps-id" class="col-xs-12 collapse">
+        <div class="row"> 
+          <div class="col-md-2 col-xs-4 col-data">Latitude:</div> 
+          <div class="col-md-4 col-xs-6 col"><span id="gps-lat">45.00</span> deg</div> 
+        </div>
+        <div class="row"> 
+          <div class="col-md-2 col-xs-4 col-data">Longitude:</div> 
+          <div class="col-md-4 col-xs-6 col"><span id="gps-long">-112.00</span> deg</div> 
+        </div>
+        <div class="row"> 
+          <div class="col-md-2 col-xs-4 col-data">SAT Count:</div> 
+          <div class="col-md-4 col-xs-6 col"><span id="gps-satellites">3</span></div> 
+        </div>
+        <div class="row"> 
+          <div class="col-md-2 col-xs-4 col-data">Course:</div> 
+          <div class="col-md-4 col-xs-6 col"><span id="gps-satellites">360</span> deg</div> 
+        </div>
+        <div class="row"> 
+          <div class="col-md-2 col-xs-4 col-data">Altitude:</div> 
+          <div class="col-md-4 col-xs-6 col"><span id="gps-altitude">0</span> m</div> 
+        </div>
+      </div>
+    </div>
+
 
     <hr class="featurette-divider">  
 
@@ -163,13 +194,16 @@
       $("#battery").text(response.result.battery_voltage.toFixed(2));
       $("#battery_percent").text(response.result.battery_percentage.toFixed(2));
       $("#temperature_val").text(response.result.temperature.toFixed(1) + ' ');
-      $("#location").text(response.result.gps_latitude + ', ' + response.result.gps_longitude + ' (SAT Count: ' + response.result.gps_satellites + ')');
+      $("#gps-lat").text(response.result.gps_latitude);
+      $("#gps-long").text(response.result.gps_longitude); 
+      $("#gps-satelites").text(response.result.gps_satellites);
       if (response.result.gps_satellites > 5) {
-        $("#velocity").text(response.result.gps_speed_kmph.toFixed(1));
-        $("#course").text(response.result.gps_course_deg.toFixed(2));
+        $("#gps-speed").text(response.result.gps_speed_kmph.toFixed(1));
+        $("#gps-course").text(response.result.gps_course_deg.toFixed(2));
+        $("#gps-course").text(response.result.gps_altitude.toFixed(2));
       } else {
-        $("#velocity").text('0');
-        $("#course").text( 'None');
+        $("#gps-speed").text('0');
+        $("#gps-course").text( 'N/A');
       }
       $("#dt").text(response.result.dt/1000);
     }
@@ -187,6 +221,7 @@
   $(document).ready(function() {
     toggleCollapsable("#sensors-id", "#sensors-btn", "Sensors");
     toggleCollapsable("#motors-id", "#motors-btn", "Motors");
+    toggleCollapsable("#gps-id", "#gps-btn", "GPS");
   });
 
   var url = "http://10.10.10.1:18222/firmware";
