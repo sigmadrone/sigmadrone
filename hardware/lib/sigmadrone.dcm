@@ -1,0 +1,37 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP C_0603_50V_X7R
+D Unpolarized capacitor
+$ENDCMP
+#
+$CMP C_0603_25V_X7R
+D Unpolarized capacitor
+$ENDCMP
+#
+$CMP C_0603_6V3_X5R
+D Unpolarized capacitor
+$ENDCMP
+#
+$CMP C_0603_50V_C0G_5%
+D Unpolarized capacitor
+$ENDCMP
+#
+$CMP C_0805_16V_X5R
+D Unpolarized capacitor
+$ENDCMP
+#
+$CMP C_1206_25V_X7R
+D Unpolarized capacitor
+$ENDCMP
+#
+$CMP R_0603_5%
+D Resistor
+K R DEV
+$ENDCMP
+#
+$CMP R_0805_5%
+D Resistor
+K R DEV
+$ENDCMP
+#
+#End Doc Library
