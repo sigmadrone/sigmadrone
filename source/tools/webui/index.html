@@ -145,8 +145,59 @@
     </div> <!--div id="home" class="container tab-pane fade in active"-->
 
     <div id="control" class="container tab-pane fade">
-      <p>Place controls here</p>
-    </div>
+      <div class="row row-padded">
+        <a href="#pidxy-id" id="pidxy-btn" class="btn btn-link" data-toggle="collapse">
+          <span class="glyphicon glyphicon-triangle-right"></span>PID Controller XY
+        </a>
+        <div id = "pidxy-id" class="col-xs-12 collapse">
+          <div class="row">
+            <div class="form-group">
+              <div class="col-xs-4 col-md-2">
+                <label for="kp-xy">Kp</label>
+                <input id="kp-xy" name="kp-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+              </div>
+              <div class="col-xs-4 col-md-2">
+                <label for="ki-xy">Ki</label>
+                <input id="ki-xy" name="kp-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+              </div>
+              <div class="col-xs-4 col-md-2">
+                <label for="kd-xy">Kd</label>
+                <input id="kd-xy" name="kd-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="featurette-divider">
+
+      <div class="row row-padded">
+        <a href="#pidz-id" id="pidz-btn" class="btn btn-link" data-toggle="collapse">
+          <span class="glyphicon glyphicon-triangle-right"></span>PID Controller Z
+        </a>
+        <div id = "pidz-id" class="col-xs-12 collapse">
+          <div class="row">
+            <div class="form-group">
+              <div class="col-xs-4 col-md-2">
+                <label for="kp-z">Kp</label>
+                <input id="kp-z" name="kp-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+              </div>
+              <div class="col-xs-4 col-md-2">
+                <label for="ki-z">Ki</label>
+                <input id="ki-z" name="kp-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+              </div>
+              <div class="col-xs-4 col-md-2">
+                <label for="kd-z">Kd</label>
+                <input id="kd-z" name="kd-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <hr class="featurette-divider">
+
+    </div> <!--div id="control" class="container tab-pane fade"-->
 
   </div> <!--div class="tab-content"-->
 
@@ -179,7 +230,7 @@
   }
 
   function quaternion2str(q) {
-    return 'w:' + q.w.toFixed(3) + ' x:' + q.x.toFixed(3) + ' y:' + q.y.toFixed(3) + ' z:' + q.z.toFixed(3);
+    return 'w:' + q.w.toFixed(3) + ' x:' + q.x.toFixed(3) + '  y:' + q.y.toFixed(3) + '  z:' + q.z.toFixed(3);
   }
 
   function vector2str(v) {
@@ -230,6 +281,8 @@
     toggleCollapsable("#sensors-id", "#sensors-btn", "Sensors");
     toggleCollapsable("#motors-id", "#motors-btn", "Motors");
     toggleCollapsable("#gps-id", "#gps-btn", "GPS");
+    toggleCollapsable("#pidxy-id", "#pidxy-btn", "PID Controller XY");
+    toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
   });
 
   var url = "http://10.10.10.1:18222/firmware";
