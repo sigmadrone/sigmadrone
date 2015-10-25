@@ -7,16 +7,6 @@ body {
   text-align: center;
 }
 
-.navbar-brand {
-	float: left;
-	padding: 5px 5px;
-}
-
-.navbar-default {
-  border: none;
-  background-color: transparent;
-}
-
 /* featurette */
 .featurette-divider {
   margin:10px 0;
@@ -47,7 +37,12 @@ body {
 	margin-top: 10px;
 }
 
+.nav-pills > li > a {
+  line-height: 25px;
+}
+
 [class*="col-"] {
+  margin-left: 0px;
   padding-top: 0px;
   padding-bottom: 0px;
   /*background-color: #888;*/
@@ -67,6 +62,53 @@ body {
 hr {
   margin-top: 40px;
   margin-bottom: 40px;
+}
+
+/* Custom nav */
+.navbar-default .navbar-nav > .active > a, .navbar-default .navbar-nav > .active > a:focus, .navbar-default .navbar-nav > .active > a:hover {
+    background-color: #337ab7;
+    color: #fff;
+    border-radius: 4px;
+}
+
+.navbar-default .navbar-nav > .open > a, .navbar-default .navbar-nav > .open > a:focus, .navbar-default .navbar-nav > .open > a:hover {
+    background-color: transparent;
+}
+
+.navbar-collapse.collapsing, .navbar-collapse.collapse.in {
+    float:none;
+}
+
+.navbar-collapse {
+  float:right;
+}
+
+.navbar-default .navbar-toggle {
+    border-color: #2e6da4;
+    background-color: #337ab7;
+}
+
+.navbar-default .navbar-toggle:focus, .navbar-default .navbar-toggle:hover  {
+    border-color: #204d74;
+    background-color: #286090;
+}
+
+.navbar-default .navbar-toggle .icon-bar {
+    background-color: #fff;
+}
+
+.navbar {
+  margin-bottom: 10px;
+}
+
+.navbar-brand {
+  float: left;
+  padding: 3px;
+}
+
+.navbar-default {
+  border: none;
+  background-color: transparent;
 }
 
 /*body {background: #eee;margin:50px;}*/

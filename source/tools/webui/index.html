@@ -20,193 +20,194 @@
 </head>
 
 <body>
-
-  <nav class="navbar navbar-default">
-    <div class="container-fluid">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="#"><img alt="SigmaDrone" src="./images/logo.svg" height="40"></a>
-      </div>
-      <div id="navbar" class="collapse navbar-collapse">
-        <ul class="nav navbar-nav">
-          <li class="active"><a href="#home" data-toggle="tab">Status</a></li>
-          <li><a href="#control" data-toggle="tab">Control</a></li>
-        <!--ul class="nav nav-pills">
-          <li class="active"><a data-toggle="pill" href="#main">Status</a></li>
-          <li><a data-toggle="pill" href="#control">Control</a></li>
-          <!--<li><a href="#contact">Contact</a></li>-->
-        </ul>
-      </div><!--/.nav-collapse -->
-    </div><!-- container-fluid -->
-  </nav>
-
-  <hr class="featurette-divider">
-
-  <div class="tab-content main">
-
-    <div id="home" class="container tab-pane fade in active">
-      <div class="row">
-        <div class="col-xs-3 attitude">Attitude</div>
-        <div class="col-xs-4 col-xs-offset-5">&#x26a1<span id="battery_percent">100</span>%</div>
-      </div>
-      <div class="row">
-        <div class="col-xs-10 col-data attitude"><span id="attQ">w:1.000 x:0.000 y:0.000 z:0.000</span></div>
-      </div>
-      <div class="row row-padded">
-        <div class="col-xs-12">
-          <div class="row"> <div class="col-xs-11">Altitude</div> </div>
-          <div class="row"> <div class="col-xs-10 col-data"><span id="altitude">100</span> m</div> </div>
-        </div>
-      </div>
-      <div class="row row-padded">
-        <div class="col-xs-12">
-          <div class="row"> <div class="col-xs-11">Speed</div> </div>
-          <div class="row"> <div class="col-xs-10 col-data"><span id="gps-speed">0</span> km/h</div> </div>
-        </div>
-      </div>
-
-      <hr class="featurette-divider">  
-
-      <div class="row row-padded sensors">
-        <a href="#sensors-id" id="sensors-btn" class="btn btn-link" data-toggle="collapse">
-          <span class="glyphicon glyphicon-triangle-right"></span>Sensors
-        </a>
-        <div id="sensors-id" class="col-xs-12 col-data collapse">
-          <div class="row row-padded"> <div class="col-xs-11">Accelerometer</div> </div>
-          <div class="row"> 
-            <div class="col-xs-11 col-data"><span id="accel">x:0.000 y:0.000 z:1.000</span></div> 
+  <div class="container">
+    <div class="header">
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#home"><img alt="SigmaDrone" src="./images/logo.svg" height="45"></a>
           </div>
-          <div class="row row-padded"> <div class="col-xs-11">Gyroscope, deg/s</div> </div>
-          <div class="row"> 
-            <div class="col-xs-11 col-data"><span id="gyro">x:0.000 y:0.000 z:0.000</span></div> 
-          </div>
-          <div class="row row-padded"> <div class="col-xs-11">Magnetometer</div> </div>
-          <div class="row"> 
-            <div class="col-xs-11 col-data"><span id="mag">x:0.000 y:0.000 z:0.000</span></div> 
+          <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav nav-pills">
+              <li class="active"><a href="#home" data-toggle="tab">Home</a></li>
+              <li><a href="#control" data-toggle="tab"><span class="glyphicon glyphicon-wrench"></span> Configure</a></li>
+            </ul>
+          </div> <!-- navbar-collapse-->
+        </div><!-- container-fluid -->
+      </nav>
+    </div><!-- header -->
+
+    <hr class="featurette-divider">
+
+    <div class="tab-content main">
+
+      <div id="home" class="tab-pane fade in active">
+        <div class="row">
+          <div class="col-xs-4">Attitude</div>
+          <div class="col-xs-3"></div>
+          <div class="col-xs-5">&#x26a1<span id="battery_percent">100</span>%</div>
+        </div>
+        <div class="row">
+          <div class="col-xs-10 col-data attitude"><span id="attQ">w:1.000 x:0.000 y:0.000 z:0.000</span></div>
+        </div>
+        <div class="row row-padded">
+          <div class="col-xs-12">
+            <div class="row"> <div class="col-xs-11">Altitude</div> </div>
+            <div class="row"> <div class="col-xs-10 col-data"><span id="altitude">100</span> m</div> </div>
           </div>
         </div>
-      </div>
-
-      <hr class="featurette-divider">
-
-      <div class="row row-padded">
-        <a href="#motors-id" id="motors-btn" class="btn btn-link" data-toggle="collapse">
-          <span class="glyphicon glyphicon-triangle-right"></span>Motors
-        </a>
-        <div id = "motors-id" class="col-xs-12 collapse">
-          <div class="row"> 
-            <div class="col-md-2 col-xs-5 col-data">M4: <span id="motor4">50</span> %</div> 
-            <div class="col-md-2 col-xs-5">M3: <span id="motor3">50</span> %</div> 
-          </div>
-          <div class="row"> 
-            <div class="col-md-2 col-xs-5 col-data">M1: <span id="motor2">50</span> %</div> 
-            <div class="col-md-2 col-xs-5">M2: <span id="motor1">50</span> %</div> 
+        <div class="row row-padded">
+          <div class="col-xs-12">
+            <div class="row"> <div class="col-xs-11">Speed</div> </div>
+            <div class="row"> <div class="col-xs-10 col-data"><span id="gps-speed">0</span> km/h</div> </div>
           </div>
         </div>
-      </div>
 
-      <hr class="featurette-divider">
+        <hr class="featurette-divider">  
 
-      <div class="row row-padded">
-        <a href="#gps-id" id="gps-btn" class="btn btn-link" data-toggle="collapse">
-          <span class="glyphicon glyphicon-triangle-right"></span>GPS
-        </a>
-        <div id = "gps-id" class="col-xs-12 collapse">
-          <div class="row"> 
-            <div class="col-md-2 col-xs-4 col-data">Latitude:</div> 
-            <div class="col-md-4 col-xs-6 col"><span id="gps-lat">45.00</span> deg</div> 
-          </div>
-          <div class="row"> 
-            <div class="col-md-2 col-xs-4 col-data">Longitude:</div> 
-            <div class="col-md-4 col-xs-6 col"><span id="gps-long">-112.00</span> deg</div> 
-          </div>
-          <div class="row"> 
-            <div class="col-md-2 col-xs-4 col-data">SAT Count:</div> 
-            <div class="col-md-4 col-xs-6 col"><span id="gps-satellites">3</span></div> 
-          </div>
-          <div class="row"> 
-            <div class="col-md-2 col-xs-4 col-data">Course:</div> 
-            <div class="col-md-4 col-xs-6 col"><span id="gps-satellites">360</span> deg</div> 
-          </div>
-          <div class="row"> 
-            <div class="col-md-2 col-xs-4 col-data">Altitude:</div> 
-            <div class="col-md-4 col-xs-6 col"><span id="gps-altitude">0</span> m</div> 
+        <div class="row row-padded sensors">
+          <a href="#sensors-id" id="sensors-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Sensors
+          </a>
+          <div id="sensors-id" class="col-xs-12 col-data collapse">
+            <div class="row row-padded"> <div class="col-xs-11">Accelerometer</div> </div>
+            <div class="row"> 
+              <div class="col-xs-11 col-data"><span id="accel">x:0.000 y:0.000 z:1.000</span></div> 
+            </div>
+            <div class="row row-padded"> <div class="col-xs-11">Gyroscope, deg/s</div> </div>
+            <div class="row"> 
+              <div class="col-xs-11 col-data"><span id="gyro">x:0.000 y:0.000 z:0.000</span></div> 
+            </div>
+            <div class="row row-padded"> <div class="col-xs-11">Magnetometer</div> </div>
+            <div class="row"> 
+              <div class="col-xs-11 col-data"><span id="mag">x:0.000 y:0.000 z:0.000</span></div> 
+            </div>
           </div>
         </div>
-      </div>
 
-      <hr class="featurette-divider">  
+        <hr class="featurette-divider">
 
-    </div> <!--div id="home" class="container tab-pane fade in active"-->
+        <div class="row row-padded">
+          <a href="#motors-id" id="motors-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Motors
+          </a>
+          <div id = "motors-id" class="col-xs-12 collapse">
+            <div class="row"> 
+              <div class="col-md-2 col-xs-5 col-data">M4: <span id="motor4">50</span> %</div> 
+              <div class="col-md-2 col-xs-5">M3: <span id="motor3">50</span> %</div> 
+            </div>
+            <div class="row"> 
+              <div class="col-md-2 col-xs-5 col-data">M1: <span id="motor2">50</span> %</div> 
+              <div class="col-md-2 col-xs-5">M2: <span id="motor1">50</span> %</div> 
+            </div>
+          </div>
+        </div>
 
-    <div id="control" class="container tab-pane fade">
-      <div class="row row-padded">
-        <a href="#pidxy-id" id="pidxy-btn" class="btn btn-link" data-toggle="collapse">
-          <span class="glyphicon glyphicon-triangle-right"></span>PID Controller XY
-        </a>
-        <div id = "pidxy-id" class="col-xs-12 collapse">
-          <div class="row">
-            <div class="form-group">
-              <div class="col-xs-4 col-md-2">
-                <label for="kp-xy">Kp</label>
-                <input id="kp-xy" name="kp-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
-              </div>
-              <div class="col-xs-4 col-md-2">
-                <label for="ki-xy">Ki</label>
-                <input id="ki-xy" name="kp-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
-              </div>
-              <div class="col-xs-4 col-md-2">
-                <label for="kd-xy">Kd</label>
-                <input id="kd-xy" name="kd-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+        <hr class="featurette-divider">
+
+        <div class="row row-padded">
+          <a href="#gps-id" id="gps-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>GPS
+          </a>
+          <div id = "gps-id" class="col-xs-12 collapse">
+            <div class="row"> 
+              <div class="col-md-2 col-xs-4 col-data">Latitude:</div> 
+              <div class="col-md-4 col-xs-6 col"><span id="gps-lat">45.00</span> deg</div> 
+            </div>
+            <div class="row"> 
+              <div class="col-md-2 col-xs-4 col-data">Longitude:</div> 
+              <div class="col-md-4 col-xs-6 col"><span id="gps-long">-112.00</span> deg</div> 
+            </div>
+            <div class="row"> 
+              <div class="col-md-2 col-xs-4 col-data">SAT Count:</div> 
+              <div class="col-md-4 col-xs-6 col"><span id="gps-satellites">3</span></div> 
+            </div>
+            <div class="row"> 
+              <div class="col-md-2 col-xs-4 col-data">Course:</div> 
+              <div class="col-md-4 col-xs-6 col"><span id="gps-satellites">360</span> deg</div> 
+            </div>
+            <div class="row"> 
+              <div class="col-md-2 col-xs-4 col-data">Altitude:</div> 
+              <div class="col-md-4 col-xs-6 col"><span id="gps-altitude">0</span> m</div> 
+            </div>
+          </div>
+        </div>
+
+        <hr class="featurette-divider">  
+
+      </div> <!--div id="home" class="container tab-pane fade in active"-->
+
+      <div id="control" class="tab-pane fade">
+        <div class="row row-padded">
+          <a href="#pidxy-id" id="pidxy-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>PID Controller XY
+          </a>
+          <div id = "pidxy-id" class="col-xs-12 collapse">
+            <div class="row">
+              <div class="form-group">
+                <div class="col-xs-4 col-md-2">
+                  <label for="kp-xy">Kp</label>
+                  <input id="kp-xy" name="kp-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="ki-xy">Ki</label>
+                  <input id="ki-xy" name="kp-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="kd-xy">Kd</label>
+                  <input id="kd-xy" name="kd-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <hr class="featurette-divider">
+        <hr class="featurette-divider">
 
-      <div class="row row-padded">
-        <a href="#pidz-id" id="pidz-btn" class="btn btn-link" data-toggle="collapse">
-          <span class="glyphicon glyphicon-triangle-right"></span>PID Controller Z
-        </a>
-        <div id = "pidz-id" class="col-xs-12 collapse">
-          <div class="row">
-            <div class="form-group">
-              <div class="col-xs-4 col-md-2">
-                <label for="kp-z">Kp</label>
-                <input id="kp-z" name="kp-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
-              </div>
-              <div class="col-xs-4 col-md-2">
-                <label for="ki-z">Ki</label>
-                <input id="ki-z" name="kp-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
-              </div>
-              <div class="col-xs-4 col-md-2">
-                <label for="kd-z">Kd</label>
-                <input id="kd-z" name="kd-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+        <div class="row row-padded">
+          <a href="#pidz-id" id="pidz-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>PID Controller Z
+          </a>
+          <div id = "pidz-id" class="col-xs-12 collapse">
+            <div class="row">
+              <div class="form-group">
+                <div class="col-xs-4 col-md-2">
+                  <label for="kp-z">Kp</label>
+                  <input id="kp-z" name="kp-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="ki-z">Ki</label>
+                  <input id="ki-z" name="kp-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="kd-z">Kd</label>
+                  <input id="kd-z" name="kd-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <hr class="featurette-divider">
+        <hr class="featurette-divider">
 
-    </div> <!--div id="control" class="container tab-pane fade"-->
+      </div> <!--div id="control" class="container tab-pane fade"-->
 
-  </div> <!--div class="tab-content"-->
+    </div> <!--div class="tab-content"-->
 
 
-  <footer class="footer">
-    <p>
-      &copy; Sigmadrone 2015
-    </p>
-  </footer>
+    <footer class="footer">
+      <p>
+        &copy; Sigmadrone 2015
+      </p>
+    </footer>
+
+  </div><!-- container -->
 
    <!-- Bootstrap core JavaScript
   ================================================== -->
