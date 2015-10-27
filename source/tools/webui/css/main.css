@@ -111,4 +111,8 @@ hr {
   background-color: transparent;
 }
 
+input:invalid {
+  color:red;
+}
+
 /*body {background: #eee;margin:50px;}*/
