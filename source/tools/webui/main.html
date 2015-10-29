@@ -88,6 +88,10 @@
             <div class="row"> 
               <div class="col-xs-11 col-data"><span id="mag">x:0.000 y:0.000 z:0.000</span></div> 
             </div>
+            <div class="row row-padded"> <div class="col-xs-11">dT</div> </div>
+            <div class="row"> 
+              <div class="col-xs-11 col-data"><span id="dt">0</span> mS</div> 
+            </div>
           </div>
         </div>
 
@@ -130,7 +134,7 @@
             </div>
             <div class="row"> 
               <div class="col-md-2 col-xs-4 col-data">Course:</div> 
-              <div class="col-md-4 col-xs-6 col"><span id="gps-satellites">360</span> deg</div> 
+              <div class="col-md-4 col-xs-6 col"><span id="gps-course">360</span> deg</div> 
             </div>
             <div class="row"> 
               <div class="col-md-2 col-xs-4 col-data">Altitude:</div> 
@@ -153,15 +157,15 @@
               <div class="form-group" aria-invalid="true">
                 <div class="col-xs-4 col-md-2">
                   <label for="kp-xy">Kp</label>
-                  <input id="kp-xy" name="kp-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001" required="true" oninput="enablePidXYSubmitBtn()">
+                  <input id="kp-xy" name="kp-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="enablePidXYSubmitBtn()">
                 </div>
                 <div class="col-xs-4 col-md-2">
                   <label for="ki-xy">Ki</label>
-                  <input id="ki-xy" name="ki-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001" required="true" oninput="enablePidXYSubmitBtn()">
+                  <input id="ki-xy" name="ki-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="enablePidXYSubmitBtn()">
                 </div>
                 <div class="col-xs-4 col-md-2">
                   <label for="kd-xy">Kd</label>
-                  <input id="kd-xy" name="kd-xy" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001" required="true" oninput="enablePidXYSubmitBtn()">
+                  <input id="kd-xy" name="kd-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="enablePidXYSubmitBtn()">
                 </div>
               </div>
               <div class="form-group">        
@@ -170,7 +174,7 @@
                 </div>
               </div>
             </form>
-          </div> <!--div class=row-->
+          </div> <!--div id = "pidxy-id" class="col-xs-12 collapse"-->
         </div> <!--div class="row row-padded"-->
 
         <hr class="featurette-divider">
@@ -180,24 +184,28 @@
             <span class="glyphicon glyphicon-triangle-right"></span>PID Controller Z
           </a>
           <div id = "pidz-id" class="col-xs-12 collapse">
-            <div class="row">
+            <form class="form-horizontal" role="form" id="pidz-form" onsubmit="return onPidZSubmit();">
               <div class="form-group">
                 <div class="col-xs-4 col-md-2">
                   <label for="kp-z">Kp</label>
-                  <input id="kp-z" name="kp-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+                  <input id="kp-z" name="kp-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="enablePidZSubmitBtn()">
                 </div>
                 <div class="col-xs-4 col-md-2">
                   <label for="ki-z">Ki</label>
-                  <input id="ki-z" name="ki-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+                  <input id="ki-z" name="ki-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="enablePidZSubmitBtn()">
                 </div>
                 <div class="col-xs-4 col-md-2">
                   <label for="kd-z">Kd</label>
-                  <input id="kd-z" name="kd-z" class="form-control input-sm" type="number" min="0.0" max="0.2" step="0.001">
+                  <input id="kd-z" name="kd-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="enablePidZSubmitBtn()">
                 </div>
               </div>
-            </div>
+              <div class="form-group">        
+                <div class="col-sm-offset-2 col-sm-10">
+                  <button type="submit" class="btn btn-default disabled" id="pidz-apply-btn">Apply</button>
+                </div>
+              </div>
+            </form>
           </div>
-        </div>
 
         <hr class="featurette-divider">
 
@@ -261,18 +269,36 @@
       $("#battery").text(response.result.battery_voltage.toFixed(2));
       $("#battery_percent").text(response.result.battery_percentage.toFixed(2));
       $("#temperature_val").text(response.result.temperature.toFixed(1) + ' ');
-      $("#gps-lat").text(response.result.gps_latitude);
-      $("#gps-long").text(response.result.gps_longitude); 
-      $("#gps-satelites").text(response.result.gps_satellites);
+      if (response.result.gps_satellites >= 3) {
+        $("#gps-lat").text(response.result.gps_latitude);
+        $("#gps-long").text(response.result.gps_longitude);
+      } else {
+        $("#gps-lat").text("N/A");
+        $("#gps-long").text("N/A");
+      }
+      $("#gps-satellites").text(response.result.gps_satellites);
       if (response.result.gps_satellites > 5) {
         $("#gps-speed").text(response.result.gps_speed_kmph.toFixed(1));
         $("#gps-course").text(response.result.gps_course_deg.toFixed(2));
-        $("#gps-course").text(response.result.gps_altitude.toFixed(2));
+        $("#gps-altitude").text(response.result.gps_altitude.toFixed(2));
       } else {
         $("#gps-speed").text('0');
         $("#gps-course").text( 'N/A');
+        $("#gps-altitude").text('N/A');
       }
       $("#dt").text(response.result.dt/1000);
+      
+      /*if form is disabled, update its fields*/
+      if (isFormDisabled($('#pidxy-form'))) {
+        $('#pidxy-form')[0].elements['kp-xy'].value = response.result.kp;
+        $('#pidxy-form')[0].elements['ki-xy'].value = response.result.ki;
+        $('#pidxy-form')[0].elements['kd-xy'].value = response.result.kd;
+      }
+      if (isFormDisabled($('#pidz-form'))) {
+        $('#pidz-form')[0].elements['kp-z'].value = response.result.yaw_kp;
+        $('#pidz-form')[0].elements['ki-z'].value = response.result.yaw_ki;
+        $('#pidz-form')[0].elements['kd-z'].value = response.result.yaw_kd;
+      }
     }
   }
 
@@ -289,6 +315,10 @@
     $('#pidxy-form').find(':submit').removeClass("disabled");
   }
 
+  function enablePidZSubmitBtn() {
+    $('#pidz-form').find(':submit').removeClass("disabled");
+  }
+
   $(document).ready(function() {
     toggleCollapsable("#sensors-id", "#sensors-btn", "Sensors");
     toggleCollapsable("#motors-id", "#motors-btn", "Motors");
@@ -297,6 +327,9 @@
     toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
   });
 
+  function isFormDisabled(form) {
+    return form.find(':submit').hasClass('disabled');
+  }
 
   function getDroneState() {
     rpcCall(url, "sd_get_dronestate_ex", JSON.parse("[]"), updateDroneState);
@@ -304,7 +337,7 @@
 
   function onPidXYSubmit() {
     var $myForm = $('#pidxy-form');
-    if ($myForm.find(':submit').hasClass('disabled')) {
+    if (isFormDisabled($myForm)) {
       $myForm.find(':submit').blur();
       return false;
     }
@@ -316,6 +349,24 @@
     rpcCall(url, "kp", "[" + $myForm[0].elements['kp-xy'].value + "]");
     rpcCall(url, "ki", "[" + $myForm[0].elements['ki-xy'].value + "]");
     rpcCall(url, "kd", "[" + $myForm[0].elements['kd-xy'].value + "]");
+    $myForm.find(':submit').blur();
+    return false;
+  }
+
+  function onPidZSubmit() {
+    var $myForm = $('#pidz-form');
+    if (isFormDisabled($myForm)) {
+      $myForm.find(':submit').blur();
+      return false;
+    }
+    if (!$myForm[0].checkValidity()) {
+      $myForm.find(':submit').blur();
+      return true; // return true so the form will be submitted
+    }
+    $myForm.find(':submit').addClass("disabled");
+    rpcCall(url, "yaw_kp", "[" + $myForm[0].elements['kp-z'].value + "]");
+    rpcCall(url, "yaw_ki", "[" + $myForm[0].elements['ki-z'].value + "]");
+    rpcCall(url, "yaw_kd", "[" + $myForm[0].elements['kd-z'].value + "]");
     $myForm.find(':submit').blur();
     return false;
   }
