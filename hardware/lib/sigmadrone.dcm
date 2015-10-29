@@ -28,6 +28,10 @@ $CMP C_SMT
 D Unpolarized capacitor
 $ENDCMP
 #
+$CMP LED_SMT
+K LED
+$ENDCMP
+#
 $CMP R_0603_5%
 D Resistor
 K R DEV
