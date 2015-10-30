@@ -67,13 +67,9 @@ F 3 "" V 1950 3100 60  0000 C CNN
 	0    -1   1    0   
 $EndComp
 Wire Wire Line
-	2300 3000 2650 3000
+	2300 3000 3550 3000
 Wire Wire Line
-	2650 3000 3550 3000
-Wire Wire Line
-	3950 3000 5150 3000
-Wire Wire Line
-	5150 3000 6550 3000
+	3950 3000 6550 3000
 Wire Wire Line
 	2300 3100 6550 3100
 Wire Wire Line
@@ -92,15 +88,7 @@ $EndComp
 Wire Wire Line
 	6550 4300 6350 4300
 Wire Wire Line
-	6350 4300 6350 4400
-Wire Wire Line
-	6350 4400 6350 4500
-Wire Wire Line
-	6350 4500 6350 4600
-Wire Wire Line
-	6350 4600 6350 4700
-Wire Wire Line
-	6350 4700 6350 5000
+	6350 4300 6350 5000
 Wire Wire Line
 	6550 4400 6350 4400
 Connection ~ 6350 4400
@@ -241,11 +229,7 @@ NoConn ~ 7950 3900
 Wire Wire Line
 	6350 2900 6350 2000
 Wire Wire Line
-	5550 2900 5950 2900
-Wire Wire Line
-	5950 2900 6350 2900
-Wire Wire Line
-	6350 2900 6550 2900
+	5550 2900 6550 2900
 Connection ~ 6350 2900
 Text HLabel 9500 2900 2    60   Output ~ 0
 C_FTDI_TXD

@@ -118,19 +118,11 @@ $EndComp
 Text HLabel 1500 5200 0    60   Input ~ 0
 MEMS_ACC_NCS
 Wire Wire Line
-	5500 3700 5650 3700
-Wire Wire Line
-	5650 3700 6100 3700
-Wire Wire Line
-	6100 3700 6900 3700
-Wire Wire Line
-	6900 3700 7750 3700
+	5500 3700 7750 3700
 Wire Wire Line
 	7750 3700 7750 3350
 Wire Wire Line
-	6900 3350 6900 3700
-Wire Wire Line
-	6900 3700 6900 3950
+	6900 3350 6900 3950
 Connection ~ 6900 3700
 Wire Wire Line
 	6100 3600 6100 3700
@@ -142,13 +134,7 @@ Wire Wire Line
 Wire Wire Line
 	5500 3300 5650 3300
 Wire Wire Line
-	5650 3300 5650 3400
-Wire Wire Line
-	5650 3400 5650 3500
-Wire Wire Line
-	5650 3500 5650 3600
-Wire Wire Line
-	5650 3600 5650 3700
+	5650 3300 5650 3700
 Connection ~ 5650 3700
 Wire Wire Line
 	5500 3400 5650 3400
@@ -164,15 +150,9 @@ Wire Wire Line
 Wire Wire Line
 	5500 3000 5650 3000
 Wire Wire Line
-	5650 2700 5650 3000
+	5650 2700 5650 3100
 Wire Wire Line
-	5650 3000 5650 3100
-Wire Wire Line
-	5650 2700 6900 2700
-Wire Wire Line
-	6900 2700 7750 2700
-Wire Wire Line
-	7750 2700 8400 2700
+	5650 2700 8400 2700
 Wire Wire Line
 	5650 3100 5500 3100
 Connection ~ 5650 3000
@@ -187,17 +167,11 @@ Wire Wire Line
 Wire Wire Line
 	3950 3700 4100 3700
 Wire Wire Line
-	1500 3100 3050 3100
+	1500 3100 4100 3100
 Wire Wire Line
-	3050 3100 4100 3100
+	1500 3200 4100 3200
 Wire Wire Line
-	1500 3200 2950 3200
-Wire Wire Line
-	2950 3200 4100 3200
-Wire Wire Line
-	1500 3300 2850 3300
-Wire Wire Line
-	2850 3300 4100 3300
+	1500 3300 4100 3300
 Wire Wire Line
 	1500 3400 4100 3400
 Wire Wire Line
@@ -216,13 +190,7 @@ Wire Wire Line
 	5650 5500 5500 5500
 Connection ~ 5650 5500
 Wire Wire Line
-	5500 5600 5650 5600
-Wire Wire Line
-	5650 5600 6100 5600
-Wire Wire Line
-	6100 5600 6900 5600
-Wire Wire Line
-	6900 5600 7750 5600
+	5500 5600 7750 5600
 Connection ~ 5650 5600
 Wire Wire Line
 	5500 5100 6100 5100
@@ -236,26 +204,14 @@ Wire Wire Line
 	7750 5600 7750 5300
 Connection ~ 6100 5600
 Wire Wire Line
-	6900 5300 6900 5600
-Wire Wire Line
-	6900 5600 6900 5950
+	6900 5300 6900 5950
 Connection ~ 6900 5600
 Wire Wire Line
 	6100 4600 6100 5000
 Wire Wire Line
-	5650 5200 5650 5300
+	5650 5200 5650 5600
 Wire Wire Line
-	5650 5300 5650 5400
-Wire Wire Line
-	5650 5400 5650 5500
-Wire Wire Line
-	5650 5500 5650 5600
-Wire Wire Line
-	8400 4600 7750 4600
-Wire Wire Line
-	7750 4600 6900 4600
-Wire Wire Line
-	6900 4600 6100 4600
+	8400 4600 6100 4600
 Wire Wire Line
 	7750 4600 7750 5000
 Wire Wire Line
@@ -292,18 +248,14 @@ Wire Wire Line
 	2850 5600 4100 5600
 Connection ~ 6900 2700
 Wire Wire Line
-	8400 2300 8400 2700
-Wire Wire Line
-	8400 2700 8400 4600
+	8400 2300 8400 4600
 Connection ~ 7750 2700
 Connection ~ 7750 4600
 Connection ~ 8400 2700
 Text HLabel 1500 2300 0    60   Input ~ 0
 V_SENS1
 Wire Wire Line
-	1500 2300 1950 2300
-Wire Wire Line
-	1950 2300 8400 2300
+	1500 2300 8400 2300
 $Comp
 L PWR_FLAG #FLG?
 U 1 1 55FF3EA5
