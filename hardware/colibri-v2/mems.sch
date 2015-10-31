@@ -396,4 +396,8 @@ F 6 "Farnell" H 3330 5270 30  0001 L CNN "Provider"
 	1    3300 5500
 	0    -1   -1   0   
 $EndComp
+Text Notes 6000 3100 0    60   ~ 0
+10n !!!!
+Text Notes 4500 4100 0    60   ~ 0
+L3GD20 is not recommended for new design\nHave to be changed to L3GD20HTR
 $EndSCHEMATC
