@@ -67,13 +67,9 @@ F 3 "" V 1700 3450 60  0000 C CNN
 	0    -1   1    0   
 $EndComp
 Wire Wire Line
-	2050 3350 2400 3350
+	2050 3350 3300 3350
 Wire Wire Line
-	2400 3350 3300 3350
-Wire Wire Line
-	3700 3350 4900 3350
-Wire Wire Line
-	4900 3350 6300 3350
+	3700 3350 6300 3350
 Wire Wire Line
 	2050 3450 6300 3450
 Wire Wire Line
@@ -92,15 +88,7 @@ $EndComp
 Wire Wire Line
 	6300 4650 6100 4650
 Wire Wire Line
-	6100 4650 6100 4750
-Wire Wire Line
-	6100 4750 6100 4850
-Wire Wire Line
-	6100 4850 6100 4950
-Wire Wire Line
-	6100 4950 6100 5050
-Wire Wire Line
-	6100 5050 6100 5350
+	6100 4650 6100 5350
 Wire Wire Line
 	6300 4750 6100 4750
 Connection ~ 6100 4750
@@ -241,11 +229,7 @@ NoConn ~ 7700 4250
 Wire Wire Line
 	6100 3250 6100 2350
 Wire Wire Line
-	5300 3250 5700 3250
-Wire Wire Line
-	5700 3250 6100 3250
-Wire Wire Line
-	6100 3250 6300 3250
+	5300 3250 6300 3250
 Connection ~ 6100 3250
 Text HLabel 9250 3250 2    60   Output ~ 0
 WB_FTDI_RXD

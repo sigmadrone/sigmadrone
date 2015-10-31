@@ -1,5 +1,9 @@
 EESchema-DOCLIB  Version 2.0
 #
+$CMP CP_SMT
+D Polarised capacitor
+$ENDCMP
+#
 $CMP C_0603_25V_X7R
 D Unpolarized capacitor
 $ENDCMP
@@ -26,6 +30,10 @@ $ENDCMP
 #
 $CMP C_SMT
 D Unpolarized capacitor
+$ENDCMP
+#
+$CMP D_SMT
+D Diode
 $ENDCMP
 #
 $CMP LED_SMT
