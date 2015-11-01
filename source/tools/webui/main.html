@@ -101,18 +101,26 @@
           <a href="#motors-id" id="motors-btn" class="btn btn-link" data-toggle="collapse">
             <span class="glyphicon glyphicon-triangle-right"></span>Motors
           </a>
+          <!--div id = "motors-id" class="collapse">
+            <div class="row motor-group">
+              <div class="motor" id="motor4"></div> <div class="motor" id="motor3"></div>
+            </div>
+            <div class="row motor-group">
+              <div class="motor" id="motor1"></div> <div class="motor" id="motor2"></div>
+            </div>
+          </div-->
           <div id = "motors-id" class="col-xs-12 collapse">
             <div class="row"> 
               <div class="col-md-2 col-xs-5 col-data">M4: <span id="motor4">50</span> %</div> 
               <div class="col-md-2 col-xs-5">M3: <span id="motor3">50</span> %</div> 
             </div>
             <div class="row"> 
-              <div class="col-md-2 col-xs-5 col-data">M1: <span id="motor2">50</span> %</div> 
-              <div class="col-md-2 col-xs-5">M2: <span id="motor1">50</span> %</div> 
+              <div class="col-md-2 col-xs-5 col-data">M1: <span id="motor1">50</span> %</div> 
+              <div class="col-md-2 col-xs-5">M2: <span id="motor2">50</span> %</div> 
             </div>
           </div>
         </div>
-
+        
         <hr class="featurette-divider">
 
         <div class="row row-padded">
@@ -154,23 +162,29 @@
           </a>
           <div id = "pidxy-id" class="col-xs-12 collapse">
             <form class="form-horizontal" role="form" id="pidxy-form" onsubmit="return onPidXYSubmit();">
-              <div class="form-group" aria-invalid="true">
+              <div class="form-group"><!-- aria-invalid="true"-->
                 <div class="col-xs-4 col-md-2">
                   <label for="kp-xy">Kp</label>
-                  <input id="kp-xy" name="kp-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="enablePidXYSubmitBtn()">
+                  <input id="kp-xy" name="kp-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="onPidXYUserInput()">
                 </div>
                 <div class="col-xs-4 col-md-2">
                   <label for="ki-xy">Ki</label>
-                  <input id="ki-xy" name="ki-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="enablePidXYSubmitBtn()">
+                  <input id="ki-xy" name="ki-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="onPidXYUserInput()">
                 </div>
                 <div class="col-xs-4 col-md-2">
                   <label for="kd-xy">Kd</label>
-                  <input id="kd-xy" name="kd-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="enablePidXYSubmitBtn()">
+                  <input id="kd-xy" name="kd-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="onPidXYUserInput()">
                 </div>
               </div>
               <div class="form-group">        
-                <div class="col-sm-offset-2 col-sm-10">
-                  <button type="submit" class="btn btn-default disabled" id="pidxy-apply-btn">Apply</button>
+                <div class="col-xs-3 col-md-1">
+                  <button type="submit" class="btn btn-default" id="pidxy-apply-btn">Apply</button>
+                </div>
+                <div class="col-xs-3 col-md-1">
+                  <button type="button" class="btn btn-default" id="pidxy-cancel-btn" onClick="onPidXYCancel();">Cancel</button>
+                </div>
+                <div class="col-xs-9 col-md-11">
+                  <span id="pidxy-help" class="help-block"></span>
                 </div>
               </div>
             </form>
@@ -213,6 +227,7 @@
 
     </div> <!--div class="tab-content"-->
 
+    <div id="gauge"></div>
 
     <footer class="footer">
       <p>
@@ -227,12 +242,18 @@
   <!-- Placed at the end of the document so the pages load faster -->
   <script src="./jquery/jquery-2.1.1.min.js"></script>
   <script src="./bootstrap/js/bootstrap.min.js"></script>
-
+  <!--script src="./justgauge/raphael-2.1.4.min.js"></script>
+  <script src="./justgauge/justgage-1.1.0.min.js"></script-->
+  <script src="./js/formmvc.js"></script>
 
   <script>
   var id = 0;
   var url = "http://10.10.10.1:18222/firmware";
-  var pidXYControlChanged = false;
+  var m1, m2, m3, m4;
+  var pidxyView = new FormView("#pidxy-form", 
+    "#pidxy-apply-btn", 
+    "#pidxy-cancel-btn", 
+    "#pidxy-help");
 
   function rpcCall(url, method, params, successCallback, failCallback) {
     var request = {id: ++id, jsonrpc: "2.0"};
@@ -241,8 +262,15 @@
     if (request.params.length > 0) {
       request.params = JSON.parse(request.params);
     }
-    console.log(JSON.stringify(request));
-    $.post(url, JSON.stringify(request), successCallback, "json").fail(failCallback);
+    /*console.log(JSON.stringify(request));*/
+    $.post(url, JSON.stringify(request), successCallback, "json").done(function(){
+      console.log("Success: " + method);
+    }).fail(function() {
+      console.log("Failed to execute " + method);
+      if (failCallback != null) {
+        failCallback(method);
+      }
+    });
   }
 
   function quaternion2str(q) {
@@ -262,10 +290,19 @@
       $("#gyro").text(vector2str(response.result.gyro));
       $("#mag").text(vector2str(response.result.mag));
       $("#altitude").text(response.result.altitude_meters.toFixed(2));
+      
       $("#motor1").text(response.result.motors[0].toFixed(3));
       $("#motor2").text(response.result.motors[1].toFixed(3));
       $("#motor3").text(response.result.motors[2].toFixed(3));
       $("#motor4").text(response.result.motors[3].toFixed(3));
+      
+      /*
+      m1.refresh(response.result.motors[0] * 100);
+      m2.refresh(response.result.motors[1] * 100);
+      m3.refresh(response.result.motors[2] * 100);
+      m4.refresh(response.result.motors[3] * 100);
+      */
+
       $("#battery").text(response.result.battery_voltage.toFixed(2));
       $("#battery_percent").text(response.result.battery_percentage.toFixed(2));
       $("#temperature_val").text(response.result.temperature.toFixed(1) + ' ');
@@ -288,8 +325,11 @@
       }
       $("#dt").text(response.result.dt/1000);
       
-      /*if form is disabled, update its fields*/
-      if (isFormDisabled($('#pidxy-form'))) {
+      /* 
+       * If form is disabled, update its fields, otherwise don't in order not
+       * to loose user input
+       */
+      if (pidxyView.onRedrawData(response.result)) {
         $('#pidxy-form')[0].elements['kp-xy'].value = response.result.kp;
         $('#pidxy-form')[0].elements['ki-xy'].value = response.result.ki;
         $('#pidxy-form')[0].elements['kd-xy'].value = response.result.kd;
@@ -302,55 +342,37 @@
     }
   }
 
-  function toggleCollapsable(collapseId, buttonId, spanText) {
-    $(collapseId).on("hide.bs.collapse", function(){
-      $(buttonId).html('<span class="glyphicon glyphicon-triangle-right"></span> ' + spanText);
-    });
-    $(collapseId).on("show.bs.collapse", function(){
-      $(buttonId).html('<span class="glyphicon glyphicon-triangle-bottom"></span> ' + spanText);
-    });
+  function onPidXYCancel() {
+    pidxyView.onCancelButton();
   }
 
-  function enablePidXYSubmitBtn() {
-    $('#pidxy-form').find(':submit').removeClass("disabled");
+  function onPidXYUserInput() {
+    pidxyView.onUserInput();
+  }
+
+  function onPidXYSubmit() {
+    var $myForm = $('#pidxy-form');
+    
+    if (!pidxyView.onSubmitButton()) {
+      // return true so the form will be submitted
+      // and automatic error will be displayed
+      return true;
+    }
+
+    rpcCall(url, "kp", "[" + $myForm[0].elements['kp-xy'].value + "]");
+    rpcCall(url, "ki", "[" + $myForm[0].elements['ki-xy'].value + "]");
+    rpcCall(url, "kd", "[" + $myForm[0].elements['kd-xy'].value + "]",
+      function() {pidxyView.onDataSubmitOK();}, 
+      function() {pidxyView.onDataSubmitFail();});
+    return false;
   }
 
   function enablePidZSubmitBtn() {
     $('#pidz-form').find(':submit').removeClass("disabled");
   }
 
-  $(document).ready(function() {
-    toggleCollapsable("#sensors-id", "#sensors-btn", "Sensors");
-    toggleCollapsable("#motors-id", "#motors-btn", "Motors");
-    toggleCollapsable("#gps-id", "#gps-btn", "GPS");
-    toggleCollapsable("#pidxy-id", "#pidxy-btn", "PID Controller XY");
-    toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
-  });
-
   function isFormDisabled(form) {
     return form.find(':submit').hasClass('disabled');
-  }
-
-  function getDroneState() {
-    rpcCall(url, "sd_get_dronestate_ex", JSON.parse("[]"), updateDroneState);
-  }
-
-  function onPidXYSubmit() {
-    var $myForm = $('#pidxy-form');
-    if (isFormDisabled($myForm)) {
-      $myForm.find(':submit').blur();
-      return false;
-    }
-    if (!$myForm[0].checkValidity()) {
-      $myForm.find(':submit').blur();
-      return true; // return true so the form will be submitted
-    }
-    $myForm.find(':submit').addClass("disabled");
-    rpcCall(url, "kp", "[" + $myForm[0].elements['kp-xy'].value + "]");
-    rpcCall(url, "ki", "[" + $myForm[0].elements['ki-xy'].value + "]");
-    rpcCall(url, "kd", "[" + $myForm[0].elements['kd-xy'].value + "]");
-    $myForm.find(':submit').blur();
-    return false;
   }
 
   function onPidZSubmit() {
@@ -371,7 +393,65 @@
     return false;
   }
 
-  window.setInterval(getDroneState, 500);
+  function toggleCollapsable(collapseId, buttonId, spanText) {
+    $(collapseId).on("hide.bs.collapse", function(){
+      $(buttonId).html('<span class="glyphicon glyphicon-triangle-right"></span> ' + spanText);
+    });
+    $(collapseId).on("show.bs.collapse", function(){
+      $(buttonId).html('<span class="glyphicon glyphicon-triangle-bottom"></span> ' + spanText);
+    });
+  }
+
+  $(document).ready(function() {
+    toggleCollapsable("#sensors-id", "#sensors-btn", "Sensors");
+    toggleCollapsable("#motors-id", "#motors-btn", "Motors");
+    toggleCollapsable("#gps-id", "#gps-btn", "GPS");
+    toggleCollapsable("#pidxy-id", "#pidxy-btn", "PID Controller XY");
+    toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
+
+    /*
+    m1 = new JustGage({
+          id: "motor1",
+          value: 0,
+          min: 0,
+          max: 100,
+          title: "M1",
+          label: "%"
+        });
+    m2 = new JustGage({
+          id: "motor2",
+          value: 0,
+          min: 0,
+          max: 100,
+          title: "M2",
+          label: "%"
+        });
+    m3 = new JustGage({
+          id: "motor3",
+          value: 0,
+          min: 0,
+          max: 100,
+          title: "M3",
+          label: "%"
+        });
+    m4 = new JustGage({
+          id: "motor4",
+          value: 0,
+          min: 0,
+          max: 100,
+          title: "M4",
+          label: "%"
+        });
+*/
+  });
+
+  $.ajaxSetup({ timeout: 5000 });
+
+  window.setInterval(
+    function () {
+      rpcCall(url, "sd_get_dronestate_ex", JSON.parse("[]"), updateDroneState);
+    }, 
+    500);
 
   </script>
 
