@@ -226,6 +226,58 @@
               </div>
             </form>
           </div>
+        </div>
+
+        <div class="row row-padded">
+          <a href="#sensors-config-id" id="sensors-config-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Sensors
+          </a>
+          <div id = "sensors-config-id" class="col-xs-12 collapse">
+            <form class="form-horizontal" role="form" id="sensors-config-form" onsubmit="return onSensorsConfigSubmit();">
+              <label for="acc-bias-gr">Accelerometer Bias</label>
+              <div class="form-group" id="acc-bias-gr">
+                <div class="col-xs-4 col-md-2">
+                  <label for="acc-bias-x">X</label>
+                  <input id="acc-bias-x" name="acc-bias-x" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.001" required="true" oninput="onSensorsConfigUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="acc-bias-y">Y</label>
+                  <input id="acc-bias-y" name="acc-bias-y" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.001" required="true" oninput="onSensorsConfigUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="acc-bias-z">Z</label>
+                  <input id="acc-bias-z" name="acc-bias-z" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.001" required="true" oninput="onSensorsConfigUserInput()">
+                </div>
+              </div>
+
+              <label for="acc-corr-per-gr">Accelerometer Correction Period</label>
+              <div class="form-group" id="acc-corr-per-gr">
+                <div class="col-xs-4 col-md-2">
+                  <input id="acc-corr-period" name="acc-corr-period" class="form-control input-sm" type="number" min="0.0" max="10.0" step="0.01" required="true" oninput="onSensorsConfigUserInput()">
+                </div>
+              </div>
+
+              <label for="gyro-factor-gr">Gyro Correction Factor</label>
+              <div class="form-group" id="gyro-factor-gr">
+                <div class="col-xs-4 col-md-2">
+                  <input id="gyro-factor" name="gyro-factor" class="form-control input-sm" type="number" min="0.0" max="2.0" step="0.01" required="true" oninput="onSensorsConfigUserInput()">
+                </div>
+              </div>
+
+              <div class="form-group">        
+                <div class="col-xs-3 col-md-1">
+                  <button type="submit" class="btn btn-default disabled" id="sensors-apply-btn">Apply</button>
+                </div>
+                <div class="col-xs-3 col-md-1">
+                  <button type="button" class="btn btn-default" id="sensors-cancel-btn" onClick="onSensorsConfigCancel();">Cancel</button>
+                </div>
+                <div class="col-xs-9 col-md-11">
+                  <span id="sensors-config-help" class="help-block"></span>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
 
         <hr class="featurette-divider">
 
@@ -264,6 +316,10 @@
     "#pidz-apply-btn", 
     "#pidz-cancel-btn", 
     "#pidz-help");
+  var sensorCfgView = new SensorsCfgFormView("#sensors-config-form",
+    "#sensors-apply-btn",
+    "#sensors-cancel-btn",
+    "#sensors-config-help");
 
   function rpcCall(url, method, params, successCallback, failCallback) {
     var request = {id: ++id, jsonrpc: "2.0"};
@@ -340,6 +396,7 @@
        */
        pidxyView.onRedrawData(response.result);
        pidzView.onRedrawData(response.result);
+       sensorCfgView.onRedrawData(response.result);
     }
   }
 
@@ -391,6 +448,34 @@
     return false;
   }
 
+  function onSensorsConfigCancel() {
+    sensorCfgView.onCancelButton();
+  }
+
+  function onSensorsConfigUserInput() {
+    sensorCfgView.onUserInput();
+  }
+
+  function onSensorsConfigSubmit() {
+    var $myForm = $('#sensors-config-form');
+    if (!sensorCfgView.onSubmitButton()) {
+      // return true so the form will be submitted
+      // and automatic error will be displayed
+      return true;
+    }
+    rpcCall(url, "sd_accelerometer_adjustment", 
+      "[[" + $myForm[0].elements['acc-bias-x'].value + "," + 
+      $myForm[0].elements['acc-bias-y'].value + "," + 
+      $myForm[0].elements['acc-bias-z'].value + "]]");
+    rpcCall(url, "sd_set_accelerometer_correction_period", 
+      "[" + $myForm[0].elements['acc-corr-period'].value + "]");
+    rpcCall(url, "sd_set_gyro_factor", 
+      "[" + $myForm[0].elements['gyro-factor'].value + "]",
+      function() {sensorCfgView.onDataSubmitOK();}, 
+      function() {sensorCfgView.onDataSubmitFail();});
+    return false;
+  }
+
   function toggleCollapsable(collapseId, buttonId, spanText) {
     $(collapseId).on("hide.bs.collapse", function(){
       $(buttonId).html('<span class="glyphicon glyphicon-triangle-right"></span> ' + spanText);
@@ -406,6 +491,7 @@
     toggleCollapsable("#gps-id", "#gps-btn", "GPS");
     toggleCollapsable("#pidxy-id", "#pidxy-btn", "PID Controller XY");
     toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
+    toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
 
     /*
     m1 = new JustGage({

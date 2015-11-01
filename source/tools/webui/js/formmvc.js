@@ -71,6 +71,8 @@ FormView.prototype.redrawControls = function() {
     this.enableDisableCancelButton(true);
     this.displayError("Failed to apply changes!");
   }
+  $(this.formId).find(this.submitButtonId).blur();
+  $(this.formId).find(this.cancelButtonId).blur();
 }
 
 FormView.prototype.onUserInput = function() {
@@ -83,7 +85,7 @@ FormView.prototype.onUserInput = function() {
 }
 
 FormView.prototype.onSubmitButton = function() {
-  $(this.formId).find(':submit').blur();
+  $(this.formId).find(this.submitButtonId).blur();
   if (this.state != "STATE_DATA_INPUT") {
     return true;
   }
@@ -96,6 +98,10 @@ FormView.prototype.onSubmitButton = function() {
 }
 
 FormView.prototype.onCancelButton = function() {
+  if (this.isButtonDisabled(this.cancelButtonId)) {
+    $(this.formId).find(this.cancelButtonId).blur();
+    return;
+  }
   this.state = "STATE_WAITING_ON_DATA";
   this.enableDisableFormInputs(false);
   this.redrawControls();
@@ -122,6 +128,7 @@ FormView.prototype.onRedrawData = function(droneState) { // this method mus be e
     this.state = "STATE_WAITING_ON_INPUT";
   }
   this.redrawControls();
+  $(this.formId).find(this.submitButtonId).blur();
   return true;
 }
 
@@ -155,5 +162,23 @@ PidZFormView.prototype.onRedrawData = function(droneState) {
   $(this.formId)[0].elements['kp-z'].value = droneState.yaw_kp;
   $(this.formId)[0].elements['ki-z'].value = droneState.yaw_ki;
   $(this.formId)[0].elements['kd-z'].value = droneState.yaw_kd;
+  return true;
+}
+
+function SensorsCfgFormView(formId, submitButtonId, cancelButtonId, statusId) {
+  FormView.call(this, formId, submitButtonId, cancelButtonId, statusId);
+}
+SensorsCfgFormView.prototype = Object.create(FormView.prototype);
+SensorsCfgFormView.prototype.constructor = SensorsCfgFormView;
+
+SensorsCfgFormView.prototype.onRedrawData = function(droneState) {
+  if (!FormView.prototype.onRedrawData.call(this,droneState)) {
+    return false;
+  }
+  $(this.formId)[0].elements['acc-bias-x'].value = droneState.accel_adjustment[0];
+  $(this.formId)[0].elements['acc-bias-y'].value = droneState.accel_adjustment[1];
+  $(this.formId)[0].elements['acc-bias-z'].value = droneState.accel_adjustment[2];
+  $(this.formId)[0].elements['acc-corr-period'].value = droneState.accelerometer_correction_period;
+  $(this.formId)[0].elements['gyro-factor'].value = droneState.gyro_factor;
   return true;
 }
