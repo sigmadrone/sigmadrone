@@ -202,20 +202,26 @@
               <div class="form-group">
                 <div class="col-xs-4 col-md-2">
                   <label for="kp-z">Kp</label>
-                  <input id="kp-z" name="kp-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="enablePidZSubmitBtn()">
+                  <input id="kp-z" name="kp-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="onPidZUserInput()">
                 </div>
                 <div class="col-xs-4 col-md-2">
                   <label for="ki-z">Ki</label>
-                  <input id="ki-z" name="ki-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="enablePidZSubmitBtn()">
+                  <input id="ki-z" name="ki-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="onPidZUserInput()">
                 </div>
                 <div class="col-xs-4 col-md-2">
                   <label for="kd-z">Kd</label>
-                  <input id="kd-z" name="kd-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="enablePidZSubmitBtn()">
+                  <input id="kd-z" name="kd-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="onPidZUserInput()">
                 </div>
               </div>
               <div class="form-group">        
-                <div class="col-sm-offset-2 col-sm-10">
+                <div class="col-xs-3 col-md-1">
                   <button type="submit" class="btn btn-default disabled" id="pidz-apply-btn">Apply</button>
+                </div>
+                <div class="col-xs-3 col-md-1">
+                  <button type="button" class="btn btn-default" id="pidz-cancel-btn" onClick="onPidZCancel();">Cancel</button>
+                </div>
+                <div class="col-xs-9 col-md-11">
+                  <span id="pidz-help" class="help-block"></span>
                 </div>
               </div>
             </form>
@@ -250,10 +256,14 @@
   var id = 0;
   var url = "http://10.10.10.1:18222/firmware";
   var m1, m2, m3, m4;
-  var pidxyView = new FormView("#pidxy-form", 
+  var pidxyView = new PidXYFormView("#pidxy-form", 
     "#pidxy-apply-btn", 
     "#pidxy-cancel-btn", 
     "#pidxy-help");
+  var pidzView = new PidZFormView("#pidz-form", 
+    "#pidz-apply-btn", 
+    "#pidz-cancel-btn", 
+    "#pidz-help");
 
   function rpcCall(url, method, params, successCallback, failCallback) {
     var request = {id: ++id, jsonrpc: "2.0"};
@@ -326,19 +336,10 @@
       $("#dt").text(response.result.dt/1000);
       
       /* 
-       * If form is disabled, update its fields, otherwise don't in order not
-       * to loose user input
+       * Update the forms
        */
-      if (pidxyView.onRedrawData(response.result)) {
-        $('#pidxy-form')[0].elements['kp-xy'].value = response.result.kp;
-        $('#pidxy-form')[0].elements['ki-xy'].value = response.result.ki;
-        $('#pidxy-form')[0].elements['kd-xy'].value = response.result.kd;
-      }
-      if (isFormDisabled($('#pidz-form'))) {
-        $('#pidz-form')[0].elements['kp-z'].value = response.result.yaw_kp;
-        $('#pidz-form')[0].elements['ki-z'].value = response.result.yaw_ki;
-        $('#pidz-form')[0].elements['kd-z'].value = response.result.yaw_kd;
-      }
+       pidxyView.onRedrawData(response.result);
+       pidzView.onRedrawData(response.result);
     }
   }
 
@@ -367,29 +368,26 @@
     return false;
   }
 
-  function enablePidZSubmitBtn() {
-    $('#pidz-form').find(':submit').removeClass("disabled");
+  function onPidZCancel() {
+    pidzView.onCancelButton();
   }
 
-  function isFormDisabled(form) {
-    return form.find(':submit').hasClass('disabled');
+  function onPidZUserInput() {
+    pidzView.onUserInput();
   }
 
   function onPidZSubmit() {
     var $myForm = $('#pidz-form');
-    if (isFormDisabled($myForm)) {
-      $myForm.find(':submit').blur();
-      return false;
+    if (!pidzView.onSubmitButton()) {
+      // return true so the form will be submitted
+      // and automatic error will be displayed
+      return true;
     }
-    if (!$myForm[0].checkValidity()) {
-      $myForm.find(':submit').blur();
-      return true; // return true so the form will be submitted
-    }
-    $myForm.find(':submit').addClass("disabled");
     rpcCall(url, "yaw_kp", "[" + $myForm[0].elements['kp-z'].value + "]");
     rpcCall(url, "yaw_ki", "[" + $myForm[0].elements['ki-z'].value + "]");
-    rpcCall(url, "yaw_kd", "[" + $myForm[0].elements['kd-z'].value + "]");
-    $myForm.find(':submit').blur();
+    rpcCall(url, "yaw_kd", "[" + $myForm[0].elements['kd-z'].value + "]",
+      function() {pidzView.onDataSubmitOK();}, 
+      function() {pidzView.onDataSubmitFail();});
     return false;
   }
 
