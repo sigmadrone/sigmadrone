@@ -324,20 +324,6 @@ F 6 "Farnell" H 6930 2970 30  0001 L CNN "Provider"
 	1    6900 3200
 	1    0    0    -1  
 $EndComp
-$Comp
-L C_SMT C?
-U 1 1 562F065D
-P 6100 3450
-F 0 "C?" H 6125 3550 50  0000 L CNN
-F 1 "10uF/16V/X5R" H 6125 3350 50  0000 L CNN
-F 2 "Capacitors_SMD:C_0603" H 6130 3300 30  0001 L CNN
-F 3 "" H 6125 3550 60  0000 L CNN
-F 4 "0805" H 6100 3450 20  0000 C CNN "SMT"
-F 5 "1414609" H 6130 3260 30  0001 L CNN "Part"
-F 6 "Farnell" H 6130 3220 30  0001 L CNN "Provider"
-	1    6100 3450
-	1    0    0    -1  
-$EndComp
 Text Notes 6050 2600 0    60   ~ 0
 C27 & C28 are different model.\nCan't they be the same?
 $Comp
@@ -396,8 +382,18 @@ F 6 "Farnell" H 3330 5270 30  0001 L CNN "Provider"
 	1    3300 5500
 	0    -1   -1   0   
 $EndComp
-Text Notes 6000 3100 0    60   ~ 0
-10n !!!!
-Text Notes 4500 4100 0    60   ~ 0
-L3GD20 is not recommended for new design\nHave to be changed to L3GD20HTR
+$Comp
+L C_SMT C?
+U 1 1 5636A6B6
+P 6100 3450
+F 0 "C?" H 6125 3550 50  0000 L CNN
+F 1 "10nF/50V/X7R" H 6125 3350 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0603" H 6130 3300 30  0001 L CNN
+F 3 "" H 6125 3550 60  0000 L CNN
+F 4 "0603" H 6100 3450 20  0000 C CNN "SMT"
+F 5 "1414609" H 6130 3260 30  0001 L CNN "Part"
+F 6 "Farnell" H 6130 3220 30  0001 L CNN "Provider"
+	1    6100 3450
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
