@@ -231,6 +231,50 @@
         <hr class="featurette-divider">
 
         <div class="row row-padded">
+          <a href="#flight-ctl-id" id="flight-ctl-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Flight Control
+          </a>
+          <div id = "flight-ctl-id" class="col-xs-12 collapse">
+            <form class="form-horizontal" role="form" id="flight-ctl-form" onsubmit="return onFlightCtlSubmit();">
+              <label for="torq-corr-gr">Torque Correction</label>
+              <div class="form-group" id="torq-corr-gr">
+                <div class="col-xs-4 col-md-2">
+                  <label for="torq-bias-roll">Roll</label>
+                  <input id="torq-bias-roll" name="torq-bias-roll" class="form-control input-sm" type="number" min="-0.1" max="0.1" step="0.001" required="true" oninput="onFlightCtlUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="torq-bias-pitch">Pitch</label>
+                  <input id="torq-bias-pitch" name="torq-bias-pitch" class="form-control input-sm" type="number" min="-0.1" max="0.1" step="0.001" required="true" oninput="onFlightCtlUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="torq-bias-yaw">Yaw</label>
+                  <input id="torq-bias-yaw" name="torq-bias-yaw" class="form-control input-sm" type="number" min="-0.1" max="0.1" step="0.001" required="true" oninput="onFlightCtlUserInput()">
+                </div>
+              </div>
+              <label for="yaw-throttle-factor-gr">Yaw Throttle Factor</label>
+              <div class="form-group" id="yaw-throttle-factor-gr">
+                <div class="col-xs-4 col-md-2">
+                  <input id="yaw-throttle-factor" name="yaw-throttle-factor" class="form-control input-sm" type="number" min="0.0" max="0.9" step="0.001" required="true" oninput="onFlightCtlUserInput()">
+                </div>
+              </div>
+              <div class="form-group">        
+                <div class="col-xs-3 col-md-1">
+                  <button type="submit" class="btn btn-default disabled" id="flight-ctl-apply-btn">Apply</button>
+                </div>
+                <div class="col-xs-3 col-md-1">
+                  <button type="button" class="btn btn-default" id="flight-ctl-cancel-btn" onClick="onFlightCtlCancel();">Cancel</button>
+                </div>
+                <div class="col-xs-9 col-md-11">
+                  <span id="flight-ctl-help" class="help-block"></span>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <hr class="featurette-divider">
+
+        <div class="row row-padded">
           <a href="#sensors-config-id" id="sensors-config-btn" class="btn btn-link" data-toggle="collapse">
             <span class="glyphicon glyphicon-triangle-right"></span>Sensors
           </a>
@@ -318,6 +362,10 @@
     "#pidz-apply-btn", 
     "#pidz-cancel-btn", 
     "#pidz-help");
+  var flightCtlView = new FlightCtlFormView("#flight-ctl-form", 
+    "#flight-ctl-apply-btn", 
+    "#flight-ctl-cancel-btn", 
+    "#flight-ctl-help");
   var sensorCfgView = new SensorsCfgFormView("#sensors-config-form",
     "#sensors-apply-btn",
     "#sensors-cancel-btn",
@@ -398,6 +446,7 @@
        */
        pidxyView.onRedrawData(response.result);
        pidzView.onRedrawData(response.result);
+       flightCtlView.onRedrawData(response.result);
        sensorCfgView.onRedrawData(response.result);
     }
   }
@@ -450,6 +499,31 @@
     return false;
   }
 
+  function onFlightCtlCancel() {
+    flightCtlView.onCancelButton();
+  }
+
+  function onFlightCtlUserInput() {
+    flightCtlView.onUserInput();
+  }
+
+  function onFlightCtlSubmit() {
+    var $myForm = $('#flight-ctl-form');
+    if (!flightCtlView.onSubmitButton()) {
+      // return true so the form will be submitted
+      // and automatic error will be displayed
+      return true;
+    }
+    rpcCall(url, "sd_set_yaw_throttle_factor", 
+      "[" + $myForm[0].elements['yaw-throttle-factor'].value + "]");
+    rpcCall(url, "roll_bias", "[" + $myForm[0].elements['torq-bias-roll'].value + "]");
+    rpcCall(url, "pitch_bias", "[" + $myForm[0].elements['torq-bias-pitch'].value + "]");
+    rpcCall(url, "yaw_bias", "[" + $myForm[0].elements['torq-bias-yaw'].value + "]",
+      function() {flightCtlView.onDataSubmitOK();}, 
+      function() {flightCtlView.onDataSubmitFail();});
+    return false;
+  }
+
   function onSensorsConfigCancel() {
     sensorCfgView.onCancelButton();
   }
@@ -494,6 +568,7 @@
     toggleCollapsable("#pidxy-id", "#pidxy-btn", "PID Controller XY");
     toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
     toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
+    toggleCollapsable("#flight-ctl-id", "#flight-ctl-btn", "Flight Control");
 
     /*
     m1 = new JustGage({

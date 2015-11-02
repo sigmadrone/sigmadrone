@@ -148,7 +148,6 @@ PidXYFormView.prototype.onRedrawData = function(droneState) {
   return true;
 }
 
-
 function PidZFormView(formId, submitButtonId, cancelButtonId, statusId) {
   FormView.call(this, formId, submitButtonId, cancelButtonId, statusId);
 }
@@ -162,6 +161,24 @@ PidZFormView.prototype.onRedrawData = function(droneState) {
   $(this.formId)[0].elements['kp-z'].value = droneState.yaw_kp;
   $(this.formId)[0].elements['ki-z'].value = droneState.yaw_ki;
   $(this.formId)[0].elements['kd-z'].value = droneState.yaw_kd;
+  return true;
+}
+
+function FlightCtlFormView(formId, submitButtonId, cancelButtonId, statusId) {
+  FormView.call(this, formId, submitButtonId, cancelButtonId, statusId);
+}
+FlightCtlFormView.prototype = Object.create(FormView.prototype);
+FlightCtlFormView.prototype.constructor = FlightCtlFormView;
+
+FlightCtlFormView.prototype.onRedrawData = function(droneState) {
+  if (!FormView.prototype.onRedrawData.call(this,droneState)) {
+    return false;
+  }
+  $(this.formId)[0].elements['torq-bias-roll'].value = droneState.roll_bias;
+  $(this.formId)[0].elements['torq-bias-pitch'].value = droneState.pitch_bias;
+  $(this.formId)[0].elements['torq-bias-yaw'].value = droneState.yaw_bias;
+
+  $(this.formId)[0].elements['yaw-throttle-factor'].value = droneState.yaw_throttle_factor;
   return true;
 }
 
