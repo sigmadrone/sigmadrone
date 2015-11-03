@@ -346,8 +346,8 @@ void main_task(void *pvParameters)
 				//	state.pid_torque_.at(2,0));
 			printf("Servo      : %s\n", flight_ctl.servo().is_started() ? "armed" : "disarmed");
 			if (!drone_state->alarm_.is_none()) {
-				printf("%s %s, data: %d, @%5.3f sec\n", drone_state->alarm_.to_string(),
-						drone_state->alarm_.severity_to_string(), (int)drone_state->alarm_.data(),
+				printf("%s %s, data: %s, @%5.3f sec\n", drone_state->alarm_.to_string(),
+						drone_state->alarm_.severity_to_string(), drone_state->alarm_.data().c_str(),
 						drone_state->alarm_.when().seconds_float());
 			}
 			printf("\n");

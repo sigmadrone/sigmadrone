@@ -31,14 +31,25 @@ RcValueConverter::RcValueConverter(
 		RcReceiver& receiver,
 		float scale_factor,
 		const TimeSpan& min_duty_cycle,
-		const TimeSpan& max_duty_cycle) : pwm_converter_(min_duty_cycle, max_duty_cycle), quaternion_yaw_(1,0,0,0),
-				mapper_(mapper), receiver_(receiver), scale_factor_(scale_factor),
-				last_gear_(0.0), motors_armed_(false), yaw_(0.0), pitch_(0.0), roll_(0.0) {
+		const TimeSpan& max_duty_cycle) :
+			    pwm_converter_(min_duty_cycle, max_duty_cycle),
+				quaternion_yaw_(1,0,0,0),
+				mapper_(mapper),
+				receiver_(receiver),
+				scale_factor_(scale_factor),
+				last_gear_(0.0),
+				motors_armed_(false),
+				prev_motors_armed_(false),
+				yaw_(0.0),
+				pitch_(0.0),
+				roll_(0.0)
+{
 	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
 	update();
 }
 
-void RcValueConverter::update() {
+void RcValueConverter::update()
+{
 	float yaw = get_value_as_float(mapper_.channel_no(RC_CHANNEL_YAW));
 	float pitch = get_value_as_float(mapper_.channel_no(RC_CHANNEL_PITCH));
 	float roll = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ROLL));
@@ -66,12 +77,14 @@ void RcValueConverter::update() {
 	 * "landed" and gear set to 0 "prepare for take off", i.e. motors armed.
 	 */
 	if (last_gear_ != 0.0 && last_gear_ != gear) {
+		prev_motors_armed_ = motors_armed_;
 		motors_armed_ = (gear > 0.5) ? true : false;
 	}
 	last_gear_ = gear;
 }
 
-void RcValueConverter::reset_yaw_quaternion(const QuaternionF& current_q) {
+void RcValueConverter::reset_yaw_quaternion(const QuaternionF& current_q)
+{
 	quaternion_yaw_ = QuaternionF(current_q.w, 0, 0, current_q.z).normalize();
 }
 
@@ -89,8 +102,14 @@ Throttle RcValueConverter::base_throttle() const {
 	return throttle_;
 }
 
-bool RcValueConverter::motors_armed() const {
+bool RcValueConverter::motors_armed() const
+{
 	return motors_armed_;
+}
+
+bool RcValueConverter::previous_motors_armed() const
+{
+	return prev_motors_armed_;
 }
 
 float RcValueConverter::get_yaw() const

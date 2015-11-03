@@ -20,37 +20,50 @@
  */
 
 #include "flightcontrol.h"
+#include <stdio.h>
 #include "colibripwm.h"
 
-FlightControl::FlightControl() : rc_receiver_(colibri::PWM_RX_CONSTS,
-		FunctionPointer(this, &FlightControl::rc_callback)),
+FlightControl::FlightControl() :
+        rc_receiver_(colibri::PWM_RX_CONSTS,
+				FunctionPointer(this, &FlightControl::rc_callback)),
 		ch_mapper_({RC_CHANNEL_THROTTLE, RC_CHANNEL_RUDDER, RC_CHANNEL_ELEVATOR, RC_CHANNEL_AILERON, RC_CHANNEL_ARM_MOTOR}),
-		rc_values_(ch_mapper_, rc_receiver_, RC_VALUE_SCALE_FACTOR, TimeSpan::from_microseconds(1100),
+		rc_values_(ch_mapper_,
+				rc_receiver_,
+				RC_VALUE_SCALE_FACTOR,
+				TimeSpan::from_microseconds(1100),
 				TimeSpan::from_microseconds(1910)),
 		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)),
-		motor_power_(PB_2), pilot_(), altitude_track_() {
+		motor_power_(PB_2),
+		pilot_(),
+		altitude_track_()
+{
 }
 
-void FlightControl::start_receiver() {
+void FlightControl::start_receiver()
+{
 	rc_receiver_.start();
 }
 
-void FlightControl::stop_receiver() {
+void FlightControl::stop_receiver()
+{
 	rc_receiver_.stop();
 }
 
-QuaternionF FlightControl::target_q() const {
+QuaternionF FlightControl::target_q() const
+{
 	return alarm_.is_none() ? rc_values_.target_quaternion() : QuaternionF(1,0,0,0);
 }
 
-Throttle FlightControl::base_throttle() const {
+Throttle FlightControl::base_throttle() const
+{
 	if (alarm_.is_none() || rc_values_.base_throttle() < EMERGENCY_THROTTLE) {
 		return rc_values_.base_throttle();
 	}
 	return EMERGENCY_THROTTLE;
 }
 
-void FlightControl::set_throttle(const std::vector<Throttle>& thrVec) {
+void FlightControl::set_throttle(const std::vector<Throttle>& thrVec)
+{
 	PwmPulse pulse(TimeSpan::from_milliseconds(1), TimeSpan::from_milliseconds(2));
 	for (size_t i = 0; i < thrVec.size(); ++i) {
 		servo_ctrl_.set_pwm_pulse(i, pulse.to_timespan(
@@ -58,7 +71,8 @@ void FlightControl::set_throttle(const std::vector<Throttle>& thrVec) {
 	}
 }
 
-void FlightControl::send_throttle_to_motors() {
+void FlightControl::send_throttle_to_motors()
+{
 	set_throttle({pilot_.motors().at(0,0), pilot_.motors().at(1,0),
 		pilot_.motors().at(2,0), pilot_.motors().at(3,0)});
 }
@@ -66,7 +80,8 @@ void FlightControl::send_throttle_to_motors() {
 /*
  * Must not be called from interrupt context - it calls malloc/free!
  */
-void FlightControl::process_servo_start_stop_command() {
+void FlightControl::process_servo_start_stop_command()
+{
 	if (rc_values_.motors_armed()) {
 		servo_ctrl_.start();
 		motor_power_.write(1);
@@ -76,7 +91,8 @@ void FlightControl::process_servo_start_stop_command() {
 	}
 }
 
-void FlightControl::motor_power_on_off(bool power_on) {
+void FlightControl::motor_power_on_off(bool power_on)
+{
 	motor_power_.write(power_on ? 1 : 0);
 }
 
@@ -104,9 +120,9 @@ void FlightControl::update_state(DroneState& state)
 	pilot().update_state(state);
 }
 
-void FlightControl::safety_check(DroneState& drone_state) {
-
-	if (!rc_values_.motors_armed()) {
+void FlightControl::safety_check(DroneState& drone_state)
+{
+	if (!rc_values_.motors_armed() && rc_values_.previous_motors_armed()) {
 		/*
 		 * motors are not armed, we will still perform the rest of the checks
 		 * so the alarm will persist if the underlying problem was not fixed
@@ -115,17 +131,31 @@ void FlightControl::safety_check(DroneState& drone_state) {
 	}
 
 	if (altitude_track_.is_flight_ceiling_hit()) {
-		record_alarm(Alarm(Alarm::ALARM_CEILING_HIT));
+		std::string alarmMessage("Alt: ");
+		char tmpBuf[6] = {0};
+		sprintf(tmpBuf,"%d",static_cast<uint16_t>(drone_state.altitude_.meters()));
+		alarmMessage += std::string(tmpBuf) + std::string(" / Ceiling: ");
+		sprintf(tmpBuf,"%d", static_cast<uint16_t>(altitude_track_.flight_ceiling().meters()));
+		alarmMessage += std::string(tmpBuf) + std::string(" m");
+		record_alarm(Alarm(Alarm::ALARM_CEILING_HIT,alarmMessage));
+	} else {
+		clear_alarm_if(Alarm::ALARM_CEILING_HIT);
 	}
 
 	/*
 	 * Are all the RC channels live?
 	 */
-	for (uint32_t i = 0; i < rc_receiver_.channel_count(); ++i) {
+	uint32_t i;
+	for (i = 0; i < rc_receiver_.channel_count(); ++i) {
 		if (!rc_receiver_.channel(i)->is_live()) {
-			record_alarm(Alarm(Alarm::ALARM_RC_CHANNEL_DEAD, i));
+			record_alarm(Alarm(Alarm::ALARM_RC_CHANNEL_DEAD,
+					std::string(RcChannelToString(ch_mapper_.channel_name(i)))));
 			break;
 		}
+	}
+
+	if (i == rc_receiver_.channel_count()) {
+		clear_alarm_if(Alarm::ALARM_RC_CHANNEL_DEAD);
 	}
 
 	/*
@@ -136,8 +166,16 @@ void FlightControl::safety_check(DroneState& drone_state) {
 	drone_state.most_critical_alarm_ = most_critical_alarm_;
 }
 
-void FlightControl::clear_alarm() {
+void FlightControl::clear_alarm()
+{
 	alarm_ = Alarm();
+}
+
+void FlightControl::clear_alarm_if(Alarm::AlarmType alarmToClear)
+{
+	if (alarm_.type() == alarmToClear) {
+		clear_alarm();
+	}
 }
 
 void FlightControl::record_alarm(const Alarm& alarm) {

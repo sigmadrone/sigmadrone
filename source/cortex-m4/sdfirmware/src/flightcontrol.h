@@ -72,6 +72,7 @@ private:
 	}
 	void record_alarm(const Alarm& alarm);
 	void clear_alarm();
+	void clear_alarm_if(Alarm::AlarmType alarmToClear);
 
 private:
 	RcReceiver rc_receiver_;

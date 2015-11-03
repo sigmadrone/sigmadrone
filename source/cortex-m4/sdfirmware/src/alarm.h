@@ -35,9 +35,9 @@ struct Alarm {
 		ALARM_BATTERY_LEVEL_CRITICAL = 257,
 		ALARM_LAST
 	};
-	Alarm(AlarmType type = ALARM_NONE) : alarm_type_(type), data_(0), time_(TimeStamp::since_boot()) {}
-	Alarm(AlarmType type, int64_t data) : alarm_type_(type), data_(data), time_(TimeStamp::since_boot()) {}
-	int64_t data() const { return data_; }
+	Alarm(AlarmType type = ALARM_NONE) : alarm_type_(type), data_(), time_(TimeStamp::since_boot()) {}
+	Alarm(AlarmType type, const std::string& data) : alarm_type_(type), data_(data), time_(TimeStamp::since_boot()) {}
+	const std::string& data() const { return data_; }
 	AlarmType type() const { return alarm_type_; }
 	bool is_warning() const { return alarm_type_ >= ALARM_SEV_WARNING && alarm_type_ < ALARM_SEV_CRITICAL; }
 	bool is_critical() const { return alarm_type_ >= ALARM_SEV_CRITICAL; }
@@ -52,7 +52,7 @@ struct Alarm {
 	}
 private:
 	AlarmType alarm_type_;
-	int64_t data_;
+	std::string data_;
 	TimeSpan time_;
 };
 

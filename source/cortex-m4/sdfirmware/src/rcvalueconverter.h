@@ -75,6 +75,7 @@ public:
 	QuaternionF target_quaternion() const;
 	Throttle base_throttle() const;
 	bool motors_armed() const;
+	bool previous_motors_armed() const;
 	void update();
 	float get_yaw() const;
 	float get_pitch() const;
@@ -93,6 +94,7 @@ private:
 	float scale_factor_;
 	float last_gear_;
 	bool motors_armed_;
+	bool prev_motors_armed_;
 	float yaw_;
 	float pitch_;
 	float roll_;

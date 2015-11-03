@@ -49,4 +49,16 @@ enum RcChannelName {
 	RC_CHANNEL_LAST
 };
 
+inline const char* RcChannelToString(RcChannelName name)
+{
+	switch(name) {
+	case RC_CHANNEL_THROTTLE: return "RC_CHANNEL_THROTTLE";
+	case RC_CHANNEL_AILERON: return "RC_CHANNEL_AILERON";
+	case RC_CHANNEL_ELEVATOR: return "RC_CHANNEL_ELEVATOR";
+	case RC_CHANNEL_RUDDER: return "RC_CHANNEL_RUDDER";
+	case RC_CHANNEL_GEAR: return "RC_CHANNEL_GEAR";
+	default: return "RC_CHANNEL_UNKNOWN";
+	}
+}
+
 #endif /* RCDEFS_H_ */

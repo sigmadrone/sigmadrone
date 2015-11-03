@@ -97,6 +97,9 @@ struct DroneState {
 			ret["roll"] = roll_;
 			if (!alarm_.is_none()) {
 				ret["alarm"] = alarm_.to_string();
+				if (alarm_.data().size() > 0) {
+					ret["alarm_data"] = alarm_.data();
+				}
 				ret["alarm_time_ms"] = static_cast<int>(alarm_.when().milliseconds());
 			}
 			return ret;
