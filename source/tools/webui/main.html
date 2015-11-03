@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <meta name="description" content="SigmaDrone Flight Deck">
+  <meta name="author" content="SigmaDrone Developers">
+  <link rel="icon" href="./images/logo.ico">
+
+  <title>SigmaDrone Flight Deck</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="./bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="./css/main.css" rel="stylesheet">
+
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <nav class="navbar navbar-default">
+        <div class="container-fluid">
+          <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+              <span class="sr-only">Toggle navigation</span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+              <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#home"><img alt="SigmaDrone" src="./images/logo.svg" height="45"></a>
+          </div>
+          <div id="navbar" class="collapse navbar-collapse">
+            <ul class="nav nav-pills">
+              <li class="active"><a href="#home" data-toggle="tab">Home</a></li>
+              <li><a href="#control" data-toggle="tab"><span class="glyphicon glyphicon-wrench"></span> Configure</a></li>
+            </ul>
+          </div> <!-- navbar-collapse-->
+        </div><!-- container-fluid -->
+      </nav>
+    </div><!-- header -->
+
+    <hr class="featurette-divider">
+
+    <div class="tab-content main">
+
+      <div id="home" class="tab-pane fade in active">
+        <div class="row">
+          <div class="col-xs-4">Attitude</div>
+          <div class="col-xs-3"></div>
+          <div class="col-xs-5">&#x26a1<span id="battery_percent">100</span>%</div>
+        </div>
+        <div class="row">
+          <div class="col-xs-11 col-data attitude"><span id="attQ">w:1.000 x:0.000 y:0.000 z:0.000</span></div>
+        </div>
+        <div class="row row-padded">
+          <div class="col-xs-12">
+            <div class="row"> <div class="col-xs-11">Altitude</div> </div>
+            <div class="row"> <div class="col-xs-10 col-data"><span id="altitude">100</span> m</div> </div>
+          </div>
+        </div>
+        <div class="row row-padded">
+          <div class="col-xs-12">
+            <div class="row"> <div class="col-xs-11">Speed</div> </div>
+            <div class="row"> <div class="col-xs-10 col-data"><span id="gps-speed">0</span> km/h</div> </div>
+          </div>
+        </div>
+
+        <hr class="featurette-divider">  
+
+        <div class="row row-padded sensors">
+          <a href="#sensors-id" id="sensors-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Sensors
+          </a>
+          <div id="sensors-id" class="col-xs-12 col-data collapse">
+            <div class="row row-padded"> <div class="col-xs-11">Accelerometer</div> </div>
+            <div class="row"> 
+              <div class="col-xs-11 col-data"><span id="accel">x:0.000 y:0.000 z:1.000</span></div> 
+            </div>
+            <div class="row row-padded"> <div class="col-xs-11">Gyroscope, deg/s</div> </div>
+            <div class="row"> 
+              <div class="col-xs-11 col-data"><span id="gyro">x:0.000 y:0.000 z:0.000</span></div> 
+            </div>
+            <div class="row row-padded"> <div class="col-xs-11">Magnetometer</div> </div>
+            <div class="row"> 
+              <div class="col-xs-11 col-data"><span id="mag">x:0.000 y:0.000 z:0.000</span></div> 
+            </div>
+            <div class="row row-padded"> <div class="col-xs-11">dT</div> </div>
+            <div class="row"> 
+              <div class="col-xs-11 col-data"><span id="dt">0</span> mS</div> 
+            </div>
+          </div>
+        </div>
+
+        <hr class="featurette-divider">
+
+        <div class="row row-padded">
+          <a href="#motors-id" id="motors-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Motors
+          </a>
+          <!--div id = "motors-id" class="collapse">
+            <div class="row motor-group">
+              <div class="motor" id="motor4"></div> <div class="motor" id="motor3"></div>
+            </div>
+            <div class="row motor-group">
+              <div class="motor" id="motor1"></div> <div class="motor" id="motor2"></div>
+            </div>
+          </div-->
+          <div id = "motors-id" class="col-xs-12 collapse">
+            <div class="row"> 
+              <div class="col-md-2 col-xs-5 col-data">M4: <span id="motor4">50</span> %</div> 
+              <div class="col-md-2 col-xs-5">M3: <span id="motor3">50</span> %</div> 
+            </div>
+            <div class="row"> 
+              <div class="col-md-2 col-xs-5 col-data">M1: <span id="motor1">50</span> %</div> 
+              <div class="col-md-2 col-xs-5">M2: <span id="motor2">50</span> %</div> 
+            </div>
+          </div>
+        </div>
+        
+        <hr class="featurette-divider">
+
+        <div class="row row-padded">
+          <a href="#gps-id" id="gps-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>GPS
+          </a>
+          <div id = "gps-id" class="col-xs-12 collapse">
+            <div class="row"> 
+              <div class="col-md-2 col-xs-4 col-data">Latitude:</div> 
+              <div class="col-md-4 col-xs-6 col"><span id="gps-lat">45.00</span> deg</div> 
+            </div>
+            <div class="row"> 
+              <div class="col-md-2 col-xs-4 col-data">Longitude:</div> 
+              <div class="col-md-4 col-xs-6 col"><span id="gps-long">-112.00</span> deg</div> 
+            </div>
+            <div class="row"> 
+              <div class="col-md-2 col-xs-4 col-data">SAT Count:</div> 
+              <div class="col-md-4 col-xs-6 col"><span id="gps-satellites">3</span></div> 
+            </div>
+            <div class="row"> 
+              <div class="col-md-2 col-xs-4 col-data">Course:</div> 
+              <div class="col-md-4 col-xs-6 col"><span id="gps-course">360</span> deg</div> 
+            </div>
+            <div class="row"> 
+              <div class="col-md-2 col-xs-4 col-data">Altitude:</div> 
+              <div class="col-md-4 col-xs-6 col"><span id="gps-altitude">0</span> m</div> 
+            </div>
+          </div>
+        </div>
+
+        <hr class="featurette-divider">  
+
+      </div> <!--div id="home" class="container tab-pane fade in active"-->
+
+      <div id="control" class="tab-pane fade">
+        <div class="row row-padded">
+          <a href="#pidxy-id" id="pidxy-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>PID Controller XY
+          </a>
+          <div id = "pidxy-id" class="col-xs-12 collapse">
+            <form class="form-horizontal" role="form" id="pidxy-form" onsubmit="return onPidXYSubmit();">
+              <div class="form-group"><!-- aria-invalid="true"-->
+                <div class="col-xs-4 col-md-2">
+                  <label for="kp-xy">Kp</label>
+                  <input id="kp-xy" name="kp-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="onPidXYUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="ki-xy">Ki</label>
+                  <input id="ki-xy" name="ki-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="onPidXYUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="kd-xy">Kd</label>
+                  <input id="kd-xy" name="kd-xy" class="form-control input-sm" type="number" min="0.0" max="0.3" step="0.001" required="true" oninput="onPidXYUserInput()">
+                </div>
+              </div>
+              <div class="form-group">        
+                <div class="col-xs-3 col-md-1">
+                  <button type="submit" class="btn btn-default" id="pidxy-apply-btn">Apply</button>
+                </div>
+                <div class="col-xs-3 col-md-1">
+                  <button type="button" class="btn btn-default" id="pidxy-cancel-btn" onClick="onPidXYCancel();">Cancel</button>
+                </div>
+                <div class="col-xs-9 col-md-11">
+                  <span id="pidxy-help" class="help-block"></span>
+                </div>
+              </div>
+            </form>
+          </div> <!--div id = "pidxy-id" class="col-xs-12 collapse"-->
+        </div> <!--div class="row row-padded"-->
+
+        <hr class="featurette-divider">
+
+        <div class="row row-padded">
+          <a href="#pidz-id" id="pidz-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>PID Controller Z
+          </a>
+          <div id = "pidz-id" class="col-xs-12 collapse">
+            <form class="form-horizontal" role="form" id="pidz-form" onsubmit="return onPidZSubmit();">
+              <div class="form-group">
+                <div class="col-xs-4 col-md-2">
+                  <label for="kp-z">Kp</label>
+                  <input id="kp-z" name="kp-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="onPidZUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="ki-z">Ki</label>
+                  <input id="ki-z" name="ki-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="onPidZUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="kd-z">Kd</label>
+                  <input id="kd-z" name="kd-z" class="form-control input-sm" type="number" min="0.0" max="0.4" step="0.001" required="true" oninput="onPidZUserInput()">
+                </div>
+              </div>
+              <div class="form-group">        
+                <div class="col-xs-3 col-md-1">
+                  <button type="submit" class="btn btn-default disabled" id="pidz-apply-btn">Apply</button>
+                </div>
+                <div class="col-xs-3 col-md-1">
+                  <button type="button" class="btn btn-default" id="pidz-cancel-btn" onClick="onPidZCancel();">Cancel</button>
+                </div>
+                <div class="col-xs-9 col-md-11">
+                  <span id="pidz-help" class="help-block"></span>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <hr class="featurette-divider">
+
+        <div class="row row-padded">
+          <a href="#flight-ctl-id" id="flight-ctl-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Flight Control
+          </a>
+          <div id = "flight-ctl-id" class="col-xs-12 collapse">
+            <form class="form-horizontal" role="form" id="flight-ctl-form" onsubmit="return onFlightCtlSubmit();">
+              <label for="torq-corr-gr">Torque Correction</label>
+              <div class="form-group" id="torq-corr-gr">
+                <div class="col-xs-4 col-md-2">
+                  <label for="torq-bias-roll">Roll</label>
+                  <input id="torq-bias-roll" name="torq-bias-roll" class="form-control input-sm" type="number" min="-0.1" max="0.1" step="0.001" required="true" oninput="onFlightCtlUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="torq-bias-pitch">Pitch</label>
+                  <input id="torq-bias-pitch" name="torq-bias-pitch" class="form-control input-sm" type="number" min="-0.1" max="0.1" step="0.001" required="true" oninput="onFlightCtlUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="torq-bias-yaw">Yaw</label>
+                  <input id="torq-bias-yaw" name="torq-bias-yaw" class="form-control input-sm" type="number" min="-0.1" max="0.1" step="0.001" required="true" oninput="onFlightCtlUserInput()">
+                </div>
+              </div>
+              <label for="yaw-throttle-factor-gr">Yaw Throttle Factor</label>
+              <div class="form-group" id="yaw-throttle-factor-gr">
+                <div class="col-xs-4 col-md-2">
+                  <input id="yaw-throttle-factor" name="yaw-throttle-factor" class="form-control input-sm" type="number" min="0.0" max="0.9" step="0.001" required="true" oninput="onFlightCtlUserInput()">
+                </div>
+              </div>
+              <div class="form-group">        
+                <div class="col-xs-3 col-md-1">
+                  <button type="submit" class="btn btn-default disabled" id="flight-ctl-apply-btn">Apply</button>
+                </div>
+                <div class="col-xs-3 col-md-1">
+                  <button type="button" class="btn btn-default" id="flight-ctl-cancel-btn" onClick="onFlightCtlCancel();">Cancel</button>
+                </div>
+                <div class="col-xs-9 col-md-11">
+                  <span id="flight-ctl-help" class="help-block"></span>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <hr class="featurette-divider">
+
+        <div class="row row-padded">
+          <a href="#sensors-config-id" id="sensors-config-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Sensors
+          </a>
+          <div id = "sensors-config-id" class="col-xs-12 collapse">
+            <form class="form-horizontal" role="form" id="sensors-config-form" onsubmit="return onSensorsConfigSubmit();">
+              <label for="acc-bias-gr">Accelerometer Bias</label>
+              <div class="form-group" id="acc-bias-gr">
+                <div class="col-xs-4 col-md-2">
+                  <label for="acc-bias-x">X</label>
+                  <input id="acc-bias-x" name="acc-bias-x" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.001" required="true" oninput="onSensorsConfigUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="acc-bias-y">Y</label>
+                  <input id="acc-bias-y" name="acc-bias-y" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.001" required="true" oninput="onSensorsConfigUserInput()">
+                </div>
+                <div class="col-xs-4 col-md-2">
+                  <label for="acc-bias-z">Z</label>
+                  <input id="acc-bias-z" name="acc-bias-z" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.001" required="true" oninput="onSensorsConfigUserInput()">
+                </div>
+              </div>
+
+              <label for="acc-corr-per-gr">Accelerometer Correction Period</label>
+              <div class="form-group" id="acc-corr-per-gr">
+                <div class="col-xs-4 col-md-2">
+                  <input id="acc-corr-period" name="acc-corr-period" class="form-control input-sm" type="number" min="0.0" max="10.0" step="0.01" required="true" oninput="onSensorsConfigUserInput()">
+                </div>
+              </div>
+
+              <label for="gyro-factor-gr">Gyro Correction Factor</label>
+              <div class="form-group" id="gyro-factor-gr">
+                <div class="col-xs-4 col-md-2">
+                  <input id="gyro-factor" name="gyro-factor" class="form-control input-sm" type="number" min="0.0" max="2.0" step="0.01" required="true" oninput="onSensorsConfigUserInput()">
+                </div>
+              </div>
+
+              <div class="form-group">        
+                <div class="col-xs-3 col-md-1">
+                  <button type="submit" class="btn btn-default disabled" id="sensors-apply-btn">Apply</button>
+                </div>
+                <div class="col-xs-3 col-md-1">
+                  <button type="button" class="btn btn-default" id="sensors-cancel-btn" onClick="onSensorsConfigCancel();">Cancel</button>
+                </div>
+                <div class="col-xs-9 col-md-11">
+                  <span id="sensors-config-help" class="help-block"></span>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <hr class="featurette-divider">
+
+      </div> <!--div id="control" class="container tab-pane fade"-->
+
+    </div> <!--div class="tab-content"-->
+
+    <div id="gauge"></div>
+
+    <footer class="footer">
+      <p>
+        &copy; Sigmadrone 2015
+      </p>
+    </footer>
+
+  </div><!-- container -->
+
+   <!-- Bootstrap core JavaScript
+  ================================================== -->
+  <!-- Placed at the end of the document so the pages load faster -->
+  <script src="./jquery/jquery-2.1.1.min.js"></script>
+  <script src="./bootstrap/js/bootstrap.min.js"></script>
+  <!--script src="./justgauge/raphael-2.1.4.min.js"></script>
+  <script src="./justgauge/justgage-1.1.0.min.js"></script-->
+  <script src="./js/formmvc.js"></script>
+
+  <script>
+  var id = 0;
+  var url = "http://10.10.10.1:18222/firmware";
+  var m1, m2, m3, m4;
+  var pidxyView = new PidXYFormView("#pidxy-form", 
+    "#pidxy-apply-btn", 
+    "#pidxy-cancel-btn", 
+    "#pidxy-help");
+  var pidzView = new PidZFormView("#pidz-form", 
+    "#pidz-apply-btn", 
+    "#pidz-cancel-btn", 
+    "#pidz-help");
+  var flightCtlView = new FlightCtlFormView("#flight-ctl-form", 
+    "#flight-ctl-apply-btn", 
+    "#flight-ctl-cancel-btn", 
+    "#flight-ctl-help");
+  var sensorCfgView = new SensorsCfgFormView("#sensors-config-form",
+    "#sensors-apply-btn",
+    "#sensors-cancel-btn",
+    "#sensors-config-help");
+
+  function rpcCall(url, method, params, successCallback, failCallback) {
+    var request = {id: ++id, jsonrpc: "2.0"};
+    request.method = method;
+    request.params = params;
+    if (request.params.length > 0) {
+      request.params = JSON.parse(request.params);
+    }
+    /*console.log(JSON.stringify(request));*/
+    $.post(url, JSON.stringify(request), successCallback, "json").done(function(){
+      console.log("Success: " + method);
+    }).fail(function() {
+      console.log("Failed to execute " + method);
+      if (failCallback != null) {
+        failCallback(method);
+      }
+    });
+  }
+
+  function quaternion2str(q) {
+    return 'w:' + q.w.toFixed(3) + ' x:' + q.x.toFixed(3) + '  y:' + q.y.toFixed(3) + '  z:' + q.z.toFixed(3);
+  }
+
+  function vector2str(v) {
+    return 'x:' + v[0].toFixed(3) + ' y:' + v[1].toFixed(3) + ' z:' + v[2].toFixed(3);
+  } 
+  
+  function updateDroneState(response) {
+    if (response.error != null) {
+      console.log(JSON.stringify(response.result)); 
+    } else {
+      $("#attQ").text(quaternion2str(response.result.attitude));
+      $("#accel").text(vector2str(response.result.accel));
+      $("#gyro").text(vector2str(response.result.gyro));
+      $("#mag").text(vector2str(response.result.mag));
+      $("#altitude").text(response.result.altitude_meters.toFixed(2));
+      
+      $("#motor1").text(response.result.motors[0].toFixed(3));
+      $("#motor2").text(response.result.motors[1].toFixed(3));
+      $("#motor3").text(response.result.motors[2].toFixed(3));
+      $("#motor4").text(response.result.motors[3].toFixed(3));
+      
+      /*
+      m1.refresh(response.result.motors[0] * 100);
+      m2.refresh(response.result.motors[1] * 100);
+      m3.refresh(response.result.motors[2] * 100);
+      m4.refresh(response.result.motors[3] * 100);
+      */
+
+      $("#battery").text(response.result.battery_voltage.toFixed(2));
+      $("#battery_percent").text(response.result.battery_percentage.toFixed(2));
+      $("#temperature_val").text(response.result.temperature.toFixed(1) + ' ');
+      if (response.result.gps_satellites >= 3) {
+        $("#gps-lat").text(response.result.gps_latitude);
+        $("#gps-long").text(response.result.gps_longitude);
+      } else {
+        $("#gps-lat").text("N/A");
+        $("#gps-long").text("N/A");
+      }
+      $("#gps-satellites").text(response.result.gps_satellites);
+      if (response.result.gps_satellites > 5) {
+        $("#gps-speed").text(response.result.gps_speed_kmph.toFixed(1));
+        $("#gps-course").text(response.result.gps_course_deg.toFixed(2));
+        $("#gps-altitude").text(response.result.gps_altitude.toFixed(2));
+      } else {
+        $("#gps-speed").text('0');
+        $("#gps-course").text( 'N/A');
+        $("#gps-altitude").text('N/A');
+      }
+      $("#dt").text(response.result.dt/1000);
+      
+      /* 
+       * Update the forms
+       */
+       pidxyView.onRedrawData(response.result);
+       pidzView.onRedrawData(response.result);
+       flightCtlView.onRedrawData(response.result);
+       sensorCfgView.onRedrawData(response.result);
+    }
+  }
+
+  function onPidXYCancel() {
+    pidxyView.onCancelButton();
+  }
+
+  function onPidXYUserInput() {
+    pidxyView.onUserInput();
+  }
+
+  function onPidXYSubmit() {
+    var $myForm = $('#pidxy-form');
+    
+    if (!pidxyView.onSubmitButton()) {
+      // return true so the form will be submitted
+      // and automatic error will be displayed
+      return true;
+    }
+
+    rpcCall(url, "kp", "[" + $myForm[0].elements['kp-xy'].value + "]");
+    rpcCall(url, "ki", "[" + $myForm[0].elements['ki-xy'].value + "]");
+    rpcCall(url, "kd", "[" + $myForm[0].elements['kd-xy'].value + "]",
+      function() {pidxyView.onDataSubmitOK();}, 
+      function() {pidxyView.onDataSubmitFail();});
+    return false;
+  }
+
+  function onPidZCancel() {
+    pidzView.onCancelButton();
+  }
+
+  function onPidZUserInput() {
+    pidzView.onUserInput();
+  }
+
+  function onPidZSubmit() {
+    var $myForm = $('#pidz-form');
+    if (!pidzView.onSubmitButton()) {
+      // return true so the form will be submitted
+      // and automatic error will be displayed
+      return true;
+    }
+    rpcCall(url, "yaw_kp", "[" + $myForm[0].elements['kp-z'].value + "]");
+    rpcCall(url, "yaw_ki", "[" + $myForm[0].elements['ki-z'].value + "]");
+    rpcCall(url, "yaw_kd", "[" + $myForm[0].elements['kd-z'].value + "]",
+      function() {pidzView.onDataSubmitOK();}, 
+      function() {pidzView.onDataSubmitFail();});
+    return false;
+  }
+
+  function onFlightCtlCancel() {
+    flightCtlView.onCancelButton();
+  }
+
+  function onFlightCtlUserInput() {
+    flightCtlView.onUserInput();
+  }
+
+  function onFlightCtlSubmit() {
+    var $myForm = $('#flight-ctl-form');
+    if (!flightCtlView.onSubmitButton()) {
+      // return true so the form will be submitted
+      // and automatic error will be displayed
+      return true;
+    }
+    rpcCall(url, "sd_set_yaw_throttle_factor", 
+      "[" + $myForm[0].elements['yaw-throttle-factor'].value + "]");
+    rpcCall(url, "roll_bias", "[" + $myForm[0].elements['torq-bias-roll'].value + "]");
+    rpcCall(url, "pitch_bias", "[" + $myForm[0].elements['torq-bias-pitch'].value + "]");
+    rpcCall(url, "yaw_bias", "[" + $myForm[0].elements['torq-bias-yaw'].value + "]",
+      function() {flightCtlView.onDataSubmitOK();}, 
+      function() {flightCtlView.onDataSubmitFail();});
+    return false;
+  }
+
+  function onSensorsConfigCancel() {
+    sensorCfgView.onCancelButton();
+  }
+
+  function onSensorsConfigUserInput() {
+    sensorCfgView.onUserInput();
+  }
+
+  function onSensorsConfigSubmit() {
+    var $myForm = $('#sensors-config-form');
+    if (!sensorCfgView.onSubmitButton()) {
+      // return true so the form will be submitted
+      // and automatic error will be displayed
+      return true;
+    }
+    rpcCall(url, "sd_accelerometer_adjustment", 
+      "[[" + $myForm[0].elements['acc-bias-x'].value + "," + 
+      $myForm[0].elements['acc-bias-y'].value + "," + 
+      $myForm[0].elements['acc-bias-z'].value + "]]");
+    rpcCall(url, "sd_set_accelerometer_correction_period", 
+      "[" + $myForm[0].elements['acc-corr-period'].value + "]");
+    rpcCall(url, "sd_set_gyro_factor", 
+      "[" + $myForm[0].elements['gyro-factor'].value + "]",
+      function() {sensorCfgView.onDataSubmitOK();}, 
+      function() {sensorCfgView.onDataSubmitFail();});
+    return false;
+  }
+
+  function toggleCollapsable(collapseId, buttonId, spanText) {
+    $(collapseId).on("hide.bs.collapse", function(){
+      $(buttonId).html('<span class="glyphicon glyphicon-triangle-right"></span> ' + spanText);
+    });
+    $(collapseId).on("show.bs.collapse", function(){
+      $(buttonId).html('<span class="glyphicon glyphicon-triangle-bottom"></span> ' + spanText);
+    });
+  }
+
+  $(document).ready(function() {
+    toggleCollapsable("#sensors-id", "#sensors-btn", "Sensors");
+    toggleCollapsable("#motors-id", "#motors-btn", "Motors");
+    toggleCollapsable("#gps-id", "#gps-btn", "GPS");
+    toggleCollapsable("#pidxy-id", "#pidxy-btn", "PID Controller XY");
+    toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
+    toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
+    toggleCollapsable("#flight-ctl-id", "#flight-ctl-btn", "Flight Control");
+
+    /*
+    m1 = new JustGage({
+          id: "motor1",
+          value: 0,
+          min: 0,
+          max: 100,
+          title: "M1",
+          label: "%"
+        });
+    m2 = new JustGage({
+          id: "motor2",
+          value: 0,
+          min: 0,
+          max: 100,
+          title: "M2",
+          label: "%"
+        });
+    m3 = new JustGage({
+          id: "motor3",
+          value: 0,
+          min: 0,
+          max: 100,
+          title: "M3",
+          label: "%"
+        });
+    m4 = new JustGage({
+          id: "motor4",
+          value: 0,
+          min: 0,
+          max: 100,
+          title: "M4",
+          label: "%"
+        });
+*/
+  });
+
+  $.ajaxSetup({ timeout: 5000 });
+
+  window.setInterval(
+    function () {
+      rpcCall(url, "sd_get_dronestate_ex", JSON.parse("[]"), updateDroneState);
+    }, 
+    500);
+
+  </script>
+
+  </body>
+  </html>

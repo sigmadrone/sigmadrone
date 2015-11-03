@@ -1,5 +1,5 @@
 #!/bin/sh
-DAEMON=/usr/sbin/sigmad
+DAEMON=/usr/bin/sigmad
 NAME=sigmad
 DESC="SIGMADRONE Daemon"
 ARGS="-d"
