@@ -41,6 +41,10 @@ body {
   line-height: 25px;
 }
 
+.alarm-gr {
+  display:none;
+}
+
 [class*="col-"] {
   margin-left: 0px;
   padding-top: 0px;
@@ -52,7 +56,7 @@ body {
   color: #777;
 }
 .col-data {
-	margin-left: 10px;
+	padding-left: 25px;
 }
 
 .footer {

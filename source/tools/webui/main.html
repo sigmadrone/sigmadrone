@@ -68,7 +68,18 @@
             <div class="row"> <div class="col-xs-10 col-data"><span id="gps-speed">0</span> km/h</div> </div>
           </div>
         </div>
-
+        <div id="alarm-gr" class="alarm-gr">
+          <div class="row row-padded alarm">
+            <div class="col-xs-12"> <span id="alarm"></span> </div>
+          </div>
+          <div class="row" id="alarm-data-row">
+            <div class="col-xs-12 col-md-6 col-data"> <span id="alarm-data">Channel No</span></div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12 col-md-6 col-data"> Time of alarm: <span id="alarm-time">6384</span> secs</div>
+          </div>
+        </div>
+        
         <hr class="featurette-divider">  
 
         <div class="row row-padded sensors">
@@ -395,6 +406,23 @@
 
   function vector2str(v) {
     return 'x:' + v[0].toFixed(3) + ' y:' + v[1].toFixed(3) + ' z:' + v[2].toFixed(3);
+  }
+
+  function displayAlarm(droneState) {
+    if (droneState.alarm != undefined) {
+      $("#alarm").text(droneState.alarm);
+      $("#alarm-time").text((droneState.alarm_time_ms/1000).toFixed(1));
+      if (droneState.alarm_data != undefined) {
+        $("#alarm-data").text(droneState.alarm_data);
+        $("#alarm-data-row").css("display","block");
+      } else {
+        $("#alarm-data-row").css("display","none");
+      }
+      $("#alarm").css("color","red");
+      $("#alarm-gr").css("display","block");
+    } else {
+      $("#alarm-gr").css("display","none");
+    }
   } 
   
   function updateDroneState(response) {
@@ -448,6 +476,8 @@
        pidzView.onRedrawData(response.result);
        flightCtlView.onRedrawData(response.result);
        sensorCfgView.onRedrawData(response.result);
+
+       displayAlarm(response.result);
     }
   }
 
