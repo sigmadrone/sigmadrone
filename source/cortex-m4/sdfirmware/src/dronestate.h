@@ -27,6 +27,8 @@
 #include "alarm.h"
 #include "librexjsonrpc/jsonserialization.h"
 
+static const Altitude DEFAULT_FLIGHT_CEILING(Altitude::from_meters(50));
+
 /*
  *
  * PID coefficients for big 9" props on DJI F450
@@ -67,44 +69,47 @@ struct DroneState {
 		, pitch_bias_(0.0)
 		, roll_bias_(0.0)
 		, base_throttle_(0.0)
-        , yaw_throttle_factor_(0.75) { }
+        , yaw_throttle_factor_(0.75)
+	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING){ }
 
-	rexjson::value to_json() {
-			rexjson::object ret;
-			ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
-			ret["accel_raw"] = matrix_to_json_value(accel_raw_);
-			ret["mag_raw"] = matrix_to_json_value(mag_raw_);
-			ret["gyro"] = matrix_to_json_value(gyro_);
-			ret["accel"] = matrix_to_json_value(accel_);
-			ret["mag"] = matrix_to_json_value(mag_);
-			ret["altitude_meters"] = altitude_.meters();
-			ret["pressure_hpa"] = pressure_hpa_;
-			ret["temperature"] = temperature_;
-			ret["battery_voltage"] = battery_voltage_.volts();
-			ret["gps_latitude"] = latitude_;
-			ret["gps_longitude"] = longitude_;
-			ret["gps_speed_kmph"] = speed_over_ground_;
-			ret["gps_course_deg"] = course_;
-			ret["gps_satellites"] = static_cast<int>(satellite_count_);
-			ret["gps_altitude"] = gps_altitude_.meters();
-			ret["dt"] = static_cast<float>(dt_.microseconds());
-			ret["attitude"] = quaternion_to_json_value(attitude_);
-			ret["target"] = quaternion_to_json_value(target_);
-			ret["motors"] = matrix_to_json_value(motors_);
-			ret["pid_torque"] = matrix_to_json_value(pid_torque_);
-			ret["yaw"] = yaw_;
-			ret["pitch"] = pitch_;
-			ret["roll"] = roll_;
-			if (!alarm_.is_none()) {
-				ret["alarm"] = alarm_.to_string();
-				if (alarm_.data().size() > 0) {
-					ret["alarm_data"] = alarm_.data();
-				}
-				ret["alarm_time_ms"] = static_cast<int>(alarm_.when().milliseconds());
+	rexjson::value to_json()
+	{
+		rexjson::object ret;
+		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
+		ret["accel_raw"] = matrix_to_json_value(accel_raw_);
+		ret["mag_raw"] = matrix_to_json_value(mag_raw_);
+		ret["gyro"] = matrix_to_json_value(gyro_);
+		ret["accel"] = matrix_to_json_value(accel_);
+		ret["mag"] = matrix_to_json_value(mag_);
+		ret["altitude_meters"] = altitude_.meters();
+		ret["pressure_hpa"] = pressure_hpa_;
+		ret["temperature"] = temperature_;
+		ret["battery_voltage"] = battery_voltage_.volts();
+		ret["gps_latitude"] = latitude_;
+		ret["gps_longitude"] = longitude_;
+		ret["gps_speed_kmph"] = speed_over_ground_;
+		ret["gps_course_deg"] = course_;
+		ret["gps_satellites"] = static_cast<int>(satellite_count_);
+		ret["gps_altitude"] = gps_altitude_.meters();
+		ret["dt"] = static_cast<float>(dt_.microseconds());
+		ret["attitude"] = quaternion_to_json_value(attitude_);
+		ret["target"] = quaternion_to_json_value(target_);
+		ret["motors"] = matrix_to_json_value(motors_);
+		ret["pid_torque"] = matrix_to_json_value(pid_torque_);
+		ret["yaw"] = yaw_;
+		ret["pitch"] = pitch_;
+		ret["roll"] = roll_;
+		if (!alarm_.is_none()) {
+			ret["alarm"] = alarm_.to_string();
+			if (alarm_.data().size() > 0) {
+				ret["alarm_data"] = alarm_.data();
 			}
-			return ret;
+			ret["alarm_time_ms"] = static_cast<int>(alarm_.when().milliseconds());
 		}
-	rexjson::value to_json_ex() {
+		return ret;
+	}
+	rexjson::value to_json_ex()
+	{
 		rexjson::object ret = to_json().get_obj();
 		ret["accel_adjustment"] = matrix_to_json_value(accelerometer_adjustment_);
 		ret["battery_percentage"] = battery_percentage_;
@@ -127,6 +132,49 @@ struct DroneState {
 			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
 		}
 		return ret;
+	}
+
+	rexjson::value boot_config_to_json()
+	{
+		rexjson::object ret;
+		ret["accel_adjustment"] = matrix_to_json_value(accelerometer_adjustment_);
+		ret["kp"] = kp_;
+		ret["ki"] = ki_;
+		ret["kd"] = kd_;
+		ret["yaw_kp"] = yaw_kp_;
+		ret["yaw_ki"] = yaw_ki_;
+		ret["yaw_kd"] = yaw_kd_;
+		ret["accelerometer_correction_period"] = accelerometer_correction_period_;
+		ret["gyro_factor"] = gyro_factor_;
+		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
+		ret["yaw_bias"] = yaw_bias_;
+		ret["pitch_bias"] = pitch_bias_;
+		ret["roll_bias"] = roll_bias_;
+		return ret;
+	}
+
+	void init_from_boot_config(rexjson::value bootconfig)
+	{
+		try {
+			try {
+				accelerometer_adjustment_ = matrix_from_json_value<float, 3, 1>(bootconfig["accelerometer_adjustment"]);
+			} catch (std::exception& e) {}
+			try { kp_ = bootconfig["kp"].get_real(); } catch (std::exception& e) {}
+			try { ki_ = bootconfig["ki"].get_real(); } catch (std::exception& e) {}
+			try { kd_ = bootconfig["kd"].get_real(); } catch (std::exception& e) {}
+			try { yaw_kp_ = bootconfig["yaw_kp"].get_real(); } catch (std::exception& e) {}
+			try { yaw_bias_ = bootconfig["yaw_bias"].get_real(); } catch (std::exception& e) {}
+			try { pitch_bias_ = bootconfig["pitch_bias"].get_real(); } catch (std::exception& e) {}
+			try { roll_bias_ = bootconfig["roll_bias"].get_real(); } catch (std::exception& e) {}
+			try { yaw_ki_ = bootconfig["yaw_ki"].get_real(); } catch (std::exception& e) {}
+			try { yaw_kd_ = bootconfig["yaw_kd"].get_real(); } catch (std::exception& e) {}
+			try { gyro_factor_ = bootconfig["gyro_factor"].get_real(); } catch (std::exception& e) {}
+			try { yaw_throttle_factor_ = bootconfig["yaw_throttle_factor"].get_real(); } catch (std::exception& e) {}
+			try {
+				accelerometer_correction_period_ = bootconfig["accelerometer_correction_period"].get_real();
+			} catch (std::exception& e) {}
+		} catch (std::exception& e) {
+		}
 	}
 
 	/*
@@ -192,6 +240,9 @@ struct DroneState {
 	 */
 	Alarm alarm_;
 	Alarm most_critical_alarm_;
+
+	Altitude flight_ceiling_;
+	Altitude take_off_altitude_;
 };
 
 

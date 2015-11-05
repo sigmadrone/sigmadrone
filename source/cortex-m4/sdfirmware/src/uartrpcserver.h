@@ -63,6 +63,8 @@ protected:
 	rexjson::value rpc_set_accelerometer_correction_period(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_set_gyro_factor(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_set_yaw_throttle_factor(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_flight_ceiling(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_restore_config(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 protected:
 	std::string cached_request_;

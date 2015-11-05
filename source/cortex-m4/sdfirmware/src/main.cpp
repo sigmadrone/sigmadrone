@@ -108,21 +108,8 @@ void dronestate_boot_config(DroneState& state)
 
 	try {
 		bootconfig.read((char*)configdata.mem_, configdata.size());
-		try { state.accelerometer_adjustment_ = matrix_from_json_value<float, 3, 1>(bootconfig["accelerometer_adjustment"]); } catch (std::exception& e) {}
-		try { state.kp_ = bootconfig["kp"].get_real(); } catch (std::exception& e) {}
-		try { state.ki_ = bootconfig["ki"].get_real(); } catch (std::exception& e) {}
-		try { state.kd_ = bootconfig["kd"].get_real(); } catch (std::exception& e) {}
-		try { state.yaw_kp_ = bootconfig["yaw_kp"].get_real(); } catch (std::exception& e) {}
-		try { state.yaw_bias_ = bootconfig["yaw_bias"].get_real(); } catch (std::exception& e) {}
-		try { state.pitch_bias_ = bootconfig["pitch_bias"].get_real(); } catch (std::exception& e) {}
-		try { state.roll_bias_ = bootconfig["roll_bias"].get_real(); } catch (std::exception& e) {}
-		try { state.yaw_ki_ = bootconfig["yaw_ki"].get_real(); } catch (std::exception& e) {}
-		try { state.yaw_kd_ = bootconfig["yaw_kd"].get_real(); } catch (std::exception& e) {}
-		try { state.gyro_factor_ = bootconfig["gyro_factor"].get_real(); } catch (std::exception& e) {}
-		try { state.accelerometer_correction_period_ = bootconfig["accelerometer_correction_period"].get_real(); } catch (std::exception& e) {}
-	} catch (std::exception& e) {
-	}
-
+		state.init_from_boot_config(bootconfig);
+	} catch (std::exception& e) {}
 }
 
 void bmp180_task(void *pvParameters)

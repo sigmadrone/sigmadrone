@@ -25,8 +25,6 @@
 #include <stdint.h>
 #include "dronestate.h"
 
-static const Altitude DEFAULT_FLIGHT_CEILING(Altitude::from_meters(50));
-
 class AltitudeTracker
 {
 public:
@@ -36,7 +34,7 @@ public:
 	~AltitudeTracker();
 	void reset();
 	Altitude flight_ceiling() const;
-	void flight_ceiling(const Altitude& altitude);
+	Altitude flight_ceiling_absolute() const;
 	Altitude highest_recorded_altitude() const;
 	void update_state(DroneState& state);
 	bool is_flight_ceiling_hit() const;

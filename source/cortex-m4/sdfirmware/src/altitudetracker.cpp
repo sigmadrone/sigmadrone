@@ -39,11 +39,19 @@ void AltitudeTracker::reset()
 	flight_ceiling_hit_ = false;
 }
 
-Altitude AltitudeTracker::flight_ceiling() const {
+Altitude AltitudeTracker::flight_ceiling() const
+{
 	return flight_ceiling_;
 }
 
-void AltitudeTracker::update_state(DroneState& drone_state) {
+Altitude AltitudeTracker::flight_ceiling_absolute() const
+{
+	return starting_altitude_ != INVALID_ALTITUDE ? (flight_ceiling_ + starting_altitude_) :
+			Altitude::from_meters(0);
+}
+
+void AltitudeTracker::update_state(DroneState& drone_state)
+{
 	if (!drone_state.altitude_.is_valid()) {
 		return;
 	}
@@ -51,6 +59,13 @@ void AltitudeTracker::update_state(DroneState& drone_state) {
 	if (!starting_altitude_.is_valid()) {
 		highest_altitude_ = starting_altitude_ = drone_state.altitude_;
 	}
+
+	if (flight_ceiling_ != drone_state.flight_ceiling_) {
+		clear_alarm(); // flight ceiling changed
+	}
+
+	flight_ceiling_ = drone_state.flight_ceiling_;
+	drone_state.take_off_altitude_ = starting_altitude_;
 
 	current_altitude_ = drone_state.altitude_;
 	if (drone_state.altitude_ > highest_altitude_) {
@@ -72,20 +87,18 @@ void AltitudeTracker::update_state(DroneState& drone_state) {
 	}
 }
 
-Altitude AltitudeTracker::highest_recorded_altitude() const {
+Altitude AltitudeTracker::highest_recorded_altitude() const
+{
 	return highest_altitude_;
 }
 
-void AltitudeTracker::flight_ceiling(const Altitude& new_ceiling) {
-	flight_ceiling_ = new_ceiling;
-	clear_alarm();
-}
-
-void AltitudeTracker::clear_alarm() {
+void AltitudeTracker::clear_alarm()
+{
 	flight_ceiling_hit_ = false;
 	alarm_count_ = 0;
 }
 
-bool AltitudeTracker::is_flight_ceiling_hit() const {
+bool AltitudeTracker::is_flight_ceiling_hit() const
+{
 	return flight_ceiling_hit_;
 }

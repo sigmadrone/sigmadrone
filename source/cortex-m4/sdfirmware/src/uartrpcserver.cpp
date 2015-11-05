@@ -51,6 +51,8 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata)
 	add("sd_get_configdata", &UartRpcServer::rpc_get_configdata);
 	add("sd_set_configdata", &UartRpcServer::rpc_set_configdata);
 	add("sd_accelerometer_adjustment", &UartRpcServer::rpc_accelerometer_adjustment);
+	add("sd_flight_ceiling", &UartRpcServer::rpc_flight_ceiling);
+	add("sd_restore_config", &UartRpcServer::rpc_restore_config);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -402,6 +404,49 @@ rexjson::value UartRpcServer::rpc_roll_bias(UART* , rexjson::array& params, rpc_
 	return dronestate_.roll_bias_;
 }
 
+rexjson::value UartRpcServer::rpc_flight_ceiling(UART*, rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+				"sd_flight_ceiling\n"
+				"\nGet/Set flight ceiling, which is relative to the lift-off altitude."
+				"\nIf the new ceiling is not specified, then the current one is returned."
+				"\n"
+				"Arguments:\n"
+				"1. flight_ceiling   (real, optional) The new flight ceiling in meters.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() == rexjson::real_type)) {
+		dronestate_.flight_ceiling_ = Altitude::from_meters(params[0].get_real());
+	}
+	return dronestate_.flight_ceiling_.meters();
+}
+
+rexjson::value UartRpcServer::rpc_restore_config(UART*, rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+				"sd_restore_config\n"
+				"\nRestores the factory default configuration data."
+				"\nPreviously stored configuration will be erased"
+				"\nArguments:\n";
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	dronestate_ = DroneState();
+	configdata_.erase();
+	return rexjson::value();
+}
 
 rexjson::value UartRpcServer::rpc_set_accelerometer_correction_period(UART* , rexjson::array& params, rpc_exec_mode mode)
 {

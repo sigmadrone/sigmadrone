@@ -133,9 +133,9 @@ void FlightControl::safety_check(DroneState& drone_state)
 	if (altitude_track_.is_flight_ceiling_hit()) {
 		std::string alarmMessage("Alt: ");
 		char tmpBuf[6] = {0};
-		sprintf(tmpBuf,"%d",static_cast<uint16_t>(drone_state.altitude_.meters()));
+		sprintf(tmpBuf,"%5.1f",drone_state.altitude_.meters());
 		alarmMessage += std::string(tmpBuf) + std::string(" / Ceiling: ");
-		sprintf(tmpBuf,"%d", static_cast<uint16_t>(altitude_track_.flight_ceiling().meters()));
+		sprintf(tmpBuf,"%5.1f", altitude_track_.flight_ceiling_absolute().meters());
 		alarmMessage += std::string(tmpBuf) + std::string(" m");
 		record_alarm(Alarm(Alarm::ALARM_CEILING_HIT,alarmMessage));
 	} else {
@@ -179,7 +179,7 @@ void FlightControl::clear_alarm_if(Alarm::AlarmType alarmToClear)
 }
 
 void FlightControl::record_alarm(const Alarm& alarm) {
-	if (alarm_.type() < alarm.type()) {
+	if (alarm_.type() <= alarm.type()) {
 		alarm_ = alarm;
 	}
 	if (most_critical_alarm_.type() < alarm.type()) {
