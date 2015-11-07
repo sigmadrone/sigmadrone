@@ -55,7 +55,7 @@ FormView.prototype.redrawControls = function() {
     this.enableDisableCancelButton(false);
     this.displayStatus("Waiting for drone state...");
   } else if (this.state == "STATE_WAITING_ON_INPUT") {
-    this.enableDisableSubmitButton(true);
+    this.enableDisableSubmitButton(false);
     this.enableDisableCancelButton(false);
     this.displayStatus("");
   } else if (this.state == "STATE_DATA_INPUT") {
@@ -121,7 +121,7 @@ FormView.prototype.onDataSubmitFail = function() {
 
 FormView.prototype.onRedrawData = function(droneState) { // this method mus be extended
   this.enableDisableFormInputs(true);
-  if (this.state != "STATE_WAITING_ON_DATA") {
+  if (this.state != "STATE_WAITING_ON_DATA" && this.state != "STATE_WAITING_ON_INPUT") {
     return false;
   }
   if (this.state == "STATE_WAITING_ON_DATA") {

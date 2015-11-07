@@ -435,10 +435,10 @@
       $("#mag").text(vector2str(response.result.mag));
       $("#altitude").text(response.result.altitude_meters.toFixed(2));
       
-      $("#motor1").text(response.result.motors[0].toFixed(3));
-      $("#motor2").text(response.result.motors[1].toFixed(3));
-      $("#motor3").text(response.result.motors[2].toFixed(3));
-      $("#motor4").text(response.result.motors[3].toFixed(3));
+      $("#motor1").text((response.result.motors[0]*100).toFixed(2));
+      $("#motor2").text((response.result.motors[1]*100).toFixed(2));
+      $("#motor3").text((response.result.motors[2]*100).toFixed(2));
+      $("#motor4").text((response.result.motors[3]*100).toFixed(2));
       
       /*
       m1.refresh(response.result.motors[0] * 100);
