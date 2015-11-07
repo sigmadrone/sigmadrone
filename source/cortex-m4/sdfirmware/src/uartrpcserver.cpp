@@ -445,7 +445,7 @@ rexjson::value UartRpcServer::rpc_restore_config(UART*, rexjson::array& params, 
 	verify_parameters(params, types, ARRAYSIZE(types));
 	dronestate_ = DroneState();
 	configdata_.erase();
-	return rexjson::value();
+	return "Default config restored.";
 }
 
 rexjson::value UartRpcServer::rpc_set_accelerometer_correction_period(UART* , rexjson::array& params, rpc_exec_mode mode)
