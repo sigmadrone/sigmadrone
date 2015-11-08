@@ -1,9 +1,17 @@
-FormView = function (formId, submitButtonId, cancelButtonId, statusId) {
+FormView = function (formId, submitButtonId, cancelButtonId, statusId, submitStatusMsg, errorStatusMsg) {
   this.formId = formId;
   this.submitButtonId = submitButtonId;
   this.cancelButtonId = cancelButtonId;
   this.statusId = statusId;
   this.state = "STATE_WAITING_ON_DATA";
+  this.submitStatusMsg = submitStatusMsg;
+  if (null == this.submitStatusMsg) {
+    this.submitStatusMsg = "Applying changes...";
+  }
+  this.errorStatusMsg = errorStatusMsg;
+  if (null == this.errorStatusMsg) {
+    this.errorStatusMsg = "Failed to apply changes!"
+  }
 
   this.enableDisableFormInputs(false);
   this.redrawControls();
@@ -65,11 +73,11 @@ FormView.prototype.redrawControls = function() {
   } else if (this.state == "STATE_SUBMITTING_DATA") {
     this.enableDisableSubmitButton(false);
     this.enableDisableCancelButton(true);
-    this.displayStatus("Applying changes..");
+    this.displayStatus(this.submitStatusMsg);
   } else if (this.state == "STATE_SUBMIT_FAILED") {
     this.enableDisableSubmitButton(false);
     this.enableDisableCancelButton(true);
-    this.displayError("Failed to apply changes!");
+    this.displayError(this.errorStatusMsg);
   }
   $(this.formId).find(this.submitButtonId).blur();
   $(this.formId).find(this.cancelButtonId).blur();

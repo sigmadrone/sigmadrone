@@ -418,11 +418,15 @@
   var restoreDefaultsView = new FormView("#restore-defaults-form",
     "#restore-apply-btn",
     "#restore-cancel-btn",
-    "#restore-defaults-help");
+    "#restore-defaults-help",
+    "Restoring default configuration...",
+    "Failed to restore default configuration!");
   var save2FlashView = new FormView("#save2flash-form",
     "#save2flash-apply-btn",
     "#save2flash-cancel-btn",
-    "#save2flash-help");
+    "#save2flash-help",
+    "Saving boot-configuration to flash...",
+    "Failed to save boot-configuration to flash!");
   var droneState;
 
   function rpcCall(url, method, params, successCallback, failCallback) {
