@@ -338,6 +338,40 @@
 
         <hr class="featurette-divider">
 
+        <div class="row-padded">
+          <form class="form-horizontal" role="form" id="restore-defaults-form" onsubmit="return onRestoreDefaultConfig();">
+            <div class="form-group">        
+              <div class="col-xs-8 col-md-4">
+                <button type="submit" class="btn btn-default btn-block disabled" id="restore-apply-btn">Restore Defaults</button>
+              </div>
+              <div class="col-xs-3 col-md-1 hidden-element">
+                  <button type="button" class="btn btn-default" id="restore-cancel-btn">Cancel</button>
+              </div>
+              <div class="col-xs-9 col-md-11">
+                <span id="restore-defaults-help" class="help-block"></span>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="row-padded">
+          <form class="form-horizontal" role="form" id="save2flash-form" onsubmit="return onSaveConfig2Flash();">
+            <div class="form-group">        
+              <div class="col-xs-8 col-md-4">
+                <button type="submit" class="btn btn-primary btn-block disabled" id="save2flash-apply-btn">Save to Flash</button>
+              </div>
+              <div class="col-xs-3 col-md-1 hidden-element">
+                  <button type="button" class="btn btn-default" id="save2flash-cancel-btn">Cancel</button>
+              </div>
+              <div class="col-xs-9 col-md-11">
+                <span id="save2flash-help" class="help-block"></span>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <hr class="featurette-divider">
+
       </div> <!--div id="control" class="container tab-pane fade"-->
 
     </div> <!--div class="tab-content"-->
@@ -381,6 +415,15 @@
     "#sensors-apply-btn",
     "#sensors-cancel-btn",
     "#sensors-config-help");
+  var restoreDefaultsView = new FormView("#restore-defaults-form",
+    "#restore-apply-btn",
+    "#restore-cancel-btn",
+    "#restore-defaults-help");
+  var save2FlashView = new FormView("#save2flash-form",
+    "#save2flash-apply-btn",
+    "#save2flash-cancel-btn",
+    "#save2flash-help");
+  var droneState;
 
   function rpcCall(url, method, params, successCallback, failCallback) {
     var request = {id: ++id, jsonrpc: "2.0"};
@@ -423,12 +466,15 @@
     } else {
       $("#alarm-gr").css("display","none");
     }
-  } 
+  }
   
   function updateDroneState(response) {
     if (response.error != null) {
       console.log(JSON.stringify(response.result)); 
     } else {
+
+      droneState = response.result;
+
       $("#attQ").text(quaternion2str(response.result.attitude));
       $("#accel").text(vector2str(response.result.accel));
       $("#gyro").text(vector2str(response.result.gyro));
@@ -476,9 +522,45 @@
        pidzView.onRedrawData(response.result);
        flightCtlView.onRedrawData(response.result);
        sensorCfgView.onRedrawData(response.result);
+       restoreDefaultsView.onRedrawData(response.result);
+       save2FlashView.onRedrawData(response.result);
 
        displayAlarm(response.result);
+
     }
+  }
+
+  function onRestoreDefaultConfig() {
+    restoreDefaultsView.onUserInput();
+    restoreDefaultsView.onSubmitButton();
+    rpcCall(url, "sd_restore_config", "[]", 
+      function() { restoreDefaultsView.onDataSubmitOK(); }, 
+      function() { restoreDefaultsView.onDataSubmitFail(); });
+    return false;
+  }
+
+  function onSaveConfig2Flash() {
+    var bootConfig = {
+      accel_adjustment: droneState.accel_adjustment,
+      kp: droneState.kp,
+      ki: droneState.ki,
+      kd: droneState.kd,
+      yaw_kp: droneState.yaw_kp,
+      yaw_ki: droneState.yaw_ki,
+      yaw_kd: droneState.yaw_kd,
+      accelerometer_correction_period: droneState.accelerometer_correction_period,
+      gyro_factor: droneState.gyro_factor,
+      yaw_throttle_factor: droneState.yaw_throttle_factor,
+      yaw_bias: droneState.yaw_bias,
+      pitch_bias: droneState.pitch_bias,
+      roll_bias: droneState.roll_bias
+    };
+    save2FlashView.onUserInput();
+    save2FlashView.onSubmitButton();
+    rpcCall(url, "sd_set_configdata", JSON.stringify(bootConfig), 
+      function() { save2FlashView.onDataSubmitOK(); }, 
+      function() { save2FlashView.onDataSubmitFail(); });
+    return false;
   }
 
   function onPidXYCancel() {

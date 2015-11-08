@@ -51,11 +51,11 @@ FormView.prototype.displayError = function(error) {
 
 FormView.prototype.redrawControls = function() {
   if (this.state == "STATE_WAITING_ON_DATA") {
-    this.enableDisableSubmitButton(false);
+    this.enableDisableSubmitButton(true);
     this.enableDisableCancelButton(false);
     this.displayStatus("Waiting for drone state...");
   } else if (this.state == "STATE_WAITING_ON_INPUT") {
-    this.enableDisableSubmitButton(false);
+    this.enableDisableSubmitButton(true);
     this.enableDisableCancelButton(false);
     this.displayStatus("");
   } else if (this.state == "STATE_DATA_INPUT") {
