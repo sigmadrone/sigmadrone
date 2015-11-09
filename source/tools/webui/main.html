@@ -561,7 +561,7 @@
     };
     save2FlashView.onUserInput();
     save2FlashView.onSubmitButton();
-    rpcCall(url, "sd_set_configdata", JSON.stringify(bootConfig), 
+    rpcCall(url, "sd_set_configdata", "["+JSON.stringify(bootConfig)+"]", 
       function() { save2FlashView.onDataSubmitOK(); }, 
       function() { save2FlashView.onDataSubmitFail(); });
     return false;
