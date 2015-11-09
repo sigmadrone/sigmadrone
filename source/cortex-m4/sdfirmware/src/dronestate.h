@@ -157,7 +157,7 @@ struct DroneState {
 	{
 		try {
 			try {
-				accelerometer_adjustment_ = matrix_from_json_value<float, 3, 1>(bootconfig["accelerometer_adjustment"]);
+				accelerometer_adjustment_ = matrix_from_json_value<float, 3, 1>(bootconfig["accel_adjustment"]);
 			} catch (std::exception& e) {}
 			try { kp_ = bootconfig["kp"].get_real(); } catch (std::exception& e) {}
 			try { ki_ = bootconfig["ki"].get_real(); } catch (std::exception& e) {}
