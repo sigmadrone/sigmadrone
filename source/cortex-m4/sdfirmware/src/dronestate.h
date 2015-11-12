@@ -70,7 +70,8 @@ struct DroneState {
 		, roll_bias_(0.0)
 		, base_throttle_(0.0)
         , yaw_throttle_factor_(0.75)
-	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING){ }
+	    , motors_armed_(false)
+	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING) { }
 
 	rexjson::value to_json()
 	{
@@ -99,6 +100,7 @@ struct DroneState {
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
+		ret["motors_armed_"] = motors_armed_;
 		if (!alarm_.is_none()) {
 			ret["alarm"] = alarm_.to_string();
 			if (alarm_.data().size() > 0) {
@@ -220,6 +222,7 @@ struct DroneState {
 	float roll_bias_;
 	float base_throttle_;
 	float yaw_throttle_factor_;
+	bool motors_armed_;
 
 	/*
 	 * Time it took to read sensors

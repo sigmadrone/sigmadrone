@@ -116,6 +116,7 @@ void FlightControl::update_state(DroneState& state)
 	state.pitch_ = rc_values_.get_pitch();
 	state.roll_ = rc_values_.get_roll();
 	state.base_throttle_ = base_throttle().get();
+	state.motors_armed_ = rc_values_.motors_armed();
 
 	pilot().update_state(state);
 }
