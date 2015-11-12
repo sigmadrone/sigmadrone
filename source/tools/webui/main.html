@@ -17,6 +17,8 @@
   <!-- Custom styles for this template -->
   <link href="./css/main.css" rel="stylesheet">
 
+  <link rel="stylesheet" href="./font-awesome/css/font-awesome.min.css">
+
 </head>
 
 <body>
@@ -49,9 +51,15 @@
 
       <div id="home" class="tab-pane fade in active">
         <div class="row">
+          <div class="col-xs-7 col-md-9"></div>
+          <div class="col-xs-5 col-md-3 text-right">
+            <span id="battery-percent">N/A</span>%
+            <i class="fa fa-battery-0 fa-lg" id="battery-icon"></i>
+          </div>
+        </div>
+        <div class="row">
           <div class="col-xs-4">Attitude</div>
-          <div class="col-xs-3"></div>
-          <div class="col-xs-5">&#x26a1<span id="battery_percent">100</span>%</div>
+          <div class="col-xs-6"></div>
         </div>
         <div class="row">
           <div class="col-xs-11 col-data attitude"><span id="attQ">w:1.000 x:0.000 y:0.000 z:0.000</span></div>
@@ -664,6 +672,21 @@
 
   var rpcFailureCount = 0;
 
+  function onRedrawBattery(batteryPercent, batteryVoltage) {
+    var batIconClass = "fa-battery-0";
+    if (batteryPercent > 15) { batIconClass = "fa-battery-1"; } 
+    if (batteryPercent > 25) { batIconClass = "fa-battery-2"; }
+    if (batteryPercent > 50) { batIconClass = "fa-battery-3"; }
+    if (batteryPercent > 75) { batIconClass = "fa-battery-4"; }
+    $("#battery-icon").removeClass("fa-battery-0");
+    $("#battery-icon").removeClass("fa-battery-1");
+    $("#battery-icon").removeClass("fa-battery-2");
+    $("#battery-icon").removeClass("fa-battery-3");
+    $("#battery-icon").removeClass("fa-battery-4");
+    $("#battery-icon").addClass(batIconClass);
+    $("#battery-percent").text(batteryPercent);
+  }
+
   function updateDroneState(response) {
     if (response.error != null) {
       console.log(JSON.stringify(response.result)); 
@@ -689,8 +712,9 @@
       m4.refresh(response.result.motors[3] * 100);
       */
 
-      $("#battery").text(response.result.battery_voltage.toFixed(2));
-      $("#battery_percent").text(response.result.battery_percentage.toFixed(2));
+      onRedrawBattery(
+        response.result.battery_percentage.toFixed(0),
+        response.result.battery_voltage.toFixed(0));
       $("#temperature_val").text(response.result.temperature.toFixed(1) + ' ');
       if (response.result.gps_satellites >= 3) {
         $("#gps-lat").text(response.result.gps_latitude);
