@@ -123,4 +123,11 @@ input:invalid {
   color:red;
 }
 
+.motor {
+  width:100px; height:80px;
+  display: inline-block;
+  margin: 1em;
+}
+
+
 /*body {background: #eee;margin:50px;}*/

@@ -120,15 +120,15 @@
           <a href="#motors-id" id="motors-btn" class="btn btn-link" data-toggle="collapse">
             <span class="glyphicon glyphicon-triangle-right"></span>Motors
           </a>
-          <!--div id = "motors-id" class="collapse">
+          <div id = "motors-id" class="collapse">
             <div class="row motor-group">
               <div class="motor" id="motor4"></div> <div class="motor" id="motor3"></div>
             </div>
             <div class="row motor-group">
               <div class="motor" id="motor1"></div> <div class="motor" id="motor2"></div>
             </div>
-          </div-->
-          <div id = "motors-id" class="col-xs-12 collapse">
+          </div>
+          <!--div id = "motors-id" class="col-xs-12 collapse">
             <div class="row"> 
               <div class="col-md-2 col-xs-5 col-data">M4: <span id="motor4">50</span> %</div> 
               <div class="col-md-2 col-xs-5">M3: <span id="motor3">50</span> %</div> 
@@ -137,7 +137,7 @@
               <div class="col-md-2 col-xs-5 col-data">M1: <span id="motor1">50</span> %</div> 
               <div class="col-md-2 col-xs-5">M2: <span id="motor2">50</span> %</div> 
             </div>
-          </div>
+          </div-->
         </div>
         
         <hr class="featurette-divider">
@@ -399,8 +399,8 @@
   <!-- Placed at the end of the document so the pages load faster -->
   <script src="./jquery/jquery-2.1.1.min.js"></script>
   <script src="./bootstrap/js/bootstrap.min.js"></script>
-  <!--script src="./justgauge/raphael-2.1.4.min.js"></script>
-  <script src="./justgauge/justgage-1.1.0.min.js"></script-->
+  <script src="./justgauge/raphael-2.1.4.min.js"></script>
+  <script src="./justgauge/justgage-1.1.0.min.js"></script>
   <script src="./js/formmvc.js"></script>
 
   <script>
@@ -632,7 +632,6 @@
     toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
     toggleCollapsable("#flight-ctl-id", "#flight-ctl-btn", "Flight Control");
 
-    /*
     m1 = new JustGage({
           id: "motor1",
           value: 0,
@@ -665,7 +664,10 @@
           title: "M4",
           label: "%"
         });
-*/
+    m1.refresh(100);
+    m2.refresh(100);
+    m3.refresh(100);
+    m4.refresh(100);
   });
 
   $.ajaxSetup({ timeout: 5000 });
@@ -700,18 +702,18 @@
       $("#mag").text(vector2str(response.result.mag));
       $("#altitude").text(response.result.altitude_meters.toFixed(2));
       
+      /*
       $("#motor1").text((response.result.motors[0]*100).toFixed(2));
       $("#motor2").text((response.result.motors[1]*100).toFixed(2));
       $("#motor3").text((response.result.motors[2]*100).toFixed(2));
       $("#motor4").text((response.result.motors[3]*100).toFixed(2));
-      
-      /*
+      */
+
       m1.refresh(response.result.motors[0] * 100);
       m2.refresh(response.result.motors[1] * 100);
       m3.refresh(response.result.motors[2] * 100);
       m4.refresh(response.result.motors[3] * 100);
-      */
-
+      
       onRedrawBattery(
         response.result.battery_percentage.toFixed(0),
         response.result.battery_voltage.toFixed(0));
