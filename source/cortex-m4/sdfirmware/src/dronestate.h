@@ -100,7 +100,7 @@ struct DroneState {
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
-		ret["motors_armed_"] = motors_armed_;
+		ret["motors_armed"] = motors_armed_;
 		if (!alarm_.is_none()) {
 			ret["alarm"] = alarm_.to_string();
 			if (alarm_.data().size() > 0) {
