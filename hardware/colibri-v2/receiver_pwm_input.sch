@@ -371,9 +371,7 @@ $EndComp
 Wire Wire Line
 	3900 6450 4050 6450
 Wire Wire Line
-	4350 6450 4600 6450
-Wire Wire Line
-	4600 6450 5750 6450
+	4350 6450 5750 6450
 $Comp
 L R_SMT R?
 U 1 1 5635FF4D
@@ -400,9 +398,7 @@ F 3 "" H 4600 7100 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	4600 6250 4600 6450
-Wire Wire Line
-	4600 6450 4600 6650
+	4600 6250 4600 6650
 Connection ~ 4600 6450
 Wire Wire Line
 	4600 6950 4600 7100

@@ -533,21 +533,7 @@ Connection ~ 8950 2650
 Connection ~ 8950 2750
 Connection ~ 8950 2850
 Wire Wire Line
-	8950 2150 8950 2250
-Wire Wire Line
-	8950 2250 8950 2350
-Wire Wire Line
-	8950 2350 8950 2450
-Wire Wire Line
-	8950 2450 8950 2550
-Wire Wire Line
-	8950 2550 8950 2650
-Wire Wire Line
-	8950 2650 8950 2750
-Wire Wire Line
-	8950 2750 8950 2850
-Wire Wire Line
-	8950 2850 8950 3400
+	8950 2150 8950 3400
 Wire Wire Line
 	7600 2350 7850 2350
 Wire Wire Line
@@ -555,15 +541,7 @@ Wire Wire Line
 Connection ~ 7600 2350
 Connection ~ 7600 2150
 Wire Wire Line
-	7600 1800 7600 2150
-Wire Wire Line
-	7600 2150 7600 2350
-Wire Wire Line
-	7600 2350 7600 2550
-Wire Wire Line
-	7600 2550 7600 2750
-Wire Wire Line
-	7600 2750 7600 3000
+	7600 1800 7600 3000
 Wire Wire Line
 	7850 2550 7600 2550
 Connection ~ 7600 2550
@@ -640,9 +618,7 @@ $EndComp
 Wire Wire Line
 	1900 4400 2050 4400
 Wire Wire Line
-	2350 4400 2600 4400
-Wire Wire Line
-	2600 4400 3400 4400
+	2350 4400 3400 4400
 $Comp
 L R_SMT R?
 U 1 1 56361969
@@ -669,9 +645,7 @@ F 3 "" H 2600 5050 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2600 4200 2600 4400
-Wire Wire Line
-	2600 4400 2600 4600
+	2600 4200 2600 4600
 Connection ~ 2600 4400
 Wire Wire Line
 	2600 4900 2600 5050
