@@ -40,6 +40,16 @@ $CMP LED_SMT
 K LED
 $ENDCMP
 #
+$CMP RET_NPN_SMT
+D Resistor
+K R DEV
+$ENDCMP
+#
+$CMP RET_PNP_SMT
+D Resistor
+K R DEV
+$ENDCMP
+#
 $CMP R_0603_5%
 D Resistor
 K R DEV
