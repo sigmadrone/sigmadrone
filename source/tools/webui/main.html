@@ -50,7 +50,7 @@
     <div class="tab-content main">
 
       <div id="home" class="tab-pane fade in active">
-        <div class="row">
+        <div class="row" id="battery-motor-status-id">
           <div class="col-xs-5 col-md-5">
             <span>Motors </span>
             <i class="fa fa-toggle-off fa-lg fa-rotate-270" id="motors-armed-icon"></i>
@@ -59,6 +59,9 @@
             <span id="battery-percent">N/A</span>%
             <i class="fa fa-battery-0 fa-lg" id="battery-icon"></i>
           </div>
+        </div>
+        <div class="row" id="status-message-id">
+          <div class="col-xs-12"> <span>Connecting to drone... </span> </div>
         </div>
         <hr class="featurette-divider">
         <div class="row">
@@ -388,8 +391,6 @@
 
     </div> <!--div class="tab-content"-->
 
-    <div id="gauge"></div>
-
     <footer class="footer">
       <p>
         &copy; Sigmadrone 2015
@@ -409,7 +410,6 @@
 
   <script>
   var id = 0;
-  var droneRpcUrl = null;
   var m1, m2, m3, m4;
   var pidxyView = new PidXYFormView("#pidxy-form",
     "#pidxy-apply-btn",
@@ -440,6 +440,7 @@
     "Saving boot-configuration to flash...",
     "Failed to save boot-configuration to flash!");
   var droneState;
+  var rpcFailureCount = 0;
 
   function rpcCall(url, method, params, successCallback, failCallback) {
     var request = {id: ++id, jsonrpc: "2.0"};
@@ -467,7 +468,7 @@
     return 'x:' + v[0].toFixed(3) + ' y:' + v[1].toFixed(3) + ' z:' + v[2].toFixed(3);
   }
 
-  function displayAlarm(droneState) {
+  function onDisplayAlarm(droneState) {
     if (droneState.alarm != undefined) {
       $("#alarm").text(droneState.alarm);
       $("#alarm-time").text((droneState.alarm_time_ms/1000).toFixed(1));
@@ -627,6 +628,119 @@
     });
   }
 
+  function toggleStatusMessage(displayStatusMessage) {
+    if (displayStatusMessage) {
+      $("#battery-motor-status-id").css("display","none");
+      $("#status-message-id").css("display","block");
+    } else {
+      $("#battery-motor-status-id").css("display","block");
+      $("#status-message-id").css("display","none");
+    }
+  }
+
+  function onRedrawBatteryIcon(batteryPercent, batteryVoltage) {
+    var batIconClass = "fa-battery-0";
+    if (batteryPercent > 15) { batIconClass = "fa-battery-1"; }
+    if (batteryPercent > 25) { batIconClass = "fa-battery-2"; }
+    if (batteryPercent > 50) { batIconClass = "fa-battery-3"; }
+    if (batteryPercent > 75) { batIconClass = "fa-battery-4"; }
+    $("#battery-icon").removeClass("fa-battery-0");
+    $("#battery-icon").removeClass("fa-battery-1");
+    $("#battery-icon").removeClass("fa-battery-2");
+    $("#battery-icon").removeClass("fa-battery-3");
+    $("#battery-icon").removeClass("fa-battery-4");
+    $("#battery-icon").addClass(batIconClass);
+    $("#battery-percent").text(batteryPercent);
+  }
+
+  function onRedrawMotorsArmedIcon(motorsArmed) {
+    if (true == motorsArmed) {
+      $("#motors-armed-icon").removeClass("fa-toggle-off");
+      $("#motors-armed-icon").addClass("fa-toggle-on");
+    } else {
+      $("#motors-armed-icon").removeClass("fa-toggle-on");
+      $("#motors-armed-icon").addClass("fa-toggle-off");
+    }
+  }
+
+  function onRedrawMotorsAndBatteryStatus(droneState) {
+    onRedrawBatteryIcon(
+      droneState.battery_percentage.toFixed(0),
+      droneState.battery_voltage.toFixed(0));
+
+    onRedrawMotorsArmedIcon(droneState.motors_armed);
+
+    toggleStatusMessage(false);
+  }
+
+  function updateDroneState(response) {
+    if (response.error != null) {
+      console.log(JSON.stringify(response.result));
+    } else {
+
+      droneState = response.result;
+
+      onRedrawMotorsAndBatteryStatus(response.result);
+
+      onDisplayAlarm(response.result);
+
+      $("#attQ").text(quaternion2str(response.result.attitude));
+      $("#accel").text(vector2str(response.result.accel));
+      $("#gyro").text(vector2str(response.result.gyro));
+      $("#mag").text(vector2str(response.result.mag));
+      $("#altitude").text(response.result.altitude_meters.toFixed(2));
+
+      /*
+      $("#motor1").text((response.result.motors[0]*100).toFixed(2));
+      $("#motor2").text((response.result.motors[1]*100).toFixed(2));
+      $("#motor3").text((response.result.motors[2]*100).toFixed(2));
+      $("#motor4").text((response.result.motors[3]*100).toFixed(2));
+      */
+
+      if (response.result.motors_armed) {
+        m1.refresh(response.result.motors[0] * 100);
+        m2.refresh(response.result.motors[1] * 100);
+        m3.refresh(response.result.motors[2] * 100);
+        m4.refresh(response.result.motors[3] * 100);
+      } else {
+        m1.refresh(0); m2.refresh(0);
+        m3.refresh(0); m4.refresh(0);
+      }
+
+      $("#temperature_val").text(response.result.temperature.toFixed(1) + ' ');
+      if (response.result.gps_satellites >= 3) {
+        $("#gps-lat").text(response.result.gps_latitude);
+        $("#gps-long").text(response.result.gps_longitude);
+      } else {
+        $("#gps-lat").text("N/A");
+        $("#gps-long").text("N/A");
+      }
+      $("#gps-satellites").text(response.result.gps_satellites);
+      if (response.result.gps_satellites > 5) {
+        $("#gps-speed").text(response.result.gps_speed_kmph.toFixed(1));
+        $("#gps-course").text(response.result.gps_course_deg.toFixed(2));
+        $("#gps-altitude").text(response.result.gps_altitude.toFixed(2));
+      } else {
+        $("#gps-speed").text('0');
+        $("#gps-course").text( 'N/A');
+        $("#gps-altitude").text('N/A');
+      }
+      $("#dt").text(response.result.dt/1000);
+
+      /*
+       * Update the forms
+       */
+       pidxyView.onRedrawData(response.result);
+       pidzView.onRedrawData(response.result);
+       flightCtlView.onRedrawData(response.result);
+       sensorCfgView.onRedrawData(response.result);
+       restoreDefaultsView.onRedrawData(response.result);
+       save2FlashView.onRedrawData(response.result);
+
+       rpcFailureCount = 0;
+    }
+  }
+
   $(document).ready(function() {
     toggleCollapsable("#sensors-id", "#sensors-btn", "Sensors");
     toggleCollapsable("#motors-id", "#motors-btn", "Motors");
@@ -635,6 +749,7 @@
     toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
     toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
     toggleCollapsable("#flight-ctl-id", "#flight-ctl-btn", "Flight Control");
+    toggleStatusMessage(true);
 
     m1 = new JustGage({
           id: "motor1",
@@ -674,123 +789,26 @@
     m4.refresh(0);
   });
 
+  function getDroneRpcUrl() {
+    var url = window.location.href;
+    if (url == null || url.match("file*")) {
+      return "http://10.10.10.1:18222/firmware";
+    }
+    if (url[url.length-1] == '/') {
+      url = url.substring(0, url.length-1);
+    }
+    return url + ":18222/firmware";
+  }
+
   $.ajaxSetup({ timeout: 5000 });
-
-  var rpcFailureCount = 0;
-
-  function onRedrawBatteryIcon(batteryPercent, batteryVoltage) {
-    var batIconClass = "fa-battery-0";
-    if (batteryPercent > 15) { batIconClass = "fa-battery-1"; }
-    if (batteryPercent > 25) { batIconClass = "fa-battery-2"; }
-    if (batteryPercent > 50) { batIconClass = "fa-battery-3"; }
-    if (batteryPercent > 75) { batIconClass = "fa-battery-4"; }
-    $("#battery-icon").removeClass("fa-battery-0");
-    $("#battery-icon").removeClass("fa-battery-1");
-    $("#battery-icon").removeClass("fa-battery-2");
-    $("#battery-icon").removeClass("fa-battery-3");
-    $("#battery-icon").removeClass("fa-battery-4");
-    $("#battery-icon").addClass(batIconClass);
-    $("#battery-percent").text(batteryPercent);
-  }
-
-  function onRedrawMotorsArmedIcon(motorsArmed) {
-    if (true == motorsArmed) {
-      $("#motors-armed-icon").removeClass("fa-toggle-off");
-      $("#motors-armed-icon").addClass("fa-toggle-on");
-    } else {
-      $("#motors-armed-icon").removeClass("fa-toggle-on");
-      $("#motors-armed-icon").addClass("fa-toggle-off");
-    }
-  }
-
-  function updateDroneState(response) {
-    if (response.error != null) {
-      console.log(JSON.stringify(response.result));
-    } else {
-
-      droneState = response.result;
-
-      $("#attQ").text(quaternion2str(response.result.attitude));
-      $("#accel").text(vector2str(response.result.accel));
-      $("#gyro").text(vector2str(response.result.gyro));
-      $("#mag").text(vector2str(response.result.mag));
-      $("#altitude").text(response.result.altitude_meters.toFixed(2));
-
-      /*
-      $("#motor1").text((response.result.motors[0]*100).toFixed(2));
-      $("#motor2").text((response.result.motors[1]*100).toFixed(2));
-      $("#motor3").text((response.result.motors[2]*100).toFixed(2));
-      $("#motor4").text((response.result.motors[3]*100).toFixed(2));
-      */
-
-      if (response.result.motors_armed) {
-        m1.refresh(response.result.motors[0] * 100);
-        m2.refresh(response.result.motors[1] * 100);
-        m3.refresh(response.result.motors[2] * 100);
-        m4.refresh(response.result.motors[3] * 100);
-      } else {
-        m1.refresh(0); m2.refresh(0);
-        m3.refresh(0); m4.refresh(0);
-      }
-
-      onRedrawBatteryIcon(
-        response.result.battery_percentage.toFixed(0),
-        response.result.battery_voltage.toFixed(0));
-
-      onRedrawMotorsArmedIcon(response.result.motors_armed);
-
-      $("#temperature_val").text(response.result.temperature.toFixed(1) + ' ');
-      if (response.result.gps_satellites >= 3) {
-        $("#gps-lat").text(response.result.gps_latitude);
-        $("#gps-long").text(response.result.gps_longitude);
-      } else {
-        $("#gps-lat").text("N/A");
-        $("#gps-long").text("N/A");
-      }
-      $("#gps-satellites").text(response.result.gps_satellites);
-      if (response.result.gps_satellites > 5) {
-        $("#gps-speed").text(response.result.gps_speed_kmph.toFixed(1));
-        $("#gps-course").text(response.result.gps_course_deg.toFixed(2));
-        $("#gps-altitude").text(response.result.gps_altitude.toFixed(2));
-      } else {
-        $("#gps-speed").text('0');
-        $("#gps-course").text( 'N/A');
-        $("#gps-altitude").text('N/A');
-      }
-      $("#dt").text(response.result.dt/1000);
-
-      /*
-       * Update the forms
-       */
-       pidxyView.onRedrawData(response.result);
-       pidzView.onRedrawData(response.result);
-       flightCtlView.onRedrawData(response.result);
-       sensorCfgView.onRedrawData(response.result);
-       restoreDefaultsView.onRedrawData(response.result);
-       save2FlashView.onRedrawData(response.result);
-
-       displayAlarm(response.result);
-
-       rpcFailureCount = 0;
-    }
-  }
 
   window.setInterval(
     function () {
-      if (droneRpcUrl == null) {
-        droneRpcUrl = window.location.href;
-        if (droneRpcUrl != null) {
-          if (droneRpcUrl[droneRpcUrl.length-1] == '/') {
-            droneRpcUrl = droneRpcUrl.substring(0, droneRpcUrl.length-1);
-          }
-          droneRpcUrl += ":18222/firmware";
-        }
-      }
-      if ((null == droneRpcUrl) || (droneRpcUrl.match("file*") != null) || (rpcFailureCount > 3)) {
-        droneRpcUrl = "http://10.10.10.1:18222/firmware";
+      if (rpcFailureCount > 3) {
+        toggleStatusMessage(true);
       }
       rpcCall(
-        droneRpcUrl,
+        getDroneRpcUrl(),
         "sd_get_dronestate_ex",
         JSON.parse("[]"),
         updateDroneState,
