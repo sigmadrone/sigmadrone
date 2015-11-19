@@ -50,6 +50,12 @@
     <div class="tab-content main">
 
       <div id="home" class="tab-pane fade in active">
+        <div class="warning-message" id="warning-message-id">
+          <div class="row">
+            <div class="col-xs-12"> <span class="warning-message">Connecting to drone... </span> </div>
+          </div>
+          <hr class="featurette-divider">
+        </div>
         <div class="row" id="battery-motor-status-id">
           <div class="col-xs-5 col-md-5">
             <span>Motors </span>
@@ -59,9 +65,6 @@
             <span id="battery-percent">N/A</span>%
             <i class="fa fa-battery-0 fa-lg" id="battery-icon"></i>
           </div>
-        </div>
-        <div class="row" id="status-message-id">
-          <div class="col-xs-12"> <span>Connecting to drone... </span> </div>
         </div>
         <hr class="featurette-divider">
         <div class="row">
@@ -630,11 +633,9 @@
 
   function toggleStatusMessage(displayStatusMessage) {
     if (displayStatusMessage) {
-      $("#battery-motor-status-id").css("display","none");
-      $("#status-message-id").css("display","block");
+      $("#warning-message-id").css("display","block");
     } else {
-      $("#battery-motor-status-id").css("display","block");
-      $("#status-message-id").css("display","none");
+      $("#warning-message-id").css("display","none");
     }
   }
 

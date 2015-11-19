@@ -64,7 +64,7 @@ body {
 }
 
 .footer {
-  color: #777; 
+  color: #777;
 }
 
 hr {
@@ -120,6 +120,10 @@ hr {
 }
 
 input:invalid {
+  color:red;
+}
+
+.warning-message {
   color:red;
 }
 
