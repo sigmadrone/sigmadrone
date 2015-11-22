@@ -443,6 +443,7 @@
     "Saving boot-configuration to flash...",
     "Failed to save boot-configuration to flash!");
   var droneState;
+  var droneRpcUrl;
   var rpcFailureCount = 0;
 
   function rpcCall(url, method, params, successCallback, failCallback) {
@@ -809,7 +810,7 @@
         toggleStatusMessage(true);
       }
       rpcCall(
-        getDroneRpcUrl(),
+        droneRpcUrl = getDroneRpcUrl(),
         "sd_get_dronestate_ex",
         JSON.parse("[]"),
         updateDroneState,
