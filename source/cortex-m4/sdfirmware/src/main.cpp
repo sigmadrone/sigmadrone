@@ -171,6 +171,26 @@ void battery_task(void *pvParameters)
 	}
 }
 
+static Vector3f CalculateGyroBias(L3GD20& gyro, uint32_t num_samples)
+{
+	Vector3f gyro_bias;
+	L3GD20::AxesDPS_t gyro_axes;
+
+	gyro.GetFifoAngRateDPS(&gyro_axes); // Drain the fifo
+	for (uint32_t i = 0; i < num_samples; i++) {
+		uint32_t msg;
+		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
+		}
+		gyro.GetFifoAngRateDPS(&gyro_axes);
+		gyro_bias.at(0) += gyro_axes.AXIS_X;
+		gyro_bias.at(1) += gyro_axes.AXIS_Y;
+		gyro_bias.at(2) += gyro_axes.AXIS_Z;
+	}
+	gyro_bias = gyro_bias / (float)num_samples;
+
+	return gyro_bias;
+}
+
 void main_task(void *pvParameters)
 {
 	(void) pvParameters;
@@ -189,9 +209,9 @@ void main_task(void *pvParameters)
 	LSM303D accel(spi5, 1);
 	uint8_t gyr_wtm = 3;
 	uint8_t acc_wtm = 17;
-	uint8_t bias_iterations = static_cast<uint8_t>(800);
 	L3GD20::AxesDPS_t gyr_axes;
 	LSM303D::AxesAcc_t acc_axes;
+	LSM303D::AxesMag_t mag_axes;
 	attitudetracker att;
 	TimeStamp console_update_time;
 	TimeStamp sample_dt;
@@ -200,6 +220,7 @@ void main_task(void *pvParameters)
 	FlightControl flight_ctl;
 	UartRpcServer rpcserver(*drone_state, configdata);
 	AccelLowPassFilter* accel_lpf = new AccelLowPassFilter();
+	Vector3f gyro_bias;
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
@@ -238,26 +259,18 @@ void main_task(void *pvParameters)
 	accel.SetThreshold(acc_wtm);
 	accel.SetInt2Pin(LSM303D_INT2_OVERRUN_ENABLE|LSM303D_INT2_FTH_ENABLE);
 	accel.SetInt2Pin(0);
+	accel.SetODR_M(LSM303D::ODR_100Hz_M);
+	accel.SetFullScaleMag(LSM303D::FULLSCALE_2_GA);
+	accel.SetModeMag(LSM303D::CONTINUOUS_MODE);
 
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	Vector3f gyr_bias;
-
 	printf("Calibrating...\n");
 
-	gyro.GetFifoAngRateDPS(&gyr_axes); // Drain the fifo
-	for (int i = 0; i < bias_iterations; i++) {
-		uint32_t msg;
-		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
-		}
-		gyro.GetFifoAngRateDPS(&gyr_axes);
-		gyr_bias.at(0) += gyr_axes.AXIS_X;
-		gyr_bias.at(1) += gyr_axes.AXIS_Y;
-		gyr_bias.at(2) += gyr_axes.AXIS_Z;
-	}
-	gyr_bias = gyr_bias / (float)bias_iterations;
+	gyro_bias = CalculateGyroBias(gyro, 800);
 
 	flight_ctl.start_receiver();
+
 	HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream3_IRQn);
 	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);
@@ -293,7 +306,7 @@ void main_task(void *pvParameters)
 
 		if (gyr_samples >= gyr_wtm) {
 			gyro.GetFifoAngRateDPS(&gyr_axes);
-			drone_state->gyro_raw_ = gyro_align * (Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyr_bias);
+			drone_state->gyro_raw_ = gyro_align * (Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyro_bias);
 			drone_state->gyro_ = drone_state->gyro_raw_ * drone_state->gyro_factor_;
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
@@ -303,6 +316,11 @@ void main_task(void *pvParameters)
 			Vector3f accel_adjusted = drone_state->accel_raw_ + drone_state->accelerometer_adjustment_;
 			drone_state->accel_ = accel_lpf->do_filter(accel_adjusted.normalize());
 		}
+
+		accel.GetMag(&mag_axes);
+		drone_state->mag_raw_ = acc_align * Vector3f(mag_axes.AXIS_X, mag_axes.AXIS_Y, mag_axes.AXIS_Z);
+		drone_state->mag_ = drone_state->mag_raw_.normalize();
+
 		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
 		drone_state->attitude_ = att.get_attitude();
 
@@ -313,6 +331,7 @@ void main_task(void *pvParameters)
 			console_update_time.time_stamp();
 			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));
 			printf("Accel     : %5.3f %5.3f %5.3f\n", drone_state->accel_.at(0), drone_state->accel_.at(1), drone_state->accel_.at(2));
+			printf("Mag       : %5.3f %5.3f %5.3f\n", drone_state->mag_.at(0), drone_state->mag_.at(1), drone_state->mag_.at(2));
 			printf("dT        : %lu uSec\n", (uint32_t)drone_state->dt_.microseconds());
 			printf("Q         : %5.3f %5.3f %5.3f %5.3f\n", drone_state->attitude_.w, drone_state->attitude_.x, drone_state->attitude_.y,
 					drone_state->attitude_.z);

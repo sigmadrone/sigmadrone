@@ -299,6 +299,19 @@ void LSM303D::SetFullScaleMag(FullscaleMag_t fs)
 	WriteReg8(LSM303D_CTRL_REG6, value);
 }
 
+float LSM303D::GetFullScaleMag()
+{
+	u8_t fs = ReadReg8(LSM303D_CTRL_REG6);
+	fs = (fs & 0x60) >> LSM303D_MFS;
+	switch (fs) {
+	case FULLSCALE_2_GA: return 2.0f;
+	case FULLSCALE_4_GA: return 4.0f;
+	case FULLSCALE_8_GA: return 8.0f;
+	case FULLSCALE_12_GA: return 12.0f;
+	default: return 0.0f;
+	}
+}
+
 /*******************************************************************************
  * Function Name  : SetBDU
  * Description    : Enable/Disable Block Data Update Functionality
@@ -359,6 +372,7 @@ void LSM303D::SetHPFMode(HPFMode_t hpm)
  *******************************************************************************/
 void LSM303D::SetHPFCutOFF(HPFCutOffFreq_t hpf)
 {
+	(void)hpf;
 }
 
 /*******************************************************************************
@@ -370,6 +384,7 @@ void LSM303D::SetHPFCutOFF(HPFCutOffFreq_t hpf)
  *******************************************************************************/
 void LSM303D::SetFilterDataSel(State_t state)
 {
+	(void)state;
 }
 
 /*******************************************************************************
@@ -460,6 +475,7 @@ void LSM303D::Int2LatchEnable(State_t latch)
 
 void LSM303D::SetIGConfiguration(IntConf_t ic)
 {
+	(void)ic;
 }
 
 void LSM303D::FIFOModeEnable(State_t enable)
@@ -591,6 +607,16 @@ void LSM303D::GetAcc(AxesAcc_t* buff)
 	AxesRaw_t raw = {0, 0, 0};
 	float fullscale = GetFullScale();
 	GetAccAxesRaw(&raw);
+	buff->AXIS_X = raw.AXIS_X * fullscale / 32768.0;
+	buff->AXIS_Y = raw.AXIS_Y * fullscale / 32768.0;
+	buff->AXIS_Z = raw.AXIS_Z * fullscale / 32768.0;
+}
+
+void LSM303D::GetMag(AxesMag_t* buff)
+{
+	AxesRaw_t raw = {0, 0, 0};
+	float fullscale = GetFullScaleMag();
+	GetMagAxesRaw(&raw);
 	buff->AXIS_X = raw.AXIS_X * fullscale / 32768.0;
 	buff->AXIS_Y = raw.AXIS_Y * fullscale / 32768.0;
 	buff->AXIS_Z = raw.AXIS_Z * fullscale / 32768.0;
