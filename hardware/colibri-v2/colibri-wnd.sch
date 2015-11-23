@@ -213,4 +213,8 @@ F0 "Voltage Regulators" 60
 F1 "voltage_regulators.sch" 60
 F2 "Vsys" I L 12850 7550 60 
 $EndSheet
+Text Notes 14850 3600 0    60   ~ 0
+Connect To:\nUSART1
+Text Notes 5900 2300 0    60   ~ 0
+Connect BUTTON_0 to:\nPB2/BOOT1
 $EndSCHEMATC
