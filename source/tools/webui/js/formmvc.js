@@ -100,6 +100,13 @@ FormView.prototype.onSubmitButton = function() {
   if (!$(this.formId)[0].checkValidity()) {
     return false;
   }
+
+  $(this.formId + " *").filter(':input').each(function(){
+    if (this.type == "number") {
+      this.value = String(Number(this.value));
+    }
+  });
+
   this.state = "STATE_SUBMITTING_DATA";
   this.redrawControls();
   return true;
