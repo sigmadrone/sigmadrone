@@ -409,7 +409,7 @@ public:
 		float AXIS_X;
 		float AXIS_Y;
 		float AXIS_Z;
-	} AxesAcc_t;
+	} AxesAcc_t, AxesMag_t;
 
 public:
 	AxesRaw_t raw;
@@ -462,8 +462,12 @@ public:
 	void SetODR_M(ODR_M_t ov);
 	void SetModeMag(Mode_M_t Mode);
 	void SetFullScaleMag(FullscaleMag_t fs);
+	float GetFullScaleMag();
 	void GetMagAxesRaw(AxesRaw_t* buff);
+
+	/******* easier to use reading functions ***/
 	void GetAcc(AxesAcc_t* buff);
+	void GetMag(AxesMag_t* buff);
 	u8_t GetFifoAcc(AxesAcc_t* buff);
 
 	u8_t ReadReg8(u8_t reg);
