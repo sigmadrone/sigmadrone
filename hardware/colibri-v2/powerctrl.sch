@@ -586,20 +586,6 @@ F 6 "Farnell" V 5650 5300 30  0001 C CNN "Provider"
 	1    0    0    -1  
 $EndComp
 $Comp
-L R_SMT R?
-U 1 1 5650C7BE
-P 6650 5300
-F 0 "R?" V 6720 5300 50  0000 C CNN
-F 1 "10K/5%" V 6580 5300 50  0000 C CNN
-F 2 "Resistors_SMD:R_0603" V 6800 5300 30  0001 C CNN
-F 3 "" V 6730 5300 30  0000 C CNN
-F 4 "0603" V 6650 5300 20  0000 C CNN "SMT"
-F 5 "9331700" V 6850 5300 30  0001 C CNN "Part"
-F 6 "Farnell" V 6900 5300 30  0001 C CNN "Provider"
-	1    6650 5300
-	1    0    0    -1  
-$EndComp
-$Comp
 L D D?
 U 1 1 5650D285
 P 2100 6250
@@ -823,12 +809,6 @@ F 3 "" H 7850 1500 60  0000 C CNN
 	1    7850 1500
 	1    0    0    -1  
 $EndComp
-Text Notes 6100 3950 1    60   ~ 0
-What is this for?
-Text Notes 6700 5500 0    60   ~ 0
-100K or 10K?
-Text Notes 2150 6100 1    60   ~ 0
-What is this for?
 Wire Wire Line
 	3100 1200 3300 1200
 Wire Wire Line
@@ -1283,23 +1263,8 @@ F 3 "" H 10100 2450 60  0000 C CNN
 $EndComp
 Wire Wire Line
 	10100 2300 10100 2450
-Text Notes 10250 2200 0    60   ~ 0
-10 OR 100?
-$Comp
-L +3V3 #PWR?
-U 1 1 565248B4
-P 8500 1950
-F 0 "#PWR?" H 8500 1800 50  0001 C CNN
-F 1 "+3V3" H 8500 2090 50  0000 C CNN
-F 2 "" H 8500 1950 60  0000 C CNN
-F 3 "" H 8500 1950 60  0000 C CNN
-	1    8500 1950
-	0    -1   -1   0   
-$EndComp
 Wire Wire Line
 	8500 1950 9050 1950
-Text Notes 8050 2250 0    60   ~ 0
-Better to\nuse MSRMNT_ON
 Wire Wire Line
 	4000 2950 3850 2950
 Wire Wire Line
@@ -1313,4 +1278,20 @@ Connection ~ 4650 2850
 Wire Wire Line
 	4400 2650 4650 2650
 Connection ~ 4650 2750
+$Comp
+L R_SMT R?
+U 1 1 5653DB72
+P 6650 5300
+F 0 "R?" V 6720 5300 50  0000 C CNN
+F 1 "100K/5%" V 6580 5300 50  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 6800 5300 30  0001 C CNN
+F 3 "" V 6730 5300 30  0000 C CNN
+F 4 "0603" V 6650 5300 20  0000 C CNN "SMT"
+F 5 "9233628" V 6850 5300 30  0001 C CNN "Part"
+F 6 "Farnell" V 6900 5300 30  0001 C CNN "Provider"
+	1    6650 5300
+	1    0    0    -1  
+$EndComp
+Text HLabel 8500 1950 0    60   Input ~ 0
+MSRMNT_ON
 $EndSCHEMATC
