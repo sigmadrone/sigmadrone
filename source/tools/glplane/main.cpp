@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
 
 	Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(0), DEG2RAD(180)));
 
-	GLuint mLoc = glGetUniformLocation(gProgram, "M");
+	GLint mLoc = glGetUniformLocation(gProgram, "M");
 	if (mLoc >= 0)
 		glUniformMatrix4fv(mLoc, 1, GL_FALSE, m.data);
 
@@ -180,7 +180,7 @@ again:
 			if (gDebug) {
 				fprintf(stdout, "%5.9lf %5.9lf %5.9lf %5.9lf\n", q.w, q.x, q.y, q.z);
 			}
-			GLuint mLoc;
+			GLint mLoc;
 			Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(180), DEG2RAD(90)) * M);
 
 			mLoc = glGetUniformLocation(gProgram, "M");
@@ -207,7 +207,7 @@ void RpcIdleFunction(void)
 
 	q = q * remapQ;
 	M = q.rotMatrix4();
-	GLuint mLoc;
+	GLint mLoc;
 	Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(180), DEG2RAD(90)) * M);
 	mLoc = glGetUniformLocation(gProgram, "M");
 	if (mLoc >= 0)

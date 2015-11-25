@@ -33,7 +33,6 @@
 server_app::server_app(const cmd_args& args)
 	: logger("server_app: ")
 	, logfile_(new logfile("sigmad.log", 1024*1024*10, logfile::none))
-	, ctrl_thread_(*this)
 	, firmware_uart_speed_(B460800)
 	, io_service_()
 	, signals_(io_service_)
@@ -96,57 +95,6 @@ void server_app::init_black_box()
 	black_box_->start_recording();
 }
 
-void server_app::init_servo_controller()
-{
-	if (args_.get_value("servo-ctrl") == "pca9685") {
-		servoctrl_.reset(new pca9685controller(4));
-	} else {
-		servoctrl_.reset(new servocontroller(4));
-	}
-	servoctrl_->motor(0) = servomotor(1.0, 1.30, 1.1, 2.2);
-	servoctrl_->motor(1) = servomotor(1.0, 1.30, 1.1, 2.2);
-	servoctrl_->motor(2) = servomotor(1.0, 1.30, 1.1, 2.2);
-	servoctrl_->motor(3) = servomotor(1.0, 1.30, 1.1, 2.2);
-	servoctrl_->setrate(300);
-	servoctrl_->update();
-}
-
-void server_app::init_sensors_sampler()
-{
-	if (args_.get_value("disable-sensors").empty()) {
-		ssampler_.reset(new sampler(
-			args_.get_value("gyr-device", args_.get_value("gyr-disable").empty() ? "/dev/gyro0" : ""),
-			args_.get_value("acc-device", args_.get_value("acc-disable").empty() ? "/dev/accel0" : ""),
-			args_.get_value("mag-device", args_.get_value("mag-disable").empty() ? "/dev/mag0" : ""),
-			args_.get_value("bar-device", args_.get_value("bar-disable").empty() ?"/sys/bus/i2c/devices/4-0077/pressure0_input" : "")));
-		if (args_.get_value("gyr-disable").empty())
-			ssampler_->gyr_.set_rate(atoi(args_.get_value("gyr-rate", "760").c_str()));
-		if (args_.get_value("acc-disable").empty())
-			ssampler_->acc_.set_rate(atoi(args_.get_value("acc-rate", "400").c_str()));
-		if (args_.get_value("mag-disable").empty())
-			ssampler_->mag_.set_rate(atoi(args_.get_value("mag-rate", "220").c_str()));
-		if (args_.get_value("gyr-disable").empty())
-			ssampler_->gyr_.set_full_scale(atoi(args_.get_value("gyr-scale", "2000").c_str()));
-		if (args_.get_value("acc-disable").empty())
-			ssampler_->acc_.set_full_scale(atoi(args_.get_value("acc-scale", "4").c_str()));
-		if (args_.get_value("mag-disable").empty())
-			ssampler_->mag_.set_full_scale(atoi(args_.get_value("mag-scale", "1300").c_str()));
-		if (args_.get_value("gyr-disable").empty())
-			ssampler_->gyr_.set_fifo_threshold(atoi(args_.get_value("gyr-fifo", "4").c_str()));
-		if (args_.get_value("acc-disable").empty())
-			ssampler_->acc_.set_fifo_threshold(atoi(args_.get_value("acc-fifo", "15").c_str()));
-		ssampler_->gyr_.set_adjustment(atof(args_.get_value("gyr-adjustment", "1.2").c_str()));
-		ssampler_->gyr_.bias_update(atoi(args_.get_value("bias-samples", "2000").c_str()));
-	} else {
-		ssampler_.reset(new sampler());
-	}
-}
-
-void server_app::init_attitude_tracker()
-{
-	attitude_tracker_.reset(new attitudetracker(atof(args_.get_value("acc-period", "3.5").c_str())));
-}
-
 int server_app::run(int argc, const char *argv[])
 {
 	if (args_.get_value("daemon") == "1") {
@@ -175,12 +123,10 @@ int server_app::run(int argc, const char *argv[])
 	}
 	get_log_file()->log_level(args_.get_value("loglevel", "info"));
 	log_info_message("Server starting.");
-	init_attitude_tracker();
 	init_user_rpcserver();
 	init_black_box();
 	boost::thread rpc_thread(boost::bind(&boost::asio::io_service::run, &io_service_));
 	rpc_thread.join();
-	ctrl_thread_.stop();
 	log_info_message("Server stopping.");
 	return 0;
 }
