@@ -191,6 +191,17 @@ void UART::clear()
 	rxbuf_.reset();
 }
 
+HAL_StatusTypeDef UART::tx(uint8_t c, uint32_t timeout)
+{
+	return HAL_UART_Transmit(&handle_, &c, sizeof(c), timeout);
+}
+
+HAL_StatusTypeDef UART::rx(uint8_t *c, uint32_t timeout)
+{
+	return HAL_UART_Receive(&handle_, c, sizeof(*c), timeout);
+}
+
+
 void UART::write(const std::string& str)
 {
 	write(str.c_str(), str.size());

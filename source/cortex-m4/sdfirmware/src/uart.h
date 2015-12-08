@@ -77,6 +77,10 @@ public:
 	void uart_dmatx_start();
 	void uart_dmarx_start();
 
+	/* Polling */
+	HAL_StatusTypeDef tx(uint8_t c, uint32_t timeout);
+	HAL_StatusTypeDef rx(uint8_t *c, uint32_t timeout);
+
 protected:
 	void dma_config();
 	void receive();

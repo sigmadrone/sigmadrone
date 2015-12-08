@@ -70,4 +70,8 @@ D Button
 K Switch
 $ENDCMP
 #
+$CMP Vbak
+K POWER, PWR
+$ENDCMP
+#
 #End Doc Library

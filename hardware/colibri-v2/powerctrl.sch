@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 9 23
+Sheet 9 24
 Title ""
 Date ""
 Rev ""
@@ -44,28 +44,6 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-$Comp
-L CONN_01X02 P?
-U 1 1 55962775
-P 1200 1100
-F 0 "P?" H 1200 1250 50  0000 C CNN
-F 1 "CONN_01X02" V 1300 1100 50  0000 C CNN
-F 2 "" H 1200 1100 60  0001 C CNN
-F 3 "" H 1200 1100 60  0000 C CNN
-	1    1200 1100
-	-1   0    0    -1  
-$EndComp
-$Comp
-L CONN_01X02 P?
-U 1 1 559627DB
-P 8150 1100
-F 0 "P?" H 8150 1250 50  0000 C CNN
-F 1 "CONN_01X02" V 8250 1100 50  0000 C CNN
-F 2 "" H 8150 1100 60  0001 C CNN
-F 3 "" H 8150 1100 60  0000 C CNN
-	1    8150 1100
-	1    0    0    -1  
-$EndComp
 $Comp
 L GND #PWR?
 U 1 1 5596291C
@@ -1056,13 +1034,9 @@ Wire Wire Line
 	1650 800  1650 1050
 Connection ~ 1650 1050
 Wire Wire Line
-	7950 1150 7850 1150
+	1400 1250 1650 1250
 Wire Wire Line
-	7850 1150 7850 1500
-Wire Wire Line
-	1400 1150 1650 1150
-Wire Wire Line
-	1650 1150 1650 1500
+	1650 1250 1650 1500
 Wire Wire Line
 	2250 6250 2700 6250
 Wire Wire Line
@@ -1231,7 +1205,7 @@ Wire Wire Line
 Text HLabel 10350 1900 2    60   Output ~ 0
 BAT_MSRMNT
 Wire Wire Line
-	10350 1900 9700 1900
+	9700 1900 10350 1900
 Connection ~ 9700 1900
 $Comp
 L C_SMT C?
@@ -1294,4 +1268,30 @@ F 6 "Farnell" V 6900 5300 30  0001 C CNN "Provider"
 $EndComp
 Text HLabel 8500 1950 0    60   Input ~ 0
 MSRMNT_ON
+$Comp
+L XT60 CN?
+U 1 1 566008A4
+P 1150 1150
+F 0 "CN?" H 1150 1400 60  0000 C CNN
+F 1 "XT60-M" H 1150 900 60  0000 C CNN
+F 2 "Sigmadrone:xt60" H 1150 850 60  0001 C CNN
+F 3 "" H 1150 1300 60  0000 C CNN
+	1    1150 1150
+	-1   0    0    1   
+$EndComp
+$Comp
+L XT60 CN?
+U 1 1 56600C8C
+P 8200 1150
+F 0 "CN?" H 8200 1400 60  0000 C CNN
+F 1 "XT60-F" H 8200 900 60  0000 C CNN
+F 2 "Sigmadrone:xt60" H 8200 850 60  0001 C CNN
+F 3 "" H 8200 1300 60  0000 C CNN
+	1    8200 1150
+	1    0    0    1   
+$EndComp
+Wire Wire Line
+	7950 1250 7850 1250
+Wire Wire Line
+	7850 1250 7850 1500
 $EndSCHEMATC

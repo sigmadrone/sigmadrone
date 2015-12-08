@@ -1,4 +1,3 @@
-#SUBDIRS += jsonrpc
 SUBDIRS += cmdargs
 SUBDIRS += httpserver
 SUBDIRS += httpclient

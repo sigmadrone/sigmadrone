@@ -14,9 +14,9 @@ endif
 xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(CFLAGS) $(DEBUGFLAGS)
 xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(CXXFLAGS) $(DEBUGFLAGS)
 xLDFLAGS 	= $(LDFLAGS)
-LIBS		= -lattitude -llogger -ldevice -lrexjsonrpc -lrexjson -lhttp -lcmdargs 
+LIBS		= -lattitude -llogger -lrexjsonrpc -lrexjson -lhttp -lcmdargs 
 LIBS		+= -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-LIBS		+= -L../libattitude/$(OUTDIR) -L../libdevice/$(OUTDIR) -L../libcmdargs/$(OUTDIR) -L../liblogger/$(OUTDIR) 
+LIBS		+= -L../libattitude/$(OUTDIR) -L../libcmdargs/$(OUTDIR) -L../liblogger/$(OUTDIR) 
 LIBS		+= -L../libhttp/$(OUTDIR) -L../librexjson/$(OUTDIR) -L../librexjsonrpc/$(OUTDIR)
 TARGET 		= $(OUTDIR)/sigmad
 OBJS		= \
@@ -26,8 +26,6 @@ OBJS		= \
 		$(OUTDIR)/clientapp.o \
 		$(OUTDIR)/serverapp.o \
 		$(OUTDIR)/userrpcserver.o \
-		$(OUTDIR)/attcontroller.o \
-		$(OUTDIR)/pidtorque.o \
 		$(OUTDIR)/blackbox.o \
 
 

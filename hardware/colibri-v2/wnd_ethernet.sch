@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 15 23
+Sheet 15 24
 Title ""
 Date ""
 Rev ""
@@ -94,9 +94,7 @@ Wire Wire Line
 Wire Wire Line
 	3400 4050 3400 4150
 Wire Wire Line
-	3400 4150 5000 4150
-Wire Wire Line
-	5000 4150 5650 4150
+	3400 4150 5650 4150
 $Comp
 L GND #PWR?
 U 1 1 561772BC
@@ -119,9 +117,7 @@ Wire Wire Line
 Wire Wire Line
 	5650 4350 5250 4350
 Wire Wire Line
-	5250 2300 5250 4350
-Wire Wire Line
-	5250 4350 5250 4650
+	5250 2300 5250 4650
 Wire Wire Line
 	5250 4650 5650 4650
 Wire Wire Line
@@ -142,9 +138,7 @@ Connection ~ 5250 4350
 Wire Wire Line
 	3150 4750 4100 4750
 Wire Wire Line
-	4400 4750 4700 4750
-Wire Wire Line
-	4700 4750 5650 4750
+	4400 4750 5650 4750
 Wire Wire Line
 	3150 4900 4100 4900
 Wire Wire Line

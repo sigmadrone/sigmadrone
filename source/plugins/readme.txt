@@ -1,1 +1,0 @@
-SigmaDrone plug-in directory

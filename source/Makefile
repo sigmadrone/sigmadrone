@@ -1,5 +1,4 @@
 SUBDIRS += libattitude
-SUBDIRS += libdevice
 SUBDIRS += libhttp
 SUBDIRS += libcmdargs
 SUBDIRS += liblogger
@@ -7,7 +6,6 @@ SUBDIRS += librexjson
 SUBDIRS += librexjsonrpc
 SUBDIRS += libgps
 SUBDIRS += tools
-SUBDIRS += plugins
 SUBDIRS += sigmad
 SUBDIRS += tests
 

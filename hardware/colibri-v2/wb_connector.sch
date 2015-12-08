@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 11 23
+Sheet 11 24
 Title ""
 Date ""
 Rev ""
@@ -478,4 +478,10 @@ Text Notes 7500 7500 2    60   ~ 0
 ???
 Text Notes 7500 7600 2    60   ~ 0
 ???
+$Sheet
+S 900  8900 1650 550 
+U 565FC76D
+F0 "Wandboard RTC" 60
+F1 "wnd_rtc.sch" 60
+$EndSheet
 $EndSCHEMATC

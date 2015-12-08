@@ -70,6 +70,7 @@ DigitalIn user_sw4(PG_11, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 TaskHandle_t main_task_handle = 0;
 TaskHandle_t bmp180_task_handle = 0;
 TaskHandle_t battery_task_handle = 0;
+TaskHandle_t uart_task_handle = 0;
 QueueHandle_t hGyroQueue;
 TimeStamp isr_ts;
 DroneState* drone_state = 0;
@@ -77,8 +78,10 @@ DroneState* drone_state = 0;
 FlashMemory configdata(&flashregion, sizeof(flashregion), FLASH_SECTOR_23, 1);
 
 UART uart2({
-	{PD_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART3_TX_PIN */
-	{PD_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART3_RX_PIN */
+	{PD_3, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART2_CTS_PIN */
+	{PD_4, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART2_RTS_PIN */
+	{PD_5, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART2_TX_PIN */
+	{PD_6, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART2_RX_PIN */
 },
 		USART2,
 		DMA1,
@@ -86,7 +89,7 @@ UART uart2({
 		DMA_CHANNEL_4,		/* TX DMA channel */
 		DMA1_Stream5,		/* RX DMA stream */
 		DMA_CHANNEL_4,		/* RX DMA channel */
-		UART_HWCONTROL_RTS_CTS,
+		UART_HWCONTROL_NONE,/* UART_HWCONTROL_RTS_CTS, UART_HWCONTROL_RTS, UART_HWCONTROL_CTS, UART_HWCONTROL_NONE */
 		460800,
 		250
 );
@@ -171,6 +174,27 @@ void battery_task(void *pvParameters)
 	}
 }
 
+void uart_task(void *pvParameters)
+{
+	char buffer[128];
+	char *p;
+	uint8_t tmp;
+	(void)pvParameters;
+
+	// Enable nCTS
+	uart2.handle_.Instance->CR3 |= (USART_CR3_CTSE);
+	for (unsigned int i = 0; true; i++) {
+		snprintf(buffer, sizeof(buffer), "{\"uart_task\": %d}\n", i);
+		for (p = buffer; *p; p++) {
+			uart2.rx(&tmp, 0);
+			if (uart2.tx(*p, 250) != HAL_OK)
+				break;
+		}
+		vTaskDelay(350 / portTICK_RATE_MS);
+	}
+}
+
+
 static Vector3f CalculateGyroBias(L3GD20& gyro, uint32_t num_samples)
 {
 	Vector3f gyro_bias;
@@ -227,7 +251,10 @@ void main_task(void *pvParameters)
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
 	HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 1, 0);
 	HAL_NVIC_EnableIRQ (DMA1_Stream5_IRQn);
+
+#ifndef ENABLE_UART_TASK
 	uart2.uart_dmarx_start();
+#endif
 
 	printf("Priority Group: %lu\n", NVIC_GetPriorityGrouping());
 	printf("SysTick_IRQn priority: %lu\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
@@ -368,7 +395,9 @@ void main_task(void *pvParameters)
 		}
 #endif
 
+#ifndef ENABLE_UART_TASK
 		rpcserver.jsonrpc_request_handler(&uart2);
+#endif
 	}
 }
 
@@ -418,6 +447,17 @@ int main(int argc, char* argv[])
 			tskIDLE_PRIORITY + 1UL, /* Task priority*/
 			&battery_task_handle /* Task handle */
 	);
+
+#if ENABLE_UART_TASK
+	xTaskCreate(
+			uart_task, /* Function pointer */
+			"uart_task", /* Task name - for debugging only*/
+			configMINIMAL_STACK_SIZE, /* Stack depth in words */
+			(void*) NULL, /* Pointer to tasks arguments (parameter) */
+			tskIDLE_PRIORITY + 1UL, /* Task priority*/
+			&uart_task_handle /* Task handle */
+	);
+#endif
 
 	/*
 	 * Disable the SysTick_IRQn and clean the priority
