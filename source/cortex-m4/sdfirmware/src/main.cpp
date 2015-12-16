@@ -244,6 +244,7 @@ void main_task(void *pvParameters)
 	FlightControl flight_ctl;
 	UartRpcServer rpcserver(*drone_state, configdata);
 	AccelLowPassFilter* accel_lpf = new AccelLowPassFilter();
+	AccelLowPassFilter* mag_lpf = new AccelLowPassFilter();
 	Vector3f gyro_bias;
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
@@ -343,12 +344,13 @@ void main_task(void *pvParameters)
 			Vector3f accel_adjusted = drone_state->accel_raw_ + drone_state->accelerometer_adjustment_;
 			drone_state->accel_ = accel_lpf->do_filter(accel_adjusted.normalize());
 		}
+		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
 
 		accel.GetMag(&mag_axes);
 		drone_state->mag_raw_ = acc_align * Vector3f(mag_axes.AXIS_X, mag_axes.AXIS_Y, mag_axes.AXIS_Z);
-		drone_state->mag_ = drone_state->mag_raw_.normalize();
+		drone_state->mag_ = mag_lpf->do_filter(drone_state->mag_raw_.normalize());
+		att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
 
-		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
 		drone_state->attitude_ = att.get_attitude();
 
 		flight_ctl.update_state(*drone_state);

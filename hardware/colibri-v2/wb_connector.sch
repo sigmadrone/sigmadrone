@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 11 24
+Sheet 11 25
 Title ""
 Date ""
 Rev ""
@@ -483,5 +483,16 @@ S 900  8900 1650 550
 U 565FC76D
 F0 "Wandboard RTC" 60
 F1 "wnd_rtc.sch" 60
+F2 "RTC_SDA" B R 2550 9000 60 
+F3 "RTC_SCL" I R 2550 9100 60 
+F4 "RTC_INT" O R 2550 9200 60 
+$EndSheet
+$Sheet
+S 900  8150 1650 450 
+U 56693441
+F0 "Wandboard EEPROM" 60
+F1 "wnd_eeprom.sch" 60
+F2 "EEPROM_SDA" B R 2550 8250 60 
+F3 "EEPROM_SCL" I R 2550 8350 60 
 $EndSheet
 $EndSCHEMATC
