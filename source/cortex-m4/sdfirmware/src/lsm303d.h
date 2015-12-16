@@ -297,6 +297,14 @@ public:
 	} HPFCutOffFreq_t;
 
 	typedef enum {
+		ABW_773_HZ          = 0x00,
+		ABW_194_HZ          = 0x01,
+		ABW_362_HZ          = 0x02,
+		ABW_50_HZ           = 0x03
+	} AntialiasFilterBandwidth_t;
+
+
+	typedef enum {
 		FULLSCALE_2         = 0x00,
 		FULLSCALE_4         = 0x01,
 		FULLSCALE_6         = 0x02,
@@ -435,6 +443,10 @@ public:
 	void SetHPFMode(HPFMode_t hpf);
 	void SetHPFCutOFF(HPFCutOffFreq_t hpf);
 	void SetFilterDataSel(State_t state);
+	void SetReferenceValueX(u8_t value);
+	void SetReferenceValueY(u8_t value);
+	void SetReferenceValueZ(u8_t value);
+	void SetAntiAliasingBandwidth(AntialiasFilterBandwidth_t abw);
 
 	//Interrupt Functions
 	void SetInt1Pin(IntPinConf_t pinConf);

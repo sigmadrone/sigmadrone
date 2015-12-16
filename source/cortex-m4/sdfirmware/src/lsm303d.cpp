@@ -384,7 +384,44 @@ void LSM303D::SetHPFCutOFF(HPFCutOffFreq_t hpf)
  *******************************************************************************/
 void LSM303D::SetFilterDataSel(State_t state)
 {
-	(void)state;
+	u8_t value;
+
+	ReadReg8(LSM303D_CTRL_REG7, &value);
+	value &= 0xDF;
+	value |= (state << LSM303D_AFDS);
+	WriteReg8(LSM303D_CTRL_REG7, value);
+}
+
+void LSM303D::SetReferenceValueX(u8_t value)
+{
+	WriteReg8(LSM303D_REFERENCE_X, value);
+}
+
+void LSM303D::SetReferenceValueY(u8_t value)
+{
+	WriteReg8(LSM303D_REFERENCE_Y, value);
+}
+
+void LSM303D::SetReferenceValueZ(u8_t value)
+{
+	WriteReg8(LSM303D_REFERENCE_Z, value);
+}
+
+/*******************************************************************************
+ * Function Name  : SetAntiAliasingBandwidth
+ * Description    : Sets the LSM303D Anti-aliasing Bandwidth
+ * Input          : AntialiasFilterBandwidth_t
+ * Output         : None
+ * Return         : None
+ *******************************************************************************/
+void LSM303D::SetAntiAliasingBandwidth(AntialiasFilterBandwidth_t abw)
+{
+	u8_t value;
+
+	ReadReg8(LSM303D_CTRL_REG2, &value);
+	value &= 0x3F;
+	value |= (abw << LSM303D_ABW);
+	WriteReg8(LSM303D_CTRL_REG2, value);
 }
 
 /*******************************************************************************
