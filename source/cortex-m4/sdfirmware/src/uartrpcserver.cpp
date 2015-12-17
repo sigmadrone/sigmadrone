@@ -186,7 +186,7 @@ rexjson::value UartRpcServer::rpc_accelerometer_adjustment(UART* , rexjson::arra
 
 rexjson::value UartRpcServer::rpc_kp(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -209,7 +209,7 @@ rexjson::value UartRpcServer::rpc_kp(UART* , rexjson::array& params, rpc_exec_mo
 
 rexjson::value UartRpcServer::rpc_kd(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -232,7 +232,7 @@ rexjson::value UartRpcServer::rpc_kd(UART* , rexjson::array& params, rpc_exec_mo
 
 rexjson::value UartRpcServer::rpc_ki(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -256,7 +256,7 @@ rexjson::value UartRpcServer::rpc_ki(UART* , rexjson::array& params, rpc_exec_mo
 
 rexjson::value UartRpcServer::rpc_yaw_kp(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -279,7 +279,7 @@ rexjson::value UartRpcServer::rpc_yaw_kp(UART* , rexjson::array& params, rpc_exe
 
 rexjson::value UartRpcServer::rpc_yaw_kd(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -302,7 +302,7 @@ rexjson::value UartRpcServer::rpc_yaw_kd(UART* , rexjson::array& params, rpc_exe
 
 rexjson::value UartRpcServer::rpc_yaw_ki(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -325,7 +325,7 @@ rexjson::value UartRpcServer::rpc_yaw_ki(UART* , rexjson::array& params, rpc_exe
 
 rexjson::value UartRpcServer::rpc_yaw_bias(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -352,7 +352,7 @@ rexjson::value UartRpcServer::rpc_yaw_bias(UART* , rexjson::array& params, rpc_e
 
 rexjson::value UartRpcServer::rpc_pitch_bias(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -379,7 +379,7 @@ rexjson::value UartRpcServer::rpc_pitch_bias(UART* , rexjson::array& params, rpc
 
 rexjson::value UartRpcServer::rpc_roll_bias(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -406,7 +406,7 @@ rexjson::value UartRpcServer::rpc_roll_bias(UART* , rexjson::array& params, rpc_
 
 rexjson::value UartRpcServer::rpc_flight_ceiling(UART*, rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type|rpc_null_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -451,7 +451,7 @@ rexjson::value UartRpcServer::rpc_restore_config(UART*, rexjson::array& params, 
 
 rexjson::value UartRpcServer::rpc_set_accelerometer_correction_period(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -480,7 +480,7 @@ rexjson::value UartRpcServer::rpc_set_accelerometer_correction_period(UART* , re
 
 rexjson::value UartRpcServer::rpc_set_gyro_factor(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -504,7 +504,7 @@ rexjson::value UartRpcServer::rpc_set_gyro_factor(UART* , rexjson::array& params
 
 rexjson::value UartRpcServer::rpc_set_yaw_throttle_factor(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_real_type};
+	static unsigned int types[] = {rpc_real_type|rpc_int_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
