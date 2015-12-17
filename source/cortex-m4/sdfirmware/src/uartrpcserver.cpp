@@ -202,7 +202,7 @@ rexjson::value UartRpcServer::rpc_kp(UART* , rexjson::array& params, rpc_exec_mo
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type))
+	if ((params[0].type() != rexjson::null_type))
 		dronestate_.kp_ = params[0].get_real();
 	return dronestate_.kp_;
 }
@@ -225,7 +225,7 @@ rexjson::value UartRpcServer::rpc_kd(UART* , rexjson::array& params, rpc_exec_mo
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type))
+	if ((params[0].type() != rexjson::null_type))
 		dronestate_.kd_ = params[0].get_real();
 	return dronestate_.kd_;
 }
@@ -248,7 +248,7 @@ rexjson::value UartRpcServer::rpc_ki(UART* , rexjson::array& params, rpc_exec_mo
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type))
+	if ((params[0].type() != rexjson::null_type))
 		dronestate_.ki_ = params[0].get_real();
 	return dronestate_.ki_;
 }
@@ -272,7 +272,7 @@ rexjson::value UartRpcServer::rpc_yaw_kp(UART* , rexjson::array& params, rpc_exe
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type))
+	if ((params[0].type() != rexjson::null_type))
 		dronestate_.yaw_kp_ = params[0].get_real();
 	return dronestate_.yaw_kp_;
 }
@@ -295,7 +295,7 @@ rexjson::value UartRpcServer::rpc_yaw_kd(UART* , rexjson::array& params, rpc_exe
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type))
+	if ((params[0].type() != rexjson::null_type))
 		dronestate_.yaw_kd_ = params[0].get_real();
 	return dronestate_.yaw_kd_;
 }
@@ -318,7 +318,7 @@ rexjson::value UartRpcServer::rpc_yaw_ki(UART* , rexjson::array& params, rpc_exe
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type))
+	if ((params[0].type() != rexjson::null_type))
 		dronestate_.yaw_ki_ = params[0].get_real();
 	return dronestate_.yaw_ki_;
 }
@@ -341,7 +341,7 @@ rexjson::value UartRpcServer::rpc_yaw_bias(UART* , rexjson::array& params, rpc_e
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type)) {
+	if ((params[0].type() != rexjson::null_type)) {
 		float value = params[0].get_real();
 		if (value > 0.1 || value < -0.1)
 			throw std::range_error("Invalid yaw_bias value");
@@ -368,7 +368,7 @@ rexjson::value UartRpcServer::rpc_pitch_bias(UART* , rexjson::array& params, rpc
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type)) {
+	if ((params[0].type() != rexjson::null_type)) {
 		float value = params[0].get_real();
 		if (value > 0.1 || value < -0.1)
 			throw std::range_error("Invalid pitch_bias value");
@@ -395,7 +395,7 @@ rexjson::value UartRpcServer::rpc_roll_bias(UART* , rexjson::array& params, rpc_
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type)) {
+	if ((params[0].type() != rexjson::null_type)) {
 		float value = params[0].get_real();
 		if (value > 0.1 || value < -0.1)
 			throw std::range_error("Invalid roll_bias value");
@@ -422,7 +422,7 @@ rexjson::value UartRpcServer::rpc_flight_ceiling(UART*, rexjson::array& params, 
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::real_type)) {
+	if ((params[0].type() != rexjson::null_type)) {
 		dronestate_.flight_ceiling_ = Altitude::from_meters(params[0].get_real());
 	}
 	return dronestate_.flight_ceiling_.meters();
