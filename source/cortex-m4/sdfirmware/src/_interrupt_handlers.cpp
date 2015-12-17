@@ -121,3 +121,8 @@ extern "C" void USART2_IRQHandler(void)
 	UART::uart_irq_handler(2);
 }
 
+extern "C" void EmergencyShutdown_Handler(void)
+{
+	DigitalOut(PB_2).write(0);
+}
+

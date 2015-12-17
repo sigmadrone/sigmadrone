@@ -17,6 +17,10 @@ extern void
 __attribute__((noreturn,weak))
 _start (void);
 
+extern void
+__attribute__((weak))
+EmergencyShutdown_Handler(void);
+
 // ----------------------------------------------------------------------------
 // Default exception handlers. Override the ones here by defining your own
 // handler routines in your application code.
@@ -53,6 +57,7 @@ Reset_Handler(void)
 void __attribute__ ((section(".after_vectors"),weak))
 NMI_Handler (void)
 {
+  EmergencyShutdown_Handler();
 #if defined(DEBUG)
   __DEBUG_BKPT();
 #endif
@@ -344,6 +349,9 @@ void __attribute__ ((section(".after_vectors"),weak,used))
 HardFault_Handler_C (ExceptionStackFrame* frame __attribute__((unused)),
                      uint32_t lr __attribute__((unused)))
 {
+
+  EmergencyShutdown_Handler();
+
 #if defined(TRACE)
   uint32_t mmfar = SCB->MMFAR; // MemManage Fault Address
   uint32_t bfar = SCB->BFAR; // Bus Fault Address
@@ -380,9 +388,9 @@ HardFault_Handler_C (ExceptionStackFrame* frame __attribute__((unused)),
 #if defined(DEBUG)
   __DEBUG_BKPT();
 #endif
-//  while (1)
-//    {
-//    }
+  while (1)
+    {
+    }
 }
 
 #endif // defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7EM__)
@@ -448,6 +456,8 @@ HardFault_Handler_C (ExceptionStackFrame* frame __attribute__((unused)),
 void __attribute__ ((section(".after_vectors"),weak))
 MemManage_Handler (void)
 {
+  EmergencyShutdown_Handler();
+
 #if defined(DEBUG)
   __DEBUG_BKPT();
 #endif
@@ -478,6 +488,8 @@ void __attribute__ ((section(".after_vectors"),weak,used))
 BusFault_Handler_C (ExceptionStackFrame* frame __attribute__((unused)),
                     uint32_t lr __attribute__((unused)))
 {
+  EmergencyShutdown_Handler();
+
 #if defined(TRACE)
   uint32_t mmfar = SCB->MMFAR; // MemManage Fault Address
   uint32_t bfar = SCB->BFAR; // Bus Fault Address
@@ -517,6 +529,8 @@ void __attribute__ ((section(".after_vectors"),weak,used))
 UsageFault_Handler_C (ExceptionStackFrame* frame __attribute__((unused)),
                       uint32_t lr __attribute__((unused)))
 {
+  EmergencyShutdown_Handler();
+
 #if defined(TRACE)
   uint32_t mmfar = SCB->MMFAR; // MemManage Fault Address
   uint32_t bfar = SCB->BFAR; // Bus Fault Address
@@ -554,6 +568,8 @@ UsageFault_Handler_C (ExceptionStackFrame* frame __attribute__((unused)),
 void __attribute__ ((section(".after_vectors"),weak))
 SVC_Handler (void)
 {
+  EmergencyShutdown_Handler();
+
 #if defined(DEBUG)
   __DEBUG_BKPT();
 #endif
@@ -567,6 +583,8 @@ SVC_Handler (void)
 void __attribute__ ((section(".after_vectors"),weak))
 DebugMon_Handler (void)
 {
+  EmergencyShutdown_Handler();
+
 #if defined(DEBUG)
   __DEBUG_BKPT();
 #endif
@@ -580,6 +598,8 @@ DebugMon_Handler (void)
 void __attribute__ ((section(".after_vectors"),weak))
 PendSV_Handler (void)
 {
+  EmergencyShutdown_Handler();
+
 #if defined(DEBUG)
   __DEBUG_BKPT();
 #endif
