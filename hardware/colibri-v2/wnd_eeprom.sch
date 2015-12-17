@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 20 25
+Sheet 20 26
 Title ""
 Date ""
 Rev ""
@@ -60,15 +60,9 @@ F 3 "" H 4850 2700 50  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	4850 2700 4850 3350
+	4850 2700 4850 3550
 Wire Wire Line
-	4850 3350 4850 3450
-Wire Wire Line
-	4850 3450 4850 3550
-Wire Wire Line
-	4400 3350 4850 3350
-Wire Wire Line
-	4850 3350 5100 3350
+	4400 3350 5100 3350
 Wire Wire Line
 	4850 3450 5100 3450
 Connection ~ 4850 3350

@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 1 25
+Sheet 1 26
 Title "Colibri WND"
 Date ""
 Rev "A1"
@@ -153,7 +153,9 @@ $EndSheet
 Wire Wire Line
 	5350 4000 5750 4000
 Wire Wire Line
-	5750 4000 5750 6200
+	5750 4000 5750 5550
+Wire Wire Line
+	5750 5550 5750 6200
 Wire Wire Line
 	5750 6200 5350 6200
 Wire Wire Line
@@ -217,4 +219,13 @@ Text Notes 14850 3600 0    60   ~ 0
 Connect To:\nUSART1
 Text Notes 5500 2300 0    60   ~ 0
 Connect BUTTON_0 to:\nPB2/BOOT1
+$Sheet
+S 12850 8100 1850 750 
+U 566CBCE8
+F0 "LED Controller" 60
+F1 "pca9685pw_led_ctrl.sch" 60
+F2 "PCA9685_OE(3V3)" I L 12850 8200 60 
+F3 "PCA9865_I2C_SCL" I L 12850 8300 60 
+F4 "PCA9865_I2C_SDA" B L 12850 8400 60 
+$EndSheet
 $EndSCHEMATC
