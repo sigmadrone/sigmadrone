@@ -139,6 +139,8 @@ std::string client_app::create_rpc_request(const std::string& method,
 				 */
 				if (!rexjson::read_no_throw(val, params[i]))
 					throw std::runtime_error("Error parsing: " + params[i]);
+				if ((params_types[i] & rpc_server<>::rpc_real_type) && rpc_server<>::get_rpc_type(val.type()) == rpc_server<>::rpc_int_type)
+					val.set_real(val.get_real());
 				if (!(rpc_server<>::get_rpc_type(val.type()) & params_types[i]))
 					throw std::runtime_error("Parameter: " + params[i] + " is of invalid type");
 			}
