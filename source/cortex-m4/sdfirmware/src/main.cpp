@@ -280,6 +280,8 @@ void main_task(void *pvParameters)
 	gyro.SetHPFCutOFF(L3GD20::HPFCF_0);
 	gyro.SetODR(L3GD20::ODR_760Hz_BW_35);
 
+	accel.SetHPFMode(LSM303D::HPM_NORMAL_MODE_RES);
+	accel.SetFilterDataSel(LSM303D::MEMS_DISABLE);
 	accel.SetODR(LSM303D::ODR_400Hz);
 	accel.SetFullScale(LSM303D::FULLSCALE_8);
 	accel.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
