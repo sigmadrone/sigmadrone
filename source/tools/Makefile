@@ -3,6 +3,8 @@ SUBDIRS += uartrpc
 ifeq ($(ARCH),x86)
 SUBDIRS += flightdeck
 SUBDIRS += glplane
+SUBDIRS += datastream
+
 endif
 
 all:

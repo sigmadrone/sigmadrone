@@ -25,12 +25,13 @@
 #include "uart.h"
 #include "dronestate.h"
 #include "flashmemory.h"
+#include "datastream.h"
 #include "librexjsonrpc/rpcserver.h"
 
 class UartRpcServer : public rpc_server<UartRpcServer, UART*>
 {
 public:
-	UartRpcServer(DroneState& dronestate, FlashMemory& configdata);
+	UartRpcServer(DroneState& dronestate, FlashMemory& configdata, DataStream& datastream);
 	virtual ~UartRpcServer();
 
 	void jsonrpc_request_handler(UART* uart);
@@ -47,6 +48,7 @@ protected:
 	rexjson::value rpc_get_dronestate_ex(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_get_configdata(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_set_configdata(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_get_datastream(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 	rexjson::value rpc_accelerometer_adjustment(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_kp(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
@@ -66,11 +68,12 @@ protected:
 	rexjson::value rpc_flight_ceiling(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_restore_config(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
+
 protected:
 	std::string cached_request_;
 	DroneState& dronestate_;
 	FlashMemory& configdata_;
-
+	DataStream& datastream_;
 };
 
 #endif /* UARTRPCSERVER_H_ */

@@ -76,6 +76,7 @@ TimeStamp isr_ts;
 DroneState* drone_state = 0;
 
 FlashMemory configdata(&flashregion, sizeof(flashregion), FLASH_SECTOR_23, 1);
+DataStream datastream(32);
 
 UART uart2({
 	{PD_3, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART2_CTS_PIN */
@@ -242,7 +243,7 @@ void main_task(void *pvParameters)
 	TimeSpan ctx_switch_time;
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
-	UartRpcServer rpcserver(*drone_state, configdata);
+	UartRpcServer rpcserver(*drone_state, configdata, datastream);
 	AccelLowPassFilter* accel_lpf = new AccelLowPassFilter();
 	AccelLowPassFilter* mag_lpf = new AccelLowPassFilter();
 	Vector3f gyro_bias;
@@ -354,10 +355,14 @@ void main_task(void *pvParameters)
 		att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
 
 		drone_state->attitude_ = att.get_attitude();
+		datastream.set_attitude(drone_state->attitude_);
 
 		flight_ctl.update_state(*drone_state);
 		flight_ctl.send_throttle_to_motors();
+		datastream.set_correction_torque(drone_state->pid_torque_);
+		datastream.set_angular_velocity(drone_state->accel_raw_);
 
+		datastream.commit();
 		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
 			console_update_time.time_stamp();
 			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));
