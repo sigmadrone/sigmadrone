@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 11 26
+Sheet 11 27
 Title ""
 Date ""
 Rev ""
@@ -494,5 +494,11 @@ F0 "Wandboard EEPROM" 60
 F1 "wnd_eeprom.sch" 60
 F2 "EEPROM_SDA" B R 2550 8250 60 
 F3 "EEPROM_SCL" I R 2550 8350 60 
+$EndSheet
+$Sheet
+S 900  7200 1650 700 
+U 567A4150
+F0 "Wandboard OTG to Cortex USB FS2" 60
+F1 "wnd_usb_otg_to_cortex_usb_fs2.sch" 60
 $EndSheet
 $EndSCHEMATC

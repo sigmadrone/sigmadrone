@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 1 26
+Sheet 1 27
 Title "Colibri WND"
 Date ""
 Rev "A1"
@@ -153,9 +153,7 @@ $EndSheet
 Wire Wire Line
 	5350 4000 5750 4000
 Wire Wire Line
-	5750 4000 5750 5550
-Wire Wire Line
-	5750 5550 5750 6200
+	5750 4000 5750 6200
 Wire Wire Line
 	5750 6200 5350 6200
 Wire Wire Line
