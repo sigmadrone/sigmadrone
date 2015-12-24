@@ -41,6 +41,7 @@
             <ul class="nav nav-pills">
               <li class="active"><a href="#home" data-toggle="tab" id="home-button">Home</a></li>
               <li><a href="#control" data-toggle="tab"><span class="glyphicon glyphicon-wrench"></span> Configure</a></li>
+              <li><a href="#drone-data" data-toggle="tab"><i class="fa fa-bar-chart"></i> Analyze</a></li>
             </ul>
           </div> <!-- navbar-collapse-->
         </div><!-- container-fluid -->
@@ -394,7 +395,24 @@
 
       </div> <!--div id="control" class="container tab-pane fade"-->
 
+      <div id="drone-data" class="tab-pane fade">
+        <div class="container-fluid">
+          <div class="row row-padded">
+            <a id="collect-data-btn" class="btn btn-link" onClick="onToggleCollectDataButton();">
+              <span>Collect Data</span> <i class="fa fa-toggle-off fa-lg" id="collect-data-btn-icon"></i>
+            </a>
+          </div> <!--div class="row row-padded"-->
+          <div id="accel-chart-id"></div>
+        </div>
+      </div> <!-- div id = "drone-data" -->
+
+      <hr class="featurette-divider">
+
+      <!--div id="accel-chart-id" style="width:600px; height:300px;"></div-->
+
     </div> <!--div class="tab-content"-->
+
+    <div id="accel-chart-dygraph-id" style="width:600px; height:300px;"></div>
 
     <footer class="footer">
       <p>
@@ -412,6 +430,11 @@
   <script src="./justgauge/raphael-2.1.4.min.js"></script>
   <script src="./justgauge/justgage-1.1.0.min.js"></script>
   <script src="./js/formmvc.js"></script>
+  <script src="./js/togglebutton.js"></script>
+  <script src="./js/dygraph.js"></script>
+  <script src="./js/vis.min.js"></script>
+  <script src="./js/chart2d.js"></script>
+  <link href="./js/vis.min.css" rel="stylesheet" type="text/css" />
 
   <script>
   var id = 0;
@@ -444,9 +467,51 @@
     "#save2flash-help",
     "Saving boot-configuration to flash...",
     "Failed to save boot-configuration to flash!");
+  var collectDataButton = new ToggleButton(
+    "#collect-data-btn",
+    "#collect-data-btn-icon",
+    false);
   var droneState;
   var droneRpcUrl;
   var rpcFailureCount = 0;
+
+  var accelData = [
+    [0, 0, 0, -1.0]
+  ];
+
+  var firstIteration = 0;
+  var g = new Dygraph(document.getElementById("accel-chart-dygraph-id"), accelData, {
+      drawPoints: true,
+      showRoller: true,
+      title: "Accelerometer",
+      titleHeight: 20,
+      xlabel: 'Samples',
+      xLabelHeight: 12,
+      valueRange: [-2, 2],
+      labels: ['Time', 'X', 'Y', 'Z']
+    });
+
+  var accelGraph = new VisChart2d(
+    document.getElementById("accel-chart-id"),
+    "Accelerometer",
+    ['X', 'Y', 'Z'],
+    -1.2, 1.2
+  );
+
+  function onRedrawCharts(droneState) {
+    if (0 == firstIteration) {
+      firstIteration = droneState.iteration;
+    }
+    if (collectDataButton.isOn()) {
+      accelData.push([
+        droneState.iteration - firstIteration,
+        droneState.accel[0].toFixed(3),
+        droneState.accel[1].toFixed(3),
+        droneState.accel[2].toFixed(3)]);
+      g.updateOptions( { 'file': accelData } );
+      accelGraph.update(droneState.accel, droneState.iteration);
+    }
+  }
 
   function rpcCall(url, method, params, successCallback, failCallback) {
     var request = {id: ++id, jsonrpc: "2.0"};
@@ -464,6 +529,10 @@
         failCallback(method);
       }
     });
+  }
+
+  function onToggleCollectDataButton() {
+    collectDataButton.onToggle();
   }
 
   function quaternion2str(q) {
@@ -683,6 +752,8 @@
     } else {
 
       droneState = response.result;
+
+      onRedrawCharts(droneState);
 
       onRedrawMotorsAndBatteryStatus(response.result);
 
