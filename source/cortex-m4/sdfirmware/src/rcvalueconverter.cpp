@@ -21,9 +21,6 @@
 
 #include "rcvalueconverter.h"
 
-const float Throttle::MIN_VALUE = 0.0;
-const float Throttle::MAX_VALUE = 1.0;
-
 static const float MAX_EULER_FROM_RC = M_PI / 4.0;
 
 RcValueConverter::RcValueConverter(

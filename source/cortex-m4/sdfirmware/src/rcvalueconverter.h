@@ -26,17 +26,6 @@
 #include "matrix.h"
 #include "rcreceiver.h"
 
-struct Throttle: public ScaledUnit<float> {
-	static const float MIN_VALUE;// = 0.0;
-	static const float MAX_VALUE;// = 1.0;
-	inline Throttle(float throttle = 0.0) : ScaledUnit<float>(throttle) {}
-	inline float get(float min = MIN_VALUE, float max = MAX_VALUE) const {
-		return (unit() < min ? min : (unit() > max ? max : unit()));
-	}
-	float get_unbound() const { return unit(); }
-private:
-};
-
 struct PwmPulse {
 	PwmPulse(const TimeSpan& min_duty, const TimeSpan& max_duty) : min_(min_duty), max_(max_duty) {
 		assert(min_ < max_);

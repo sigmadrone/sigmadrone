@@ -210,4 +210,16 @@ private:
 	Voltage(float volts) : ScaledUnit(volts) {}
 };
 
+struct Throttle: public ScaledUnit<float> {
+	static constexpr float MIN_VALUE = 0.0f;
+	static constexpr float MAX_VALUE = 1.0f;
+	inline Throttle(float throttle = 0.0) : ScaledUnit<float>(throttle) {}
+	inline float get(float min = MIN_VALUE, float max = MAX_VALUE) const {
+		return (unit() < min ? min : (unit() > max ? max : unit()));
+	}
+	float get_unbound() const { return unit(); }
+private:
+};
+
+
 #endif /* UNITS_H_ */
