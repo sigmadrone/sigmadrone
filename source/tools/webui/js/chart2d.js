@@ -17,7 +17,7 @@ VisChart2d = function (containerId, chartTitle, ylabels, rangeMin, rangeMax, yla
         options: {
           drawPoints: {
             style: 'circle',
-            size: 2
+            size: 3
           }
       }
     });
@@ -33,7 +33,7 @@ VisChart2d = function (containerId, chartTitle, ylabels, rangeMin, rangeMax, yla
           yAxisOrientation: 'right',
           drawPoints: {
             style: 'square',
-            size: 2
+            size: 3
           }
         }
       });
@@ -46,7 +46,7 @@ VisChart2d = function (containerId, chartTitle, ylabels, rangeMin, rangeMax, yla
 
   var options = {
     start: 0, //vis.moment().add(-30, 'seconds'), // changed so its faster
-    end: 100, //vis.moment(),
+    end: 1000, //vis.moment(),
     showCurrentTime: true,
     dataAxis: {
       left: {
@@ -56,9 +56,9 @@ VisChart2d = function (containerId, chartTitle, ylabels, rangeMin, rangeMax, yla
         format: function(value) {
           return value.toFixed(2);
         },
-        title: {
+        /*title: {
           text: chartTitle
-        }
+        }*/
       }
     },
     legend: {left:{position:"top-left"}},
