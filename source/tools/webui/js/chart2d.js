@@ -38,7 +38,7 @@ VisChart2d = function (containerId, chartTitle, ylabels, rangeMin, rangeMax) {
       }
     },
     legend:true,
-    clickToUse:true,
+    //clickToUse:true,
     showMajorLabels:false,
     showMinorLabels:true,
     height: '300px',
