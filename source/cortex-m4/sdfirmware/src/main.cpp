@@ -76,7 +76,7 @@ TimeStamp isr_ts;
 DroneState* drone_state = 0;
 
 FlashMemory configdata(&flashregion, sizeof(flashregion), FLASH_SECTOR_23, 1);
-DataStream datastream(32);
+DataStream datastream(24);
 
 UART uart2({
 	{PD_3, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART2_CTS_PIN */
@@ -357,12 +357,15 @@ void main_task(void *pvParameters)
 		att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
 
 		drone_state->attitude_ = att.get_attitude();
-		datastream.set_attitude(drone_state->attitude_);
 
 		flight_ctl.update_state(*drone_state);
 		flight_ctl.send_throttle_to_motors();
-		datastream.set_correction_torque(drone_state->pid_torque_);
-		datastream.set_angular_velocity(drone_state->accel_raw_);
+		datastream.set_correction_torque(flight_ctl.pilot().torque_correction());
+		datastream.set_gyroscope(drone_state->gyro_);
+		datastream.set_accelerometer(drone_state->accel_);
+		datastream.set_attitude(drone_state->attitude_);
+		datastream.set_target_attitude(drone_state->target_);
+
 
 		datastream.commit();
 		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
