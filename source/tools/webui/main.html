@@ -474,13 +474,15 @@
   var accelGraph = new VisChart2d(
     document.getElementById("accel-chart-id"),
     "Accelerometer",
-    ['X', 'Y', 'Z'],
-    -1.2, 1.2
+    ['AccX', 'AccY', 'AccZ'],
+    -1.0, 1.0,
+    ['GyroX', 'GyroY', 'GyroZ']
   );
 
   function onRedrawCharts(droneState) {
     if (collectDataButton.isOn()) {
-      accelGraph.update(droneState.accel, droneState.iteration);
+      var samples = droneState.accel.concat(droneState.gyro);
+      accelGraph.update(samples, droneState.iteration);
     }
   }
 

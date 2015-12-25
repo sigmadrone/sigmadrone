@@ -4,7 +4,7 @@ function assert(condition, message) {
     }
 }
 
-VisChart2d = function (containerId, chartTitle, ylabels, rangeMin, rangeMax) {
+VisChart2d = function (containerId, chartTitle, ylabels, rangeMin, rangeMax, ylabelsRight) {
   this.dataset = new vis.DataSet();
 
   // Create the groups, number of groups is controlled by the size of the ylabels
@@ -15,10 +15,34 @@ VisChart2d = function (containerId, chartTitle, ylabels, rangeMin, rangeMax) {
         id: i,
         content: ylabels[i],
         options: {
-        drawPoints: true,
+          drawPoints: {
+            style: 'circle',
+            size: 2
+          }
       }
     });
   }
+  this.numLeftYAxis = ylabels.length;
+
+  if (null != ylabelsRight) {
+    for (var i = 0; i < ylabelsRight.length; ++i) {
+      this.groups.add({
+        id: this.numLeftYAxis + i,
+        content: ylabelsRight[i],
+        options: {
+          yAxisOrientation: 'right',
+          drawPoints: {
+            style: 'square',
+            size: 2
+          }
+        }
+      });
+    }
+    this.numRightYAxis = ylabelsRight.length;
+  } else {
+    this.numRightYAxis = 0;
+  }
+
 
   var options = {
     start: 0, //vis.moment().add(-30, 'seconds'), // changed so its faster
@@ -37,15 +61,11 @@ VisChart2d = function (containerId, chartTitle, ylabels, rangeMin, rangeMax) {
         }
       }
     },
-    legend:true,
+    legend: {left:{position:"top-left"}},
     //clickToUse:true,
     showMajorLabels:false,
     showMinorLabels:true,
-    height: '300px',
-    drawPoints: {
-      size: 1,
-      style: 'circle' // square, circle
-    },
+    height: '400px',
     /*
     shaded: {
       orientation: 'bottom' // top, bottom
@@ -59,12 +79,18 @@ VisChart2d = function (containerId, chartTitle, ylabels, rangeMin, rangeMax) {
 }
 
 VisChart2d.prototype.update = function(samples, iteration) {
-  assert(samples.length == this.groups.length);
+  assert(samples.length <= this.groups.length);
   assert(this.firstIteration <= iteration);
   if (this.firstIteration == 0) {
     this.firstIteration = iteration;
   }
   for (var i = 0; i < samples.length; ++i) {
+    this.dataset.add([
+      {x: iteration - this.firstIteration, y:samples[i], group: i}
+    ]);
+  }
+
+  for (var i = this.numLeftYAxis; i < samples.length; ++i) {
     this.dataset.add([
       {x: iteration - this.firstIteration, y:samples[i], group: i}
     ]);
