@@ -316,6 +316,8 @@ void main_task(void *pvParameters)
 	while (1) {
 		uint32_t msg;
 
+		drone_state->iteration_++;
+
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
 		}
 		ctx_switch_time = isr_ts.elapsed();

@@ -25,6 +25,7 @@
 #include "units.h"
 #include "matrix.h"
 #include "alarm.h"
+#include "flightdefs.h"
 #include "librexjsonrpc/jsonserialization.h"
 
 static const Altitude DEFAULT_FLIGHT_CEILING(Altitude::from_meters(50));
@@ -70,7 +71,9 @@ struct DroneState {
 		, roll_bias_(0.0)
 		, base_throttle_(0.0)
         , yaw_throttle_factor_(0.75)
+	    , flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
 	    , motors_armed_(false)
+	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING) { }
 
 	rexjson::value to_json()
@@ -93,6 +96,7 @@ struct DroneState {
 		ret["gps_satellites"] = static_cast<int>(satellite_count_);
 		ret["gps_altitude"] = gps_altitude_.meters();
 		ret["dt"] = static_cast<float>(dt_.microseconds());
+		ret["iteration"] = static_cast<int>(iteration_);
 		ret["attitude"] = quaternion_to_json_value(attitude_);
 		ret["target"] = quaternion_to_json_value(target_);
 		ret["motors"] = matrix_to_json_value(motors_);
@@ -133,6 +137,7 @@ struct DroneState {
 			ret["crit_alarm"] = most_critical_alarm_.to_string();
 			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
 		}
+		ret["flight_mode"] = flight_mode_;
 		return ret;
 	}
 
@@ -211,6 +216,9 @@ struct DroneState {
 	float yaw_kp_;
 	float yaw_ki_;
 	float yaw_kd_;
+	float altitude_kp_;
+	float altitude_ki_;
+	float altitude_kd_;
 	Vector3f accelerometer_adjustment_;
 	float accelerometer_correction_period_;
 	float gyro_factor_;
@@ -222,12 +230,18 @@ struct DroneState {
 	float roll_bias_;
 	float base_throttle_;
 	float yaw_throttle_factor_;
+	FlightMode flight_mode_;
 	bool motors_armed_;
 
 	/*
 	 * Time it took to read sensors
 	 */
 	TimeSpan dt_;
+
+	/*
+	 * Iteration number of the main control loop
+	 */
+	uint32_t iteration_;
 
 	/*
 	 * Calculated state attributes
