@@ -571,7 +571,9 @@ rexjson::value UartRpcServer::rpc_get_datastream(UART* , rexjson::array& params,
 		rexjson::object obj;
 		obj["serial"] = static_cast<int>(entry.serial_);
 		obj["attitude"] = quaternion_to_json_value(entry.attitude_);
-		obj["angular_velocity"] = matrix_to_json_value(entry.angular_velocity_);
+		obj["target_attitude"] = quaternion_to_json_value(entry.target_attitude_);
+		obj["gyro"] = matrix_to_json_value(entry.gyro_);
+		obj["accel"] = matrix_to_json_value(entry.accel_);
 		obj["correction_torque"] = matrix_to_json_value(entry.correction_torque_);
 		ret.push_back(obj);
 	}

@@ -32,9 +32,14 @@ DataStream::~DataStream()
 
 }
 
-void DataStream::set_angular_velocity(const Vector3d& value)
+void DataStream::set_gyroscope(const Vector3d& value)
 {
-	entry_.angular_velocity_ = value;
+	entry_.gyro_ = value;
+}
+
+void DataStream::set_accelerometer(const Vector3d& value)
+{
+	entry_.accel_ = value;
 }
 
 void DataStream::set_correction_torque(const Vector3d& value)
@@ -46,6 +51,12 @@ void DataStream::set_attitude(const QuaternionD& value)
 {
 	entry_.attitude_ = value;
 }
+
+void DataStream::set_target_attitude(const QuaternionD& value)
+{
+	entry_.target_attitude_ = value;
+}
+
 
 /*
  * Serialize the current DataStreamEntry and reset its value to default ones.

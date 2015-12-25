@@ -29,16 +29,20 @@
 
 struct DataStreamEntry {
 	size_t serial_;
-	Vector3d angular_velocity_;
+	Vector3d gyro_;
+	Vector3d accel_;
 	Vector3d correction_torque_;
 	QuaternionD attitude_;
+	QuaternionD target_attitude_;
 
 	DataStreamEntry() : serial_(0) {}
 	void reset() {
 		serial_ = 0;
-		angular_velocity_ = Vector3d();
+		gyro_ = Vector3d();
+		accel_ = Vector3d();
 		correction_torque_ = Vector3d();
 		attitude_ = QuaternionD();
+		target_attitude_ = QuaternionD();
 	}
 
 };
@@ -48,9 +52,11 @@ public:
 	DataStream(size_t queuesiz);
 	~DataStream();
 
-	void set_angular_velocity(const Vector3d& value);
+	void set_gyroscope(const Vector3d& value);
+	void set_accelerometer(const Vector3d& value);
 	void set_correction_torque(const Vector3d& value);
 	void set_attitude(const QuaternionD& value);
+	void set_target_attitude(const QuaternionD& value);
 	void commit();
 	bool retrieve(DataStreamEntry& entry);
 

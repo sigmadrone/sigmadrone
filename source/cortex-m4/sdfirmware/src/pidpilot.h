@@ -40,6 +40,7 @@ public:
 	void set_max_thrust(float maxRev);
 	void set_target_thrust(float thrust);
 
+	const Vector3f& torque_correction() const { return torque_correction_; }
 	const Vector4f& motors() const;
 	float get_min_thrust() const { return min_thrust_; }
 	float get_max_thrust() const { return max_thrust_; }
