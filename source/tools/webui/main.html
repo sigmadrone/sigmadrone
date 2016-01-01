@@ -404,6 +404,9 @@
           </div> <!--div class="row row-padded"-->
           <div class="row row-padded"></div>
           <div id="accel-chart-id"></div>
+          <div class="row row-padded">
+            <span id="chart-status-id">123</span>
+          </div>
         </div>
       </div> <!-- div id = "drone-data" -->
 
@@ -430,6 +433,7 @@
   <script src="./js/togglebutton.js"></script>
   <script src="./js/vis.min.js"></script>
   <script src="./js/chart2d.js"></script>
+  <script src="./js/rpcclient.js"></script>
   <link href="./js/vis.min.css" rel="stylesheet" type="text/css" />
 
   <script>
@@ -469,44 +473,16 @@
     false);
   var droneState;
   var droneRpcUrl;
-  var rpcFailureCount = 0;
+  var rpcClient = new RpcClient();
 
   var accelGraph = new VisChart2d(
     document.getElementById("accel-chart-id"),
+    "#chart-status-id",
     "Accelerometer",
     ['AccX', 'AccY', 'AccZ'],
     -1.0, 1.0,
     ['GyroX', 'GyroY', 'GyroZ']
   );
-
-  function onRedrawCharts(droneState) {
-    if (collectDataButton.isOn()) {
-      var samples = droneState.accel.concat(droneState.gyro);
-      accelGraph.update(samples, droneState.iteration);
-    }
-  }
-
-  function rpcCall(url, method, params, successCallback, failCallback) {
-    var request = {id: ++id, jsonrpc: "2.0"};
-    request.method = method;
-    request.params = params;
-    if (request.params.length > 0) {
-      request.params = JSON.parse(request.params);
-    }
-    /*console.log(JSON.stringify(request));*/
-    $.post(url, JSON.stringify(request), successCallback, "json").done(function(){
-      console.log("Success: " + method);
-    }).fail(function() {
-      console.log("Failed to execute " + method);
-      if (failCallback != null) {
-        failCallback(method);
-      }
-    });
-  }
-
-  function onToggleCollectDataButton() {
-    collectDataButton.onToggle();
-  }
 
   function quaternion2str(q) {
     return 'w:' + q.w.toFixed(3) + ' x:' + q.x.toFixed(3) + '  y:' + q.y.toFixed(3) + '  z:' + q.z.toFixed(3);
@@ -536,7 +512,7 @@
   function onRestoreDefaultConfig() {
     restoreDefaultsView.onUserInput();
     restoreDefaultsView.onSubmitButton();
-    rpcCall(droneRpcUrl, "sd_restore_config", "[]",
+    rpcClient.rpcCall(droneRpcUrl, "sd_restore_config", "[]",
       function() { restoreDefaultsView.onDataSubmitOK(); },
       function() { restoreDefaultsView.onDataSubmitFail(); });
     return false;
@@ -560,7 +536,7 @@
     };
     save2FlashView.onUserInput();
     save2FlashView.onSubmitButton();
-    rpcCall(droneRpcUrl, "sd_set_configdata", "["+JSON.stringify(bootConfig)+"]",
+    rpcClient.rpcCall(droneRpcUrl, "sd_set_configdata", "["+JSON.stringify(bootConfig)+"]",
       function() { save2FlashView.onDataSubmitOK(); },
       function() { save2FlashView.onDataSubmitFail(); });
     return false;
@@ -583,9 +559,9 @@
       return true;
     }
 
-    rpcCall(droneRpcUrl, "kp", "[" + $myForm[0].elements['kp-xy'].value + "]");
-    rpcCall(droneRpcUrl, "ki", "[" + $myForm[0].elements['ki-xy'].value + "]");
-    rpcCall(droneRpcUrl, "kd", "[" + $myForm[0].elements['kd-xy'].value + "]",
+    rpcClient.rpcCall(droneRpcUrl, "kp", "[" + $myForm[0].elements['kp-xy'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "ki", "[" + $myForm[0].elements['ki-xy'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "kd", "[" + $myForm[0].elements['kd-xy'].value + "]",
       function() {pidxyView.onDataSubmitOK();},
       function() {pidxyView.onDataSubmitFail();});
     return false;
@@ -606,9 +582,9 @@
       // and automatic error will be displayed
       return true;
     }
-    rpcCall(droneRpcUrl, "yaw_kp", "[" + $myForm[0].elements['kp-z'].value + "]");
-    rpcCall(droneRpcUrl, "yaw_ki", "[" + $myForm[0].elements['ki-z'].value + "]");
-    rpcCall(droneRpcUrl, "yaw_kd", "[" + $myForm[0].elements['kd-z'].value + "]",
+    rpcClient.rpcCall(droneRpcUrl, "yaw_kp", "[" + $myForm[0].elements['kp-z'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "yaw_ki", "[" + $myForm[0].elements['ki-z'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "yaw_kd", "[" + $myForm[0].elements['kd-z'].value + "]",
       function() {pidzView.onDataSubmitOK();},
       function() {pidzView.onDataSubmitFail();});
     return false;
@@ -629,11 +605,11 @@
       // and automatic error will be displayed
       return true;
     }
-    rpcCall(droneRpcUrl, "sd_set_yaw_throttle_factor",
+    rpcClient.rpcCall(droneRpcUrl, "sd_set_yaw_throttle_factor",
       "[" + $myForm[0].elements['yaw-throttle-factor'].value + "]");
-    rpcCall(droneRpcUrl, "roll_bias", "[" + $myForm[0].elements['torq-bias-roll'].value + "]");
-    rpcCall(droneRpcUrl, "pitch_bias", "[" + $myForm[0].elements['torq-bias-pitch'].value + "]");
-    rpcCall(droneRpcUrl, "yaw_bias", "[" + $myForm[0].elements['torq-bias-yaw'].value + "]",
+    rpcClient.rpcCall(droneRpcUrl, "roll_bias", "[" + $myForm[0].elements['torq-bias-roll'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "pitch_bias", "[" + $myForm[0].elements['torq-bias-pitch'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "yaw_bias", "[" + $myForm[0].elements['torq-bias-yaw'].value + "]",
       function() {flightCtlView.onDataSubmitOK();},
       function() {flightCtlView.onDataSubmitFail();});
     return false;
@@ -654,13 +630,13 @@
       // and automatic error will be displayed
       return true;
     }
-    rpcCall(droneRpcUrl, "sd_accelerometer_adjustment",
+    rpcClient.rpcCall(droneRpcUrl, "sd_accelerometer_adjustment",
       "[[" + $myForm[0].elements['acc-bias-x'].value + "," +
       $myForm[0].elements['acc-bias-y'].value + "," +
       $myForm[0].elements['acc-bias-z'].value + "]]");
-    rpcCall(droneRpcUrl, "sd_set_accelerometer_correction_period",
+    rpcClient.rpcCall(droneRpcUrl, "sd_set_accelerometer_correction_period",
       "[" + $myForm[0].elements['acc-corr-period'].value + "]");
-    rpcCall(droneRpcUrl, "sd_set_gyro_factor",
+    rpcClient.rpcCall(droneRpcUrl, "sd_set_gyro_factor",
       "[" + $myForm[0].elements['gyro-factor'].value + "]",
       function() {sensorCfgView.onDataSubmitOK();},
       function() {sensorCfgView.onDataSubmitFail();});
@@ -719,14 +695,24 @@
     toggleStatusMessage(false);
   }
 
+  function updateChart2d(response) {
+    if (response.error != null) {
+      console.log(JSON.stringify(response.result));
+    } else {
+      var sensorDataStream = response.result;
+      for (var i = 0; i < sensorDataStream.length; ++i) {
+        var samples = sensorDataStream[i].accel.concat(sensorDataStream[i].gyro);
+        accelGraph.update(samples, sensorDataStream[i].serial);
+      }
+    }
+  }
+
   function updateDroneState(response) {
     if (response.error != null) {
       console.log(JSON.stringify(response.result));
     } else {
 
       droneState = response.result;
-
-      onRedrawCharts(droneState);
 
       onRedrawMotorsAndBatteryStatus(response.result);
 
@@ -784,8 +770,6 @@
        sensorCfgView.onRedrawData(response.result);
        restoreDefaultsView.onRedrawData(response.result);
        save2FlashView.onRedrawData(response.result);
-
-       rpcFailureCount = 0;
     }
   }
 
@@ -854,20 +838,55 @@
 
   $.ajaxSetup({ timeout: 5000 });
 
+  var redrawGraph = false;
+  function onToggleCollectDataButton() {
+    collectDataButton.onToggle();
+    if (collectDataButton.isOff()) {
+      // Disable the button while drawing the chart
+      $("#collect-data-btn").addClass("disabled");
+      redrawGraph = true;
+      accelGraph.updateStatus("DRAWING");
+    } else {
+      accelGraph.reset();
+    }
+  }
+
+  function timerCount() {
+    return timerCount.i++;
+  }
+
+  timerCount.i = 0;
   window.setInterval(
     function () {
-      if (rpcFailureCount > 3) {
+      if (redrawGraph) {
+        redrawGraph = false;
+        accelGraph.draw();
+        $("#collect-data-btn").removeClass("disabled");
+      }
+      if (rpcClient.failureCount() > 5) {
         toggleStatusMessage(true);
       }
-      rpcCall(
-        droneRpcUrl = getDroneRpcUrl(),
-        "sd_get_dronestate_ex",
-        JSON.parse("[]"),
-        updateDroneState,
-        function() { ++rpcFailureCount; }
-        );
+      if (!rpcClient.isBusy()) {
+        if (collectDataButton.isOn()) {
+          rpcClient.rpcCall(
+            droneRpcUrl = getDroneRpcUrl(),
+            "sd_get_datastream",
+            JSON.parse("[]"),
+            updateChart2d,
+            function() { ++rpcFailureCount; }
+          );
+        } else if (0 == (timerCount() % 100)) {
+          rpcClient.rpcCall(
+            droneRpcUrl = getDroneRpcUrl(),
+            "sd_get_dronestate_ex",
+            JSON.parse("[]"),
+            updateDroneState,
+            function() { ++rpcFailureCount; }
+          );
+        }
+      }
     },
-    500);
+    5);
 
   </script>
 
