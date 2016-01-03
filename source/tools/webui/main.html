@@ -398,16 +398,95 @@
       <div id="drone-data" class="tab-pane fade">
         <div class="container-fluid">
           <div class="row row-padded">
-            <a id="collect-data-btn" class="btn btn-link" onClick="onToggleCollectDataButton();">
-              <span>Collect Data</span> <i class="fa fa-toggle-off fa-lg" id="collect-data-btn-icon"></i>
-            </a>
+            <div class="col-xs-12">
+              <a id="collect-data-btn" class="btn btn-link" onClick="onToggleCollectDataButton();">
+                <span>Collect Data</span> <i class="fa fa-toggle-off fa-lg" id="collect-data-btn-icon"></i>
+              </a>
+            </div>
           </div> <!--div class="row row-padded"-->
-          <div class="row row-padded"></div>
+          <a href="#chart-data-select-id" id="chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Select Y Axis Data
+          </a>
+          <div id = "chart-data-select-id" class="col-xs-12 collapse">
+            <div class="row">
+              <div class="col-xs-3 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAccXData(this)">Acc X</label>
+                </div>
+              </div>
+              <div class="col-xs-3">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAccYData(this)">Acc Y</label>
+                </div>
+              </div>
+              <div class="col-xs-3">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAccZData(this)">Acc Z</label>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-3 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartGyroXData(this)">Gyro X</label>
+                </div>
+              </div>
+              <div class="col-xs-3">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartGyroYData(this)">Gyro Y</label>
+                </div>
+              </div>
+              <div class="col-xs-3">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartGyroZData(this)">Gyro Z</label>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-3 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTorqXData(this)">Torque X</label>
+                </div>
+              </div>
+              <div class="col-xs-3">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTorqYData(this)">Torque Y</label>
+                </div>
+              </div>
+              <div class="col-xs-3">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTorqZData(this)">Torque Z</label>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-3 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartQWData(this)">Q:W</label>
+                </div>
+              </div>
+              <div class="col-xs-3">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartQXData(this)">Q:X</label>
+                </div>
+              </div>
+              <div class="col-xs-3">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartQYData(this)">Q:Y</label>
+                </div>
+              </div>
+              <div class="col-xs-3">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartQZData(this)">Q:Z</label>
+                </div>
+              </div>
+            </div>
+            <div class="row row-padded"></div>
+          </div>
           <div id="sensor-chart-id"></div>
           <div class="row row-padded">
             <span id="chart-status-id"></span>
           </div>
-        </div>
       </div> <!-- div id = "drone-data" -->
 
       <hr class="featurette-divider">
@@ -479,10 +558,24 @@
     document.getElementById("sensor-chart-id"),
     "#chart-status-id",
     "Accelerometer",
-    ['AccX', 'AccY', 'AccZ', 'Q:w', 'Q:X', 'Q:Y', 'Q:Z', 'TorqX', 'TorqY', 'TorqZ'],
+    ['AccX', 'AccY', 'AccZ', 'Q:W', 'Q:X', 'Q:Y', 'Q:Z', 'TorqX', 'TorqY', 'TorqZ'],
     -1.0, 1.0,
     ['GyroX', 'GyroY', 'GyroZ']
   );
+
+  function onToggleChartAccXData(element) { sensorChart.enableDisableGroup('AccX', element.checked); }
+  function onToggleChartAccYData(element) { sensorChart.enableDisableGroup('AccY', element.checked); }
+  function onToggleChartAccZData(element) { sensorChart.enableDisableGroup('AccZ', element.checked); }
+  function onToggleChartGyroXData(element) { sensorChart.enableDisableGroup('GyroX', element.checked); }
+  function onToggleChartGyroYData(element) { sensorChart.enableDisableGroup('GyroY', element.checked); }
+  function onToggleChartGyroZData(element) { sensorChart.enableDisableGroup('GyroZ', element.checked); }
+  function onToggleChartTorqXData(element) { sensorChart.enableDisableGroup('TorqX', element.checked); }
+  function onToggleChartTorqYData(element) { sensorChart.enableDisableGroup('TorqY', element.checked); }
+  function onToggleChartTorqZData(element) { sensorChart.enableDisableGroup('TorqZ', element.checked); }
+  function onToggleChartQWData(element) { sensorChart.enableDisableGroup('Q:W', element.checked); }
+  function onToggleChartQXData(element) { sensorChart.enableDisableGroup('Q:X', element.checked); }
+  function onToggleChartQYData(element) { sensorChart.enableDisableGroup('Q:Y', element.checked); }
+  function onToggleChartQZData(element) { sensorChart.enableDisableGroup('Q:Z', element.checked); }
 
   function quaternion2str(q) {
     return 'w:' + q.w.toFixed(3) + ' x:' + q.x.toFixed(3) + '  y:' + q.y.toFixed(3) + '  z:' + q.z.toFixed(3);
@@ -803,6 +896,7 @@
     toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
     toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
     toggleCollapsable("#flight-ctl-id", "#flight-ctl-btn", "Flight Control");
+    toggleCollapsable("#chart-data-select-id", "#chart-data-select-bt", "Select Y Axis Data");
     toggleStatusMessage(true);
 
     m1 = new JustGage({

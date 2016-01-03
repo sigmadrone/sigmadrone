@@ -51,6 +51,20 @@ VisChart2d = function (containerId, statusId, chartTitle, ylabels, rangeMin, ran
   this.reset();
 }
 
+VisChart2d.prototype.enableDisableGroup = function(groupName, enable) {
+  var i = 0;
+  var groupIds = this.groups.getIds();
+  for (;i < groupIds.length; ++i) {
+    if (this.groups.get(groupIds[i]).content == groupName) {
+      break;
+    }
+  }
+  assert(i < groupIds.length);
+  var options = { groups: { visibility: {} } };
+  options.groups.visibility[i] = enable;
+  this.graph2d.setOptions(options);
+}
+
 VisChart2d.prototype.getOptions = function() {
   return {
     start: vis.moment(),
