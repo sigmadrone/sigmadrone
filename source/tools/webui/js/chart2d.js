@@ -5,8 +5,10 @@ function assert(condition, message) {
 }
 
 VisChart2d = function (containerId, statusId, chartTitle, ylabels, rangeMin, rangeMax, ylabelsRight) {
-  this.dataset = new vis.DataSet({type: {start: 'Number', end: 'Number' }});
+  this.dataset = new vis.DataSet({type: {start: 'ISODate', end: 'ISODate' }});
   this.statusId = statusId;
+  this.rangeMin = rangeMin;
+  this.rangeMax = rangeMax;
 
   // Create the groups, number of groups is controlled by the size of the ylabels
   // array
@@ -44,22 +46,27 @@ VisChart2d = function (containerId, statusId, chartTitle, ylabels, rangeMin, ran
     this.numRightYAxis = 0;
   }
 
+  this.graph2d = new vis.Graph2d(containerId, this.dataset, this.groups, this.getOptions());
 
-  var options = {
-    start: 0, //vis.moment().add(-30, 'seconds'), // changed so its faster
-    end: 1000, //vis.moment(),
+  this.reset();
+}
+
+VisChart2d.prototype.getOptions = function() {
+  return {
+    start: vis.moment(),
+    end: vis.moment() + 60 * 1000,
     showCurrentTime: true,
     dataAxis: {
       left: {
         range: {
-          min:rangeMin, max: rangeMax
+          min: this.rangeMin, max: this.rangeMax
         },
         format: function(value) {
           return value.toFixed(2);
         },
-        /*title: {
-          text: chartTitle
-        }*/
+        //title: {
+        //  text: chartTitle
+        //}
       }
     },
     sampling: true,
@@ -70,54 +77,51 @@ VisChart2d = function (containerId, statusId, chartTitle, ylabels, rangeMin, ran
     height: '400px',
     interpolation: true,
   };
-
-  this.graph2d = new vis.Graph2d(containerId, this.dataset, this.groups, options);
-
-  this.firstIteration = 0;
-  this.dataset.clear();
-  this.newData = [];
-  this.dataId = 0;
 }
 
 VisChart2d.prototype.reset = function() {
-  this.firstIteration = 0;
+  this.lastIteration = this.firstIteration = -1;
   this.dataset.clear();
   this.newData = [];
   this.dataId = 0;
+  this.beginTimeLine = 0;
+  this.graph2d.setOptions(this.getOptions());
 }
 
 VisChart2d.prototype.update = function(samples, iteration) {
-  assert(samples.length <= this.groups.length);
   assert(this.firstIteration <= iteration);
-  if (this.firstIteration == 0) {
+
+  if (this.firstIteration < 0) {
     this.updateStatus("COLLECT");
     this.firstIteration = iteration;
+    this.beginTimeLine = vis.moment();
   }
+
+  var xData = this.beginTimeLine + (iteration - this.firstIteration) * 5.8;
   for (var i = 0; i < this.numLeftYAxis; ++i) {
     this.newData.push(
-      {id: this.dataId++, x: iteration-this.firstIteration, y:samples[i], group: i}
+      {id: this.dataId++, x: xData, y:samples[i], group: i}
     );
   }
 
-  for (var i = this.numLeftYAxis; i < samples.length; ++i) {
+  for (var i = this.numLeftYAxis; i < samples.length && i < this.groups.length; ++i) {
     this.newData.push(
-      {id: this.dataId++, x: iteration-this.firstIteration, y:samples[i], group: i}
+      {id: this.dataId++, x: xData, y: samples[i], group: i}
     );
   }
 
-  //var now = iteration - this.firstIteration;//vis.moment();
+  this.lastIteration = iteration;
 }
 
 VisChart2d.prototype.draw = function() {
   this.updateStatus("DRAWING");
-  this.dataset.add(this.newData);
-  var now = this.newData.length;
-  var range = this.graph2d.getWindow();
-  var interval = range.end - range.start;
-  /*if (interval > 1000) {
-    interval = 1000;
-  }*/
-  this.graph2d.setWindow(now - interval, now, {animation: false});
+  if (this.newData.length > 0) {
+    this.graph2d.setWindow(
+      this.beginTimeLine,
+      this.newData[this.newData.length-1].x,
+      {animation: false});
+    this.dataset.add(this.newData);
+  }
   this.updateStatus("DONE");
 }
 
@@ -130,7 +134,7 @@ VisChart2d.prototype.updateStatus = function(state) {
     } else if (state == "DRAWING") {
       $(this.statusId).text("Drawing...");
     } else if (state == "DONE") {
-      $(this.statusId).text("Collected " + this.dataId + " samples");
+      $(this.statusId).text("Collected " + this.dataId / this.groups.length + " samples");
     }
   }
 }

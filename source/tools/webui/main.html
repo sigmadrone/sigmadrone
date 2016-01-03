@@ -405,7 +405,7 @@
           <div class="row row-padded"></div>
           <div id="accel-chart-id"></div>
           <div class="row row-padded">
-            <span id="chart-status-id">123</span>
+            <span id="chart-status-id"></span>
           </div>
         </div>
       </div> <!-- div id = "drone-data" -->
@@ -695,15 +695,21 @@
     toggleStatusMessage(false);
   }
 
-  function updateChart2d(response) {
+  function updateChart2d(sensorDataStream) {
+    for (var i = 0; i < sensorDataStream.length; ++i) {
+      var samples = sensorDataStream[i].accel.concat(sensorDataStream[i].gyro);
+      accelGraph.update(samples, sensorDataStream[i].serial);
+    }
+    console.log("DataStream len " +
+    sensorDataStream.length + ", serial: " +
+    sensorDataStream[sensorDataStream.length-1].serial);
+  }
+
+  function getDataStreamCallback(response) {
     if (response.error != null) {
       console.log(JSON.stringify(response.result));
     } else {
-      var sensorDataStream = response.result;
-      for (var i = 0; i < sensorDataStream.length; ++i) {
-        var samples = sensorDataStream[i].accel.concat(sensorDataStream[i].gyro);
-        accelGraph.update(samples, sensorDataStream[i].serial);
-      }
+      updateChart2d(response.result);
     }
   }
 
@@ -714,9 +720,16 @@
 
       droneState = response.result;
 
-      onRedrawMotorsAndBatteryStatus(response.result);
+      if (collectDataButton.isOn()) {
+        droneState.serial = droneState.iteration;
+        updateChart2d([droneState]);
+      }
 
-      onDisplayAlarm(response.result);
+      console.log("Iteration: ", droneState.iteration);
+
+      onRedrawMotorsAndBatteryStatus(droneState);
+
+      onDisplayAlarm(droneState);
 
       $("#attQ").text(quaternion2str(response.result.attitude));
       $("#accel").text(vector2str(response.result.accel));
@@ -867,26 +880,32 @@
         toggleStatusMessage(true);
       }
       if (!rpcClient.isBusy()) {
-        if (collectDataButton.isOn()) {
-          rpcClient.rpcCall(
-            droneRpcUrl = getDroneRpcUrl(),
-            "sd_get_datastream",
-            JSON.parse("[]"),
-            updateChart2d,
-            function() { ++rpcFailureCount; }
-          );
-        } else if (0 == (timerCount() % 100)) {
+        rpcClient.rpcCall(
+          droneRpcUrl = getDroneRpcUrl(),
+          "sd_get_dronestate_ex",
+          JSON.parse("[]"),
+          updateDroneState
+        );
+        /*
+        if (collectDataButton.isOff()) { //} 0 == (timerCount() % 2)) {
           rpcClient.rpcCall(
             droneRpcUrl = getDroneRpcUrl(),
             "sd_get_dronestate_ex",
             JSON.parse("[]"),
-            updateDroneState,
-            function() { ++rpcFailureCount; }
+            updateDroneState
+          );
+        } else if (collectDataButton.isOn()) {
+          rpcClient.rpcCall(
+            droneRpcUrl = getDroneRpcUrl(),
+            "sd_get_datastream",
+            JSON.parse("[]"),
+            getDataStreamCallback
           );
         }
+        */
       }
     },
-    5);
+    10);
 
   </script>
 
