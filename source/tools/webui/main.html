@@ -403,7 +403,7 @@
             </a>
           </div> <!--div class="row row-padded"-->
           <div class="row row-padded"></div>
-          <div id="accel-chart-id"></div>
+          <div id="sensor-chart-id"></div>
           <div class="row row-padded">
             <span id="chart-status-id"></span>
           </div>
@@ -475,11 +475,11 @@
   var droneRpcUrl;
   var rpcClient = new RpcClient();
 
-  var accelGraph = new VisChart2d(
-    document.getElementById("accel-chart-id"),
+  var sensorChart = new VisChart2d(
+    document.getElementById("sensor-chart-id"),
     "#chart-status-id",
     "Accelerometer",
-    ['AccX', 'AccY', 'AccZ'],
+    ['AccX', 'AccY', 'AccZ', 'Q:w', 'Q:X', 'Q:Y', 'Q:Z', 'TorqX', 'TorqY', 'TorqZ'],
     -1.0, 1.0,
     ['GyroX', 'GyroY', 'GyroZ']
   );
@@ -697,12 +697,21 @@
 
   function updateChart2d(sensorDataStream) {
     for (var i = 0; i < sensorDataStream.length; ++i) {
-      var samples = sensorDataStream[i].accel.concat(sensorDataStream[i].gyro);
-      accelGraph.update(samples, sensorDataStream[i].serial);
+      var samples = sensorDataStream[i].accel;
+      samples = samples.concat([
+        sensorDataStream[i].attitude.w,
+        sensorDataStream[i].attitude.x,
+        sensorDataStream[i].attitude.y,
+        sensorDataStream[i].attitude.z]);
+      samples = samples.concat(sensorDataStream[i].pid_torque);
+      samples = samples.concat(sensorDataStream[i].gyro);
+      sensorChart.update(samples, sensorDataStream[i].serial);
     }
+    /*
     console.log("DataStream len " +
     sensorDataStream.length + ", serial: " +
     sensorDataStream[sensorDataStream.length-1].serial);
+    */
   }
 
   function getDataStreamCallback(response) {
@@ -858,9 +867,9 @@
       // Disable the button while drawing the chart
       $("#collect-data-btn").addClass("disabled");
       redrawGraph = true;
-      accelGraph.updateStatus("DRAWING");
+      sensorChart.updateStatus("DRAWING");
     } else {
-      accelGraph.reset();
+      sensorChart.reset();
     }
   }
 
@@ -873,7 +882,7 @@
     function () {
       if (redrawGraph) {
         redrawGraph = false;
-        accelGraph.draw();
+        sensorChart.draw();
         $("#collect-data-btn").removeClass("disabled");
       }
       if (rpcClient.failureCount() > 5) {
