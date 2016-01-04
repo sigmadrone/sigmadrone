@@ -398,9 +398,14 @@
       <div id="drone-data" class="tab-pane fade">
         <div class="container-fluid">
           <div class="row row-padded">
-            <div class="col-xs-12">
+            <div class="col-xs-6 col-md-2">
               <a id="collect-data-btn" class="btn btn-link" onClick="onToggleCollectDataButton();">
                 <span>Collect Data</span> <i class="fa fa-toggle-off fa-lg" id="collect-data-btn-icon"></i>
+              </a>
+            </div>
+            <div class="col-xs-6 col-md-2">
+              <a id="sync-graph-btn" class="btn btn-link" onClick="onToggleSyncGraphButton();">
+                <span>Sync Graphs</span> <i class="fa fa-toggle-off fa-lg" id="sync-graph-btn-icon"></i>
               </a>
             </div>
           </div> <!--div class="row row-padded"-->
@@ -610,27 +615,43 @@
     "#collect-data-btn",
     "#collect-data-btn-icon",
     false);
+  var syncGraphButton = new ToggleButton(
+      "#sync-graph-btn",
+      "#sync-graph-btn-icon",
+      false);
   var droneState;
   var droneRpcUrl;
   var rpcClient = new RpcClient();
-
-  var sensorChart = new VisChart2d(
+  var sensorChart = null;
+  var motorChart = null;
+  sensorChart = new VisChart2d(
     document.getElementById("sensor-chart-id"),
     "#chart-status-id",
     "Sensors",
     ['AccX', 'AccY', 'AccZ', 'Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z', 'TorqX', 'TorqY', 'TorqZ'],
     -1.0, 1.0,
-    ['GyroX', 'GyroY', 'GyroZ']
+    ['GyroX', 'GyroY', 'GyroZ'],
+    onChartEvent
   );
 
-  var motorChart = new VisChart2d(
+  motorChart = new VisChart2d(
     document.getElementById("motor-chart-id"),
     null,
     "Motors",
     ['M1', 'M2', 'M3', 'M4'],
     -1.0, 1.0,
-    ['Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z']
+    ['Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z'],
+    onChartEvent
   );
+
+  function onChartEvent(event) {
+    if (event.hasOwnProperty('start') && event.hasOwnProperty('end')) {
+      if (syncGraphButton.isOn()) {
+        sensorChart.setRange(event.start, event.end);
+        motorChart.setRange(event.start, event.end);
+      }
+    }
+  }
 
   function onToggleChartAccXData(element) { sensorChart.enableDisableGroup('AccX', element.checked); }
   function onToggleChartAccYData(element) { sensorChart.enableDisableGroup('AccY', element.checked); }
@@ -1055,6 +1076,13 @@
     }
   }
 
+  function onToggleSyncGraphButton() {
+    syncGraphButton.onToggle();
+    if (syncGraphButton.isOn()) {
+      onChartEvent(sensorChart.getRange());
+    }
+  }
+
   function timerCount() {
     return timerCount.i++;
   }
@@ -1097,7 +1125,7 @@
         */
       }
     },
-    10);
+    50);
 
   </script>
 

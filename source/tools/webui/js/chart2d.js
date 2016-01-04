@@ -4,7 +4,15 @@ function assert(condition, message) {
     }
 }
 
-VisChart2d = function (containerId, statusId, chartTitle, ylabels, rangeMin, rangeMax, ylabelsRight) {
+VisChart2d = function (
+  containerId,
+  statusId,
+  chartTitle,
+  ylabels,
+  rangeMin,
+  rangeMax,
+  ylabelsRight,
+  eventCallback) {
   this.dataset = new vis.DataSet({type: {start: 'ISODate', end: 'ISODate' }});
   this.statusId = statusId;
   this.rangeMin = rangeMin;
@@ -48,7 +56,18 @@ VisChart2d = function (containerId, statusId, chartTitle, ylabels, rangeMin, ran
 
   this.graph2d = new vis.Graph2d(containerId, this.dataset, this.groups, this.getOptions());
 
+  this.constructed = false;
+
+  var self = this;
+  this.graph2d.on('rangechanged', function(event) {
+    if (eventCallback != null && self.constructed) {
+      eventCallback(event);
+    }
+  });
+
   this.reset();
+
+  this.constructed = true;
 }
 
 VisChart2d.prototype.enableDisableGroup = function(groupName, enable) {
@@ -76,11 +95,16 @@ VisChart2d.prototype.getOptions = function() {
           min: this.rangeMin, max: this.rangeMax
         },
         format: function(value) {
-          return value.toFixed(2);
+          return value.toFixed(3);
         },
         //title: {
         //  text: chartTitle
         //}
+      },
+      right: {
+        format: function(value) {
+          return value.toFixed(3);
+        },
       }
     },
     sampling: true,
@@ -137,6 +161,14 @@ VisChart2d.prototype.draw = function() {
     this.dataset.add(this.newData);
   }
   this.updateStatus("DONE");
+}
+
+VisChart2d.prototype.setRange = function(start, end) {
+  this.graph2d.setWindow(start, end);
+}
+
+VisChart2d.prototype.getRange = function() {
+  return this.graph2d.getWindow();
 }
 
 VisChart2d.prototype.updateStatus = function(state) {
