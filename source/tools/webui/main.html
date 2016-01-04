@@ -494,7 +494,7 @@
 
           <hr class="featurette-divider">
 
-          <h5 class="graph-title">Motors and Target Attitude</h5>
+          <h5 class="graph-title">Motors and Attitude</h5>
           <a href="#motor-chart-ydata-select-id" id="motor-chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
             <span class="glyphicon glyphicon-triangle-right"></span>Y Axis Data
           </a>
@@ -638,9 +638,9 @@
     document.getElementById("motor-chart-id"),
     null,
     "Motors",
-    ['M1', 'M2', 'M3', 'M4'],
+    ['Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z', 'TgtQ:W', 'TgtQ:X', 'TgtQ:Y', 'TgtQ:Z'],
     -1.0, 1.0,
-    ['Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z'],
+    ['M1', 'M2', 'M3', 'M4'],
     onChartEvent
   );
 
@@ -670,10 +670,22 @@
   function onToggleChartM2Data(element) { motorChart.enableDisableGroup('M2', element.checked); }
   function onToggleChartM3Data(element) { motorChart.enableDisableGroup('M3', element.checked); }
   function onToggleChartM4Data(element) { motorChart.enableDisableGroup('M4', element.checked); }
-  function onToggleChartTgtQtWData(element) { motorChart.enableDisableGroup('Qt:W', element.checked); }
-  function onToggleChartTgtQtXData(element) { motorChart.enableDisableGroup('Qt:X', element.checked); }
-  function onToggleChartTgtQtYData(element) { motorChart.enableDisableGroup('Qt:Y', element.checked); }
-  function onToggleChartTgtQtZData(element) { motorChart.enableDisableGroup('Qt:Z', element.checked); }
+  function onToggleChartTgtQtWData(element) {
+    motorChart.enableDisableGroup('Qt:W', element.checked);
+    motorChart.enableDisableGroup('TgtQ:W', element.checked);
+  }
+  function onToggleChartTgtQtXData(element) {
+    motorChart.enableDisableGroup('Qt:X', element.checked);
+    motorChart.enableDisableGroup('TgtQ:X', element.checked);
+  }
+  function onToggleChartTgtQtYData(element) {
+    motorChart.enableDisableGroup('Qt:Y', element.checked);
+    motorChart.enableDisableGroup('TgtQ:Y', element.checked);
+  }
+  function onToggleChartTgtQtZData(element) {
+    motorChart.enableDisableGroup('Qt:Z', element.checked);
+    motorChart.enableDisableGroup('TgtQ:Z', element.checked);
+  }
 
   function quaternion2str(q) {
     return 'w:' + q.w.toFixed(3) + ' x:' + q.x.toFixed(3) + '  y:' + q.y.toFixed(3) + '  z:' + q.z.toFixed(3);
@@ -902,11 +914,15 @@
 
   function updateMotorChart(sensorDataStream) {
     for (var i = 0; i < sensorDataStream.length; ++i) {
-      var samples = sensorDataStream[i].motors.concat([
+      var samples = [
+        sensorDataStream[i].attitude.w,
+        sensorDataStream[i].attitude.x,
+        sensorDataStream[i].attitude.y,
+        sensorDataStream[i].attitude.z,
         sensorDataStream[i].target.w,
         sensorDataStream[i].target.x,
         sensorDataStream[i].target.y,
-        sensorDataStream[i].target.z]);
+        sensorDataStream[i].target.z].concat(sensorDataStream[i].motors);
       motorChart.update(samples, sensorDataStream[i].serial);
     }
   }
