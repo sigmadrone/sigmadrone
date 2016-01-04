@@ -398,13 +398,160 @@
       <div id="drone-data" class="tab-pane fade">
         <div class="container-fluid">
           <div class="row row-padded">
-            <a id="collect-data-btn" class="btn btn-link" onClick="onToggleCollectDataButton();">
-              <span>Collect Data</span> <i class="fa fa-toggle-off fa-lg" id="collect-data-btn-icon"></i>
-            </a>
+            <div class="col-xs-6 col-md-2">
+              <a id="collect-data-btn" class="btn btn-link" onClick="onToggleCollectDataButton();">
+                <span>Collect Data</span> <i class="fa fa-toggle-off fa-lg" id="collect-data-btn-icon"></i>
+              </a>
+            </div>
+            <div class="col-xs-6 col-md-2">
+              <a id="sync-graph-btn" class="btn btn-link" onClick="onToggleSyncGraphButton();">
+                <span>Sync Graphs</span> <i class="fa fa-toggle-off fa-lg" id="sync-graph-btn-icon"></i>
+              </a>
+            </div>
           </div> <!--div class="row row-padded"-->
-          <div class="row row-padded"></div>
-          <div id="accel-chart-id"></div>
-        </div>
+          <hr class="featurette-divider">
+          <h5 class="graph-title">Sensors, Atittude and Torque</h5>
+          <a href="#sensor-chart-ydata-select-id" id="sensor-chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Y Axis Data
+          </a>
+          <div id = "sensor-chart-ydata-select-id" class="col-xs-12 collapse">
+            <div class="row">
+              <div class="col-xs-3 col-md-2 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAccXData(this)">Acc X</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAccYData(this)">Acc Y</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAccZData(this)">Acc Z</label>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-3 col-md-2 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartGyroXData(this)">Gyro X</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartGyroYData(this)">Gyro Y</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartGyroZData(this)">Gyro Z</label>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-3 col-md-2 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTorqXData(this)">Torq X</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTorqYData(this)">Torq Y</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTorqZData(this)">Torq Z</label>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-3 col-md-2 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartQtXData(this)">Qt:X</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartQtYData(this)">Qt:Y</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartQtZData(this)">Qt:Z</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartQtWData(this)">Qt:W</label>
+                </div>
+              </div>
+            </div>
+            <div class="row row-padded"></div>
+          </div>
+          <div id="sensor-chart-id"></div>
+
+          <hr class="featurette-divider">
+
+          <h5 class="graph-title">Motors and Attitude</h5>
+          <a href="#motor-chart-ydata-select-id" id="motor-chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Y Axis Data
+          </a>
+          <div id = "motor-chart-ydata-select-id" class="col-xs-12 collapse">
+            <div class="row">
+              <div class="col-xs-3 col-md-2 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM1Data(this)">M1</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM2Data(this)">M2</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM3Data(this)">M3</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM4Data(this)">M4</label>
+                </div>
+              </div>
+            </div> <!--row-->
+            <div class="row">
+              <div class="col-xs-3 col-md-2 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtXData(this)">Qt:X</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtYData(this)">Qt:Y</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtZData(this)">Qt:Z</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtWData(this)">Qt:W</label>
+                </div>
+              </div>
+            </div>
+            <div class="row row-padded"></div>
+          </div>
+
+          <div id="motor-chart-id"></div>
+
+          <div class="row row-padded">
+            <span id="chart-status-id"></span>
+          </div>
+
       </div> <!-- div id = "drone-data" -->
 
       <hr class="featurette-divider">
@@ -430,6 +577,7 @@
   <script src="./js/togglebutton.js"></script>
   <script src="./js/vis.min.js"></script>
   <script src="./js/chart2d.js"></script>
+  <script src="./js/rpcclient.js"></script>
   <link href="./js/vis.min.css" rel="stylesheet" type="text/css" />
 
   <script>
@@ -467,43 +615,76 @@
     "#collect-data-btn",
     "#collect-data-btn-icon",
     false);
+  var syncGraphButton = new ToggleButton(
+      "#sync-graph-btn",
+      "#sync-graph-btn-icon",
+      false);
   var droneState;
   var droneRpcUrl;
-  var rpcFailureCount = 0;
-
-  var accelGraph = new VisChart2d(
-    document.getElementById("accel-chart-id"),
-    "Accelerometer",
-    ['X', 'Y', 'Z'],
-    -1.2, 1.2
+  var rpcClient = new RpcClient();
+  var sensorChart = null;
+  var motorChart = null;
+  sensorChart = new VisChart2d(
+    document.getElementById("sensor-chart-id"),
+    "#chart-status-id",
+    "Sensors",
+    ['AccX', 'AccY', 'AccZ', 'Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z', 'TorqX', 'TorqY', 'TorqZ'],
+    -1.0, 1.0,
+    ['GyroX', 'GyroY', 'GyroZ'],
+    onChartEvent
   );
 
-  function onRedrawCharts(droneState) {
-    if (collectDataButton.isOn()) {
-      accelGraph.update(droneState.accel, droneState.iteration);
-    }
-  }
+  motorChart = new VisChart2d(
+    document.getElementById("motor-chart-id"),
+    null,
+    "Motors",
+    ['Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z', 'TgtQ:W', 'TgtQ:X', 'TgtQ:Y', 'TgtQ:Z'],
+    -1.0, 1.0,
+    ['M1', 'M2', 'M3', 'M4'],
+    onChartEvent
+  );
 
-  function rpcCall(url, method, params, successCallback, failCallback) {
-    var request = {id: ++id, jsonrpc: "2.0"};
-    request.method = method;
-    request.params = params;
-    if (request.params.length > 0) {
-      request.params = JSON.parse(request.params);
-    }
-    /*console.log(JSON.stringify(request));*/
-    $.post(url, JSON.stringify(request), successCallback, "json").done(function(){
-      console.log("Success: " + method);
-    }).fail(function() {
-      console.log("Failed to execute " + method);
-      if (failCallback != null) {
-        failCallback(method);
+  function onChartEvent(event) {
+    if (event.hasOwnProperty('start') && event.hasOwnProperty('end')) {
+      if (syncGraphButton.isOn()) {
+        sensorChart.setRange(event.start, event.end);
+        motorChart.setRange(event.start, event.end);
       }
-    });
+    }
   }
 
-  function onToggleCollectDataButton() {
-    collectDataButton.onToggle();
+  function onToggleChartAccXData(element) { sensorChart.enableDisableGroup('AccX', element.checked); }
+  function onToggleChartAccYData(element) { sensorChart.enableDisableGroup('AccY', element.checked); }
+  function onToggleChartAccZData(element) { sensorChart.enableDisableGroup('AccZ', element.checked); }
+  function onToggleChartGyroXData(element) { sensorChart.enableDisableGroup('GyroX', element.checked); }
+  function onToggleChartGyroYData(element) { sensorChart.enableDisableGroup('GyroY', element.checked); }
+  function onToggleChartGyroZData(element) { sensorChart.enableDisableGroup('GyroZ', element.checked); }
+  function onToggleChartTorqXData(element) { sensorChart.enableDisableGroup('TorqX', element.checked); }
+  function onToggleChartTorqYData(element) { sensorChart.enableDisableGroup('TorqY', element.checked); }
+  function onToggleChartTorqZData(element) { sensorChart.enableDisableGroup('TorqZ', element.checked); }
+  function onToggleChartQtWData(element) { sensorChart.enableDisableGroup('Qt:W', element.checked); }
+  function onToggleChartQtXData(element) { sensorChart.enableDisableGroup('Qt:X', element.checked); }
+  function onToggleChartQtYData(element) { sensorChart.enableDisableGroup('Qt:Y', element.checked); }
+  function onToggleChartQtZData(element) { sensorChart.enableDisableGroup('Qt:Z', element.checked); }
+  function onToggleChartM1Data(element) { motorChart.enableDisableGroup('M1', element.checked); }
+  function onToggleChartM2Data(element) { motorChart.enableDisableGroup('M2', element.checked); }
+  function onToggleChartM3Data(element) { motorChart.enableDisableGroup('M3', element.checked); }
+  function onToggleChartM4Data(element) { motorChart.enableDisableGroup('M4', element.checked); }
+  function onToggleChartTgtQtWData(element) {
+    motorChart.enableDisableGroup('Qt:W', element.checked);
+    motorChart.enableDisableGroup('TgtQ:W', element.checked);
+  }
+  function onToggleChartTgtQtXData(element) {
+    motorChart.enableDisableGroup('Qt:X', element.checked);
+    motorChart.enableDisableGroup('TgtQ:X', element.checked);
+  }
+  function onToggleChartTgtQtYData(element) {
+    motorChart.enableDisableGroup('Qt:Y', element.checked);
+    motorChart.enableDisableGroup('TgtQ:Y', element.checked);
+  }
+  function onToggleChartTgtQtZData(element) {
+    motorChart.enableDisableGroup('Qt:Z', element.checked);
+    motorChart.enableDisableGroup('TgtQ:Z', element.checked);
   }
 
   function quaternion2str(q) {
@@ -534,7 +715,7 @@
   function onRestoreDefaultConfig() {
     restoreDefaultsView.onUserInput();
     restoreDefaultsView.onSubmitButton();
-    rpcCall(droneRpcUrl, "sd_restore_config", "[]",
+    rpcClient.rpcCall(droneRpcUrl, "sd_restore_config", "[]",
       function() { restoreDefaultsView.onDataSubmitOK(); },
       function() { restoreDefaultsView.onDataSubmitFail(); });
     return false;
@@ -558,7 +739,7 @@
     };
     save2FlashView.onUserInput();
     save2FlashView.onSubmitButton();
-    rpcCall(droneRpcUrl, "sd_set_configdata", "["+JSON.stringify(bootConfig)+"]",
+    rpcClient.rpcCall(droneRpcUrl, "sd_set_configdata", "["+JSON.stringify(bootConfig)+"]",
       function() { save2FlashView.onDataSubmitOK(); },
       function() { save2FlashView.onDataSubmitFail(); });
     return false;
@@ -581,9 +762,9 @@
       return true;
     }
 
-    rpcCall(droneRpcUrl, "kp", "[" + $myForm[0].elements['kp-xy'].value + "]");
-    rpcCall(droneRpcUrl, "ki", "[" + $myForm[0].elements['ki-xy'].value + "]");
-    rpcCall(droneRpcUrl, "kd", "[" + $myForm[0].elements['kd-xy'].value + "]",
+    rpcClient.rpcCall(droneRpcUrl, "kp", "[" + $myForm[0].elements['kp-xy'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "ki", "[" + $myForm[0].elements['ki-xy'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "kd", "[" + $myForm[0].elements['kd-xy'].value + "]",
       function() {pidxyView.onDataSubmitOK();},
       function() {pidxyView.onDataSubmitFail();});
     return false;
@@ -604,9 +785,9 @@
       // and automatic error will be displayed
       return true;
     }
-    rpcCall(droneRpcUrl, "yaw_kp", "[" + $myForm[0].elements['kp-z'].value + "]");
-    rpcCall(droneRpcUrl, "yaw_ki", "[" + $myForm[0].elements['ki-z'].value + "]");
-    rpcCall(droneRpcUrl, "yaw_kd", "[" + $myForm[0].elements['kd-z'].value + "]",
+    rpcClient.rpcCall(droneRpcUrl, "yaw_kp", "[" + $myForm[0].elements['kp-z'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "yaw_ki", "[" + $myForm[0].elements['ki-z'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "yaw_kd", "[" + $myForm[0].elements['kd-z'].value + "]",
       function() {pidzView.onDataSubmitOK();},
       function() {pidzView.onDataSubmitFail();});
     return false;
@@ -627,11 +808,11 @@
       // and automatic error will be displayed
       return true;
     }
-    rpcCall(droneRpcUrl, "sd_set_yaw_throttle_factor",
+    rpcClient.rpcCall(droneRpcUrl, "sd_set_yaw_throttle_factor",
       "[" + $myForm[0].elements['yaw-throttle-factor'].value + "]");
-    rpcCall(droneRpcUrl, "roll_bias", "[" + $myForm[0].elements['torq-bias-roll'].value + "]");
-    rpcCall(droneRpcUrl, "pitch_bias", "[" + $myForm[0].elements['torq-bias-pitch'].value + "]");
-    rpcCall(droneRpcUrl, "yaw_bias", "[" + $myForm[0].elements['torq-bias-yaw'].value + "]",
+    rpcClient.rpcCall(droneRpcUrl, "roll_bias", "[" + $myForm[0].elements['torq-bias-roll'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "pitch_bias", "[" + $myForm[0].elements['torq-bias-pitch'].value + "]");
+    rpcClient.rpcCall(droneRpcUrl, "yaw_bias", "[" + $myForm[0].elements['torq-bias-yaw'].value + "]",
       function() {flightCtlView.onDataSubmitOK();},
       function() {flightCtlView.onDataSubmitFail();});
     return false;
@@ -652,13 +833,13 @@
       // and automatic error will be displayed
       return true;
     }
-    rpcCall(droneRpcUrl, "sd_accelerometer_adjustment",
+    rpcClient.rpcCall(droneRpcUrl, "sd_accelerometer_adjustment",
       "[[" + $myForm[0].elements['acc-bias-x'].value + "," +
       $myForm[0].elements['acc-bias-y'].value + "," +
       $myForm[0].elements['acc-bias-z'].value + "]]");
-    rpcCall(droneRpcUrl, "sd_set_accelerometer_correction_period",
+    rpcClient.rpcCall(droneRpcUrl, "sd_set_accelerometer_correction_period",
       "[" + $myForm[0].elements['acc-corr-period'].value + "]");
-    rpcCall(droneRpcUrl, "sd_set_gyro_factor",
+    rpcClient.rpcCall(droneRpcUrl, "sd_set_gyro_factor",
       "[" + $myForm[0].elements['gyro-factor'].value + "]",
       function() {sensorCfgView.onDataSubmitOK();},
       function() {sensorCfgView.onDataSubmitFail();});
@@ -717,6 +898,44 @@
     toggleStatusMessage(false);
   }
 
+  function updateSensorChart(sensorDataStream) {
+    for (var i = 0; i < sensorDataStream.length; ++i) {
+      var samples = sensorDataStream[i].accel;
+      samples = samples.concat([
+        sensorDataStream[i].attitude.w,
+        sensorDataStream[i].attitude.x,
+        sensorDataStream[i].attitude.y,
+        sensorDataStream[i].attitude.z]);
+      samples = samples.concat(sensorDataStream[i].pid_torque);
+      samples = samples.concat(sensorDataStream[i].gyro);
+      sensorChart.update(samples, sensorDataStream[i].serial);
+    }
+  }
+
+  function updateMotorChart(sensorDataStream) {
+    for (var i = 0; i < sensorDataStream.length; ++i) {
+      var samples = [
+        sensorDataStream[i].attitude.w,
+        sensorDataStream[i].attitude.x,
+        sensorDataStream[i].attitude.y,
+        sensorDataStream[i].attitude.z,
+        sensorDataStream[i].target.w,
+        sensorDataStream[i].target.x,
+        sensorDataStream[i].target.y,
+        sensorDataStream[i].target.z].concat(sensorDataStream[i].motors);
+      motorChart.update(samples, sensorDataStream[i].serial);
+    }
+  }
+
+  function getDataStreamCallback(response) {
+    if (response.error != null) {
+      console.log(JSON.stringify(response.result));
+    } else {
+      updateSensorChart(response.result);
+      updateMotorChart(response.result);
+    }
+  }
+
   function updateDroneState(response) {
     if (response.error != null) {
       console.log(JSON.stringify(response.result));
@@ -724,11 +943,17 @@
 
       droneState = response.result;
 
-      onRedrawCharts(droneState);
+      if (collectDataButton.isOn()) {
+        droneState.serial = droneState.iteration;
+        updateSensorChart([droneState]);
+        updateMotorChart([droneState]);
+      }
 
-      onRedrawMotorsAndBatteryStatus(response.result);
+      console.log("Iteration: ", droneState.iteration);
 
-      onDisplayAlarm(response.result);
+      onRedrawMotorsAndBatteryStatus(droneState);
+
+      onDisplayAlarm(droneState);
 
       $("#attQ").text(quaternion2str(response.result.attitude));
       $("#accel").text(vector2str(response.result.accel));
@@ -782,8 +1007,6 @@
        sensorCfgView.onRedrawData(response.result);
        restoreDefaultsView.onRedrawData(response.result);
        save2FlashView.onRedrawData(response.result);
-
-       rpcFailureCount = 0;
     }
   }
 
@@ -795,6 +1018,8 @@
     toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
     toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
     toggleCollapsable("#flight-ctl-id", "#flight-ctl-btn", "Flight Control");
+    toggleCollapsable("#sensor-chart-ydata-select-id", "#sensor-chart-data-select-bt", "Y Axis Data");
+    toggleCollapsable("#motor-chart-ydata-select-id", "#motor-chart-data-select-bt", "Y Axis Data");
     toggleStatusMessage(true);
 
     m1 = new JustGage({
@@ -852,20 +1077,71 @@
 
   $.ajaxSetup({ timeout: 5000 });
 
+  var redrawGraph = false;
+  function onToggleCollectDataButton() {
+    collectDataButton.onToggle();
+    if (collectDataButton.isOff()) {
+      // Disable the button while drawing the chart
+      $("#collect-data-btn").addClass("disabled");
+      redrawGraph = true;
+      sensorChart.updateStatus("DRAWING");
+      motorChart.updateStatus("DRAWING");
+    } else {
+      sensorChart.reset();
+      motorChart.reset();
+    }
+  }
+
+  function onToggleSyncGraphButton() {
+    syncGraphButton.onToggle();
+    if (syncGraphButton.isOn()) {
+      onChartEvent(sensorChart.getRange());
+    }
+  }
+
+  function timerCount() {
+    return timerCount.i++;
+  }
+
+  timerCount.i = 0;
   window.setInterval(
     function () {
-      if (rpcFailureCount > 3) {
+      if (redrawGraph) {
+        redrawGraph = false;
+        sensorChart.draw();
+        motorChart.draw();
+        $("#collect-data-btn").removeClass("disabled");
+      }
+      if (rpcClient.failureCount() > 5) {
         toggleStatusMessage(true);
       }
-      rpcCall(
-        droneRpcUrl = getDroneRpcUrl(),
-        "sd_get_dronestate_ex",
-        JSON.parse("[]"),
-        updateDroneState,
-        function() { ++rpcFailureCount; }
+      if (!rpcClient.isBusy()) {
+        rpcClient.rpcCall(
+          droneRpcUrl = getDroneRpcUrl(),
+          "sd_get_dronestate_ex",
+          JSON.parse("[]"),
+          updateDroneState
         );
+        /*
+        if (collectDataButton.isOff()) { //} 0 == (timerCount() % 2)) {
+          rpcClient.rpcCall(
+            droneRpcUrl = getDroneRpcUrl(),
+            "sd_get_dronestate_ex",
+            JSON.parse("[]"),
+            updateDroneState
+          );
+        } else if (collectDataButton.isOn()) {
+          rpcClient.rpcCall(
+            droneRpcUrl = getDroneRpcUrl(),
+            "sd_get_datastream",
+            JSON.parse("[]"),
+            getDataStreamCallback
+          );
+        }
+        */
+      }
     },
-    500);
+    50);
 
   </script>
 

@@ -67,6 +67,10 @@ body {
   color: #777;
 }
 
+.graph-title {
+  color: #777;
+}
+
 hr {
   margin-top: 40px;
   margin-bottom: 40px;
