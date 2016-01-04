@@ -404,10 +404,12 @@
               </a>
             </div>
           </div> <!--div class="row row-padded"-->
-          <a href="#chart-data-select-id" id="chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
+          <hr class="featurette-divider">
+          <h5 class="graph-title">Sensors, Atittude and Torque</h5>
+          <a href="#sensor-chart-ydata-select-id" id="sensor-chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
             <span class="glyphicon glyphicon-triangle-right"></span>Y Axis Data
           </a>
-          <div id = "chart-data-select-id" class="col-xs-12 collapse">
+          <div id = "sensor-chart-ydata-select-id" class="col-xs-12 collapse">
             <div class="row">
               <div class="col-xs-3 col-md-2 col-data">
                 <div class="checkbox">
@@ -484,9 +486,67 @@
             <div class="row row-padded"></div>
           </div>
           <div id="sensor-chart-id"></div>
+
+          <hr class="featurette-divider">
+
+          <h5 class="graph-title">Motors and Target Attitude</h5>
+          <a href="#motor-chart-ydata-select-id" id="motor-chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Y Axis Data
+          </a>
+          <div id = "motor-chart-ydata-select-id" class="col-xs-12 collapse">
+            <div class="row">
+              <div class="col-xs-3 col-md-2 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM1Data(this)">M1</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM2Data(this)">M2</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM3Data(this)">M3</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM4Data(this)">M4</label>
+                </div>
+              </div>
+            </div> <!--row-->
+            <div class="row">
+              <div class="col-xs-3 col-md-2 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtXData(this)">Qt:X</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtYData(this)">Qt:Y</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtZData(this)">Qt:Z</label>
+                </div>
+              </div>
+              <div class="col-xs-3 col-md-2">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtWData(this)">Qt:W</label>
+                </div>
+              </div>
+            </div>
+            <div class="row row-padded"></div>
+          </div>
+
+          <div id="motor-chart-id"></div>
+
           <div class="row row-padded">
             <span id="chart-status-id"></span>
           </div>
+
       </div> <!-- div id = "drone-data" -->
 
       <hr class="featurette-divider">
@@ -557,10 +617,19 @@
   var sensorChart = new VisChart2d(
     document.getElementById("sensor-chart-id"),
     "#chart-status-id",
-    "Accelerometer",
+    "Sensors",
     ['AccX', 'AccY', 'AccZ', 'Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z', 'TorqX', 'TorqY', 'TorqZ'],
     -1.0, 1.0,
     ['GyroX', 'GyroY', 'GyroZ']
+  );
+
+  var motorChart = new VisChart2d(
+    document.getElementById("motor-chart-id"),
+    null,
+    "Motors",
+    ['M1', 'M2', 'M3', 'M4'],
+    -1.0, 1.0,
+    ['Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z']
   );
 
   function onToggleChartAccXData(element) { sensorChart.enableDisableGroup('AccX', element.checked); }
@@ -576,6 +645,14 @@
   function onToggleChartQtXData(element) { sensorChart.enableDisableGroup('Qt:X', element.checked); }
   function onToggleChartQtYData(element) { sensorChart.enableDisableGroup('Qt:Y', element.checked); }
   function onToggleChartQtZData(element) { sensorChart.enableDisableGroup('Qt:Z', element.checked); }
+  function onToggleChartM1Data(element) { motorChart.enableDisableGroup('M1', element.checked); }
+  function onToggleChartM2Data(element) { motorChart.enableDisableGroup('M2', element.checked); }
+  function onToggleChartM3Data(element) { motorChart.enableDisableGroup('M3', element.checked); }
+  function onToggleChartM4Data(element) { motorChart.enableDisableGroup('M4', element.checked); }
+  function onToggleChartTgtQtWData(element) { motorChart.enableDisableGroup('Qt:W', element.checked); }
+  function onToggleChartTgtQtXData(element) { motorChart.enableDisableGroup('Qt:X', element.checked); }
+  function onToggleChartTgtQtYData(element) { motorChart.enableDisableGroup('Qt:Y', element.checked); }
+  function onToggleChartTgtQtZData(element) { motorChart.enableDisableGroup('Qt:Z', element.checked); }
 
   function quaternion2str(q) {
     return 'w:' + q.w.toFixed(3) + ' x:' + q.x.toFixed(3) + '  y:' + q.y.toFixed(3) + '  z:' + q.z.toFixed(3);
@@ -788,7 +865,7 @@
     toggleStatusMessage(false);
   }
 
-  function updateChart2d(sensorDataStream) {
+  function updateSensorChart(sensorDataStream) {
     for (var i = 0; i < sensorDataStream.length; ++i) {
       var samples = sensorDataStream[i].accel;
       samples = samples.concat([
@@ -800,18 +877,25 @@
       samples = samples.concat(sensorDataStream[i].gyro);
       sensorChart.update(samples, sensorDataStream[i].serial);
     }
-    /*
-    console.log("DataStream len " +
-    sensorDataStream.length + ", serial: " +
-    sensorDataStream[sensorDataStream.length-1].serial);
-    */
+  }
+
+  function updateMotorChart(sensorDataStream) {
+    for (var i = 0; i < sensorDataStream.length; ++i) {
+      var samples = sensorDataStream[i].motors.concat([
+        sensorDataStream[i].target.w,
+        sensorDataStream[i].target.x,
+        sensorDataStream[i].target.y,
+        sensorDataStream[i].target.z]);
+      motorChart.update(samples, sensorDataStream[i].serial);
+    }
   }
 
   function getDataStreamCallback(response) {
     if (response.error != null) {
       console.log(JSON.stringify(response.result));
     } else {
-      updateChart2d(response.result);
+      updateSensorChart(response.result);
+      updateMotorChart(response.result);
     }
   }
 
@@ -824,7 +908,8 @@
 
       if (collectDataButton.isOn()) {
         droneState.serial = droneState.iteration;
-        updateChart2d([droneState]);
+        updateSensorChart([droneState]);
+        updateMotorChart([droneState]);
       }
 
       console.log("Iteration: ", droneState.iteration);
@@ -896,7 +981,8 @@
     toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
     toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
     toggleCollapsable("#flight-ctl-id", "#flight-ctl-btn", "Flight Control");
-    toggleCollapsable("#chart-data-select-id", "#chart-data-select-bt", "Y Axis Data");
+    toggleCollapsable("#sensor-chart-ydata-select-id", "#sensor-chart-data-select-bt", "Y Axis Data");
+    toggleCollapsable("#motor-chart-ydata-select-id", "#motor-chart-data-select-bt", "Y Axis Data");
     toggleStatusMessage(true);
 
     m1 = new JustGage({
@@ -962,8 +1048,10 @@
       $("#collect-data-btn").addClass("disabled");
       redrawGraph = true;
       sensorChart.updateStatus("DRAWING");
+      motorChart.updateStatus("DRAWING");
     } else {
       sensorChart.reset();
+      motorChart.reset();
     }
   }
 
@@ -977,6 +1065,7 @@
       if (redrawGraph) {
         redrawGraph = false;
         sensorChart.draw();
+        motorChart.draw();
         $("#collect-data-btn").removeClass("disabled");
       }
       if (rpcClient.failureCount() > 5) {
