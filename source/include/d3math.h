@@ -49,7 +49,7 @@ namespace MATRIX_NAMESPACE
 
 const double EPSILON = 4.37114e-05;
 
-template <typename M, typename T, size_t ROWS, size_t COLS>
+template <typename T = float, size_t ROWS = 1, size_t COLS = 1>
 class MatrixBase {
 public:
 	using array_type = std::array<T, ROWS * COLS>;
@@ -59,253 +59,126 @@ public:
 
 public:
 	std::array<T, ROWS * COLS> data;
+	static constexpr size_t rows = ROWS;
+	static constexpr size_t cols = COLS;
 
 	MatrixBase();
-	MatrixBase(const MatrixBase&) = default;
 	MatrixBase(const std::initializer_list<std::initializer_list<T>>& list);
 	MatrixBase(const std::initializer_list<T>& list);
 
+    // Move semantics
+	MatrixBase(MatrixBase&&) = default;
+	MatrixBase& operator=(MatrixBase&&) = default;
+
+    // Copy semantics
+	MatrixBase(const MatrixBase&) = default;
+	MatrixBase& operator=(const MatrixBase&) = default;
+
+    // Destruction
+    ~MatrixBase() = default;
+
 	T& at(size_t row, size_t col);
 	const T& at(size_t row, size_t col) const;
-	std::string toString() const;
+	std::string to_string() const;
 	void clear();
+	void swap_rows(size_t m, size_t n);
+	void swap_columns(size_t m, size_t n);
 
-	void setRow(size_t m, const T* p, size_t size);
-	void setColumn(size_t n, const T* p, size_t size);
-	MatrixBase<M, T, 1, COLS> row(size_t m) const;
-};
+	void set_row(size_t m, const MatrixBase<T, 1, COLS>& r);
+	void set_column(size_t n, const MatrixBase<T, ROWS, 1>& c);
+	MatrixBase<T, 1, COLS> row(size_t m) const;
+	MatrixBase<T, ROWS, 1> column(size_t n) const;
 
-template <typename M, typename T, size_t ROWS, size_t COLS>
-inline MatrixBase<M, T, ROWS, COLS>::MatrixBase() {
-	for (auto& i : data)
-		i = static_cast<T>(0);
-}
+    // Scalar arithmetic
+	MatrixBase& operator=(const T& x);
+	MatrixBase& operator+=(const T& x);
+	MatrixBase& operator-=(const T& x);
+	MatrixBase& operator*=(const T& x);
+	MatrixBase& operator/=(const T& x);
+	MatrixBase& operator%=(const T& x);
 
-template <typename M, typename T, size_t ROWS, size_t COLS>
-inline MatrixBase<M, T, ROWS, COLS>::MatrixBase(const std::initializer_list<std::initializer_list<T>>& list) {
-	assert(list.size() == ROWS);
-	iterator it = data.begin();
-	for (auto row : list) {
-		assert(row.size() == COLS);
-		for (auto elem : row) {
-			*it++ = elem;
-		}
-	}
-}
+	// Matrix arithmetic
+	MatrixBase& operator-=(const MatrixBase& m);
+	MatrixBase& operator+=(const MatrixBase& m);
 
-template <typename M, typename T, size_t ROWS, size_t COLS>
-inline MatrixBase<M, T, ROWS, COLS>::MatrixBase(const std::initializer_list<T>& list) {
-	assert(list.size() == ROWS * COLS);
-	iterator it = data.begin();
-	for (auto elem : list) {
-		*it++ = elem;
-	}
-}
+	iterator begin() 						{ return data.begin(); }
+	iterator end()   						{ return data.end(); }
 
-template <typename M, typename T, size_t ROWS, size_t COLS>
-inline T& MatrixBase<M, T, ROWS, COLS>::at(size_t row, size_t col)
-{
-	return data[row * COLS + col];
-}
+	const_iterator begin() const 			{ return data.begin(); }
+	const_iterator end() const   			{ return data.end(); }
 
-template <typename M, typename T, size_t ROWS, size_t COLS>
-inline const T& MatrixBase<M, T, ROWS, COLS>::at(size_t row, size_t col) const
-{
-	return data[row * COLS + col];
-}
-
-template <typename M, typename T, size_t ROWS, size_t COLS>
-inline std::string MatrixBase<M, T, ROWS, COLS>::toString() const
-{
-	std::stringstream oss;
-	oss.setf(std::ios::fixed, std::ios::floatfield);
-	oss.precision(2);
-	for (size_t i = 0; i < ROWS; i++) {
-		for (size_t j = 0; j < COLS; j++) {
-			oss.width(7);
-			oss << at(i, j) << " ";
-		}
-		oss << std::endl;
-	}
-	return oss.str();
-}
-
-template <typename M, typename T, size_t ROWS, size_t COLS>
-void MatrixBase<M, T, ROWS, COLS>::clear()
-{
-	for (size_t i = 0; i < ROWS; i++)
-		for (size_t j = 0; j < COLS; j++)
-			at(i, j) = static_cast<T>(0);
-}
-
-template <typename M, typename T, size_t ROWS, size_t COLS>
-void MatrixBase<M, T, ROWS, COLS>::setRow(size_t m, const T* p, size_t size)
-{
-	assert(size == COLS);
-	for (int i = 0; i < COLS; i++)
-		at(m, i) = *p++;
-}
-
-template <typename M, typename T, size_t ROWS, size_t COLS>
-void MatrixBase<M, T, ROWS, COLS>::setColumn(size_t n, const T* p, size_t size)
-{
-	assert(size == ROWS);
-	for (int i = 0; i < ROWS; i++)
-		at(i, n) = *p++;
-}
-
-
-
-
-template <typename T, size_t ROWS, size_t COLS>
-class MatrixMN : public MatrixBase<MatrixMN<T, ROWS, COLS>, T, ROWS, COLS>
-{
-public:
-	using matrix_base = MatrixBase<MatrixMN<T, ROWS, COLS>, T, ROWS, COLS>;
-	using matrix_type = MatrixMN<T, ROWS, COLS>;
-	using array_type = std::array<T, ROWS * COLS>;
-	using value_type = typename array_type::value_type;
-    using iterator       = typename array_type::iterator;
-    using const_iterator = typename array_type::const_iterator;
-
-
-public:
-	std::array<T, ROWS * COLS> data;
-
-public:
-	MatrixMN() : MatrixBase<matrix_type, T, ROWS, COLS>() {} ;
-	MatrixMN(const std::initializer_list<std::initializer_list<T>>& list) : MatrixBase<matrix_type, T, ROWS, COLS>(list) {}
-	MatrixMN(const std::initializer_list<T>& list) : MatrixBase<matrix_type, T, ROWS, COLS>(list) {}
-	MatrixMN(const MatrixBase<matrix_type, T, ROWS, COLS>& m) : MatrixBase<matrix_type, T, ROWS, COLS>(m) {} ;
-
-	T& at(size_t row, size_t col) 					{ return matrix_base::at(row, col); }
-	const T& at(size_t row, size_t col) const 		{ return matrix_base::at(row, col); }
-	void clear()									{ return matrix_base::clear(); }
-	std::string toString() const 					{ return matrix_base::toString(); }
 
 	template <typename TT, size_t R, size_t C>
-	friend std::ostream& operator<< (std::ostream& os, const MatrixMN<TT, R, C>& m);
+	friend std::ostream& operator<<(std::ostream& os, const MatrixBase<TT, R, C>& m);
 
-	static MatrixMN<T, ROWS, COLS> identity();
-	MatrixMN<T, 1, COLS> row(size_t m) const;
-	MatrixMN<T, ROWS, 1> column(size_t n) const;
-	void setRow(size_t m, const MatrixMN<T, 1, COLS>& r)			{ matrix_base::setRow(m, &r.MatrixMN<T, 1, COLS>::matrix_base::data[0], r.MatrixMN<T, 1, COLS>::matrix_base::data.size()); }
-	void setColumn(size_t n, const MatrixMN<T, ROWS, 1>& c)			{ matrix_base::setRow(n, &c.data[0], c.matrix_base::data.size()); }
+	template<size_t R = ROWS, size_t C = COLS>
+	static typename std::enable_if<R == C, MatrixBase<T, ROWS, COLS>>::type identity();
 
-#if 0
-	void setColumn(int n, const MatrixMN<T, ROWS, 1>& c);
-#endif
+protected:
+	template <typename Functor>
+	MatrixBase& apply(Functor f);
+
+	template <typename M, typename Functor>
+	MatrixBase& apply(const M& m, Functor f);
+
+
 };
 
 template <typename T, size_t ROWS, size_t COLS>
-std::ostream& operator<<(std::ostream& os, const MatrixMN<T, ROWS, COLS>& m)
+class MatrixMN : public MatrixBase<T, ROWS, COLS>
 {
-	os << m.toString();
-	return os;
-}
+public:
+	using base = MatrixBase<T, ROWS, COLS>;
 
-template <typename T, size_t ROWS, size_t COLS>
-inline MatrixMN<T, ROWS, COLS> MatrixMN<T, ROWS, COLS>::identity()
+public:
+	MatrixMN() : MatrixBase<T, ROWS, COLS>() {} ;
+	MatrixMN(const std::initializer_list<std::initializer_list<T>>& list) : MatrixBase<T, ROWS, COLS>(list) {}
+	MatrixMN(const std::initializer_list<T>& list) : MatrixBase<T, ROWS, COLS>(list) {}
+	MatrixMN(const MatrixBase<T, ROWS, COLS>& m) : MatrixBase<T, ROWS, COLS>(m) {} ;
+
+	MatrixMN& operator=(const T& x)			{ return static_cast<MatrixMN&>(base::operator=(x)); }
+};
+
+
+template <typename T, size_t ROWS>
+class MatrixMN<T, ROWS, 1> : public MatrixBase<T, ROWS, 1>
 {
-	assert(ROWS == COLS);
-	MatrixMN<T, ROWS, COLS> ret;
-	for (size_t i = 0; i < ROWS; i++)
-		for (size_t j = 0; j < COLS; j++)
-			ret.at(i, j) = (i == j) ? static_cast<T>(1) : static_cast<T>(0);
-	return ret;
-}
+public:
+	T &x, &y, &z, &w;
 
-template <typename T, size_t ROWS, size_t COLS>
-MatrixMN<T, 1, COLS> MatrixMN<T, ROWS, COLS>::row(size_t m) const
-{
-	MatrixMN<T, 1, COLS> ret;
-	for (int i = 0; i < COLS; i++)
-		ret.at(0, i) = at(m, i);
-	return ret;
-}
+public:
+	using base = MatrixBase<T, ROWS, 1>;
 
-template <typename T, size_t ROWS, size_t COLS>
-MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, COLS>::column(size_t n) const
-{
-	MatrixMN<T, ROWS, 1> ret;
-	for (int i = 0; i < ROWS; i++)
-		ret.at(i, 0) = at(i, n);
-	return ret;
-}
+public:
+	MatrixMN() : MatrixBase<T, ROWS, 1>(), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {} ;
+	MatrixMN(const std::initializer_list<std::initializer_list<T>>& list) : MatrixBase<T, ROWS, 1>(list), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {}
+	MatrixMN(const std::initializer_list<T>& list) : MatrixBase<T, ROWS, 1>(list), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {}
+	MatrixMN(const MatrixBase<T, ROWS, 1>& m) : MatrixBase<T, ROWS, 1>(m), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {} ;
+
+	MatrixMN& operator=(const T& x)			{ return static_cast<MatrixMN&>(base::operator=(x)); }
 
 
-#if 0
-template <typename T, size_t ROWS, size_t COLS>
-inline MatrixMN<T, ROWS, COLS>::MatrixMN() {
-	for (auto& i : data)
-		i = static_cast<T>(0);
-}
-
-template <typename T, size_t ROWS, size_t COLS>
-inline MatrixMN<T, ROWS, COLS>::MatrixMN(const std::initializer_list<std::initializer_list<T>>& list) {
-	assert(list.size() == ROWS);
-	iterator it = data.begin();
-	for (auto row : list) {
-		assert(row.size() == COLS);
-		for (auto elem : row) {
-			*it++ = elem;
-		}
+	T length_squared() const
+	{
+		T ret = static_cast<T>(0);
+		for (int i = 0; i < ROWS; i++)
+			ret += base::at(i, 0) * base::at(i, 0);
+		return ret;
 	}
-}
 
-template <typename T, size_t ROWS, size_t COLS>
-inline MatrixMN<T, ROWS, COLS>::MatrixMN(const std::initializer_list<T>& list) {
-	assert(list.size() == ROWS * COLS);
-	iterator it = data.begin();
-	for (auto elem : list) {
-		*it++ = elem;
-	}
-}
+	T length() const						{ return std::sqrt(length_squared()); }
+	T& at(size_t row)						{ return base::at(row, 0); }
+	const T& at(size_t row) const			{ return base::at(row, 0); }
 
-template <typename T, size_t ROWS, size_t COLS>
-inline T& MatrixMN<T, ROWS, COLS>::at(size_t row, size_t col)
-{
-	return data[row * COLS + col];
-}
-
-template <typename T, size_t ROWS, size_t COLS>
-inline const T& MatrixMN<T, ROWS, COLS>::at(size_t row, size_t col) const
-{
-	return data[row * COLS + col];
-}
-
-template <typename T, size_t ROWS, size_t COLS>
-void MatrixMN<T, ROWS, COLS>::clear()
-{
-	for (size_t i = 0; i < ROWS; i++)
-		for (size_t j = 0; j < COLS; j++)
-			at(i, j) = static_cast<T>(0);
-}
+};
 
 
-
-
-template <typename T, size_t ROWS, size_t COLS>
-inline std::string MatrixMN<T, ROWS, COLS>::toString() const
-{
-	std::stringstream oss;
-	oss.setf(std::ios::fixed, std::ios::floatfield);
-	oss.precision(2);
-	for (size_t i = 0; i < ROWS; i++) {
-		for (size_t j = 0; j < COLS; j++) {
-			oss.width(7);
-			oss << at(i, j) << " ";
-		}
-		oss << std::endl;
-	}
-	return oss.str();
-}
-#endif
 
 
 typedef MatrixMN<float, 3, 3> Matrix3f;
 typedef MatrixMN<double, 3, 3> Matrix3d;
 typedef MatrixMN<int, 3, 3> Matrix3i;
+
 typedef MatrixMN<float, 4, 4> Matrix4f;
 typedef MatrixMN<double, 4, 4> Matrix4d;
 typedef MatrixMN<int, 4, 4> Matrix4i;
@@ -321,9 +194,243 @@ typedef MatrixMN<int, 2, 1> Vector2i;
 typedef MatrixMN<float, 3, 1> Vector3f;
 typedef MatrixMN<double, 3, 1> Vector3d;
 typedef MatrixMN<int, 3, 1> Vector3i;
+
 typedef MatrixMN<float, 4, 1> Vector4f;
 typedef MatrixMN<double, 4, 1> Vector4d;
 typedef MatrixMN<int, 4, 1> Vector4i;
+
+
+template <typename T, size_t ROWS, size_t COLS>
+template <size_t R, size_t C>
+typename std::enable_if<R == C, MatrixBase<T, ROWS, COLS>>::type MatrixBase<T, ROWS, COLS>::identity()
+{
+	MatrixBase<T, ROWS, COLS> ret;
+	for (size_t i = 0; i < ROWS; i++)
+		for (size_t j = 0; j < COLS; j++)
+			ret.at(i, j) = (i == j) ? static_cast<T>(1) : static_cast<T>(0);
+	return ret;
+}
+
+template <typename TT, size_t R, size_t C>
+std::ostream& operator<<(std::ostream& os, const MatrixBase<TT, R, C>& m)
+{
+	os << m.to_string();
+	return os;
+}
+
+
+template <typename T, size_t ROWS, size_t COLS>
+inline MatrixBase<T, ROWS, COLS>::MatrixBase() {
+	for (auto& i : data)
+		i = static_cast<T>(0);
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+inline MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<std::initializer_list<T>>& list) {
+	assert(list.size() == ROWS);
+	iterator it = data.begin();
+	for (auto row : list) {
+		assert(row.size() == COLS);
+		for (auto elem : row) {
+			*it++ = elem;
+		}
+	}
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+inline MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<T>& list) {
+	assert(list.size() == ROWS * COLS);
+	iterator it = data.begin();
+	for (auto elem : list) {
+		*it++ = elem;
+	}
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+inline T& MatrixBase<T, ROWS, COLS>::at(size_t row, size_t col)
+{
+	return data[row * COLS + col];
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+inline const T& MatrixBase<T, ROWS, COLS>::at(size_t row, size_t col) const
+{
+	return data[row * COLS + col];
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+inline std::string MatrixBase<T, ROWS, COLS>::to_string() const
+{
+	std::stringstream oss;
+	oss.setf(std::ios::fixed, std::ios::floatfield);
+	oss.precision(2);
+	for (size_t i = 0; i < ROWS; i++) {
+		for (size_t j = 0; j < COLS; j++) {
+			oss.width(7);
+			oss << at(i, j) << " ";
+		}
+		oss << std::endl;
+	}
+	return oss.str();
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+void MatrixBase<T, ROWS, COLS>::clear()
+{
+	for (size_t i = 0; i < ROWS; i++)
+		for (size_t j = 0; j < COLS; j++)
+			at(i, j) = static_cast<T>(0);
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+void MatrixBase<T, ROWS, COLS>::set_row(size_t m, const MatrixBase<T, 1, COLS>& r)
+{
+	for (int i = 0; i < COLS; i++)
+		at(m, i) = r.at(0, i);
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+void MatrixBase<T, ROWS, COLS>::set_column(size_t n, const MatrixBase<T, ROWS, 1>& c)
+{
+	for (int i = 0; i < ROWS; i++)
+		at(i, n) = c.at(i, 0);
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, 1, COLS> MatrixBase<T, ROWS, COLS>::row(size_t m) const
+{
+	MatrixBase<T, 1, COLS> ret;
+	for (int i = 0; i < COLS; i++)
+		ret.at(0, i) = at(m, i);
+	return ret;
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, 1> MatrixBase<T, ROWS, COLS>::column(size_t n) const
+{
+	MatrixBase<T, ROWS, 1> ret;
+	for (int i = 0; i < ROWS; i++)
+		ret.at(i, 0) = at(i, n);
+	return ret;
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+void MatrixBase<T, ROWS, COLS>::swap_rows(size_t m, size_t n)
+{
+	T temp;
+
+	assert(m < ROWS && n < ROWS);
+	if (m == n)
+		return;
+	for (int i = 0; i < COLS; i++) {
+		temp = at(m, i);
+		at(m, i) = at(n, i);
+		at(n, i) = temp;
+	}
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+void MatrixBase<T, ROWS, COLS>::swap_columns(size_t m, size_t n)
+{
+	T temp;
+
+	assert(m < COLS && n < COLS);
+	if (m == n)
+		return;
+	for (int i = 0; i < ROWS; i++) {
+		temp = at(i, m);
+		at(i, m) = at(i, n);
+		at(i, n) = temp;
+	}
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+template <typename Functor>
+MatrixBase<T, ROWS, COLS>& MatrixBase<T, ROWS, COLS>::apply(Functor f)
+{
+	for (auto& x : data)
+		f(x);
+	return *this;
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+template<typename M, typename Functor>
+inline MatrixBase<T, ROWS, COLS>& MatrixBase<T, ROWS, COLS>::apply(const M& m, Functor f)
+{
+	assert(rows == m.rows && cols == m.cols);
+	auto i = begin();
+	auto j = m.begin();
+	while (i != end()) {
+		f(*i, *j);
+		++i;
+		++j;
+	}
+	return *this;
+}
+
+
+// Scalar assignment
+template<typename T, size_t ROWS, size_t COLS>
+inline MatrixBase<T, ROWS, COLS>&
+MatrixBase<T, ROWS, COLS>::operator=(const T& x)
+{
+	return apply([&](T& y) {y = x;});
+}
+
+// Scalar addition
+template<typename T, size_t ROWS, size_t COLS>
+inline MatrixBase<T, ROWS, COLS>&
+MatrixBase<T, ROWS, COLS>::operator+=(const T& x)
+{
+	return apply([&](T& y) {y += x;});
+}
+
+// Scalar subtraction
+template<typename T, size_t ROWS, size_t COLS>
+inline MatrixBase<T, ROWS, COLS>&
+MatrixBase<T, ROWS, COLS>::operator-=(const T& x)
+{
+	return apply([&](T& y) {y -= x;});
+}
+
+// Scalar multiplication
+template<typename T, size_t ROWS, size_t COLS>
+inline MatrixBase<T, ROWS, COLS>&
+MatrixBase<T, ROWS, COLS>::operator*=(const T& x)
+{
+	return apply([&](T& y) {y *= x;});
+}
+
+// Scalar division
+template<typename T, size_t ROWS, size_t COLS>
+inline MatrixBase<T, ROWS, COLS>&
+MatrixBase<T, ROWS, COLS>::operator/=(const T& x)
+{
+	return apply([&](T& y) {y /= x;});
+}
+
+// Scalar remainder
+template<typename T, size_t ROWS, size_t COLS>
+inline MatrixBase<T, ROWS, COLS>&
+MatrixBase<T, ROWS, COLS>::operator%=(const T& x)
+{
+	return apply([&](T& y) {y %= x;});
+}
+
+// Matrix addition
+template<typename T, size_t ROWS, size_t COLS>
+inline MatrixBase<T, ROWS, COLS>& MatrixBase<T, ROWS, COLS>::operator+=(const MatrixBase<T, ROWS, COLS>& m)
+{
+	return apply(m, [&](T& t, const T& u) {t += u;});
+}
+
+// Matrix subtraction
+template<typename T, size_t ROWS, size_t COLS>
+inline MatrixBase<T, ROWS, COLS>& MatrixBase<T, ROWS, COLS>::operator-=(const MatrixBase<T, ROWS, COLS>& m)
+{
+	return apply(m, [&](T& t, const T& u) {t -= u;});
+}
+
 
 #ifdef MATRIX_NAMESPACE
 }
