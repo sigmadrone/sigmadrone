@@ -39,16 +39,15 @@
 #define RAD2DEG(__r__) (((__r__) / M_PI) * 180.0)
 #endif
 
-#ifdef MATRIX_NAMESPACE
-namespace MATRIX_NAMESPACE
+#ifdef D3MATH_NAMESPACE
+namespace D3MATH_NAMESPACE
 {
 #endif
 
-#ifndef COUNT_OF
-#define COUNT_OF(__x__) (sizeof(__x__)/sizeof(__x__[0]))
-#endif
-
 const double EPSILON = 4.37114e-05;
+
+template<typename T>
+class Quaternion;
 
 template <typename T = float, size_t ROWS = 1, size_t COLS = 1>
 class MatrixBase {
@@ -92,6 +91,10 @@ public:
 	void clear();
 	void swap_rows(size_t m, size_t n);
 	void swap_columns(size_t m, size_t n);
+	T sum() const;
+	T min() const;
+	T max() const;
+
 
 	void set_row(size_t m, const MatrixBase<T, 1, COLS>& r);
 	void set_column(size_t n, const MatrixBase<T, ROWS, 1>& c);
@@ -111,6 +114,8 @@ public:
 	MatrixBase operator*(const T& x) const					{ MatrixBase ret(*this); ret *= x; return ret; }
 	MatrixBase operator/(const T& x) const					{ MatrixBase ret(*this); ret /= x; return ret; }
 	MatrixBase operator%(const T& x) const					{ MatrixBase ret(*this); ret %= x; return ret; }
+	T* operator[](size_t row)								{ return &data[row * COLS]; }
+	const T* operator[](size_t row)	const					{ return &data[row * COLS]; }
 
 
 	// Matrix arithmetic
@@ -143,6 +148,8 @@ protected:
 	template <typename M, typename Functor>
 	MatrixBase& apply(const M& m, Functor f);
 
+	static T abs(T a)										{ return (a < 0) ? -a : a; }
+
 
 };
 
@@ -170,10 +177,10 @@ template <typename T, size_t ROWS>
 class MatrixMN<T, ROWS, 1> : public MatrixBase<T, ROWS, 1>
 {
 public:
-	T &x, &y, &z, &w;
+	using base = MatrixBase<T, ROWS, 1>;
 
 public:
-	using base = MatrixBase<T, ROWS, 1>;
+	T &x, &y, &z, &w;
 
 public:
 	MatrixMN() : MatrixBase<T, ROWS, 1>(), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {}
@@ -184,14 +191,406 @@ public:
 	template<typename... ARGS>
 	explicit MatrixMN(ARGS... args) : MatrixBase<T, ROWS, 1>(args...), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {}
 
+	T dot(const MatrixMN& v);
+	MatrixMN<T, 3, 1> cross(const MatrixMN<T, 3, 1>& v) const;
+	MatrixMN<T, 3, 1> projection(const MatrixMN<T, 3, 1>& u) const;
+	MatrixMN<T, 3, 1> perpendicular(const MatrixMN<T, 3, 1>& u) const;
 	MatrixMN& operator=(const T& x)			{ return static_cast<MatrixMN&>(base::operator=(x)); }
 	T length_squared() const				{ return std::inner_product(base::begin(), base::end(), base::begin(), 0); }
 	T length() const						{ return std::sqrt(length_squared()); }
 	MatrixMN normalize() const				{ return (*this / length()); }
 	T& at(size_t row)						{ return base::at(row, 0); }
 	const T& at(size_t row) const			{ return base::at(row, 0); }
+	T& operator[](size_t row)				{ return at(row); }
+	const T& operator[](size_t row)	const	{ return at(row); }
+	static T dot(const MatrixMN& u, const MatrixMN& v) { return MatrixMN(u).dot(v); }
+	static MatrixMN<T, 3, 1> cross(const MatrixMN<T, 3, 1>& u, const MatrixMN<T, 3, 1>& v) { return MatrixMN(u).cross(v); }
 };
 
+
+template<typename T>
+class Quaternion
+{
+public:
+	T w, x, y, z;
+
+public:
+	static Quaternion<T> identity;
+	Quaternion(const Quaternion<T>& q)
+			: w(q.w), x(q.x), y(q.y), z(q.z)
+	{
+	}
+
+	template<class FromT>
+	Quaternion(const Quaternion<FromT>& q)
+			: w(static_cast<T>(q.w)), x(static_cast<T>(q.x)), y(static_cast<T>(q.y)), z(static_cast<T>(q.z))
+	{
+	}
+
+	Quaternion(const MatrixMN<T, 3, 1>& v, T _w = 0)
+			: w(_w), x(v.at(0,0)), y(v.at(1,0)), z(v.at(2,0))
+	{
+	}
+
+	Quaternion(T _w = 0, T _x = 0, T _y = 0, T _z = 0)
+			: w(_w), x(_x), y(_y), z(_z)
+	{
+	}
+
+	template<typename FromT>
+	Quaternion<T>& operator=(const Quaternion<FromT>& rhs)
+	{
+		w = static_cast<T>(rhs.w);
+		x = static_cast<T>(rhs.x);
+		y = static_cast<T>(rhs.y);
+		z = static_cast<T>(rhs.z);
+		return *this;
+	}
+
+	Quaternion<T> operator+(const Quaternion<T>& rhs) const 	{ Quaternion<T>ret(*this); ret += rhs; return ret;	}
+	Quaternion<T> operator*(T rhs) const						{ Quaternion<T>ret(*this); ret *= rhs; return ret;	}
+	Quaternion<T> operator/(T rhs) const						{ Quaternion<T>ret(*this); ret /= rhs; return ret;	}
+	Quaternion<T> operator-(const Quaternion<T>& rhs) const		{ Quaternion<T>ret(*this); ret -= rhs; return ret;	}
+
+	Quaternion<T> operator*(const Quaternion<T>& rhs) const
+	{
+		return Quaternion<T>(w * rhs.w - x * rhs.x - y * rhs.y - z * rhs.z,
+				w * rhs.x + x * rhs.w + y * rhs.z - z * rhs.y,
+				w * rhs.y - x * rhs.z + y * rhs.w + z * rhs.x,
+				w * rhs.z + x * rhs.y - y * rhs.x + z * rhs.w);
+	}
+
+	Quaternion<T>& operator+=(const Quaternion<T>& rhs)
+	{
+		w += rhs.w;
+		x += rhs.x;
+		y += rhs.y;
+		z += rhs.z;
+		return *this;
+	}
+
+	Quaternion<T>& operator*=(T rhs)
+	{
+		w *= rhs;
+		x *= rhs;
+		y *= rhs;
+		z *= rhs;
+		return *this;
+	}
+
+	Quaternion<T>& operator-=(const Quaternion<T>& rhs)
+	{
+		w -= rhs.w;
+		x -= rhs.x;
+		y -= rhs.y;
+		z -= rhs.z;
+		return *this;
+	}
+
+	Quaternion<T>& operator*=(const Quaternion<T>& rhs)
+	{
+		Quaternion q = (*this) * rhs;
+		*this = q;
+		return *this;
+	}
+
+	bool operator==(const Quaternion<T>& rhs) const
+	{
+		const Quaternion<T>& lhs = *this;
+		return (std::fabs(w - rhs.w) < EPSILON) &&
+				(std::fabs(x - rhs.x) < EPSILON) &&
+				(std::fabs(y - rhs.y) < EPSILON) &&
+				(std::fabs(z - rhs.z) < EPSILON);
+	}
+
+	bool operator!=(const Quaternion<T>& rhs) const
+	{
+		return !(*this == rhs);
+	}
+
+	Quaternion<T> operator-() const
+	{
+		return Quaternion<T>(-w, -x, -y, -z);
+	}
+
+	Quaternion<T> operator~() const
+	{
+		return conjugate();
+	}
+
+	Quaternion<T> conjugate() const
+	{
+		return Quaternion<T>(w, -x, -y, -z);
+	}
+
+	T length() const
+	{
+		return static_cast<T>(std::sqrt(w * w + x * x + y * y + z * z));
+	}
+
+	T lengthSq() const
+	{
+		return static_cast<T>(w * w + x * x + y * y + z * z);
+	}
+
+	Quaternion<T> normalize() const
+	{
+		Quaternion<T> q = *this;
+		T len = length();
+		if (len > EPSILON) {
+			q.w /= len;
+			q.x /= len;
+			q.y /= len;
+			q.z /= len;
+		}
+		return q;
+	}
+
+	MatrixMN<T, 3, 1> rotate(const MatrixMN<T, 3, 1>& v) const
+	{
+		Quaternion<T> r = (*this)*Quaternion<T>(0, v.at(0,0), v.at(1,0), v.at(2,0))*~(*this);
+		return MatrixMN<T, 3, 1>(r.x, r.y, r.z);
+	}
+
+	Quaternion<T> ln()
+	{
+		Quaternion<T> Q(*this);
+		MatrixMN<T,3,1> v = MatrixMN<T,3,1>(Q.x, Q.y, Q.z);
+		T lV = v.length();
+		double ac = std::acos(Q.w/Q.length());
+		return Quaternion<T>(std::log(Q.length()), v.at(0,0)/lV*ac, v.at(1,0)/lV*ac, v.at(2,0)/lV*ac);
+	}
+
+	Quaternion<T> exp()
+	{
+		MatrixMN<T,3,1> v(x, y, z);
+		T lV = v.length();
+		double c = std::cos(lV);
+		double s = std::sin(lV);
+		double e = std::exp(w);
+		return Quaternion<T>(e*c, e*v.at(0,0)/lV*s, e*v.at(1,0)/lV*s, e*v.at(2,0)/lV*s);
+	}
+
+	double angle()
+	{
+	    Quaternion<T> q = this->normalize();
+	    return static_cast<double>(2*std::acos(q.w));
+	}
+
+	MatrixMN<T,3,1> axis() const
+	{
+		Quaternion<T> q = this->normalize();
+
+		double ca2 = q.w;
+		double sa2  = std::sqrt( 1.0 - ca2 * ca2 );
+		if (fabs( sa2 ) < 0.0005)
+		  sa2 = 1;
+		return MatrixMN<T,3,1>(q.x/sa2, q.y/sa2, q.z/sa2);
+	}
+
+	static Quaternion<T> fromAngularVelocity(const MatrixMN<T,3,1>& omega /* Rad/Sec */, float deltaT)
+	{
+		Quaternion<T> deltaQ;
+		MatrixMN<T,3,1> theta = omega * (0.5f * deltaT);
+		float thetaMagSq = theta.lengthSq();
+		float s;
+
+		if(thetaMagSq * thetaMagSq / 24.0f < EPSILON) {
+			deltaQ.w = 1.0f - thetaMagSq / 2.0f;
+			s = 1.0f - thetaMagSq / 6.0f;
+		} else {
+			float thetaMag = std::sqrt(thetaMagSq);
+			deltaQ.w = std::cos(thetaMag);
+			s = sin(thetaMag) / thetaMag;
+		}
+
+		deltaQ.x = theta.at(0,0) * s;
+		deltaQ.y = theta.at(1,0) * s;
+		deltaQ.z = theta.at(2,0) * s;
+
+		return deltaQ;
+	}
+
+	static Quaternion<T> fromAxisRot(MatrixMN<T,3,1> axis, float rad)
+	{
+		double sa2 = std::sin(rad / 2);
+		double ca2 = std::cos(rad / 2);
+
+		/*
+		 * Constructing quaternion from vector and angle requires the vector portion to be the unit vector.
+		 * q = cos(a/2) + i ( x * sin(a/2)) + j (y * sin(a/2)) + k ( z * sin(a/2))
+		 */
+		axis = axis.normalize() * sa2;
+		Quaternion<T> temp(ca2, axis.at(0), axis.at(1), axis.at(2));
+		return temp;
+	}
+
+	static Quaternion<T> fromEulerAngles(T x, T y, T z)
+	{
+		Quaternion<T> ret = fromAxisRot(MatrixMN<T,3,1>(1, 0, 0), x) * fromAxisRot(MatrixMN<T,3,1>(0, 1, 0), y)
+				* fromAxisRot(MatrixMN<T,3,1>(0, 0, 1), z);
+		return ret;
+	}
+
+	static Quaternion<T> fromVectors(const MatrixMN<T, 3, 1>& u, const MatrixMN<T, 3, 1>& v)
+	{
+		// Based on Stan Melax's article in Game Programming Gems
+		Quaternion<T> q;
+		// Copy, since cannot modify local
+		MatrixMN<T, 3, 1> v0 = u.normalize();
+		MatrixMN<T, 3, 1> v1 = v.normalize();
+		double d = MatrixMN<T, 3, 1>::dot(v0, v1);
+
+		// If dot == 1, vectors are the same
+		if (d > 1.0f - EPSILON) {
+			return Quaternion<T>(1, 0, 0, 0);
+		}
+		if (d < (EPSILON - 1.0f)) {
+			MatrixMN<T, 3, 1> axis = MatrixMN<T, 3, 1>::cross(MatrixMN<T, 3, 1>(1, 0, 0), v0);
+			if (axis.lengthSq() < EPSILON * EPSILON) // pick another if colinear
+				axis = MatrixMN<T, 3, 1>::cross(MatrixMN<T, 3, 1>(0, 1, 0), v0);
+			q = fromAxisRot(axis, M_PI);
+		} else {
+			double s = std::sqrt((1 + d) * 2);
+			double invs = 1 / s;
+			MatrixMN<T, 3, 1> c = MatrixMN<T, 3, 1>::cross(v0, v1);
+			q.x = c.at(0,0) * invs;
+			q.y = c.at(1,0) * invs;
+			q.z = c.at(2,0) * invs;
+			q.w = s * 0.5f;
+			q = q.normalize();
+		}
+		return q;
+	}
+
+
+	static Quaternion<T> fromVectorsPartial(const MatrixMN<T,3,1>& u, const MatrixMN<T,3,1>& v, float part)
+	{
+		double d = MatrixMN<T, 3, 1>::dot(u, v);
+
+		// If dot == 1, vectors are the same
+		if (d >= (1.0f - EPSILON)) {
+			return Quaternion<T>(1, 0, 0, 0);
+		}
+		Quaternion<T> Q = fromVectors(u,v);
+		return fromAxisRot(Q.axis(), part * Q.angle());
+	}
+
+	static T dot(const Quaternion<T>& u, const Quaternion<T>& v)
+	{
+		return u.w*v.w + u.x*v.x + u.y*v.y + u.z*v.z;
+	}
+
+	/**
+	 * Every rotation can be decomposed to twist and swing
+	 * That is, first we do the twist around the direction axis
+	 * then we do the swing around an axis perpendicular to the
+	 * direction axis.
+	 * composite_rotation = swing * twist (this has singularity in case of
+	 * swing rotation close to 180 degrees).
+	 */
+	static void decomposeTwistSwing(
+			const Quaternion<T>& rotation,
+			const MatrixMN<T, 3, 1>& direction,
+			Quaternion<T>& swing,
+			Quaternion<T>& twist)
+	{
+		MatrixMN<T, 3, 1> rotation_axis(rotation.x, rotation.y, rotation.z);
+		// return projection v1 on to v2 (parallel component)
+		// here can be optimized if direction is unit
+		MatrixMN<T, 3, 1> proj = direction.projection(rotation_axis);
+		twist = Quaternion<T>(rotation.w, proj.at(0, 0), proj.at(1, 0), proj.at(2, 0)).normalize();
+		swing = rotation * twist.conjugate();
+	}
+
+	static void decomposeSwingTwist(
+			const Quaternion<T>& rotation,
+			const MatrixMN<T, 3, 1>& direction,
+			Quaternion<T>& swing,
+			Quaternion<T>& twist)
+	{
+		MatrixMN<T, 3, 1> rotation_axis(rotation.x, rotation.y, rotation.z);
+		MatrixMN<T, 3, 1> perp = direction.perpendicular(rotation_axis);
+		swing = Quaternion<T>(rotation.w, perp.at(0, 0), perp.at(1, 0), perp.at(2, 0)).normalize();
+		twist = rotation * swing.conjugate();
+	}
+
+	/*
+	 * Angle between two quaternions
+	 */
+	static double theta(const Quaternion<T>& u, const Quaternion<T>& v)
+	{
+		return std::acos(std::pow(dot(u, v),2.0)*2.0 - 1.0);
+	}
+
+	static Quaternion<T> nlerp(const Quaternion<T>& i, const Quaternion<T>& f, float alpha)
+	{
+		Quaternion<T> result;
+
+		if(dot(i, f) < 0.0f) {
+			result = i * (1.0f - alpha) - f * alpha;
+		} else {
+			result = i * (1.0f - alpha) + f * alpha;
+		}
+		return result.normalize();
+	}
+
+	static Quaternion<T> slerp(const Quaternion<T>& v0, const Quaternion<T>& v1, float alpha)
+	{
+	    float dot = Quaternion<T>::dot(v0, v1);
+	    const float DOT_THRESHOLD = 0.9995f;
+
+	    if (dot > DOT_THRESHOLD)
+	        return nlerp(v0, v1, alpha);
+
+	    /* clamp dot between -1.0 and 1.0 */
+	    dot = std::min(std::max(dot, -1.0f), 1.0f);
+	    float theta_0 = acosf(dot);
+	    float theta = theta_0 * alpha;
+	    Quaternion<T> v2 = (v1 - v0 * dot).normalize();
+	    return v0*cos(theta) + v2*sin(theta);
+	}
+
+	static MatrixMN<T,3,1> angularVelocity(Quaternion<T> i, Quaternion<T> f, float dT)
+	{
+		double dotprod = dot(i, f);
+		if (dotprod < 0.0)
+			f = -f;
+		if (dotprod < 1.0f && dotprod > -1.0f) {
+			Quaternion<T> logQ = (f * ~i).ln();
+			MatrixMN<T,3,1> V = MatrixMN<T,3,1>(logQ.x, logQ.y, logQ.z) * 2.0f / dT;
+			return V;
+		}
+		return MatrixMN<T,3,1>(0, 0, 0);
+	}
+
+	static Quaternion<T> reciprocal(const Quaternion<T>& q)
+	{
+		Quaternion<T> rec;
+		T norm = q.length();
+		if (0 != norm) {
+			rec = ~q / (norm*norm);
+		} else {
+			rec = q;
+		}
+		return rec;
+	}
+
+	std::string toString() const
+	{
+		std::stringstream oss;
+		oss.setf(std::ios::fixed, std::ios::floatfield);
+		oss.precision(2);
+		oss << std::showpos << w << std::showpos << x << "i" << std::showpos << y << "j" << std::showpos << z << "k";
+		return oss.str();
+	}
+
+	friend std::ostream& operator<<(std::ostream& os, const Quaternion<T>& q)
+	{
+		os << q.toString();
+		return os;
+	}
+};
 
 
 
@@ -419,11 +818,38 @@ void MatrixBase<T, ROWS, COLS>::swap_columns(size_t m, size_t n)
 }
 
 template <typename T, size_t ROWS, size_t COLS>
+T MatrixBase<T, ROWS, COLS>::sum() const
+{
+	return std::accumulate(begin(), end(), static_cast<T>(0));
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+T MatrixBase<T, ROWS, COLS>::min() const
+{
+	T ret = *begin();
+	for (auto x : data)
+		if (x < ret)
+			ret = x;
+	return ret;
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+T MatrixBase<T, ROWS, COLS>::max() const
+{
+	T ret = *begin();
+	for (auto x : data)
+		if (x > ret)
+			ret = x;
+	return ret;
+}
+
+
+template <typename T, size_t ROWS, size_t COLS>
 template <typename Functor>
 MatrixBase<T, ROWS, COLS>& MatrixBase<T, ROWS, COLS>::apply(Functor f)
 {
-	for (auto& x : data)
-		f(x);
+	for (auto it = begin(); it != end(); it++)
+		f(*it);
 	return *this;
 }
 
@@ -432,16 +858,10 @@ template<typename M, typename Functor>
 inline MatrixBase<T, ROWS, COLS>& MatrixBase<T, ROWS, COLS>::apply(const M& m, Functor f)
 {
 	assert(rows == m.rows && cols == m.cols);
-	auto i = begin();
-	auto j = m.begin();
-	while (i != end()) {
+	for (auto i = begin(), j = m.begin(); i != end(); i++, j++)
 		f(*i, *j);
-		++i;
-		++j;
-	}
 	return *this;
 }
-
 
 // Scalar assignment
 template<typename T, size_t ROWS, size_t COLS>
@@ -530,12 +950,12 @@ bool MatrixBase<T, ROWS, COLS>::lup(MatrixBase<T, ROWS, COLS> &L, MatrixBase<T, 
 	P =  MatrixBase<T, ROWS, COLS>::identity();
 	U = *this;
 	for (k = 0; k < ROWS; k++) {
-		double p = 0;
+		T p = 0;
 		K = k;
 		for (i = k; i < ROWS; i++) {
-			double temp = fabs(U.at(i, k));
-			if (temp > p) {
-				p = temp;
+			T u = abs(U.at(i, k));
+			if (u > p) {
+				p = u;
 				K = i;
 			}
 		}
@@ -573,8 +993,232 @@ MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::inverse() const
 	return ret;
 }
 
+template<typename T, size_t ROWS>
+T MatrixMN<T, ROWS, 1>::dot(const MatrixMN<T, ROWS, 1>& v)
+{
+	return std::inner_product(base::begin(), base::end(), v.begin(), static_cast<T>(0));
+}
 
-#ifdef MATRIX_NAMESPACE
+template<typename T, size_t ROWS>
+MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::cross(const MatrixMN<T, 3, 1>& v) const
+{
+	return MatrixMN<T, 3, 1>(
+			at(1) * v.at(2) - v.at(1) * at(2),
+			at(2) * v.at(0) - v.at(2) * at(0),
+			at(0) * v.at(1) - v.at(0) * at(1));
+}
+
+template<typename T, size_t ROWS>
+MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::projection(const MatrixMN<T, 3, 1>& u) const
+{
+	return (*this) * dot(u) / length_squared();
+}
+
+template<typename T, size_t ROWS>
+MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::perpendicular(const MatrixMN<T, 3, 1>& u) const
+{
+	return u - projection(u);
+}
+
+/*
+ * n denotes the normal vector to a plane
+ */
+template<typename T>
+static MatrixMN<T, 3, 1> parallel(const MatrixMN<T, 3, 1>& n, const MatrixMN<T, 3, 1>& v)
+{
+	Quaternion<T> qn(0, n.at(0, 0), n.at(1, 0), n.at(2, 0));
+	Quaternion<T> qv(0, v.at(0, 0), v.at(1, 0), v.at(2, 0));
+	Quaternion<T> qr = (qv + qn * qv * qn) * 1.0 / 2.0;
+	return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
+}
+
+/*
+ * n denotes the normal vector to a plane
+ */
+template<typename T>
+static MatrixMN<T, 3, 1> perpendicular(const MatrixMN<T, 3, 1>& n, const MatrixMN<T, 3, 1>& v)
+{
+	Quaternion<T> qn(0, n.at(0, 0), n.at(1, 0), n.at(2, 0));
+	Quaternion<T> qv(0, v.at(0, 0), v.at(1, 0), v.at(2, 0));
+	Quaternion<T> qr = (qv - qn * qv * qn) * 1.0 / 2.0;
+	return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
+}
+
+/*
+ * n denotes the normal vector to a plane
+ */
+template<typename T>
+static MatrixMN<T, 3, 1> reflection(const MatrixMN<T, 3, 1>& n, const MatrixMN<T, 3, 1>& v)
+{
+	Quaternion<T> qn(0, n.at(0, 0), n.at(1, 0), n.at(2, 0));
+	Quaternion<T> qv(0, v.at(0, 0), v.at(1, 0), v.at(2, 0));
+	Quaternion<T> qr = (qn * qv * qn);
+	return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
+}
+
+
+
+template<typename T>
+static MatrixMN<T, 4, 4> create_rotation_matrix(T xrad, T yrad, T zrad)
+{
+	float cx = cos(xrad);
+	float sx = sin(xrad);
+	float cy = cos(yrad);
+	float sy = sin(yrad);
+	float cz = cos(zrad);
+	float sz = sin(zrad);
+	MatrixMN<T, 4, 4> mx{ 1,   0,   0,  0,
+						  0,  cx, -sx,  0,
+						  0,  sx,  cx,  0,
+						  0,   0,   0,  1};
+	MatrixMN<T, 4, 4> my{ cy,   0,  sy,  0,
+						   0,   1,   0,  0,
+						 -sy,   0,  cy,  0,
+						   0,   0,   0,  1};
+	MatrixMN<T, 4, 4> mz{ cz, -sz,  0,  0,
+						  sz,  cz,  0,  0,
+						   0,   0,  1,  0,
+						   0,   0,  0,  1};
+	return mx * my * mz;
+}
+
+template<typename T>
+static MatrixMN<T, 4, 4> create_translation_matrix(T x, T y, T z)
+{
+	MatrixMN<T, 4, 4> ret{	1,   0,  0,  x,
+							0,   1,  0,  y,
+							0,   0,  1,  z,
+							0,   0,  0,  1};
+	return ret;
+}
+
+template<typename T>
+static MatrixMN<T, 4, 4> create_scale_matrix(T x, T y, T z)
+{
+	MatrixMN<T, 4, 4> ret{	x,   0,  0,  0,
+							0,   y,  0,  0,
+							0,   0,  z,  0,
+							0,   0,  0,  1};
+	return ret;
+}
+
+template<typename T>
+static MatrixMN<T, 4, 4> create_frustum_matrix(T left, T right, T bottom, T top, T zNear, T zFar)
+{
+	MatrixMN<T, 4, 4> ret{
+
+		2 * zNear/(right-left),	0,						(right+left)/(right-left),	0,
+		0,						2*zNear/(top-bottom),	(top+bottom)/(top-bottom),	0,
+		0,						0,						-(zFar+zNear)/(zFar-zNear),	-(2*zFar*zNear)/(zFar-zNear),
+		0,						0,						-1,							0
+	};
+	return ret;
+}
+
+template<typename T>
+static MatrixMN<T, 4, 4> create_ortho_matrix(T left, T right, T bottom, T top, T zNear, T zFar)
+{
+	MatrixMN<T, 4, 4> ret
+	{
+		2/(right-left),			0,						0,							(right+left)/(right-left),
+		0,						2/(top-bottom),			0,							(top+bottom)/(top-bottom),
+		0,						0,						-2/(zFar-zNear),			-(zFar+zNear)/(zFar-zNear),
+		0,						0,						0,							1
+	};
+	return ret;
+}
+
+template<typename T>
+static MatrixMN<T, 4, 4> create_look_at(
+		const MatrixMN<T, 3, 1>& eyePos,
+		const MatrixMN<T, 3, 1>& centerPos,
+		const MatrixMN<T, 3, 1>& upDir)
+{
+	MatrixMN<T, 3, 1> forward, side, up(upDir);
+	MatrixMN<T, 4, 4> m = MatrixMN<T, 4, 4>::identity();
+
+	forward = (centerPos - eyePos).normalize();
+
+	// Side = forward x up
+	side = forward.cross(up).normalize();
+
+	// Recompute up as: up = side x forward
+	up = side.cross(forward).normalize();
+
+	m.at(0, 0) = side.at(0,0);
+	m.at(0, 1) = side.at(1,0);
+	m.at(0, 2) = side.at(2,0);
+
+	m.at(1, 0) = up.at(0,0);
+	m.at(1, 1) = up.at(1,0);
+	m.at(1, 2) = up.at(2,0);
+
+	m.at(2, 0) = -forward.at(0,0);
+	m.at(2, 1) = -forward.at(1,0);
+	m.at(2, 2) = -forward.at(2,0);
+
+	return (m * create_translation_matrix(-eyePos.at(0,0), -eyePos.at(1,0), -eyePos.at(2,0)));
+}
+
+template<typename T>
+static MatrixMN<T, 3, 3> create_rotation_matrix3(const Quaternion<T>& rot)
+{
+	MatrixMN<T,4,4> ret;
+	Quaternion<T> q = rot->normalize();
+
+	T xx = q.x * q.x;
+	T xy = q.x * q.y;
+	T xz = q.x * q.z;
+	T xw = q.x * q.w;
+	T yy = q.y * q.y;
+	T yz = q.y * q.z;
+	T yw = q.y * q.w;
+	T zz = q.z * q.z;
+	T zw = q.z * q.w;
+
+	ret.at(0, 0) = 1 - 2 * (yy + zz);
+	ret.at(0, 1) = 2 * (xy - zw);
+	ret.at(0, 2) = 2 * (xz + yw);
+	ret.at(0, 3) = 0;
+
+	ret.at(1, 0) = 2 * (xy + zw);
+	ret.at(1, 1) = 1 - 2 * (xx + zz);
+	ret.at(1, 2) = 2 * (yz - xw);
+	ret.at(1, 3) = 0;
+
+	ret.at(2, 0) = 2 * (xz - yw);
+	ret.at(2, 1) = 2 * (yz + xw);
+	ret.at(2, 2) = 1 - 2 * (xx + yy);
+	ret.at(2, 3) = 0;
+	return ret;
+}
+
+template<typename T>
+static MatrixMN<T, 4, 4> create_rotation_matrix4(const Quaternion<T>& rot)
+{
+	MatrixMN<T,4,4> ret4;
+	MatrixMN<T,3,3> ret3 = create_rotation_matrix3(rot);
+
+	ret4[0][0] = ret3[0][0];
+	ret4[0][1] = ret3[0][1];
+	ret4[0][2] = ret3[0][2];
+
+	ret4[1][0] = ret3[1][0];
+	ret4[1][1] = ret3[1][1];
+	ret4[1][2] = ret3[1][2];
+
+	ret4[2][0] = ret3[2][0];
+	ret4[2][1] = ret3[2][1];
+	ret4[2][2] = ret3[2][2];
+	ret4[3][3] = 1;
+	return ret4;
+}
+
+template<class T>
+Quaternion<T> Quaternion<T>::identity(1, 0, 0, 0);
+
+
+#ifdef D3MATH_NAMESPACE
 }
 #endif
 

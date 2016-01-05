@@ -54,6 +54,8 @@ int main(int argc, char *argv[])
 				 3,  4,  4,
 				 5,  6,  3);
 
+	D[0][2] = 3;
+	std::cout << "D[1][1]: " << D[1][1] << std::endl;
 
 	std::cout << "A :\n" << A << std::endl;
 	std::cout << "B :\n" << B << std::endl;
@@ -69,8 +71,8 @@ int main(int argc, char *argv[])
 	std::cout << "C.length() is: \n" << C.length() << std::endl << std::endl;
 	std::cout << "C.normalize() is: \n" << C.normalize() << std::endl;
 	std::cout << "C.normalize().transpose() is: \n" << C.normalize().transpose() << std::endl;
-//	std::cout << "C x C.normalize() is: \n" << Vector3f::cross(C, C.normalize()) << endl;
-
+	std::cout << "C x C.normalize() is: \n" << Vector3f::cross(C, C.normalize()) << endl;
+	cout << "C dot C.normalize() is: \n" << Vector3f::dot(C, C.normalize()) << endl;
 
 	Matrix3f I3 = Matrix3f::identity();
 
@@ -124,5 +126,16 @@ int main(int argc, char *argv[])
 
 	std::cout << "D.inverse() is:\n" << D.inverse() << std::endl;
 
+	std::cout << "D.inverse().min(): \n" << D.inverse().min() << std::endl;
+	std::cout << "D.inverse().max(): \n" << D.inverse().max() << std::endl;
+	std::cout << "D.sum(): \n" << D.sum() << std::endl;
+
+	std::cout << "Vector3f::cross(Vector3f(1,0,0), Vector3f(0,1,0)): \n" << Vector3f::cross(Vector3f(1,0,0), Vector3f(0,1,0)) << std::endl;
+	std::cout << "Vector3f(1,0,0).cross(Vector3f(0,1,0)): \n" << Vector3f(1,0,0).cross(Vector3f(0,1,0)) << std::endl;
+
+	std::cout << "Vector3f::dot(Vector3f(1,0,0), Vector3f(0,1,0)): \n" << Vector3f::dot(Vector3f(1,0,0), Vector3f(0,1,0)) << std::endl;
+	std::cout << "Vector3f(1,2,3).dot(Vector3f(0,1,0)): \n" << Vector3f(1,2,2).dot(Vector3f(0,1,0)) << std::endl;
+
+	std::cout << "Vector3f(1,2,3)[0]: " << Vector3f(1,2,3)[0] << std::endl;
 	return 0;
 }
