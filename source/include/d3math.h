@@ -27,6 +27,7 @@
 #include <cmath>
 #include <array>
 #include <type_traits>
+#include <numeric>
 
 
 #ifndef M_PI
@@ -52,19 +53,27 @@ const double EPSILON = 4.37114e-05;
 template <typename T = float, size_t ROWS = 1, size_t COLS = 1>
 class MatrixBase {
 public:
-	using array_type = std::array<T, ROWS * COLS>;
-	using value_type = typename array_type::value_type;
-    using iterator       = typename array_type::iterator;
-    using const_iterator = typename array_type::const_iterator;
+	using array_type 		= std::array<T, ROWS * COLS>;
+	using value_type 		= typename array_type::value_type;
+    using iterator			= typename array_type::iterator;
+    using const_iterator	= typename array_type::const_iterator;
 
 public:
-	std::array<T, ROWS * COLS> data;
+	array_type data;
 	static constexpr size_t rows = ROWS;
 	static constexpr size_t cols = COLS;
 
 	MatrixBase();
 	MatrixBase(const std::initializer_list<std::initializer_list<T>>& list);
 	MatrixBase(const std::initializer_list<T>& list);
+
+	template<typename... ARGS>
+	explicit MatrixBase(ARGS... args);
+
+	template<typename... ARGS>
+	void init(iterator& it, T x, ARGS... args);
+
+	void init(iterator& it, T x);
 
     // Move semantics
 	MatrixBase(MatrixBase&&) = default;
@@ -88,6 +97,7 @@ public:
 	void set_column(size_t n, const MatrixBase<T, ROWS, 1>& c);
 	MatrixBase<T, 1, COLS> row(size_t m) const;
 	MatrixBase<T, ROWS, 1> column(size_t n) const;
+	MatrixBase<T, COLS, ROWS> transpose() const;
 
     // Scalar arithmetic
 	MatrixBase& operator=(const T& x);
@@ -96,17 +106,29 @@ public:
 	MatrixBase& operator*=(const T& x);
 	MatrixBase& operator/=(const T& x);
 	MatrixBase& operator%=(const T& x);
+	MatrixBase operator+(const T& x) const					{ MatrixBase ret(*this); ret += x; return ret; }
+	MatrixBase operator-(const T& x) const					{ MatrixBase ret(*this); ret -= x; return ret; }
+	MatrixBase operator*(const T& x) const					{ MatrixBase ret(*this); ret *= x; return ret; }
+	MatrixBase operator/(const T& x) const					{ MatrixBase ret(*this); ret /= x; return ret; }
+	MatrixBase operator%(const T& x) const					{ MatrixBase ret(*this); ret %= x; return ret; }
+
 
 	// Matrix arithmetic
 	MatrixBase& operator-=(const MatrixBase& m);
 	MatrixBase& operator+=(const MatrixBase& m);
+	MatrixBase operator-=(const MatrixBase& m) const		{ MatrixBase ret(*this); ret -= m; return ret; }
+	MatrixBase operator+=(const MatrixBase& m) const		{ MatrixBase ret(*this); ret += m; return ret; }
 
-	iterator begin() 						{ return data.begin(); }
-	iterator end()   						{ return data.end(); }
+	iterator begin() 										{ return data.begin(); }
+	iterator end()   										{ return data.end(); }
+	const_iterator begin() const 							{ return data.begin(); }
+	const_iterator end() const   							{ return data.end(); }
 
-	const_iterator begin() const 			{ return data.begin(); }
-	const_iterator end() const   			{ return data.end(); }
+	template<typename rhsT, size_t rhsCOLS>
+	MatrixBase<T, ROWS, rhsCOLS> operator*(const MatrixBase<rhsT, COLS, rhsCOLS>& rhs) const;
 
+	bool lup(MatrixBase<T, ROWS, COLS> &L, MatrixBase<T, ROWS, COLS> &U, MatrixBase<T, ROWS, COLS> &P) const;
+	MatrixBase<T, ROWS, COLS> inverse() const;
 
 	template <typename TT, size_t R, size_t C>
 	friend std::ostream& operator<<(std::ostream& os, const MatrixBase<TT, R, C>& m);
@@ -136,6 +158,10 @@ public:
 	MatrixMN(const std::initializer_list<T>& list) : MatrixBase<T, ROWS, COLS>(list) {}
 	MatrixMN(const MatrixBase<T, ROWS, COLS>& m) : MatrixBase<T, ROWS, COLS>(m) {} ;
 
+	template<typename... ARGS>
+	explicit MatrixMN(ARGS... args) : MatrixBase<T, ROWS, COLS>(args...) {};
+
+
 	MatrixMN& operator=(const T& x)			{ return static_cast<MatrixMN&>(base::operator=(x)); }
 };
 
@@ -150,26 +176,20 @@ public:
 	using base = MatrixBase<T, ROWS, 1>;
 
 public:
-	MatrixMN() : MatrixBase<T, ROWS, 1>(), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {} ;
+	MatrixMN() : MatrixBase<T, ROWS, 1>(), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {}
 	MatrixMN(const std::initializer_list<std::initializer_list<T>>& list) : MatrixBase<T, ROWS, 1>(list), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {}
 	MatrixMN(const std::initializer_list<T>& list) : MatrixBase<T, ROWS, 1>(list), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {}
 	MatrixMN(const MatrixBase<T, ROWS, 1>& m) : MatrixBase<T, ROWS, 1>(m), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {} ;
 
+	template<typename... ARGS>
+	explicit MatrixMN(ARGS... args) : MatrixBase<T, ROWS, 1>(args...), x{base::data[0]}, y{base::data[1]}, z{base::data[2]}, w{base::data[3]} {}
+
 	MatrixMN& operator=(const T& x)			{ return static_cast<MatrixMN&>(base::operator=(x)); }
-
-
-	T length_squared() const
-	{
-		T ret = static_cast<T>(0);
-		for (int i = 0; i < ROWS; i++)
-			ret += base::at(i, 0) * base::at(i, 0);
-		return ret;
-	}
-
+	T length_squared() const				{ return std::inner_product(base::begin(), base::end(), base::begin(), 0); }
 	T length() const						{ return std::sqrt(length_squared()); }
+	MatrixMN normalize() const				{ return (*this / length()); }
 	T& at(size_t row)						{ return base::at(row, 0); }
 	const T& at(size_t row) const			{ return base::at(row, 0); }
-
 };
 
 
@@ -199,6 +219,28 @@ typedef MatrixMN<float, 4, 1> Vector4f;
 typedef MatrixMN<double, 4, 1> Vector4d;
 typedef MatrixMN<int, 4, 1> Vector4i;
 
+template <typename T, size_t ROWS, size_t COLS>
+static MatrixBase<T, ROWS, 1> lup_solve(
+		const MatrixBase<T, ROWS, COLS> &L,
+		const MatrixBase<T, ROWS, COLS> &U,
+		const MatrixBase<T, ROWS, COLS> &P,
+		const MatrixBase<T, ROWS, 1> &B)
+{
+	MatrixBase<T, ROWS, 1> X;
+	MatrixBase<T, ROWS, 1> Y = P * B;
+	for (int i = 0; i < ROWS; i++) {
+		for (int j = 0; j < i; j++)
+			Y.at(i, 0) -= Y.at(j, 0) * L.at(i, j);
+	}
+	X = Y;
+	for (int i = ROWS - 1; i >= 0; i--) {
+		for (int j = i + 1; j < ROWS; j++)
+			X.at(i, 0) -= X.at(j, 0) * U.at(i, j);
+		X.at(i, 0) /= U.at(i,i);
+	}
+	return X;
+}
+
 
 template <typename T, size_t ROWS, size_t COLS>
 template <size_t R, size_t C>
@@ -214,15 +256,63 @@ typename std::enable_if<R == C, MatrixBase<T, ROWS, COLS>>::type MatrixBase<T, R
 template <typename TT, size_t R, size_t C>
 std::ostream& operator<<(std::ostream& os, const MatrixBase<TT, R, C>& m)
 {
-	os << m.to_string();
+	os.setf(std::ios::fixed, std::ios::floatfield);
+	os.precision(2);
+	for (size_t i = 0; i < m.rows; i++) {
+		for (size_t j = 0; j < m.cols; j++) {
+			os.width(7);
+			os << m.at(i, j) << " ";
+		}
+		os << std::endl;
+	}
 	return os;
 }
 
+template <typename T, size_t ROWS, size_t COLS>
+inline std::string MatrixBase<T, ROWS, COLS>::to_string() const
+{
+	std::stringstream oss;
+	oss << *this;
+	return oss.str();
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, COLS, ROWS> MatrixBase<T, ROWS, COLS>::transpose() const
+{
+	MatrixMN<T, COLS, ROWS> ret;
+	for (int i = 0; i < COLS; i++)
+		for (int j = 0; j < ROWS; j++)
+			ret.at(i, j) = at(j, i);
+	return ret;
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+template<typename... ARGS>
+void MatrixBase<T, ROWS, COLS>::init(iterator& it, T x, ARGS... args)
+{
+	assert(it != end());
+	*it++ = x;
+	init(it, args...);
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+void MatrixBase<T, ROWS, COLS>::init(iterator& it, T x)
+{
+	assert(it != end());
+	*it++ = x;
+}
 
 template <typename T, size_t ROWS, size_t COLS>
 inline MatrixBase<T, ROWS, COLS>::MatrixBase() {
 	for (auto& i : data)
 		i = static_cast<T>(0);
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+template<typename... ARGS>
+inline MatrixBase<T, ROWS, COLS>::MatrixBase(ARGS... args) : MatrixBase() {
+	auto it = begin();
+	init(it, args...);
 }
 
 template <typename T, size_t ROWS, size_t COLS>
@@ -256,22 +346,6 @@ template <typename T, size_t ROWS, size_t COLS>
 inline const T& MatrixBase<T, ROWS, COLS>::at(size_t row, size_t col) const
 {
 	return data[row * COLS + col];
-}
-
-template <typename T, size_t ROWS, size_t COLS>
-inline std::string MatrixBase<T, ROWS, COLS>::to_string() const
-{
-	std::stringstream oss;
-	oss.setf(std::ios::fixed, std::ios::floatfield);
-	oss.precision(2);
-	for (size_t i = 0; i < ROWS; i++) {
-		for (size_t j = 0; j < COLS; j++) {
-			oss.width(7);
-			oss << at(i, j) << " ";
-		}
-		oss << std::endl;
-	}
-	return oss.str();
 }
 
 template <typename T, size_t ROWS, size_t COLS>
@@ -429,6 +503,74 @@ template<typename T, size_t ROWS, size_t COLS>
 inline MatrixBase<T, ROWS, COLS>& MatrixBase<T, ROWS, COLS>::operator-=(const MatrixBase<T, ROWS, COLS>& m)
 {
 	return apply(m, [&](T& t, const T& u) {t -= u;});
+}
+
+template<typename T, size_t ROWS, size_t COLS>
+template<typename rhsT, size_t rhsCOLS>
+MatrixBase<T, ROWS, rhsCOLS> MatrixBase<T, ROWS, COLS>::operator*(const MatrixBase<rhsT, COLS, rhsCOLS>& rhs) const
+{
+	MatrixBase<T, ROWS, rhsCOLS> ret;
+	for (int h = 0; h < rhsCOLS; h++) {
+		for (int i = 0; i < ROWS; i++) {
+			for (int j = 0; j < COLS; j++) {
+				ret.at(i, h) += at(i, j) * rhs.at(j, h);
+			}
+		}
+	}
+	return ret;
+}
+
+template<typename T, size_t ROWS, size_t COLS>
+bool MatrixBase<T, ROWS, COLS>::lup(MatrixBase<T, ROWS, COLS> &L, MatrixBase<T, ROWS, COLS> &U, MatrixBase<T, ROWS, COLS> &P) const
+{
+	assert(ROWS == COLS);
+	int K, k, i, j;
+
+	L.clear();
+	P =  MatrixBase<T, ROWS, COLS>::identity();
+	U = *this;
+	for (k = 0; k < ROWS; k++) {
+		double p = 0;
+		K = k;
+		for (i = k; i < ROWS; i++) {
+			double temp = fabs(U.at(i, k));
+			if (temp > p) {
+				p = temp;
+				K = i;
+			}
+		}
+		if (!p)
+			return false;
+		P.swap_rows(k, K);
+		U.swap_rows(k, K);
+		L.swap_rows(k, K);
+		for (i = k + 1; i < ROWS; i++) {
+			L.at(i, k) = U.at(i, k) / U.at(k, k);
+			for (j = 0; j < COLS; j++)
+				U.at(i, j) -= L.at(i, k) * U.at(k, j);
+		}
+	}
+	for (i = 0; i < ROWS; i++)
+		L.at(i, i) = static_cast<T>(1);
+	return true;
+}
+
+template<typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::inverse() const
+{
+	assert(ROWS == COLS);
+	MatrixBase<T, ROWS, COLS> ret;
+	MatrixBase<T, ROWS, 1> In;
+	MatrixBase<T, ROWS, COLS> L, U, P;
+
+	if (!lup(L, U, P))
+		return ret;
+	for (int i = 0; i < ROWS; i++) {
+		In.at(i, 0) = 1;
+		ret.set_column(i, lup_solve(L, U, P, In));
+		In.at(i, 0) = 0;
+	}
+	return ret;
 }
 
 

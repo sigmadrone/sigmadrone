@@ -33,10 +33,44 @@ int main(int argc, char *argv[])
 				{2, 19, 10, 23},
 				{4, 10, 11, 31}};
 
-	Matrix3f M3 {2,  3,  1,
+	Matrix3f M3 (2,  3,  1,
 				 6, 13,  5,
-				 2, 19, 10,
-				 };
+				 2, 19, 10
+				 );
+
+
+	Matrix4f A (2,  3,  1,  5,
+			    6, 13,  5, 19,
+			    2, 19, 10, 23,
+			    4, 10, 11, 31);
+
+	Matrix4f B ( 2,  0,  2, 0.6,
+				 3,  3,  4,  -2,
+				 5,  5,  4,   2,
+				-1, -2,3.4,  -1);
+
+	Vector3f C(3, 7, 8);
+	Matrix3f D(  1,  2,  0,
+				 3,  4,  4,
+				 5,  6,  3);
+
+
+	std::cout << "A :\n" << A << std::endl;
+	std::cout << "B :\n" << B << std::endl;
+	std::cout << "A * B is:\n" << A * B << std::endl;
+
+	std::cout << "D is:\n" << D << std::endl;
+	std::cout << "C is:\n" << C << std::endl;
+	std::cout << "D * C is:\n" << D * C << std::endl;
+	std::cout << "D.inverse() is:\n" << D.inverse() << std::endl;
+	std::cout << "D * D.inverse() is:\n" << D * D.inverse() << std::endl;
+	std::cout << "D.transpose() is:\n" << D.transpose() << std::endl;
+	std::cout << "C.length() is: \n" << C.length() << std::endl << std::endl;
+	std::cout << "C.length() is: \n" << C.length() << std::endl << std::endl;
+	std::cout << "C.normalize() is: \n" << C.normalize() << std::endl;
+	std::cout << "C.normalize().transpose() is: \n" << C.normalize().transpose() << std::endl;
+//	std::cout << "C x C.normalize() is: \n" << Vector3f::cross(C, C.normalize()) << endl;
+
 
 	Matrix3f I3 = Matrix3f::identity();
 
@@ -84,7 +118,11 @@ int main(int argc, char *argv[])
 
 
 	std::cout << "V4=5: \n" << (V4 = 5) << std::endl;
-	std::cout << "V4-=V4: \n" << (V4 -= V4) << std::endl;
+	std::cout << "V4 - =Vector4f({1,2,3,4}): \n" << (V4 -= Vector4f(1,2,3,4)) << std::endl;
+
+	std::cout << "V4.transpose(): \n" << V4.transpose() << std::endl;
+
+	std::cout << "D.inverse() is:\n" << D.inverse() << std::endl;
 
 	return 0;
 }
