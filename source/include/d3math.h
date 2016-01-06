@@ -95,7 +95,6 @@ public:
 	T min() const;
 	T max() const;
 
-
 	void set_row(size_t m, const MatrixBase<T, 1, COLS>& r);
 	void set_column(size_t n, const MatrixBase<T, ROWS, 1>& c);
 	MatrixBase<T, 1, COLS> row(size_t m) const;
@@ -151,7 +150,7 @@ protected:
 	template <typename M, typename Functor>
 	MatrixBase& apply(const M& m, Functor f);
 
-	static T abs(T a)										{ return (a < 0) ? -a : a; }
+	static T abs(T a) { return (a < 0) ? -a : a; }
 };
 
 template <typename T, size_t ROWS, size_t COLS>
@@ -169,9 +168,9 @@ public:
 	template<typename... ARGS>
 	explicit MatrixMN(ARGS... args) : MatrixBase<T, ROWS, COLS>(args...) {};
 
-	MatrixMN& operator=(const T& x)					{ return static_cast<MatrixMN&>(base::operator=(x)); }
-	MatrixMN operator-(const MatrixMN& m) const		{ return static_cast<MatrixMN>(base::operator-(m));  }
-	MatrixMN operator+(const MatrixMN& m) const		{ return static_cast<MatrixMN>(base::operator+(m));  }
+	MatrixMN& operator=(const T& x);
+	MatrixMN operator-(const MatrixMN& m) const;
+	MatrixMN operator+(const MatrixMN& m) const;
 };
 
 
@@ -198,29 +197,28 @@ public:
 	MatrixMN<T, 3, 1> perpendicular2(const MatrixMN<T, 3, 1>& v) const;
 	MatrixMN<T, 3, 1> reflection(const MatrixMN<T, 3, 1>& v) const;
 
-	MatrixMN& operator=(const MatrixMN& m)	{ return static_cast<MatrixMN&>(base::operator=(m)); }
-	MatrixMN& operator=(const T& x)			{ return static_cast<MatrixMN&>(base::operator=(x)); }
-	T length_squared() const				{ return std::inner_product(base::begin(), base::end(), base::begin(), static_cast<T>(0)); }
-	T length() const						{ return std::sqrt(length_squared()); }
-	MatrixMN normalize() const				{ return (*this / length()); }
-	T& at(size_t row)						{ return base::at(row, 0); }
-	const T& at(size_t row) const			{ return base::at(row, 0); }
-	T& operator[](size_t row)				{ return at(row); }
-	const T& operator[](size_t row)	const	{ return at(row); }
-	T& x()									{ assert(base::rows > 0); return at(0); }
-	const T& x() const						{ assert(base::rows > 0); return at(0); }
-	T& y()									{ assert(base::rows > 1); return at(1); }
-	const T& y() const						{ assert(base::rows > 1); return at(1); }
-	T& z()									{ assert(base::rows > 2); return at(2); }
-	const T& z() const						{ assert(base::rows > 2); return at(2); }
-	T& w()									{ assert(base::rows > 3); return at(3); }
-	const T& w() const						{ assert(base::rows > 3); return at(3); }
+	MatrixMN operator-(const MatrixMN& m) const;
+	MatrixMN operator+(const MatrixMN& m) const;
+	MatrixMN& operator=(const MatrixMN& m);
+	MatrixMN& operator=(const T& x);
+	T length_squared() const;
+	T length() const;
+	MatrixMN normalize() const;
+	T& at(size_t row);
+	const T& at(size_t row) const;
+	T& operator[](size_t row);
+	const T& operator[](size_t row)	const;
+	T& x();
+	const T& x() const;
+	T& y();
+	const T& y() const;
+	T& z();
+	const T& z() const;
+	T& w();
+	const T& w() const;
 
 	static T dot(const MatrixMN& u, const MatrixMN& v) { return MatrixMN(u).dot(v); }
 	static MatrixMN<T, 3, 1> cross(const MatrixMN<T, 3, 1>& u, const MatrixMN<T, 3, 1>& v) { return MatrixMN(u).cross(v); }
-
-	MatrixMN operator-(const MatrixMN& m) const		{ return static_cast<MatrixMN>(base::operator-(m));  }
-	MatrixMN operator+(const MatrixMN& m) const		{ return static_cast<MatrixMN>(base::operator+(m));  }
 };
 
 
@@ -294,6 +292,9 @@ public:
 	template <typename TT>
 	friend std::ostream& operator<<(std::ostream& os, const Quaternion<TT>& q);
 };
+
+template<class T>
+Quaternion<T> Quaternion<T>::identity(1, 0, 0, 0);
 
 template <typename T>
 Quaternion<T>::Quaternion(const Quaternion<T>& q)
@@ -1194,6 +1195,25 @@ MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::inverse() const
 	return ret;
 }
 
+template<typename T, size_t ROWS, size_t COLS>
+MatrixMN<T, ROWS, COLS>& MatrixMN<T, ROWS, COLS>::operator=(const T& x)
+{
+	return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator=(x));
+}
+
+template<typename T, size_t ROWS, size_t COLS>
+MatrixMN<T, ROWS, COLS> MatrixMN<T, ROWS, COLS>::operator-(const MatrixMN<T, ROWS, COLS>& m) const
+{
+	return static_cast<MatrixMN<T, ROWS, COLS>>(base::operator-(m));
+}
+
+template<typename T, size_t ROWS, size_t COLS>
+MatrixMN<T, ROWS, COLS> MatrixMN<T, ROWS, COLS>::operator+(const MatrixMN<T, ROWS, COLS>& m) const
+{
+	return static_cast<MatrixMN<T, ROWS, COLS>>(base::operator+(m));
+}
+
+
 template<typename T, size_t ROWS>
 T MatrixMN<T, ROWS, 1>::dot(const MatrixMN<T, ROWS, 1>& v)
 {
@@ -1257,7 +1277,127 @@ MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::reflection(const MatrixMN<T, 3, 1>& v) c
 	return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
 }
 
+template<typename T, size_t ROWS>
+MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::operator-(const MatrixMN<T, ROWS, 1>& m) const
+{
+	return static_cast<MatrixMN<T, ROWS, 1>>(base::operator-(m));
+}
 
+template<typename T, size_t ROWS>
+MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::operator+(const MatrixMN<T, ROWS, 1>& m) const
+{
+	return static_cast<MatrixMN<T, ROWS, 1>>(base::operator+(m));
+}
+
+template<typename T, size_t ROWS>
+MatrixMN<T, ROWS, 1>& MatrixMN<T, ROWS, 1>::operator=(const MatrixMN<T, ROWS, 1>& m)
+{
+	return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator=(m));
+}
+
+template<typename T, size_t ROWS>
+MatrixMN<T, ROWS, 1>& MatrixMN<T, ROWS, 1>::operator=(const T& x)
+{
+	return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator=(x));
+}
+
+template<typename T, size_t ROWS>
+T MatrixMN<T, ROWS, 1>::length_squared() const
+{
+	return std::inner_product(base::begin(), base::end(), base::begin(), static_cast<T>(0));
+}
+
+template<typename T, size_t ROWS>
+T MatrixMN<T, ROWS, 1>::length() const
+{
+	return std::sqrt(length_squared());
+}
+
+template<typename T, size_t ROWS>
+MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::normalize() const
+{
+	return (*this / length());
+}
+
+template<typename T, size_t ROWS>
+T& MatrixMN<T, ROWS, 1>::at(size_t row)
+{
+	return base::at(row, 0);
+}
+
+template<typename T, size_t ROWS>
+const T& MatrixMN<T, ROWS, 1>::at(size_t row) const
+{
+	return base::at(row, 0);
+}
+
+template<typename T, size_t ROWS>
+T& MatrixMN<T, ROWS, 1>::operator[](size_t row)
+{
+	return at(row);
+}
+
+template<typename T, size_t ROWS>
+const T& MatrixMN<T, ROWS, 1>::operator[](size_t row) const
+{
+	return at(row);
+}
+
+template<typename T, size_t ROWS>
+T& MatrixMN<T, ROWS, 1>::x()
+{
+	assert(base::rows > 0);
+	return at(0);
+}
+
+template<typename T, size_t ROWS>
+const T& MatrixMN<T, ROWS, 1>::x() const
+{
+	assert(base::rows > 0);
+	return at(0);
+}
+
+template<typename T, size_t ROWS>
+T& MatrixMN<T, ROWS, 1>::y()
+{
+	assert(base::rows > 1);
+	return at(1);
+}
+
+template<typename T, size_t ROWS>
+const T& MatrixMN<T, ROWS, 1>::y() const
+{
+	assert(base::rows > 1);
+	return at(1);
+}
+
+template<typename T, size_t ROWS>
+T& MatrixMN<T, ROWS, 1>::z()
+{
+	assert(base::rows > 2);
+	return at(2);
+}
+
+template<typename T, size_t ROWS>
+const T& MatrixMN<T, ROWS, 1>::z() const
+{
+	assert(base::rows > 2);
+	return at(2);
+}
+
+template<typename T, size_t ROWS>
+T& MatrixMN<T, ROWS, 1>::w()
+{
+	assert(base::rows > 3);
+	return at(3);
+}
+
+template<typename T, size_t ROWS>
+const T& MatrixMN<T, ROWS, 1>::w() const
+{
+	assert(base::rows > 3);
+	return at(3);
+}
 
 template<typename T>
 MatrixMN<T, 4, 4> create_rotation_matrix(T xrad, T yrad, T zrad)
@@ -1360,9 +1500,6 @@ MatrixMN<T, 4, 4> create_look_at(
 
 	return (m * create_translation_matrix(-eyePos.at(0,0), -eyePos.at(1,0), -eyePos.at(2,0)));
 }
-
-template<class T>
-Quaternion<T> Quaternion<T>::identity(1, 0, 0, 0);
 
 
 #ifdef D3MATH_NAMESPACE
