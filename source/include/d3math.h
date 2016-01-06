@@ -200,7 +200,7 @@ public:
 
 	MatrixMN& operator=(const MatrixMN& m)	{ return static_cast<MatrixMN&>(base::operator=(m)); }
 	MatrixMN& operator=(const T& x)			{ return static_cast<MatrixMN&>(base::operator=(x)); }
-	T length_squared() const				{ return std::inner_product(base::begin(), base::end(), base::begin(), 0); }
+	T length_squared() const				{ return std::inner_product(base::begin(), base::end(), base::begin(), static_cast<T>(0)); }
 	T length() const						{ return std::sqrt(length_squared()); }
 	MatrixMN normalize() const				{ return (*this / length()); }
 	T& at(size_t row)						{ return base::at(row, 0); }
@@ -475,7 +475,7 @@ Quaternion<T> Quaternion<T>::normalize() const
 template <typename T>
 MatrixMN<T, 3, 1> Quaternion<T>::rotate(const MatrixMN<T, 3, 1>& v) const
 {
-	Quaternion<T> r = (*this)*Quaternion<T>(0, v.at(0,0), v.at(1,0), v.at(2,0))*~(*this);
+	Quaternion<T> r = (*this)*Quaternion<T>(0, v.at(0), v.at(1), v.at(2))*~(*this);
 	return MatrixMN<T, 3, 1>(r.x, r.y, r.z);
 }
 
@@ -486,7 +486,7 @@ Quaternion<T> Quaternion<T>::ln() const
 	MatrixMN<T,3,1> v = MatrixMN<T,3,1>(Q.x, Q.y, Q.z);
 	T lV = v.length();
 	double ac = std::acos(Q.w/Q.length());
-	return Quaternion<T>(std::log(Q.length()), v.at(0,0)/lV*ac, v.at(1,0)/lV*ac, v.at(2,0)/lV*ac);
+	return Quaternion<T>(std::log(Q.length()), v.at(0)/lV*ac, v.at(1)/lV*ac, v.at(2)/lV*ac);
 }
 
 template <typename T>
@@ -497,7 +497,7 @@ Quaternion<T> Quaternion<T>::exp() const
 	double c = std::cos(lV);
 	double s = std::sin(lV);
 	double e = std::exp(w);
-	return Quaternion<T>(e*c, e*v.at(0,0)/lV*s, e*v.at(1,0)/lV*s, e*v.at(2,0)/lV*s);
+	return Quaternion<T>(e*c, e*v.at(0)/lV*s, e*v.at(1)/lV*s, e*v.at(2)/lV*s);
 }
 
 template <typename T>
@@ -703,9 +703,9 @@ Quaternion<T> Quaternion<T>::fromVectors(const MatrixMN<T, 3, 1>& u, const Matri
 		double s = std::sqrt((1 + d) * 2);
 		double invs = 1 / s;
 		MatrixMN<T, 3, 1> c = MatrixMN<T, 3, 1>::cross(v0, v1);
-		q.x = c.at(0,0) * invs;
-		q.y = c.at(1,0) * invs;
-		q.z = c.at(2,0) * invs;
+		q.x = c.at(0) * invs;
+		q.y = c.at(1) * invs;
+		q.z = c.at(2) * invs;
 		q.w = s * 0.5f;
 		q = q.normalize();
 	}
@@ -751,7 +751,7 @@ void Quaternion<T>::decomposeTwistSwing(
 	// return projection v1 on to v2 (parallel component)
 	// here can be optimized if direction is unit
 	MatrixMN<T, 3, 1> proj = direction.projection(rotation_axis);
-	twist = Quaternion<T>(rotation.w, proj.at(0, 0), proj.at(1, 0), proj.at(2, 0)).normalize();
+	twist = Quaternion<T>(rotation.w, proj.at(0), proj.at(1), proj.at(2)).normalize();
 	swing = rotation * twist.conjugate();
 }
 
@@ -764,7 +764,7 @@ void Quaternion<T>::decomposeSwingTwist(
 {
 	MatrixMN<T, 3, 1> rotation_axis(rotation.x, rotation.y, rotation.z);
 	MatrixMN<T, 3, 1> perp = direction.perpendicular(rotation_axis);
-	swing = Quaternion<T>(rotation.w, perp.at(0, 0), perp.at(1, 0), perp.at(2, 0)).normalize();
+	swing = Quaternion<T>(rotation.w, perp.at(0), perp.at(1), perp.at(2)).normalize();
 	twist = rotation * swing.conjugate();
 }
 
@@ -1228,7 +1228,7 @@ template<typename T, size_t ROWS>
 MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::parallel(const MatrixMN<T, 3, 1>& v) const
 {
 	Quaternion<T> qn(0, at(0), at(1), at(2));
-	Quaternion<T> qv(0, v.at(0, 0), v.at(1, 0), v.at(2, 0));
+	Quaternion<T> qv(0, v.at(0), v.at(1), v.at(2));
 	Quaternion<T> qr = (qv + qn * qv * qn) * 1.0 / 2.0;
 	return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
 }
@@ -1240,7 +1240,7 @@ template<typename T, size_t ROWS>
 MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::perpendicular2(const MatrixMN<T, 3, 1>& v) const
 {
 	Quaternion<T> qn(0, at(0), at(1), at(2));
-	Quaternion<T> qv(0, v.at(0, 0), v.at(1, 0), v.at(2, 0));
+	Quaternion<T> qv(0, v.at(0), v.at(1), v.at(2));
 	Quaternion<T> qr = (qv - qn * qv * qn) * 1.0 / 2.0;
 	return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
 }
@@ -1252,7 +1252,7 @@ template<typename T, size_t ROWS>
 MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::reflection(const MatrixMN<T, 3, 1>& v) const
 {
 	Quaternion<T> qn(0, at(0), at(1), at(2));
-	Quaternion<T> qv(0, v.at(0, 0), v.at(1, 0), v.at(2, 0));
+	Quaternion<T> qv(0, v.at(0), v.at(1), v.at(2));
 	Quaternion<T> qr = (qn * qv * qn);
 	return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
 }
