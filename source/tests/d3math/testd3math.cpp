@@ -28,10 +28,17 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-	Matrix4f M4 {{2,  3,  1,  5},
+	Matrix4f M4{{2,  3,  1,  5},
 				{6, 13,  5, 19},
 				{2, 19, 10, 23},
 				{4, 10, 11, 31}};
+
+	Matrix4f N4{{4, 10, 11, 31},
+				{1,  3,  1,  3},
+				{2, 19, 9, 23},
+				{7, 10,  5, 19}};
+
+	Matrix4f P4;
 
 	Matrix3f M3 (2,  3,  1,
 				 6, 13,  5,
@@ -48,6 +55,12 @@ int main(int argc, char *argv[])
 				 3,  3,  4,  -2,
 				 5,  5,  4,   2,
 				-1, -2,3.4,  -1);
+
+	P4 = M4;
+	P4 *= N4;
+	std::cout << "P4: \n" << P4 << std::endl;
+	P4 = M4 * N4;
+	std::cout << "P4: \n" << P4 << std::endl;
 
 	Vector3f C(3, 7, 8);
 	Matrix3f D(  1,  2,  0,
@@ -78,16 +91,18 @@ int main(int argc, char *argv[])
 
 	std::cout << "Identity: \n" << MatrixMN<float, 4, 4>::identity() << std::endl;
 
-	Vector4f V4 {1, 2, 3, 4};
+	Vector4f V4 {1, 2, 3, 4}, U4;
 	Vector1f V1 {1};
 
+	U4 = V4;
 	std::cout << "M4: \n" << M4 << std::endl;
 	std::cout << "V4: \n" << V4 << std::endl;
+	std::cout << "U4: \n" << U4 << std::endl;
 	std::cout << "V4.length(): " << V4.length() << std::endl << std::endl;
-	std::cout << "V4.x: " << V4.x << std::endl;
-	std::cout << "V4.y: " << V4.y << std::endl;
-	std::cout << "V4.z: " << V4.z << std::endl;
-	std::cout << "V4.w: " << V4.w << std::endl;
+	std::cout << "V4.x: " << V4.x() << std::endl;
+	std::cout << "V4.y: " << V4.y() << std::endl;
+	std::cout << "V4.z: " << V4.z() << std::endl;
+	std::cout << "V4.w: " << V4.w() << std::endl;
 	std::cout << "V4.at(3): " << V4.at(3) << std::endl;
 
 	std::cout << "V1: \n" << V1 << std::endl;
@@ -137,5 +152,6 @@ int main(int argc, char *argv[])
 	std::cout << "Vector3f(1,2,3).dot(Vector3f(0,1,0)): \n" << Vector3f(1,2,2).dot(Vector3f(0,1,0)) << std::endl;
 
 	std::cout << "Vector3f(1,2,3)[0]: " << Vector3f(1,2,3)[0] << std::endl;
+	(Vector3f(3,3,3) - Vector3f(1,2,3)).normalize();
 	return 0;
 }
