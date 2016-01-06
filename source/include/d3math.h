@@ -74,6 +74,8 @@ public:
 
 	void init(iterator& it, T x);
 
+	void init_identity();
+
     // Move semantics
 	MatrixBase(MatrixBase&&) = default;
 	MatrixBase& operator=(MatrixBase&&) = default;
@@ -847,11 +849,19 @@ template <size_t RR, size_t CC>
 typename std::enable_if<RR == CC, MatrixBase<T, ROWS, COLS>>::type MatrixBase<T, ROWS, COLS>::identity()
 {
 	MatrixBase<T, ROWS, COLS> ret;
-	for (size_t i = 0; i < ROWS; i++)
-		for (size_t j = 0; j < COLS; j++)
-			ret.at(i, j) = (i == j) ? static_cast<T>(1) : static_cast<T>(0);
+	ret.init_identity();
 	return ret;
 }
+
+template <typename T, size_t ROWS, size_t COLS>
+void MatrixBase<T, ROWS, COLS>::init_identity()
+{
+	assert(ROWS == COLS);
+	for (size_t i = 0; i < ROWS; i++)
+		for (size_t j = 0; j < COLS; j++)
+			at(i, j) = (i == j) ? static_cast<T>(1) : static_cast<T>(0);
+}
+
 
 template <typename TT, size_t RR, size_t CC>
 std::ostream& operator<<(std::ostream& os, const MatrixBase<TT, RR, CC>& m)
@@ -1326,6 +1336,14 @@ MatrixMN<T, 4, 4> create_ortho_matrix(T left, T right, T bottom, T top, T zNear,
 		0,						0,						-2/(zFar-zNear),			-(zFar+zNear)/(zFar-zNear),
 		0,						0,						0,							1
 	};
+	return ret;
+}
+
+template<typename T, size_t ROWS>
+MatrixMN<T, ROWS, ROWS> create_identity_matrix()
+{
+	MatrixMN<T, ROWS, ROWS> ret;
+	ret.init_identity();
 	return ret;
 }
 
