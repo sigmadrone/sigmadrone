@@ -21,7 +21,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
-#include "matrix.h"
+#include "d3math.h"
 
 #define VMATH_NAMESPACE vmath
 //#include "vmath.h"
@@ -83,9 +83,9 @@ void test_quaternion_transforms()
 	cout << "Perpendicular component of plane  :  " << (Pin - q * Pin * q) * 1.0 / 2.0 << std::endl;
 	cout << "Reflection in plane               :  " << (q * Pin * q) << std::endl << std::endl;
 
-	cout << "(V) Parallel component of plane       :  " << Vector3d::parallel(N, Vin).transpose();
-	cout << "(V) Perpendicular component of plane  :  " << Vector3d::perpendicular(N, Vin).transpose();
-	cout << "(V) Reflection in plane               :  " << Vector3d::reflection(N, Vin).transpose();
+	cout << "(V) Parallel component of plane       :  " << N.parallel(Vin).transpose();
+	cout << "(V) Perpendicular component of plane  :  " << N.perpendicular(Vin).transpose();
+	cout << "(V) Reflection in plane               :  " << N.reflection(Vin).transpose();
 
 	cout << std::endl;
 	cout << "(V) Projection to vector              :  " << N.projection(Vin).transpose();
