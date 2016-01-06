@@ -168,6 +168,7 @@ public:
 	template<typename... ARGS>
 	explicit MatrixMN(ARGS... args) : MatrixBase<T, ROWS, COLS>(args...) {};
 
+	MatrixMN& operator=(const MatrixMN& m);
 	MatrixMN& operator=(const T& x);
 	MatrixMN operator-(const MatrixMN& m) const;
 	MatrixMN operator+(const MatrixMN& m) const;
@@ -1211,6 +1212,12 @@ template<typename T, size_t ROWS, size_t COLS>
 MatrixMN<T, ROWS, COLS>& MatrixMN<T, ROWS, COLS>::operator=(const T& x)
 {
 	return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator=(x));
+}
+
+template<typename T, size_t ROWS, size_t COLS>
+MatrixMN<T, ROWS, COLS>& MatrixMN<T, ROWS, COLS>::operator=(const MatrixMN<T, ROWS, COLS>& m)
+{
+	return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator=(m));
 }
 
 template<typename T, size_t ROWS, size_t COLS>
