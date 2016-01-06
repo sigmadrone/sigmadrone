@@ -21,7 +21,7 @@
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
-#include "matrix.h"
+#include "d3math.h"
 
 using namespace std;
 

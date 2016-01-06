@@ -189,7 +189,7 @@ public:
 	template<typename... ARGS>
 	explicit MatrixMN(ARGS... args) : MatrixBase<T, ROWS, 1>(args...) {}
 
-	T dot(const MatrixMN& v);
+	T dot(const MatrixMN& v) const;
 	MatrixMN<T, 3, 1> cross(const MatrixMN<T, 3, 1>& v) const;
 	MatrixMN<T, 3, 1> projection(const MatrixMN<T, 3, 1>& u) const;
 	MatrixMN<T, 3, 1> perpendicular(const MatrixMN<T, 3, 1>& u) const;
@@ -242,12 +242,14 @@ public:
 	Quaternion<T>& operator=(const Quaternion<FromT>& rhs);
 
 	Quaternion<T> operator+(const Quaternion<T>& rhs) const;
-	Quaternion<T> operator*(T rhs) const;
-	Quaternion<T> operator/(T rhs) const;
 	Quaternion<T> operator-(const Quaternion<T>& rhs) const;
 	Quaternion<T> operator*(const Quaternion<T>& rhs) const;
-	Quaternion<T>& operator+=(const Quaternion<T>& rhs);
+	Quaternion<T> operator*(T rhs) const;
+	Quaternion<T> operator/(T rhs) const;
+
 	Quaternion<T>& operator*=(T rhs);
+	Quaternion<T>& operator/=(T rhs);
+	Quaternion<T>& operator+=(const Quaternion<T>& rhs);
 	Quaternion<T>& operator-=(const Quaternion<T>& rhs);
 	Quaternion<T>& operator*=(const Quaternion<T>& rhs);
 	bool operator==(const Quaternion<T>& rhs) const;
@@ -391,6 +393,16 @@ Quaternion<T>& Quaternion<T>::operator*=(T rhs)
 	x *= rhs;
 	y *= rhs;
 	z *= rhs;
+	return *this;
+}
+
+template <typename T>
+Quaternion<T>& Quaternion<T>::operator/=(T rhs)
+{
+	w /= rhs;
+	x /= rhs;
+	y /= rhs;
+	z /= rhs;
 	return *this;
 }
 
@@ -1215,7 +1227,7 @@ MatrixMN<T, ROWS, COLS> MatrixMN<T, ROWS, COLS>::operator+(const MatrixMN<T, ROW
 
 
 template<typename T, size_t ROWS>
-T MatrixMN<T, ROWS, 1>::dot(const MatrixMN<T, ROWS, 1>& v)
+T MatrixMN<T, ROWS, 1>::dot(const MatrixMN<T, ROWS, 1>& v) const
 {
 	return std::inner_product(base::begin(), base::end(), v.begin(), static_cast<T>(0));
 }
