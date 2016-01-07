@@ -44,8 +44,6 @@ namespace D3MATH_NAMESPACE
 {
 #endif
 
-const double EPSILON = 4.37114e-05;
-
 template<typename T>
 class Quaternion;
 
@@ -103,10 +101,10 @@ public:
 	MatrixBase<T, ROWS, 1> column(size_t n) const;
 	MatrixBase<T, COLS, ROWS> transpose() const;
 
-	T* operator[](size_t row)								{ return &data[row * COLS]; }
-	const T* operator[](size_t row)	const					{ return &data[row * COLS]; }
-	operator const T*()	const								{ return &data[0];			}
-	operator T*()											{ return &data[0];			}
+	T* operator[](size_t row);
+	const T* operator[](size_t row)	const;
+	operator const T*()	const;
+	operator T*();
 
     // Scalar arithmetic
 	MatrixBase& operator=(const T& x);
@@ -115,23 +113,23 @@ public:
 	MatrixBase& operator*=(const T& x);
 	MatrixBase& operator/=(const T& x);
 	MatrixBase& operator%=(const T& x);
-	MatrixBase operator+(const T& x) const					{ MatrixBase ret(*this); ret += x; return ret; }
-	MatrixBase operator-(const T& x) const					{ MatrixBase ret(*this); ret -= x; return ret; }
-	MatrixBase operator*(const T& x) const					{ MatrixBase ret(*this); ret *= x; return ret; }
-	MatrixBase operator/(const T& x) const					{ MatrixBase ret(*this); ret /= x; return ret; }
-	MatrixBase operator%(const T& x) const					{ MatrixBase ret(*this); ret %= x; return ret; }
+	MatrixBase operator+(const T& x) const;
+	MatrixBase operator-(const T& x) const;
+	MatrixBase operator*(const T& x) const;
+	MatrixBase operator/(const T& x) const;
+	MatrixBase operator%(const T& x) const;
 
 	// Matrix arithmetic
 	MatrixBase& operator-=(const MatrixBase& m);
 	MatrixBase& operator+=(const MatrixBase& m);
-	MatrixBase& operator*=(const MatrixBase& m)				{ return (*this = operator*(m)); }
-	MatrixBase operator-(const MatrixBase& m) const			{ MatrixBase ret(*this); ret -= m; return ret; }
-	MatrixBase operator+(const MatrixBase& m) const			{ MatrixBase ret(*this); ret += m; return ret; }
+	MatrixBase& operator*=(const MatrixBase& m);
+	MatrixBase operator-(const MatrixBase& m) const;
+	MatrixBase operator+(const MatrixBase& m) const;
 
-	iterator begin() 										{ return data.begin(); }
-	iterator end()   										{ return data.end(); }
-	const_iterator begin() const 							{ return data.begin(); }
-	const_iterator end() const   							{ return data.end(); }
+	iterator begin();
+	iterator end();
+	const_iterator begin() const;
+	const_iterator end() const;
 
 	template<typename rhsT, size_t rhsCOLS>
 	MatrixBase<T, ROWS, rhsCOLS> operator*(const MatrixBase<rhsT, COLS, rhsCOLS>& rhs) const;
@@ -230,6 +228,7 @@ class Quaternion
 {
 public:
 	T w, x, y, z;
+	static constexpr double EPSILON = 4.37114e-05;
 
 public:
 	static Quaternion<T> identity;
@@ -958,6 +957,116 @@ inline MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<T>& lis
 	for (auto elem : list) {
 		*it++ = elem;
 	}
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+typename MatrixBase<T, ROWS, COLS>::iterator MatrixBase<T, ROWS, COLS>::begin()
+{
+	return data.begin();
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+typename MatrixBase<T, ROWS, COLS>::iterator MatrixBase<T, ROWS, COLS>::end()
+{
+	return data.end();
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+typename MatrixBase<T, ROWS, COLS>::const_iterator MatrixBase<T, ROWS, COLS>::begin() const
+{
+	return data.begin();
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+typename MatrixBase<T, ROWS, COLS>::const_iterator MatrixBase<T, ROWS, COLS>::end() const
+{
+	return data.end();
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+T* MatrixBase<T, ROWS, COLS>::operator[](size_t row)
+{
+	return &data[row * COLS];
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+const T* MatrixBase<T, ROWS, COLS>::operator[](size_t row) const
+{
+	return &data[row * COLS];
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS>::operator const T*() const
+{
+	return &data[0];
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS>::operator T*()
+{
+	return &data[0];
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS>& MatrixBase<T, ROWS, COLS>::operator*=(const MatrixBase& m)
+{
+	return (*this = operator*(m));
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::operator-(const MatrixBase& m) const
+{
+	MatrixBase ret(*this);
+	ret -= m;
+	return ret;
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::operator+(const MatrixBase& m) const
+{
+	MatrixBase ret(*this);
+	ret += m;
+	return ret;
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::operator+(const T& x) const
+{
+	MatrixBase ret(*this);
+	ret += x;
+	return ret;
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::operator-(const T& x) const
+{
+	MatrixBase ret(*this);
+	ret -= x;
+	return ret;
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::operator*(const T& x) const
+{
+	MatrixBase ret(*this);
+	ret *= x;
+	return ret;
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::operator/(const T& x) const
+{
+	MatrixBase ret(*this);
+	ret /= x;
+	return ret;
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::operator%(const T& x) const
+{
+	MatrixBase ret(*this);
+	ret %= x;
+	return ret;
 }
 
 template <typename T, size_t ROWS, size_t COLS>
