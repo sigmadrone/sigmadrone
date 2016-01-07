@@ -20,7 +20,7 @@
  */
 
 #include <sys/time.h>
-#include "matrix.h"
+#include "d3math.h"
 
 #ifndef _PIDTORQUE_H_
 #define _PIDTORQUE_H_
@@ -31,16 +31,16 @@ public:
 	pidtorque();
 	~pidtorque();
 
-	void set_target(const QuaternionD &setQ);
-	Vector3d get_xy_torque(const QuaternionD &inQ, const Vector3d& Omega, double dT);
-	Vector3d get_z_torque(const QuaternionD &inQ, const Vector3d& Omega, double dT);
+	void set_target(const QuaternionF &setQ);
+	Vector3f get_xy_torque(const QuaternionF &inQ, const Vector3f& Omega, double dT);
+	Vector3f get_z_torque(const QuaternionF &inQ, const Vector3f& Omega, double dT);
 	void reset(double Kp, double Ki, double Kd);
 
 public:
-	QuaternionD target_q_;
-	QuaternionD old_q_;
-	Vector3d error_;
-	Vector3d integral_error_;
+	QuaternionF target_q_;
+	QuaternionF old_q_;
+	Vector3f error_;
+	Vector3f integral_error_;
 	timespec previous_time_;
 	double Kp_, Ki_, Kd_;
 };

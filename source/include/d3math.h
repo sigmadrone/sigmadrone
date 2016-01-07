@@ -201,7 +201,7 @@ public:
 
 	MatrixMN operator-() const;
 	MatrixMN operator-(const MatrixMN& m) const;
-	MatrixMN operator+(const MatrixMN& m) const;
+	MatrixMN operator-(const T& x) const;
 	MatrixMN& operator=(const MatrixMN& m);
 	MatrixMN& operator=(const T& x);
 	T length_squared() const;
@@ -1276,9 +1276,9 @@ template<typename rhsT, size_t rhsCOLS>
 MatrixBase<T, ROWS, rhsCOLS> MatrixBase<T, ROWS, COLS>::operator*(const MatrixBase<rhsT, COLS, rhsCOLS>& rhs) const
 {
 	MatrixBase<T, ROWS, rhsCOLS> ret;
-	for (int h = 0; h < rhsCOLS; h++) {
-		for (int i = 0; i < ROWS; i++) {
-			for (int j = 0; j < COLS; j++) {
+	for (size_t h = 0; h < rhsCOLS; h++) {
+		for (size_t i = 0; i < ROWS; i++) {
+			for (size_t j = 0; j < COLS; j++) {
 				ret.at(i, h) += at(i, j) * rhs.at(j, h);
 			}
 		}
@@ -1440,9 +1440,9 @@ MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::operator-(const MatrixMN<T, ROWS, 1>&
 }
 
 template<typename T, size_t ROWS>
-MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::operator+(const MatrixMN<T, ROWS, 1>& m) const
+MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::operator-(const T& x) const
 {
-	return static_cast<MatrixMN<T, ROWS, 1>>(base::operator+(m));
+	return static_cast<MatrixMN<T, ROWS, 1>>(base::operator+(x));
 }
 
 template<typename T, size_t ROWS>

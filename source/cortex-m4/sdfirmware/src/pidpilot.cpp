@@ -105,16 +105,16 @@ void PidPilot::set_and_scale_motors(
 		float m4)
 {
 	Vector4f mv(m1,m2,m3,m4);
-	float min_val = mv.minValue();
+	float min_val = mv.min();
 	if (min_val < min_thrust_) {
 		mv = mv + (min_thrust_ - min_val);
 	}
-	float max_val = mv.maxValue();
+	float max_val = mv.max();
 	if (max_val > max_thrust_) {
 		mv = mv - (max_val - max_thrust_);
 	}
-	max_val = mv.maxValue();
-	min_val = mv.minValue();
+	max_val = mv.max();
+	min_val = mv.min();
 	if (min_val < min_thrust_ || max_val > max_thrust_) {
 		float scale = (max_thrust_-min_thrust_)/(max_val-min_val);
 		mv = mv - min_val;

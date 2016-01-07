@@ -23,7 +23,7 @@
 #define __FIRFILT_H__
 
 #include <string.h>
-#include "matrix.h"
+#include "d3math.h"
 
 template<typename T, int N>
 struct FiltVector{
@@ -77,7 +77,7 @@ public:
 	do_filter(const typename FiltVector<T,DIM>::type& in)
 	{
 		typename FiltVector<T,DIM>::type out;
-		do_filter((const T*)in.data);
+		do_filter((const T*)in);
 		for (size_t i = 0; i < DIM; ++i) {
 			out.at(i,0) = output_[i];
 		}
@@ -139,9 +139,9 @@ public:
 		double in[3] = {a,b,c};
 		return fir_filter_.do_filter(in);
 	}
-	Vector3d DoFilter(const Vector3d& in)
+	Vector3f DoFilter(const Vector3f& in)
 	{
-		Vector3d out;
+		Vector3f out;
 		double inArr[3] = {in.at(0,0),in.at(1,0),in.at(2,0)};
 		DoFilter(inArr);
 		out.at(0,0) = fir_filter_.get_output()[0];

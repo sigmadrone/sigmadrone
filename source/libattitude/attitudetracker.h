@@ -21,55 +21,55 @@
 #ifndef ATTITUDETRACKER_H_
 #define ATTITUDETRACKER_H_
 
-#include "matrix.h"
+#include "d3math.h"
 
 class attitudetracker
 {
 public:
-	explicit attitudetracker(double accelerometer_correction_period = 1.5, Vector3d earth_g = Vector3d(0, 0, -1));
+	explicit attitudetracker(double accelerometer_correction_period = 1.5, Vector3f earth_g = Vector3f(0, 0, -1));
 	~attitudetracker();
-	Vector3d get_earth_g() const;
-	void set_earth_g(Vector3d earth_g);
-	Vector3d get_earth_m() const;
-	void set_earth_m(Vector3d earth_m);
-	void track_gyroscope(const Vector3d& omega, double dtime);
-	void track_accelerometer(const Vector3d& g, double dtime);
-	void track_magnetometer(const Vector3d& m, double dtime);
+	Vector3f get_earth_g() const;
+	void set_earth_g(Vector3f earth_g);
+	Vector3f get_earth_m() const;
+	void set_earth_m(Vector3f earth_m);
+	void track_gyroscope(const Vector3f& omega, double dtime);
+	void track_accelerometer(const Vector3f& g, double dtime);
+	void track_magnetometer(const Vector3f& m, double dtime);
 	void accelerometer_correction_period(double accelerometer_correction_period);
 	/*
 	 * Return our attitude in the world coordinate system
 	 */
-	QuaternionD get_attitude() const;
+	QuaternionF get_attitude() const;
 
 	/*
 	 * Return the world attitude in our coordinate system
 	 */
-	QuaternionD get_world_attitude() const;
+	QuaternionF get_world_attitude() const;
 	void reset_attitude();
 
 public:
 	/*
 	 * The earth M vector reading while in initial position.
 	 */
-	Vector3d earth_m_;
+	Vector3f earth_m_;
 	double accelerometer_correction_period_;
 
 protected:
 	/*
 	 * The earth G vector reading while in leveled position.
 	 */
-	Vector3d earth_g_;
+	Vector3f earth_g_;
 
 	/*
 	 * Current attitude of the world. We assume that
 	 * the world is rotating in our coordinate system.
 	 */
-	QuaternionD attitude_;
+	QuaternionF attitude_;
 
 	/*
 	 * Angular velocity integral
 	 */
-	Vector3d integral_w_;
+	Vector3f integral_w_;
 
 };
 

@@ -22,7 +22,7 @@
 #define JSONSERIALIZATION_H
 
 #include "librexjson/rexjson++.h"
-#include "matrix.h"
+#include "d3math.h"
 
 template<class T> Quaternion<T> quaternion_from_json_value(const rexjson::value& val)
 {
@@ -45,23 +45,23 @@ template<class T> rexjson::value quaternion_to_json_value(const Quaternion<T>& q
 	return obj;
 }
 
-template <typename T, int M, int N>
+template <typename T, size_t M, size_t N>
 MatrixMN<T, M, N> matrix_from_json_value(const rexjson::value& val)
 {
 	const rexjson::array& arr = val.get_array();
 	MatrixMN<T, M, N> ret;
-	for (int i = 0; i < M; i++)
-		for (int j = 0; j < N; j++)
+	for (size_t i = 0; i < M; i++)
+		for (size_t j = 0; j < N; j++)
 			ret.at(i, j) = arr.at(j * M + i).get_real();
 	return ret;
 }
 
-template <typename T, int M, int N>
+template <typename T, size_t M, size_t N>
 rexjson::value matrix_to_json_value(const MatrixMN<T, M, N>& m)
 {
 	rexjson::array arr;
-	for (int i = 0; i < M; i++)
-		for (int j = 0; j < N; j++)
+	for (size_t i = 0; i < M; i++)
+		for (size_t j = 0; j < N; j++)
 			arr.push_back(m.at(i, j));
 	return arr;
 }

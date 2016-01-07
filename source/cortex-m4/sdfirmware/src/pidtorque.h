@@ -20,7 +20,7 @@
  */
 
 #include "units.h"
-#include "matrix.h"
+#include "d3math.h"
 #include "pidcontroller.h"
 
 #ifndef _PIDTORQUE_H_

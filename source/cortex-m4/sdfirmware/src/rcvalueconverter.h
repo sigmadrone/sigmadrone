@@ -23,7 +23,7 @@
 #define RCVALUECONVERTER_H_
 
 #include "rcchannelmapper.h"
-#include "matrix.h"
+#include "d3math.h"
 #include "rcreceiver.h"
 
 struct PwmPulse {

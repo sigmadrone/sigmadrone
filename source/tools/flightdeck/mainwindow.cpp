@@ -290,7 +290,7 @@ void mainwindow::set_rpc_connection(const std::string& rpcserver, const std::str
 void mainwindow::rpc_update_attitude()
 {
 	try {
-		QuaternionD q;
+		QuaternionF q;
 		q = quaternion_from_json_value<double>(drone_state_["attitude"]);
 		label_attitude_w_->set_text(double_to_str(q.w));
 		label_attitude_x_->set_text(double_to_str(q.x));
@@ -314,7 +314,7 @@ void mainwindow::rpc_update_altitude()
 void mainwindow::rpc_update_target()
 {
 	try {
-		QuaternionD q;
+		QuaternionF q;
 		q = quaternion_from_json_value<double>(drone_state_["target"]);
 		label_target_w_->set_text(double_to_str(q.w));
 		label_target_x_->set_text(double_to_str(q.x));
@@ -328,7 +328,7 @@ void mainwindow::rpc_update_target()
 void mainwindow::rpc_update_twist()
 {
 	try {
-		QuaternionD q;
+		QuaternionF q;
 		q = quaternion_from_json_value<double>(drone_state_["twist"]);
 		label_twist_w_->set_text(double_to_str(q.w));
 		label_twist_x_->set_text(double_to_str(q.x));
@@ -407,7 +407,7 @@ void mainwindow::rpc_update_accelerometer()
 {
 	try {
 		rexjson::value val = drone_state_["accel"];
-		Vector3d G = matrix_from_json_value<double, 3, 1>(val);
+		Vector3f G = matrix_from_json_value<float, 3, 1>(val);
 		label_accelerometer_x_->set_text(double_to_str(val.get_array().at(0).get_real()));
 		label_accelerometer_y_->set_text(double_to_str(val.get_array().at(1).get_real()));
 		label_accelerometer_z_->set_text(double_to_str(val.get_array().at(2).get_real()));

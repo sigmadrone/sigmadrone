@@ -38,7 +38,7 @@
 #include "uart.h"
 #include "l3gd20.h"
 #include "lsm303d.h"
-#include "matrix.h"
+#include "d3math.h"
 #include "hwtimer.h"
 #include "pwmencoder.h"
 #include "pwmdecoder.h"

@@ -22,7 +22,7 @@
 #ifndef PIDCONTROLLER_H_
 #define PIDCONTROLLER_H_
 
-#include "matrix.h"
+#include "d3math.h"
 
 template <class FLOAT, int M>
 class PidController

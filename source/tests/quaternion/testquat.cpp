@@ -34,10 +34,10 @@ void printQ(float X, float Y, float Z)
 
 void test_quaternion_decompostion_twist_swing()
 {
-	QuaternionD swing, twist;
-	QuaternionD swing_z = QuaternionD::fromAxisRot(Vector3d(1, 0, 0), M_PI/2).normalize();
-	QuaternionD twist_z = QuaternionD::fromAxisRot(Vector3d(0, 0, 1), M_PI/4).normalize();
-	QuaternionD::decomposeTwistSwing(swing_z * twist_z, Vector3d(0,0,1), swing, twist);
+	QuaternionF swing, twist;
+	QuaternionF swing_z = QuaternionF::fromAxisRot(Vector3f(1, 0, 0), M_PI/2).normalize();
+	QuaternionF twist_z = QuaternionF::fromAxisRot(Vector3f(0, 0, 1), M_PI/4).normalize();
+	QuaternionF::decomposeTwistSwing(swing_z * twist_z, Vector3f(0,0,1), swing, twist);
 
 	cout << "swing_z:             " << swing_z << std::endl;
 	cout << "twist_z:             " << twist_z << std::endl;
@@ -51,10 +51,10 @@ void test_quaternion_decompostion_twist_swing()
 
 void test_quaternion_decompostion_swing_twist()
 {
-	QuaternionD swing, twist;
-	QuaternionD swing_z = QuaternionD::fromAxisRot(Vector3d(1, 0, 0), M_PI).normalize();
-	QuaternionD twist_z = QuaternionD::fromAxisRot(Vector3d(0, 0, 1), M_PI).normalize();
-	QuaternionD::decomposeSwingTwist(twist_z * swing_z, Vector3d(0,0,1), swing, twist);
+	QuaternionF swing, twist;
+	QuaternionF swing_z = QuaternionF::fromAxisRot(Vector3f(1, 0, 0), M_PI).normalize();
+	QuaternionF twist_z = QuaternionF::fromAxisRot(Vector3f(0, 0, 1), M_PI).normalize();
+	QuaternionF::decomposeSwingTwist(twist_z * swing_z, Vector3f(0,0,1), swing, twist);
 
 	cout << "swing_z:             " << swing_z << std::endl;
 	cout << "twist_z:             " << twist_z << std::endl;
@@ -69,10 +69,10 @@ void test_quaternion_decompostion_swing_twist()
 void test_quaternion_transforms()
 {
 	cout << "Quaternion Transforms from: http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/transforms/" << std::endl << std::endl;
-	Vector3d N(0,0,1);
-	Vector3d Vin(2, 3, 4);
-	QuaternionD q = QuaternionD(N);
-	QuaternionD Pin = QuaternionD(Vin);
+	Vector3f N(0,0,1);
+	Vector3f Vin(2, 3, 4);
+	QuaternionF q = QuaternionF(N);
+	QuaternionF Pin = QuaternionF(Vin);
 	cout << "q:                                   " << q << std::endl;
 	cout << "Pin:                                 " << Pin << std::endl;
 
@@ -98,29 +98,29 @@ void test_quaternion_nlerp()
 {
 	cout << "\nQuaternion nlerp test\n" << std::endl;
 
-	QuaternionD q1 = QuaternionD::identity;
-	QuaternionD q2 = QuaternionD::fromAxisRot(Vector3d(0,0,1),M_PI/2);
-//	QuaternionD dq = slerp(q1, q2, 1.0);
+	QuaternionF q1 = QuaternionF::identity;
+	QuaternionF q2 = QuaternionF::fromAxisRot(Vector3f(0,0,1),M_PI/2);
+//	QuaternionF dq = slerp(q1, q2, 1.0);
 
 	cout << "q1:                 " << q1 << std::endl;
 	cout << "q2:                 " << q2 << std::endl << std::endl;
 
-	cout << "slerp(q1,q2,0.33):  " << QuaternionD::slerp(q1,q2,0.33) << std::endl;
-	cout << "slerp(q1,q2,0.66):  " << QuaternionD::slerp(q1,q2,0.66) << std::endl;
-	cout << "slerp(q1,q2,1.0):   " << QuaternionD::slerp(q1,q2,1.0) << std::endl << std::endl;
+	cout << "slerp(q1,q2,0.33):  " << QuaternionF::slerp(q1,q2,0.33) << std::endl;
+	cout << "slerp(q1,q2,0.66):  " << QuaternionF::slerp(q1,q2,0.66) << std::endl;
+	cout << "slerp(q1,q2,1.0):   " << QuaternionF::slerp(q1,q2,1.0) << std::endl << std::endl;
 
-	cout << "nlerp(q1,q2,0.33):  " << QuaternionD::nlerp(q1,q2,0.33) << std::endl;
-	cout << "nlerp(q1,q2,0.66):  " << QuaternionD::nlerp(q1,q2,0.66) << std::endl;
-	cout << "nlerp(q1,q2,1.0):   " << QuaternionD::nlerp(q1,q2,1.0) << std::endl << std::endl;
+	cout << "nlerp(q1,q2,0.33):  " << QuaternionF::nlerp(q1,q2,0.33) << std::endl;
+	cout << "nlerp(q1,q2,0.66):  " << QuaternionF::nlerp(q1,q2,0.66) << std::endl;
+	cout << "nlerp(q1,q2,1.0):   " << QuaternionF::nlerp(q1,q2,1.0) << std::endl << std::endl;
 
 }
 
 void test_delta_quaternion()
 {
-	Vector3d v(1.0, 0.0, 0.0);
-	QuaternionD q1 = QuaternionD::fromAxisRot(Vector3d(0,0,1), M_PI/3);
-	QuaternionD q2 = QuaternionD::fromAxisRot(Vector3d(0,0,1), M_PI/2);
-	QuaternionD dQ;
+	Vector3f v(1.0, 0.0, 0.0);
+	QuaternionF q1 = QuaternionF::fromAxisRot(Vector3f(0,0,1), M_PI/3);
+	QuaternionF q2 = QuaternionF::fromAxisRot(Vector3f(0,0,1), M_PI/2);
+	QuaternionF dQ;
 
 	/*
 	 * Example using absolute frame
@@ -148,9 +148,9 @@ void test_delta_quaternion()
 	std::cout << "q2 = q1 * dQ:       " << q1 * dQ << std::endl;
 
 	std::cout << "q2 = q1 * dQ(W):    " << q1
-			* QuaternionD::fromAngularVelocity(Vector3d(0,0,M_PI/6), 1.0/4.0)
-			* QuaternionD::fromAngularVelocity(Vector3d(0,0,M_PI/6), 1.0/2.0)
-			* QuaternionD::fromAngularVelocity(Vector3d(0,0,M_PI/6), 1.0/4.0)
+			* QuaternionF::fromAngularVelocity(Vector3f(0,0,M_PI/6), 1.0/4.0)
+			* QuaternionF::fromAngularVelocity(Vector3f(0,0,M_PI/6), 1.0/2.0)
+			* QuaternionF::fromAngularVelocity(Vector3f(0,0,M_PI/6), 1.0/4.0)
 			<< std::endl;
 
 }
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 
 	for (int i = 0; i <= 24; i++) {
 		double angle = 2 * M_PI * i /24.0;
-		std::cout << "Rotation around Z, angle: " << RAD2DEG(angle) << ", Q: " << QuaternionD::fromAxisRot(Vector3d(0, 0, 1), angle).normalize() << std::endl;
+		std::cout << "Rotation around Z, angle: " << RAD2DEG(angle) << ", Q: " << QuaternionF::fromAxisRot(Vector3f(0, 0, 1), angle).normalize() << std::endl;
 	}
 	std::cout << std::endl << std::endl;
 

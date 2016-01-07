@@ -37,23 +37,23 @@ void pidtorque::reset(double Kp, double Ki, double Kd)
 	Kp_ = Kp;
 	Ki_ = Ki;
 	Kd_ = Kd;
-	integral_error_ = Vector3d();
-	error_ = Vector3d();
+	integral_error_ = Vector3f();
+	error_ = Vector3f();
 }
 
-void pidtorque::set_target(const QuaternionD &setQ)
+void pidtorque::set_target(const QuaternionF &setQ)
 {
 	target_q_ = setQ;
 }
 
-Vector3d pidtorque::get_xy_torque(const QuaternionD &inQ, const Vector3d& Omega, double dT)
+Vector3f pidtorque::get_xy_torque(const QuaternionF &inQ, const Vector3f& Omega, double dT)
 {
-	Vector3d torq;
-	Vector3d differentialError;
-	Vector3d Zset = target_q_.rotate(Vector3d(0.0, 0.0, 1.0));
-	Vector3d Zin = (~inQ).rotate(Vector3d(0.0, 0.0, 1.0));
-	QuaternionD Qtorq = QuaternionD::fromVectors(Zin, Zset);
-	Vector3d error = Qtorq.axis().normalize() * Qtorq.angle() * -1.0;
+	Vector3f torq;
+	Vector3f differentialError;
+	Vector3f Zset = target_q_.rotate(Vector3f(0.0, 0.0, 1.0));
+	Vector3f Zin = (~inQ).rotate(Vector3f(0.0, 0.0, 1.0));
+	QuaternionF Qtorq = QuaternionF::fromVectors(Zin, Zset);
+	Vector3f error = Qtorq.axis().normalize() * Qtorq.angle() * -1.0;
 	double Kp = 1000.0 * Kp_ / 1000.0 * 22.5 / 100.0 / (3.1415/2);
 	double Ki = 1000.0 * Ki_ / 1000.0 * 22.5 / 100.0 / (3.1415/2);
 	double Kd = 1000.0 * Kd_ / 1000.0 * 22.5 / 100.0 / (3.1415/2);
@@ -71,14 +71,14 @@ Vector3d pidtorque::get_xy_torque(const QuaternionD &inQ, const Vector3d& Omega,
 	return torq;
 }
 
-Vector3d pidtorque::get_z_torque(const QuaternionD &inQ, const Vector3d& Omega, double dT)
+Vector3f pidtorque::get_z_torque(const QuaternionF &inQ, const Vector3f& Omega, double dT)
 {
-	Vector3d torq;
-	Vector3d differentialError;
-	Vector3d Zset = target_q_.rotate(Vector3d(0.0, 0.0, 1.0));
-	Vector3d Zin = (~inQ).rotate(Vector3d(0.0, 0.0, 1.0));
-	QuaternionD Qtorq = QuaternionD::fromVectors(Zin, Zset);
-	Vector3d error = Qtorq.axis().normalize() * Qtorq.angle() * -1.0;
+	Vector3f torq;
+	Vector3f differentialError;
+	Vector3f Zset = target_q_.rotate(Vector3f(0.0, 0.0, 1.0));
+	Vector3f Zin = (~inQ).rotate(Vector3f(0.0, 0.0, 1.0));
+	QuaternionF Qtorq = QuaternionF::fromVectors(Zin, Zset);
+	Vector3f error = Qtorq.axis().normalize() * Qtorq.angle() * -1.0;
 	double Kp = 50.0 / 1000.0  * Kp_ * 22.5 / 100.0 / (3.1415/2);
 	double Ki = 50.0 / 1000.0  * Ki_ * 22.5 / 100.0 / (3.1415/2);
 	double Kd = 50.0 / 1000.0  * Kd_ * 22.5 / 100.0 / (3.1415/2);

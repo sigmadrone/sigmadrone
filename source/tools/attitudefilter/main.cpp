@@ -36,7 +36,7 @@
 #include <deque>
 using namespace std;
 
-#include "matrix.h"
+#include "d3math.h"
 #include "axesdata.h"
 #include "attitudefilter.h"
 
@@ -142,8 +142,8 @@ int main(int argc, char *argv[])
 	int3d_t gyroBias;
 	int3d_t accBias;
 	unsigned int frame;
-	Matrix4d rotMx = Matrix3f::createIdentityMatrix();
-	Vector3d X(1, 0, 0), Y(0, 1, 0), Z(0, 0, 1);
+	Matrix3f rotMx = Matrix3f::createIdentityMatrix();
+	Vector3f X(1, 0, 0), Y(0, 1, 0), Z(0, 0, 1);
 	AttitudeFilter attiFilt(
 			FS_HZ,
 			GYRO_MAX_DPS,
@@ -222,14 +222,14 @@ int main(int argc, char *argv[])
 	{
 		if (read_sensor_data(&accRaw,&gyroRaw,&magRaw))
 		{
-			QuaternionD attQ;
+			QuaternionF attQ;
 
 			attiFilt.Update(gyroRaw,accRaw,magRaw);
 			attQ = attiFilt.GetAttitude();
 
-			X = attQ.rotate(Vector3d(1, 0, 0));
-			Y = attQ.rotate(Vector3d(0, 1, 0));
-			Z = attQ.rotate(Vector3d(0, 0, 1));
+			X = attQ.rotate(Vector3f(1, 0, 0));
+			Y = attQ.rotate(Vector3f(0, 1, 0));
+			Z = attQ.rotate(Vector3f(0, 0, 1));
 
 			if ((++frame % (FS_HZ/FPS)) == 0) {
 				rotMx = attQ.rotMatrix4();
@@ -243,10 +243,10 @@ int main(int argc, char *argv[])
 				fflush(stdout);
 			}
 		} else {
-			QuaternionD attQ = attiFilt.GetAttitude();
-			X = attQ.rotate(Vector3d(1, 0, 0));
-			Y = attQ.rotate(Vector3d(0, 1, 0));
-			Z = attQ.rotate(Vector3d(0, 0, 1));
+			QuaternionF attQ = attiFilt.GetAttitude();
+			X = attQ.rotate(Vector3f(1, 0, 0));
+			Y = attQ.rotate(Vector3f(0, 1, 0));
+			Z = attQ.rotate(Vector3f(0, 0, 1));
 			fprintf(stdout,"IMU accel bias  : %3d %3d %3d\n",accBias.x,accBias.y,accBias.z);
 			fprintf(stdout,"IMU gyro  bias  : %3d %3d %3d\n",gyroBias.x,gyroBias.y,gyroBias.z);
 			fprintf(stdout,"Final Quaternion: %5.9lf %5.9lf %5.9lf %5.9lf\n",

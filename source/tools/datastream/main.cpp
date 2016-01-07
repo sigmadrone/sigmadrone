@@ -32,7 +32,7 @@ using namespace std;
 #include <string.h>
 #include "GL/glew.h"
 #include "GL/freeglut.h"
-#include "matrix.h"
+#include "d3math.h"
 #include "libcmdargs/cmdargs.h"
 #include "libhttp/http_client.hpp"
 #include "librexjsonrpc/rpcclienthttp.h"

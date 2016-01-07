@@ -23,7 +23,7 @@
 #define IMUFILTER_H_
 
 #include "axesdata.h"
-#include "matrix.h"
+#include "d3math.h"
 #include "firfilt.h"
 #include "pidcontroller.h"
 
@@ -35,7 +35,7 @@
  * attitude quaternion from the previous iteration.
  */
 
-static const QuaternionD s_IdentityQ = QuaternionD(1, 0, 0, 0);
+static const QuaternionF s_IdentityQ = QuaternionF(1, 0, 0, 0);
 
 class ImuFilter
 {
@@ -47,19 +47,19 @@ public:
 	~ImuFilter() {}
 	void Reset()
 	{
-		m_Q = QuaternionD(1,0,0,0);
-		SetEarthG(Vector3d(1,0,0));
+		m_Q = QuaternionF(1,0,0,0);
+		SetEarthG(Vector3f(1,0,0));
 	}
 
-	void SetEarthG(const Vector3d& earthG)
+	void SetEarthG(const Vector3f& earthG)
 	{
 		m_earthG = earthG;
 	}
 
-	const QuaternionD& Update(
-			Vector3d gyroDataDps,
-			Vector3d accData,
-			Vector3d magData,
+	const QuaternionF& Update(
+			Vector3f gyroDataDps,
+			Vector3f accData,
+			Vector3f magData,
 			double dT)
 	{
 		accData = accData.normalize();
@@ -69,33 +69,33 @@ public:
 		m_LastAccData = accData;
 		m_LastMagData = magData;
 
-		Vector3d omega = gyroDataDps - m_Vg;
-		QuaternionD deltaQ = QuaternionD::fromAngularVelocity(omega * M_PI / 180.0f, dT);
+		Vector3f omega = gyroDataDps - m_Vg;
+		QuaternionF deltaQ = QuaternionF::fromAngularVelocity(omega * M_PI / 180.0f, dT);
 
 		m_Q = m_Q * deltaQ; // m_Q * deltaQ * ~m_Q * m_Q;
 		m_Q.normalize();
 
-		Vector3d accEst = (~m_Q).rotate(m_earthG);
-		QuaternionD q = QuaternionD::fromVectors(accEst, accData);
+		Vector3f accEst = (~m_Q).rotate(m_earthG);
+		QuaternionF q = QuaternionF::fromVectors(accEst, accData);
 
-		m_Vg = QuaternionD::angularVelocity(s_IdentityQ, q, 0.75);  // The last parameter (dT) controls how fast to do the compensation
+		m_Vg = QuaternionF::angularVelocity(s_IdentityQ, q, 0.75);  // The last parameter (dT) controls how fast to do the compensation
 		m_Vg = m_Vg * 180.0f / M_PI;
 		return m_Q;
 	}
 
-	const QuaternionD& GetAttitude() const { return m_Q; }
-	const Vector3d& GetGyroData() const { return m_LastGyroData; }
-	const Vector3d& GetAccelData() const { return m_LastAccData; }
-	const Vector3d& GetMagData() const { return m_LastMagData; }
-	const Vector3d& GetVg() const {return m_Vg;}
+	const QuaternionF& GetAttitude() const { return m_Q; }
+	const Vector3f& GetGyroData() const { return m_LastGyroData; }
+	const Vector3f& GetAccelData() const { return m_LastAccData; }
+	const Vector3f& GetMagData() const { return m_LastMagData; }
+	const Vector3f& GetVg() const {return m_Vg;}
 
 private:
-	Vector3d m_earthG;
-	Vector3d m_LastGyroData;
-	Vector3d m_LastAccData;
-	Vector3d m_LastMagData;
-	Vector3d m_Vg;
-	QuaternionD m_Q;
+	Vector3f m_earthG;
+	Vector3f m_LastGyroData;
+	Vector3f m_LastAccData;
+	Vector3f m_LastMagData;
+	Vector3f m_Vg;
+	QuaternionF m_Q;
 };
 
 #endif /* IMUFILTER_H_ */

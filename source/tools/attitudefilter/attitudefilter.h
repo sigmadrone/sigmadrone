@@ -23,10 +23,10 @@
 #define ATTITUDEFILTER_H_
 
 #include "axesdata.h"
-#include "matrix.h"
+#include "d3math.h"
 #include "firfilt.h"
 
-typedef Quaternion<double> QuaternionD;
+typedef Quaternion<double> QuaternionF;
 
 /*
  * Implements attitude estimation, by filtering the data read from the IMU.
@@ -75,18 +75,18 @@ public:
 			const int3d_t& gyroBias,
 			const int3d_t& accBias)
 	{
-		m_GyroBias = Vector3d(gyroBias.x,gyroBias.y,gyroBias.z);
-		m_AccBias = Vector3d(accBias.x,accBias.y,accBias.z);
+		m_GyroBias = Vector3f(gyroBias.x,gyroBias.y,gyroBias.z);
+		m_AccBias = Vector3f(accBias.x,accBias.y,accBias.z);
 	}
 
-	const QuaternionD& Update(
+	const QuaternionF& Update(
 			const short3d_t& gyroDataRaw,
 			const short3d_t& accDataRaw,
 			const short3d_t& magDataRaw)
 	{
-		Vector3d gyroData(gyroDataRaw.x,gyroDataRaw.y,gyroDataRaw.z);
-		Vector3d accData(accDataRaw.x,accDataRaw.y,accDataRaw.z);
-		Vector3d magData(magDataRaw.x,magDataRaw.y,magDataRaw.z);
+		Vector3f gyroData(gyroDataRaw.x,gyroDataRaw.y,gyroDataRaw.z);
+		Vector3f accData(accDataRaw.x,accDataRaw.y,accDataRaw.z);
+		Vector3f magData(magDataRaw.x,magDataRaw.y,magDataRaw.z);
 
 		gyroData = gyroData - m_GyroBias;
 		gyroData = gyroData * (double)m_MaxDps / (double)m_MaxAdc;
@@ -99,9 +99,9 @@ public:
 		{
 			double zVector[3] = {0.0,0.0,1.0};
 			m_OrigAcc = accData;
-			m_OrigMag = Vector3d(zVector);
-			m_MagQ = QuaternionD::fromVectors(magData,m_OrigMag);
-			m_GyroQ = QuaternionD(1,0,0,0);
+			m_OrigMag = Vector3f(zVector);
+			m_MagQ = QuaternionF::fromVectors(magData,m_OrigMag);
+			m_GyroQ = QuaternionF(1,0,0,0);
 			return m_GyroQ;
 		}
 
@@ -109,11 +109,11 @@ public:
 
 
 		/*calculate the acc estimate*/
-		Vector3d accEst = m_GyroQ.rotate(m_OrigAcc);
+		Vector3f accEst = m_GyroQ.rotate(m_OrigAcc);
 		/*calculate the acc error*/
-		Vector3d err = Vector3d::cross(accData,accEst);
+		Vector3f err = Vector3f::cross(accData,accEst);
 
-		Vector3d derivativeErr;
+		Vector3f derivativeErr;
 
 		/*implement the PID controller logic to calculate the resultant error*/
 		m_IntegralError = m_IntegralError + err * m_Dt;
@@ -126,7 +126,7 @@ public:
 		gyroData = gyroData - m_Err;
 
 		/* calculate quaternion derivative */
-		QuaternionD qDot(gyroData, 0);
+		QuaternionF qDot(gyroData, 0);
 		qDot = (qDot * m_GyroQ) * 0.5;
 
 		/* integrate the derivative to yield quaternion*/
@@ -137,18 +137,18 @@ public:
 		return m_GyroQ;
 	}
 
-	const QuaternionD& GetAttitude() const { return m_GyroQ; }
+	const QuaternionF& GetAttitude() const { return m_GyroQ; }
 
 
 private:
-	Vector3d m_Err;
-	Vector3d m_IntegralError;
-	Vector3d m_OrigAcc;
-	Vector3d m_OrigMag;
-	Vector3d m_GyroBias;
-	Vector3d m_AccBias;
-	QuaternionD m_MagQ;
-	QuaternionD m_GyroQ;
+	Vector3f m_Err;
+	Vector3f m_IntegralError;
+	Vector3f m_OrigAcc;
+	Vector3f m_OrigMag;
+	Vector3f m_GyroBias;
+	Vector3f m_AccBias;
+	QuaternionF m_MagQ;
+	QuaternionF m_GyroQ;
 	LpPreFilter3d m_GyroLpf;
 	LpPreFilter3d m_AccLpf;
 	double m_Kp; /*proportional gain*/

@@ -66,7 +66,7 @@ GlShape gPlane;
 GLuint gProgram;
 void IdleFunction(void);
 void RpcIdleFunction(void);
-QuaternionD remapQ = QuaternionD::fromAxisRot(Vector3d(1,0,0), M_PI) * QuaternionD::fromAxisRot(Vector3d(0,0,1), M_PI/2);
+QuaternionF remapQ = QuaternionF::fromAxisRot(Vector3f(1,0,0), M_PI) * QuaternionF::fromAxisRot(Vector3f(0,0,1), M_PI/2);
 
 Vector4f applyW(const Vector4f &v)
 {
@@ -190,7 +190,7 @@ again:
 
 void RpcIdleFunction(void)
 {
-	QuaternionF q = QuaternionD::identity;
+	QuaternionF q = QuaternionF::identity;
 	Matrix4f M;
 
 	try {

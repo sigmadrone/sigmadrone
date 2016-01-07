@@ -23,7 +23,7 @@
 #define DRONESTATE_H_
 
 #include "units.h"
-#include "matrix.h"
+#include "d3math.h"
 #include "alarm.h"
 #include "flightdefs.h"
 #include "librexjsonrpc/jsonserialization.h"

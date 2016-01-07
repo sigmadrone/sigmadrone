@@ -32,27 +32,27 @@ DataStream::~DataStream()
 
 }
 
-void DataStream::set_gyroscope(const Vector3d& value)
+void DataStream::set_gyroscope(const Vector3f& value)
 {
 	entry_.gyro_ = value;
 }
 
-void DataStream::set_accelerometer(const Vector3d& value)
+void DataStream::set_accelerometer(const Vector3f& value)
 {
 	entry_.accel_ = value;
 }
 
-void DataStream::set_correction_torque(const Vector3d& value)
+void DataStream::set_correction_torque(const Vector3f& value)
 {
 	entry_.correction_torque_ = value;
 }
 
-void DataStream::set_attitude(const QuaternionD& value)
+void DataStream::set_attitude(const QuaternionF& value)
 {
 	entry_.attitude_ = value;
 }
 
-void DataStream::set_target_attitude(const QuaternionD& value)
+void DataStream::set_target_attitude(const QuaternionF& value)
 {
 	entry_.target_attitude_ = value;
 }

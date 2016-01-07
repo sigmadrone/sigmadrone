@@ -153,5 +153,9 @@ int main(int argc, char *argv[])
 
 	std::cout << "Vector3f(1,2,3)[0]: " << Vector3f(1,2,3)[0] << std::endl;
 	(Vector3f(3,3,3) - Vector3f(1,2,3)).normalize();
+
+	Vector3f res = Matrix3f::identity() * (Vector3f(3,3,3) - Vector3f(2,1,0));
+	std::cout << "res: \n" << res;
+
 	return 0;
 }

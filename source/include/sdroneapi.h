@@ -24,7 +24,7 @@
 
 #include <stdarg.h>
 #include <string>
-#include "matrix.h"
+#include "d3math.h"
 #include "jsonrpc.h"
 #include "axesdata.h"
 
@@ -336,9 +336,9 @@ typedef struct _SdServoIoData
 } SdServoIoData;
 
 typedef struct _SdImuData {
-	Vector3d gyro3d;
-	Vector3d acc3d;
-	Vector3d mag3d;
+	Vector3f gyro3d;
+	Vector3f acc3d;
+	Vector3f mag3d;
 	bool gyro3d_upd;
 	bool acc3d_upd;
 	bool mag3d_upd;
@@ -376,15 +376,15 @@ struct SdIoData
 	static const uint32_t TYPE_SERVO 		= 9;
 	static const uint32_t TYPE_THRUST 		= 10;
 
-	typedef boost::variant<int32_t,double,Vector3d,Vector4d,QuaternionD,SdDroneConfig,
+	typedef boost::variant<int32_t,double,Vector3f,Vector4d,QuaternionF,SdDroneConfig,
 			SdServoIoData,SdThrustValues,SdImuData,std::string> Data;
 
 	SdIoData() { dataType_ = TYPE_INVALID; data_ = 0; }
 	SdIoData(int32_t i) { dataType_ = TYPE_INT32; data_ = asInt32(); }
 	SdIoData(double d) { dataType_ = TYPE_DOUBLE; data_ = d; }
-	SdIoData(const Vector3d& v3d) { dataType_ = TYPE_VECTOR3D; data_ = v3d; }
+	SdIoData(const Vector3f& v3d) { dataType_ = TYPE_VECTOR3D; data_ = v3d; }
 	SdIoData(const Vector4d& v4d) { dataType_ = TYPE_VECTOR4D; data_ = v4d; }
-	SdIoData(const QuaternionD& qt) { dataType_ = TYPE_QUATERNION; data_ = qt; }
+	SdIoData(const QuaternionF& qt) { dataType_ = TYPE_QUATERNION; data_ = qt; }
 	SdIoData(const SdServoIoData& siod) { dataType_ = TYPE_SERVO; data_ = siod; }
 	SdIoData(const SdDroneConfig& config) {
 		dataType_ = TYPE_DRONE_CONFIG; data_ = config;
@@ -397,14 +397,14 @@ struct SdIoData
 	double asDouble() const { assert(dataType_ == TYPE_DOUBLE);
 		return boost::get<double>(data_);
 	}
-	const QuaternionD& asQuaternion()  const {
-		assert(dataType_ == TYPE_QUATERNION); return boost::get<QuaternionD>(data_);
+	const QuaternionF& asQuaternion()  const {
+		assert(dataType_ == TYPE_QUATERNION); return boost::get<QuaternionF>(data_);
 	}
 	const Vector4d& asVector4d()  const {
 		assert(dataType_ == TYPE_VECTOR4D); return boost::get<Vector4d>(data_);
 	}
-	const Vector3d& asVector3d()  const {
-		assert(dataType_ == TYPE_VECTOR3D); return boost::get<Vector3d>(data_);
+	const Vector3f& asVector3f()  const {
+		assert(dataType_ == TYPE_VECTOR3D); return boost::get<Vector3f>(data_);
 	}
 	const SdDroneConfig& asDroneConfig()  const {
 		assert(dataType_ == TYPE_DRONE_CONFIG); return boost::get<SdDroneConfig>(data_);
@@ -518,11 +518,11 @@ struct SdIoPacket
 	 * as GetAttribute/SetAttribute and are provided for easy access to
 	 * the most commonly accessed fields
 	 */
-	virtual const QuaternionD& Attitude() = 0;
-	virtual const Vector3d& GyroData() = 0;
-	virtual const Vector3d& AccelData() = 0;
-	virtual const Vector3d& MagData() = 0;
-	virtual const QuaternionD& TargetAttitude() = 0;
+	virtual const QuaternionF& Attitude() = 0;
+	virtual const Vector3f& GyroData() = 0;
+	virtual const Vector3f& AccelData() = 0;
+	virtual const Vector3f& MagData() = 0;
+	virtual const QuaternionF& TargetAttitude() = 0;
 	virtual double DeltaTime() = 0;
 
 

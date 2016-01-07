@@ -24,25 +24,25 @@
 
 #include <vector>
 #include <deque>
-#include "matrix.h"
+#include "d3math.h"
 
 
 struct DataStreamEntry {
 	size_t serial_;
-	Vector3d gyro_;
-	Vector3d accel_;
-	Vector3d correction_torque_;
-	QuaternionD attitude_;
-	QuaternionD target_attitude_;
+	Vector3f gyro_;
+	Vector3f accel_;
+	Vector3f correction_torque_;
+	QuaternionF attitude_;
+	QuaternionF target_attitude_;
 
 	DataStreamEntry() : serial_(0) {}
 	void reset() {
 		serial_ = 0;
-		gyro_ = Vector3d();
-		accel_ = Vector3d();
-		correction_torque_ = Vector3d();
-		attitude_ = QuaternionD();
-		target_attitude_ = QuaternionD();
+		gyro_ = Vector3f();
+		accel_ = Vector3f();
+		correction_torque_ = Vector3f();
+		attitude_ = QuaternionF();
+		target_attitude_ = QuaternionF();
 	}
 
 };
@@ -52,11 +52,11 @@ public:
 	DataStream(size_t queuesiz);
 	~DataStream();
 
-	void set_gyroscope(const Vector3d& value);
-	void set_accelerometer(const Vector3d& value);
-	void set_correction_torque(const Vector3d& value);
-	void set_attitude(const QuaternionD& value);
-	void set_target_attitude(const QuaternionD& value);
+	void set_gyroscope(const Vector3f& value);
+	void set_accelerometer(const Vector3f& value);
+	void set_correction_torque(const Vector3f& value);
+	void set_attitude(const QuaternionF& value);
+	void set_target_attitude(const QuaternionF& value);
 	void commit();
 	bool retrieve(DataStreamEntry& entry);
 
