@@ -21,7 +21,7 @@
 #include "GL/glew.h"
 #include "GL/freeglut.h"
 
-#include "matrix.h"
+#include "d3math.h"
 #include "plane.h"
 
 #define ALPHA1 1.00f

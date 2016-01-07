@@ -36,7 +36,7 @@ using namespace std;
 #include "glutprogram.h"
 #include "glshape.h"
 #include "plane.h"
-#include "matrix.h"
+#include "d3math.h"
 #include "libcmdargs/cmdargs.h"
 #include "libhttp/http_client.hpp"
 #include "librexjsonrpc/rpcclienthttp.h"
@@ -45,11 +45,13 @@ using namespace std;
 
 #define ALPHA1 0.95f
 #define ALPHA2 1.0f
-#define SCALE 1.75
+#define SCALE 1.75f
 #define WINDOW_SIZE_FACTOR 4
 #define BUFFER_OFFSET(i) ((void*)(i))
 
-Matrix4f P(Matrix4f::createFrustumMatrix(-SCALE, SCALE, -SCALE, SCALE, 10, 35));
+
+
+Matrix4f P(create_frustum_matrix<float>(-SCALE, SCALE, -SCALE, SCALE, 10.0f, 35.0f));
 
 static cmd_arg_spec g_argspec[] = {
 		{"help",			"h",	"Display this help", CMD_ARG_BOOL},
@@ -68,16 +70,9 @@ QuaternionD remapQ = QuaternionD::fromAxisRot(Vector3d(1,0,0), M_PI) * Quaternio
 
 Vector4f applyW(const Vector4f &v)
 {
-	Vector4f ret = v;
-	float w = v.at(3, 0);
-
-	if (w) {
-		ret.at(0, 0) /= w;
-		ret.at(1, 0) /= w;
-		ret.at(2, 0) /= w;
-		ret.at(3, 0) /= w;
-	}
-	return ret;
+	if (v[3])
+		return v/v[3];
+	return v;
 }
 
 void display(void)
@@ -131,11 +126,11 @@ int main(int argc, char *argv[])
 	glutDisplayFunc(display);
 	glutIdleFunc(rpcclient ? RpcIdleFunction : IdleFunction);
 
-	Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(0), DEG2RAD(180)));
+	Matrix4f m(P * create_translation_matrix<float>(0, 0, -12) * create_rotation_matrix<float>(DEG2RAD(-88), DEG2RAD(0), DEG2RAD(180)));
 
 	GLint mLoc = glGetUniformLocation(gProgram, "M");
 	if (mLoc >= 0)
-		glUniformMatrix4fv(mLoc, 1, GL_FALSE, m.data);
+		glUniformMatrix4fv(mLoc, 1, GL_TRUE, m);
 
 	glutMainLoop();
 
@@ -160,7 +155,7 @@ void IdleFunction(void)
 	maxfd = fileno (stdin);
 	tv.tv_sec = 0;
 	tv.tv_usec = 0;
-	QuaternionD q;
+	QuaternionF q;
 
 again:
 	if (select (maxfd + 1, &rset, NULL, NULL, &tv) > 0) {
@@ -174,18 +169,18 @@ again:
 					fputs(buffer, stdout);
 				goto again;
 			}
-			sscanf(buffer, "%lf %lf %lf %lf", &q.w, &q.x, &q.y, &q.z);
+			sscanf(buffer, "%f %f %f %f", &q.w, &q.x, &q.y, &q.z);
 			q = q * remapQ;
 			M = q.rotMatrix4();
 			if (gDebug) {
 				fprintf(stdout, "%5.9lf %5.9lf %5.9lf %5.9lf\n", q.w, q.x, q.y, q.z);
 			}
 			GLint mLoc;
-			Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(180), DEG2RAD(90)) * M);
+			Matrix4f m(P * create_translation_matrix<float>(0, 0, -12) * create_rotation_matrix<float>(DEG2RAD(-88), DEG2RAD(180), DEG2RAD(90)) * M);
 
 			mLoc = glGetUniformLocation(gProgram, "M");
 			if (mLoc >= 0)
-				glUniformMatrix4fv(mLoc, 1, GL_FALSE, m.data);
+				glUniformMatrix4fv(mLoc, 1, GL_TRUE, m);
 			glutPostRedisplay();
 
 		}
@@ -195,7 +190,7 @@ again:
 
 void RpcIdleFunction(void)
 {
-	QuaternionD q = QuaternionD::identity;
+	QuaternionF q = QuaternionD::identity;
 	Matrix4f M;
 
 	try {
@@ -208,9 +203,9 @@ void RpcIdleFunction(void)
 	q = q * remapQ;
 	M = q.rotMatrix4();
 	GLint mLoc;
-	Matrix4f m(P * Matrix4f::createTranslationMatrix(0, 0, -12) * Matrix4f::createRotationMatrix(DEG2RAD(-88), DEG2RAD(180), DEG2RAD(90)) * M);
+	Matrix4f m(P * create_translation_matrix<float>(0, 0, -12) * create_rotation_matrix<float>(DEG2RAD(-88), DEG2RAD(180), DEG2RAD(90)) * M);
 	mLoc = glGetUniformLocation(gProgram, "M");
 	if (mLoc >= 0)
-		glUniformMatrix4fv(mLoc, 1, GL_FALSE, m.data);
+		glUniformMatrix4fv(mLoc, 1, GL_TRUE, m);
 	glutPostRedisplay();
 }
