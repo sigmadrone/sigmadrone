@@ -846,13 +846,13 @@ static MatrixBase<T, ROWS, 1> lup_solve(
 {
 	MatrixBase<T, ROWS, 1> X;
 	MatrixBase<T, ROWS, 1> Y = P * B;
-	for (int i = 0; i < ROWS; i++) {
-		for (int j = 0; j < i; j++)
+	for (size_t i = 0; i < ROWS; i++) {
+		for (size_t j = 0; j < i; j++)
 			Y.at(i, 0) -= Y.at(j, 0) * L.at(i, j);
 	}
 	X = Y;
-	for (int i = ROWS - 1; i >= 0; i--) {
-		for (int j = i + 1; j < ROWS; j++)
+	for (size_t i = ROWS - 1; i >= 0; i--) {
+		for (size_t j = i + 1; j < ROWS; j++)
 			X.at(i, 0) -= X.at(j, 0) * U.at(i, j);
 		X.at(i, 0) /= U.at(i,i);
 	}
@@ -906,8 +906,8 @@ template <typename T, size_t ROWS, size_t COLS>
 MatrixBase<T, COLS, ROWS> MatrixBase<T, ROWS, COLS>::transpose() const
 {
 	MatrixMN<T, COLS, ROWS> ret;
-	for (int i = 0; i < COLS; i++)
-		for (int j = 0; j < ROWS; j++)
+	for (size_t i = 0; i < COLS; i++)
+		for (size_t j = 0; j < ROWS; j++)
 			ret.at(i, j) = at(j, i);
 	return ret;
 }
@@ -1104,14 +1104,14 @@ void MatrixBase<T, ROWS, COLS>::clear()
 template <typename T, size_t ROWS, size_t COLS>
 void MatrixBase<T, ROWS, COLS>::set_row(size_t m, const MatrixBase<T, 1, COLS>& r)
 {
-	for (int i = 0; i < COLS; i++)
+	for (size_t i = 0; i < COLS; i++)
 		at(m, i) = r.at(0, i);
 }
 
 template <typename T, size_t ROWS, size_t COLS>
 void MatrixBase<T, ROWS, COLS>::set_column(size_t n, const MatrixBase<T, ROWS, 1>& c)
 {
-	for (int i = 0; i < ROWS; i++)
+	for (size_t i = 0; i < ROWS; i++)
 		at(i, n) = c.at(i, 0);
 }
 
@@ -1119,7 +1119,7 @@ template <typename T, size_t ROWS, size_t COLS>
 MatrixBase<T, 1, COLS> MatrixBase<T, ROWS, COLS>::row(size_t m) const
 {
 	MatrixBase<T, 1, COLS> ret;
-	for (int i = 0; i < COLS; i++)
+	for (size_t i = 0; i < COLS; i++)
 		ret.at(0, i) = at(m, i);
 	return ret;
 }
@@ -1128,7 +1128,7 @@ template <typename T, size_t ROWS, size_t COLS>
 MatrixBase<T, ROWS, 1> MatrixBase<T, ROWS, COLS>::column(size_t n) const
 {
 	MatrixBase<T, ROWS, 1> ret;
-	for (int i = 0; i < ROWS; i++)
+	for (size_t i = 0; i < ROWS; i++)
 		ret.at(i, 0) = at(i, n);
 	return ret;
 }
@@ -1141,7 +1141,7 @@ void MatrixBase<T, ROWS, COLS>::swap_rows(size_t m, size_t n)
 	assert(m < ROWS && n < ROWS);
 	if (m == n)
 		return;
-	for (int i = 0; i < COLS; i++) {
+	for (size_t i = 0; i < COLS; i++) {
 		temp = at(m, i);
 		at(m, i) = at(n, i);
 		at(n, i) = temp;
@@ -1156,7 +1156,7 @@ void MatrixBase<T, ROWS, COLS>::swap_columns(size_t m, size_t n)
 	assert(m < COLS && n < COLS);
 	if (m == n)
 		return;
-	for (int i = 0; i < ROWS; i++) {
+	for (size_t i = 0; i < ROWS; i++) {
 		temp = at(i, m);
 		at(i, m) = at(i, n);
 		at(i, n) = temp;
@@ -1290,7 +1290,7 @@ template<typename T, size_t ROWS, size_t COLS>
 bool MatrixBase<T, ROWS, COLS>::lup(MatrixBase<T, ROWS, COLS> &L, MatrixBase<T, ROWS, COLS> &U, MatrixBase<T, ROWS, COLS> &P) const
 {
 	assert(ROWS == COLS);
-	int K, k, i, j;
+	size_t K, k, i, j;
 
 	L.clear();
 	P =  MatrixBase<T, ROWS, COLS>::identity();
@@ -1331,7 +1331,7 @@ MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::inverse() const
 
 	if (!lup(L, U, P))
 		return ret;
-	for (int i = 0; i < ROWS; i++) {
+	for (size_t i = 0; i < ROWS; i++) {
 		In.at(i, 0) = 1;
 		ret.set_column(i, lup_solve(L, U, P, In));
 		In.at(i, 0) = 0;
