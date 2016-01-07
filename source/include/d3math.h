@@ -118,6 +118,7 @@ public:
 	MatrixBase operator*(const T& x) const;
 	MatrixBase operator/(const T& x) const;
 	MatrixBase operator%(const T& x) const;
+	MatrixBase operator-() const;
 
 	// Matrix arithmetic
 	MatrixBase& operator-=(const MatrixBase& m);
@@ -198,6 +199,7 @@ public:
 	MatrixMN<T, 3, 1> perpendicular2(const MatrixMN<T, 3, 1>& v) const;
 	MatrixMN<T, 3, 1> reflection(const MatrixMN<T, 3, 1>& v) const;
 
+	MatrixMN operator-() const;
 	MatrixMN operator-(const MatrixMN& m) const;
 	MatrixMN operator+(const MatrixMN& m) const;
 	MatrixMN& operator=(const MatrixMN& m);
@@ -205,6 +207,8 @@ public:
 	T length_squared() const;
 	T length() const;
 	MatrixMN normalize() const;
+	T& at(size_t row, size_t col);
+	const T& at(size_t row, size_t col) const;
 	T& at(size_t row);
 	const T& at(size_t row) const;
 	T& operator[](size_t row);
@@ -299,6 +303,34 @@ public:
 
 template<class T>
 Quaternion<T> Quaternion<T>::identity(1, 0, 0, 0);
+
+typedef Quaternion<double> QuaternionD;
+typedef Quaternion<float> QuaternionF;
+
+typedef MatrixMN<float, 3, 3> Matrix3f;
+typedef MatrixMN<double, 3, 3> Matrix3d;
+typedef MatrixMN<int, 3, 3> Matrix3i;
+
+typedef MatrixMN<float, 4, 4> Matrix4f;
+typedef MatrixMN<double, 4, 4> Matrix4d;
+typedef MatrixMN<int, 4, 4> Matrix4i;
+
+typedef MatrixMN<float, 1, 1> Vector1f;
+typedef MatrixMN<double, 1, 1> Vector1d;
+typedef MatrixMN<int, 1, 1> Vector1i;
+
+typedef MatrixMN<float, 2, 1> Vector2f;
+typedef MatrixMN<double, 2, 1> Vector2d;
+typedef MatrixMN<int, 2, 1> Vector2i;
+
+typedef MatrixMN<float, 3, 1> Vector3f;
+typedef MatrixMN<double, 3, 1> Vector3d;
+typedef MatrixMN<int, 3, 1> Vector3i;
+
+typedef MatrixMN<float, 4, 1> Vector4f;
+typedef MatrixMN<double, 4, 1> Vector4d;
+typedef MatrixMN<int, 4, 1> Vector4i;
+
 
 template <typename T>
 Quaternion<T>::Quaternion(const Quaternion<T>& q)
@@ -805,35 +837,6 @@ Quaternion<T> Quaternion<T>::nlerp(const Quaternion<T>& i, const Quaternion<T>& 
 	return result.normalize();
 }
 
-
-
-typedef Quaternion<double> QuaternionD;
-typedef Quaternion<float> QuaternionF;
-
-typedef MatrixMN<float, 3, 3> Matrix3f;
-typedef MatrixMN<double, 3, 3> Matrix3d;
-typedef MatrixMN<int, 3, 3> Matrix3i;
-
-typedef MatrixMN<float, 4, 4> Matrix4f;
-typedef MatrixMN<double, 4, 4> Matrix4d;
-typedef MatrixMN<int, 4, 4> Matrix4i;
-
-typedef MatrixMN<float, 1, 1> Vector1f;
-typedef MatrixMN<double, 1, 1> Vector1d;
-typedef MatrixMN<int, 1, 1> Vector1i;
-
-typedef MatrixMN<float, 2, 1> Vector2f;
-typedef MatrixMN<double, 2, 1> Vector2d;
-typedef MatrixMN<int, 2, 1> Vector2i;
-
-typedef MatrixMN<float, 3, 1> Vector3f;
-typedef MatrixMN<double, 3, 1> Vector3d;
-typedef MatrixMN<int, 3, 1> Vector3i;
-
-typedef MatrixMN<float, 4, 1> Vector4f;
-typedef MatrixMN<double, 4, 1> Vector4d;
-typedef MatrixMN<int, 4, 1> Vector4i;
-
 template <typename T, size_t ROWS, size_t COLS>
 static MatrixBase<T, ROWS, 1> lup_solve(
 		const MatrixBase<T, ROWS, COLS> &L,
@@ -1044,6 +1047,15 @@ MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::operator-(const T& x) const
 	ret -= x;
 	return ret;
 }
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::operator-() const
+{
+	MatrixBase ret(*this);
+	ret *= -1;
+	return ret;
+}
+
 
 template <typename T, size_t ROWS, size_t COLS>
 MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::operator*(const T& x) const
@@ -1416,6 +1428,12 @@ MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::reflection(const MatrixMN<T, 3, 1>& v) c
 }
 
 template<typename T, size_t ROWS>
+MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::operator-() const
+{
+	return static_cast<MatrixMN<T, ROWS, 1>>(base::operator-());
+}
+
+template<typename T, size_t ROWS>
 MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::operator-(const MatrixMN<T, ROWS, 1>& m) const
 {
 	return static_cast<MatrixMN<T, ROWS, 1>>(base::operator-(m));
@@ -1467,6 +1485,18 @@ template<typename T, size_t ROWS>
 const T& MatrixMN<T, ROWS, 1>::at(size_t row) const
 {
 	return base::at(row, 0);
+}
+
+template<typename T, size_t ROWS>
+T& MatrixMN<T, ROWS, 1>::at(size_t row, size_t col)
+{
+	return base::at(row, col);
+}
+
+template<typename T, size_t ROWS>
+const T& MatrixMN<T, ROWS, 1>::at(size_t row, size_t col) const
+{
+	return base::at(row, col);
 }
 
 template<typename T, size_t ROWS>
