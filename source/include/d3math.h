@@ -113,6 +113,13 @@ public:
 	MatrixBase& operator*=(const T& x);
 	MatrixBase& operator/=(const T& x);
 	MatrixBase& operator%=(const T& x);
+
+	// Scalar and Matrix arithmetic
+	MatrixBase& operator-=(const MatrixBase& m);
+	MatrixBase& operator+=(const MatrixBase& m);
+	MatrixBase& operator*=(const MatrixBase& m);
+	MatrixBase operator-(const MatrixBase& m) const;
+	MatrixBase operator+(const MatrixBase& m) const;
 	MatrixBase operator+(const T& x) const;
 	MatrixBase operator-(const T& x) const;
 	MatrixBase operator*(const T& x) const;
@@ -120,29 +127,19 @@ public:
 	MatrixBase operator%(const T& x) const;
 	MatrixBase operator-() const;
 
-	// Matrix arithmetic
-	MatrixBase& operator-=(const MatrixBase& m);
-	MatrixBase& operator+=(const MatrixBase& m);
-	MatrixBase& operator*=(const MatrixBase& m);
-	MatrixBase operator-(const MatrixBase& m) const;
-	MatrixBase operator+(const MatrixBase& m) const;
+	template<typename rhsT, size_t rhsROWS, size_t rhsCOLS>
+	MatrixBase<T, ROWS, rhsCOLS> operator*(const MatrixBase<rhsT, rhsROWS, rhsCOLS>& rhs) const;
 
 	iterator begin();
 	iterator end();
 	const_iterator begin() const;
 	const_iterator end() const;
 
-	template<typename rhsT, size_t rhsCOLS>
-	MatrixBase<T, ROWS, rhsCOLS> operator*(const MatrixBase<rhsT, COLS, rhsCOLS>& rhs) const;
-
 	bool lup(MatrixBase<T, ROWS, COLS> &L, MatrixBase<T, ROWS, COLS> &U, MatrixBase<T, ROWS, COLS> &P) const;
 	MatrixBase<T, ROWS, COLS> inverse() const;
 
 	template <typename TT, size_t RR, size_t CC>
 	friend std::ostream& operator<<(std::ostream& os, const MatrixBase<TT, RR, CC>& m);
-
-	template<size_t RR = ROWS, size_t CC = COLS>
-	static typename std::enable_if<RR == CC, MatrixBase<T, ROWS, COLS>>::type identity();
 
 protected:
 	template <typename Functor>
@@ -169,10 +166,32 @@ public:
 	template<typename... ARGS>
 	explicit MatrixMN(ARGS... args) : MatrixBase<T, ROWS, COLS>(args...) {};
 
-	MatrixMN& operator=(const MatrixMN& m);
-	MatrixMN& operator=(const T& x);
-	MatrixMN operator-(const MatrixMN& m) const;
-	MatrixMN operator+(const MatrixMN& m) const;
+	MatrixMN& operator=(const MatrixBase<T, ROWS, COLS>& m)			{ return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator=(m)); }
+	MatrixMN& operator=(const T& x)									{ return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator=(x)); }
+	MatrixMN& operator+=(const T& x)								{ return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator+=(x)); }
+	MatrixMN& operator-=(const T& x)								{ return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator-=(x)); }
+	MatrixMN& operator*=(const T& x)								{ return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator*=(x)); }
+	MatrixMN& operator/=(const T& x)								{ return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator/=(x)); }
+	MatrixMN& operator%=(const T& x)								{ return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator%=(x)); }
+	MatrixMN& operator-=(const MatrixBase<T, ROWS, COLS>& m)		{ return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator-=(m)); }
+	MatrixMN& operator+=(const MatrixBase<T, ROWS, COLS>& m)		{ return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator+=(m)); }
+	MatrixMN& operator*=(const MatrixBase<T, ROWS, COLS>& m)		{ return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator*=(m)); }
+
+	// Scalar and Matrix arithmetic
+	MatrixMN operator-(const MatrixBase<T, ROWS, COLS>& m) const	{ return base::operator-(m); }
+	MatrixMN operator+(const MatrixBase<T, ROWS, COLS>& m) const	{ return base::operator+(m); }
+	MatrixMN operator+(const T& x) const							{ return base::operator+(x); }
+	MatrixMN operator-(const T& x) const							{ return base::operator-(x); }
+	MatrixMN operator*(const T& x) const							{ return base::operator*(x); }
+	MatrixMN operator/(const T& x) const							{ return base::operator/(x); }
+	MatrixMN operator%(const T& x) const							{ return base::operator%(x); }
+	MatrixMN operator-() const										{ return base::operator-();  }
+
+	template<typename rhsT, size_t rhsROWS, size_t rhsCOLS>
+	MatrixMN<T, ROWS, rhsCOLS> operator*(const MatrixBase<rhsT, rhsROWS, rhsCOLS>& rhs) const { return base::operator*(rhs); }
+
+	template<size_t RR = ROWS, size_t CC = COLS>
+	static typename std::enable_if<RR == CC, MatrixMN<T, ROWS, COLS>>::type identity();
 };
 
 
@@ -199,11 +218,33 @@ public:
 	MatrixMN<T, 3, 1> perpendicular2(const MatrixMN<T, 3, 1>& v) const;
 	MatrixMN<T, 3, 1> reflection(const MatrixMN<T, 3, 1>& v) const;
 
-	MatrixMN operator-() const;
-	MatrixMN operator-(const MatrixMN& m) const;
-	MatrixMN operator-(const T& x) const;
-	MatrixMN& operator=(const MatrixMN& m);
-	MatrixMN& operator=(const T& x);
+
+	MatrixMN& operator=(const MatrixBase<T, ROWS, 1>& m)			{ return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator=(m)); }
+	MatrixMN& operator=(const T& x)									{ return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator=(x)); }
+	MatrixMN& operator+=(const T& x)								{ return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator+=(x)); }
+	MatrixMN& operator-=(const T& x)								{ return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator-=(x)); }
+	MatrixMN& operator*=(const T& x)								{ return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator*=(x)); }
+	MatrixMN& operator/=(const T& x)								{ return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator/=(x)); }
+	MatrixMN& operator%=(const T& x)								{ return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator%=(x)); }
+	MatrixMN& operator-=(const MatrixBase<T, ROWS, 1>& m)			{ return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator-=(m)); }
+	MatrixMN& operator+=(const MatrixBase<T, ROWS, 1>& m)			{ return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator+=(m)); }
+
+
+	// Scalar and Matrix arithmetic
+	MatrixMN operator-(const MatrixBase<T, ROWS, 1>& m) const		{ return base::operator-(m); }
+	MatrixMN operator+(const MatrixBase<T, ROWS, 1>& m) const		{ return base::operator+(m); }
+	MatrixMN operator+(const T& x) const							{ return base::operator+(x); }
+	MatrixMN operator-(const T& x) const							{ return base::operator-(x); }
+	MatrixMN operator*(const T& x) const							{ return base::operator*(x); }
+	MatrixMN operator/(const T& x) const							{ return base::operator/(x); }
+	MatrixMN operator%(const T& x) const							{ return base::operator%(x); }
+	MatrixMN operator-() const										{ return base::operator-();  }
+
+	template<typename rhsT, size_t rhsROWS, size_t rhsCOLS>
+	MatrixMN<T, ROWS, rhsCOLS>	operator*(const MatrixBase<rhsT, rhsROWS, rhsCOLS>& rhs) const { return base::operator*(rhs); }
+
+//	MatrixMN& operator=(const MatrixMN& m);
+//	MatrixMN& operator=(const T& x);
 	T length_squared() const;
 	T length() const;
 	MatrixMN normalize() const;
@@ -224,6 +265,9 @@ public:
 
 	static T dot(const MatrixMN& u, const MatrixMN& v) { return MatrixMN(u).dot(v); }
 	static MatrixMN<T, 3, 1> cross(const MatrixMN<T, 3, 1>& u, const MatrixMN<T, 3, 1>& v) { return MatrixMN(u).cross(v); }
+
+	template<size_t RR = ROWS, size_t CC = 1>
+	static typename std::enable_if<RR == CC, MatrixMN<T, ROWS, 1>>::type identity();
 };
 
 
@@ -846,28 +890,19 @@ static MatrixBase<T, ROWS, 1> lup_solve(
 {
 	MatrixBase<T, ROWS, 1> X;
 	MatrixBase<T, ROWS, 1> Y = P * B;
-	for (size_t i = 0; i < ROWS; i++) {
-		for (size_t j = 0; j < i; j++)
+	for (long i = 0; i < (long)ROWS; i++) {
+		for (long j = 0; j < i; j++)
 			Y.at(i, 0) -= Y.at(j, 0) * L.at(i, j);
 	}
 	X = Y;
-	for (size_t i = ROWS - 1; i >= 0; i--) {
-		for (size_t j = i + 1; j < ROWS; j++)
+	for (long i = ROWS - 1; i >= 0; i--) {
+		for (long j = i + 1; j < (long)ROWS; j++)
 			X.at(i, 0) -= X.at(j, 0) * U.at(i, j);
 		X.at(i, 0) /= U.at(i,i);
 	}
 	return X;
 }
 
-
-template <typename T, size_t ROWS, size_t COLS>
-template <size_t RR, size_t CC>
-typename std::enable_if<RR == CC, MatrixBase<T, ROWS, COLS>>::type MatrixBase<T, ROWS, COLS>::identity()
-{
-	MatrixBase<T, ROWS, COLS> ret;
-	ret.init_identity();
-	return ret;
-}
 
 template <typename T, size_t ROWS, size_t COLS>
 void MatrixBase<T, ROWS, COLS>::init_identity()
@@ -1272,9 +1307,10 @@ inline MatrixBase<T, ROWS, COLS>& MatrixBase<T, ROWS, COLS>::operator-=(const Ma
 }
 
 template<typename T, size_t ROWS, size_t COLS>
-template<typename rhsT, size_t rhsCOLS>
-MatrixBase<T, ROWS, rhsCOLS> MatrixBase<T, ROWS, COLS>::operator*(const MatrixBase<rhsT, COLS, rhsCOLS>& rhs) const
+template<typename rhsT, size_t rhsROWS, size_t rhsCOLS>
+MatrixBase<T, ROWS, rhsCOLS> MatrixBase<T, ROWS, COLS>::operator*(const MatrixBase<rhsT, rhsROWS, rhsCOLS>& rhs) const
 {
+	assert(COLS == rhsROWS);
 	MatrixBase<T, ROWS, rhsCOLS> ret;
 	for (size_t h = 0; h < rhsCOLS; h++) {
 		for (size_t i = 0; i < ROWS; i++) {
@@ -1293,7 +1329,7 @@ bool MatrixBase<T, ROWS, COLS>::lup(MatrixBase<T, ROWS, COLS> &L, MatrixBase<T, 
 	size_t K, k, i, j;
 
 	L.clear();
-	P =  MatrixBase<T, ROWS, COLS>::identity();
+	P.init_identity();
 	U = *this;
 	for (k = 0; k < ROWS; k++) {
 		T p = 0;
@@ -1339,30 +1375,14 @@ MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::inverse() const
 	return ret;
 }
 
-template<typename T, size_t ROWS, size_t COLS>
-MatrixMN<T, ROWS, COLS>& MatrixMN<T, ROWS, COLS>::operator=(const T& x)
+template <typename T, size_t ROWS, size_t COLS>
+template <size_t RR, size_t CC>
+typename std::enable_if<RR == CC, MatrixMN<T, ROWS, COLS>>::type MatrixMN<T, ROWS, COLS>::identity()
 {
-	return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator=(x));
+	MatrixMN<T, ROWS, COLS> ret;
+	ret.init_identity();
+	return ret;
 }
-
-template<typename T, size_t ROWS, size_t COLS>
-MatrixMN<T, ROWS, COLS>& MatrixMN<T, ROWS, COLS>::operator=(const MatrixMN<T, ROWS, COLS>& m)
-{
-	return static_cast<MatrixMN<T, ROWS, COLS>&>(base::operator=(m));
-}
-
-template<typename T, size_t ROWS, size_t COLS>
-MatrixMN<T, ROWS, COLS> MatrixMN<T, ROWS, COLS>::operator-(const MatrixMN<T, ROWS, COLS>& m) const
-{
-	return static_cast<MatrixMN<T, ROWS, COLS>>(base::operator-(m));
-}
-
-template<typename T, size_t ROWS, size_t COLS>
-MatrixMN<T, ROWS, COLS> MatrixMN<T, ROWS, COLS>::operator+(const MatrixMN<T, ROWS, COLS>& m) const
-{
-	return static_cast<MatrixMN<T, ROWS, COLS>>(base::operator+(m));
-}
-
 
 template<typename T, size_t ROWS>
 T MatrixMN<T, ROWS, 1>::dot(const MatrixMN<T, ROWS, 1>& v) const
@@ -1425,36 +1445,6 @@ MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::reflection(const MatrixMN<T, 3, 1>& v) c
 	Quaternion<T> qv(0, v.at(0), v.at(1), v.at(2));
 	Quaternion<T> qr = (qn * qv * qn);
 	return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
-}
-
-template<typename T, size_t ROWS>
-MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::operator-() const
-{
-	return static_cast<MatrixMN<T, ROWS, 1>>(base::operator-());
-}
-
-template<typename T, size_t ROWS>
-MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::operator-(const MatrixMN<T, ROWS, 1>& m) const
-{
-	return static_cast<MatrixMN<T, ROWS, 1>>(base::operator-(m));
-}
-
-template<typename T, size_t ROWS>
-MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::operator-(const T& x) const
-{
-	return static_cast<MatrixMN<T, ROWS, 1>>(base::operator+(x));
-}
-
-template<typename T, size_t ROWS>
-MatrixMN<T, ROWS, 1>& MatrixMN<T, ROWS, 1>::operator=(const MatrixMN<T, ROWS, 1>& m)
-{
-	return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator=(m));
-}
-
-template<typename T, size_t ROWS>
-MatrixMN<T, ROWS, 1>& MatrixMN<T, ROWS, 1>::operator=(const T& x)
-{
-	return static_cast<MatrixMN<T, ROWS, 1>&>(base::operator=(x));
 }
 
 template<typename T, size_t ROWS>
@@ -1565,6 +1555,15 @@ const T& MatrixMN<T, ROWS, 1>::w() const
 {
 	assert(base::rows > 3);
 	return at(3);
+}
+
+template <typename T, size_t ROWS>
+template <size_t RR, size_t CC>
+typename std::enable_if<RR == CC, MatrixMN<T, ROWS, 1>>::type MatrixMN<T, ROWS, 1>::identity()
+{
+	MatrixMN<T, ROWS, 1> ret;
+	ret.init_identity();
+	return ret;
 }
 
 template<typename T>

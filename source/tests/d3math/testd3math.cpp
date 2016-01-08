@@ -79,6 +79,7 @@ int main(int argc, char *argv[])
 	std::cout << "D * C is:\n" << D * C << std::endl;
 	std::cout << "D.inverse() is:\n" << D.inverse() << std::endl;
 	std::cout << "D * D.inverse() is:\n" << D * D.inverse() << std::endl;
+
 	std::cout << "D.transpose() is:\n" << D.transpose() << std::endl;
 	std::cout << "C.length() is: \n" << C.length() << std::endl << std::endl;
 	std::cout << "C.length() is: \n" << C.length() << std::endl << std::endl;
@@ -156,6 +157,18 @@ int main(int argc, char *argv[])
 
 	Vector3f res = Matrix3f::identity() * (Vector3f(3,3,3) - Vector3f(2,1,0));
 	std::cout << "res: \n" << res;
+
+	std::cout << "(Matrix3f::identity() * Vector3f(3,3,3)).normalize(): \n" << (Matrix3f::identity() * Vector3f(3,3,3)).normalize();
+
+	std::cout << "Vector3f(3,4,5) * Vector3f(3,4,5).transpose(): \n" << Vector3f(3,4,5) * Vector3f(3,4,5).transpose();
+
+	std::cout << "Vector3f(3,4,5).transpose() * Vector3f(3,4,5): \n" << Vector3f(3,4,5).transpose() * Vector3f(3,4,5);
+
+	std::cout << "MatrixMN<float, 2, 3>(1,2,3,4,5,6) * MatrixMN<float, 3, 2>(7,8,9,10,11,12):\n" << MatrixMN<float, 2, 3>(1,2,3,4,5,6) * MatrixMN<float, 3, 2>(7,8,9,10,11,12);
+	std::cout << "(MatrixMN<float, 2, 3>(1,2,3,4,5,6) += MatrixMN<float, 2, 3>(7,8,9,10,11,12)).min():\n" << (MatrixMN<float, 2, 3>(1,2,3,4,5,6) += MatrixMN<float, 2, 3>(7,8,9,10,11,12)).min() << std::endl;
+	std::cout << "(MatrixMN<float, 3, 3>(1,2,3,4,5,6,7,8,9) *= MatrixMN<float, 3, 3>(7,8,9,10,11,12,13,14,15)).min():\n" << (MatrixMN<float, 3, 3>(1,2,3,4,5,6,7,8,9) *= MatrixMN<float, 3, 3>(7,8,9,10,11,12,13,14,15)).min() << std::endl;
+
+	std::cout << "(MatrixMN<float, 3, 1>(1,2,3) *= 7).min():\n" << (MatrixMN<float, 3, 1>(1,2,3) *= 7).min() << std::endl;
 
 	return 0;
 }
