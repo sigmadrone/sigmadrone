@@ -30,10 +30,10 @@ PidPilot::PidPilot() {
 	m1_ = Vector3f::cross(Vector3f(-1,  1,  0), thrust_dir).normalize();
 	m2_ = Vector3f::cross(Vector3f( 1,  1,  0), thrust_dir).normalize();
 	m3_ = Vector3f::cross(Vector3f( 1, -1,  0), thrust_dir).normalize();
-	m0_.at(2,0) = -0.5;
-	m1_.at(2,0) = 0.5;
-	m2_.at(2,0) = -0.5;
-	m3_.at(2,0) = 0.5;
+	m0_.at(2) = -0.5;
+	m1_.at(2) = 0.5;
+	m2_.at(2) = -0.5;
+	m3_.at(2) = 0.5;
 }
 
 PidPilot::~PidPilot() {
@@ -63,9 +63,9 @@ void PidPilot::update_state(DroneState& state)
 	//  0.6 --> (450/1000) * (22.5/100)
 	//  0.6 --> 0.10125 kg.m
 	static const float rpm_coeff = 0.6 / (101.25/1000.0) / 2.0;
-	torque_rpm.at(0,0) = torque_correction_.at(0,0) * rpm_coeff;
-	torque_rpm.at(1,0) = torque_correction_.at(1,0) * rpm_coeff;
-	torque_rpm.at(2,0) = torque_correction_.at(2,0) * rpm_coeff;
+	torque_rpm.at(0) = torque_correction_.at(0) * rpm_coeff;
+	torque_rpm.at(1) = torque_correction_.at(1) * rpm_coeff;
+	torque_rpm.at(2) = torque_correction_.at(2) * rpm_coeff;
 
 	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
 	torque_rpm = torque_rpm + torque_bias;
@@ -86,10 +86,10 @@ void PidPilot::update_state(DroneState& state)
 #endif
 
 	set_and_scale_motors(
-			motors_.at(0,0),
-			motors_.at(1,0),
-			motors_.at(2,0),
-			motors_.at(3,0));
+			motors_.at(0),
+			motors_.at(1),
+			motors_.at(2),
+			motors_.at(3));
 
 	state.motors_ = motors();
 

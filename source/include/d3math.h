@@ -243,8 +243,6 @@ public:
 	template<typename rhsT, size_t rhsROWS, size_t rhsCOLS>
 	MatrixMN<T, ROWS, rhsCOLS>	operator*(const MatrixBase<rhsT, rhsROWS, rhsCOLS>& rhs) const { return base::operator*(rhs); }
 
-//	MatrixMN& operator=(const MatrixMN& m);
-//	MatrixMN& operator=(const T& x);
 	T length_squared() const;
 	T length() const;
 	MatrixMN normalize() const;

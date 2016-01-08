@@ -111,7 +111,7 @@ void attitudetracker::track_magnetometer(const Vector3f& m, double dtime)
 	/*
 	 * Ignore the Z component from the reading
 	 */
-	Vector3f mag_xy = Vector3f(m.at(0,0), m.at(1,0), 0.0).normalize();
+	Vector3f mag_xy = Vector3f(m.at(0), m.at(1), 0.0).normalize();
 
 	/*
 	 * Estimate the mag_xy using the earth quaternion. Note: here we assume that
@@ -123,7 +123,7 @@ void attitudetracker::track_magnetometer(const Vector3f& m, double dtime)
 	/*
 	 * Nullify the Z component and normalize
 	 */
-	mag_xy_estimated.at(2,0) = 0.0;
+	mag_xy_estimated.at(2) = 0.0;
 	mag_xy_estimated = mag_xy_estimated.normalize();
 
 	/*

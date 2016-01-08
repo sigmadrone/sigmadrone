@@ -49,10 +49,10 @@ int main(int argc, char *argv[])
 	cout << "A is:\n" << A << endl;
 	cout << "B is:\n" << B << endl;
 	cout << "A * B is:\n" << A * B << endl;
-	cout << "A * 2 is:\n" << A * 2 << endl;
-	cout << "A + 2 is:\n" << A + 2 << endl;
-	cout << "A - 2 is:\n" << A - 2 << endl;
-	cout << "A / 2 is:\n" << A / 2 << endl;
+	cout << "A * 2 is:\n" << A * 2.0f << endl;
+	cout << "A + 2 is:\n" << A + 2.0f << endl;
+	cout << "A - 2 is:\n" << A - 2.0f << endl;
+	cout << "A / 2 is:\n" << A / 2.0f << endl;
 	cout << "D is:\n" << D << endl;
 	cout << "C is:\n" << C << endl;
 	cout << "D * C is:\n" << D * C << endl;

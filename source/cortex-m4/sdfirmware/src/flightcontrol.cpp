@@ -73,8 +73,8 @@ void FlightControl::set_throttle(const std::vector<Throttle>& thrVec)
 
 void FlightControl::send_throttle_to_motors()
 {
-	set_throttle({pilot_.motors().at(0,0), pilot_.motors().at(1,0),
-		pilot_.motors().at(2,0), pilot_.motors().at(3,0)});
+	set_throttle({pilot_.motors().at(0), pilot_.motors().at(1),
+		pilot_.motors().at(2), pilot_.motors().at(3)});
 }
 
 /*
