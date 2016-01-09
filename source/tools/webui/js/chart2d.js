@@ -15,8 +15,8 @@ VisChart2d = function (
   eventCallback) {
   this.dataset = new vis.DataSet({type: {start: 'ISODate', end: 'ISODate' }});
   this.statusId = statusId;
-  this.rangeMin = rangeMin;
-  this.rangeMax = rangeMax;
+  this.rangeMin = this.originalRangeMin = rangeMin;
+  this.rangeMax = this.originalRangeMax = rangeMax;
 
   // Create the groups, number of groups is controlled by the size of the ylabels
   // array
@@ -54,7 +54,7 @@ VisChart2d = function (
     this.numRightYAxis = 0;
   }
 
-  this.graph2d = new vis.Graph2d(containerId, this.dataset, this.groups, this.getOptions());
+  this.graph2d = new vis.Graph2d(containerId, this.dataset, this.groups, this.createOptions());
 
   this.constructed = false;
 
@@ -62,6 +62,31 @@ VisChart2d = function (
   this.graph2d.on('rangechanged', function(event) {
     if (eventCallback != null && self.constructed) {
       eventCallback(event);
+    }
+  });
+
+  this.graph2d.on('click', function(event) {
+    if (event.what == "background") {
+      self.rangeMin = event.value[0] - (self.rangeMax-self.rangeMin)/4;
+      self.rangeMax = event.value[0] + (self.rangeMax-self.rangeMin)/4;
+      self.graph2d.setOptions(
+        { dataAxis: { left: { range: { min: self.rangeMin, max: self.rangeMax } } } }
+      );
+    }
+  });
+
+  this.graph2d.on('contextmenu', function(props) {
+    if (props.what == "background") {
+      props.event.preventDefault();
+      self.rangeMin = props.value[0] - (self.rangeMax-self.rangeMin)*4;
+      self.rangeMax = props.value[0] + (self.rangeMax-self.rangeMin)*4;
+      if (self.rangeMin < self.originalRangeMin || self.rangeMax > self.originalRangeMax) {
+        self.rangeMin = self.originalRangeMin;
+        self.rangeMax = self.originalRangeMax;
+      }
+      self.graph2d.setOptions(
+        { dataAxis: { left: { range: { min: self.rangeMin, max: self.rangeMax } } } }
+      );
     }
   });
 
@@ -84,7 +109,7 @@ VisChart2d.prototype.enableDisableGroup = function(groupName, enable) {
   this.graph2d.setOptions(options);
 }
 
-VisChart2d.prototype.getOptions = function() {
+VisChart2d.prototype.createOptions = function() {
   return {
     start: vis.moment(),
     end: vis.moment() + 60 * 1000,
@@ -123,7 +148,7 @@ VisChart2d.prototype.reset = function() {
   this.newData = [];
   this.dataId = 0;
   this.beginTimeLine = 0;
-  this.graph2d.setOptions(this.getOptions());
+  this.graph2d.setOptions(this.createOptions());
 }
 
 VisChart2d.prototype.update = function(samples, iteration) {
