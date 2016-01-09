@@ -9,6 +9,7 @@
 #include "cmsis_device.h"
 #include "arm/semihosting.h"
 #include "diag/Trace.h"
+#include "cortexm/emergency_shutdown.h"
 #include <string.h>
 
 // ----------------------------------------------------------------------------
@@ -17,9 +18,6 @@ extern void
 __attribute__((noreturn,weak))
 _start (void);
 
-extern void
-__attribute__((weak))
-EmergencyShutdown_Handler(void);
 
 // ----------------------------------------------------------------------------
 // Default exception handlers. Override the ones here by defining your own

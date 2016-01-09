@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include "diag/Trace.h"
+#include "cortexm/emergency_shutdown.h"
 
 // ----------------------------------------------------------------------------
 
@@ -38,6 +39,7 @@ _exit(int code __attribute__((unused)))
   __reset_hardware();
 #endif
 
+  EmergencyShutdown_Handler();
   // TODO: write on trace
   while (1)
     ;
