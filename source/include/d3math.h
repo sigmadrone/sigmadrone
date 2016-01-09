@@ -1406,7 +1406,9 @@ typename std::enable_if<RR == CC, MatrixMN<T, ROWS, COLS>>::type MatrixMN<T, ROW
 template<typename T, size_t ROWS>
 T MatrixMN<T, ROWS, 1>::dot(const MatrixMN<T, ROWS, 1>& v) const
 {
-	return std::inner_product(base::begin(), base::end(), v.begin(), static_cast<T>(0));
+	T ret = std::inner_product(base::begin(), base::end(), v.begin(), static_cast<T>(0));
+	assert(!std::isnan(ret));
+	return ret;
 }
 
 template<typename T, size_t ROWS>
