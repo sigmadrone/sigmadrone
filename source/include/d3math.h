@@ -1483,7 +1483,10 @@ T MatrixMN<T, ROWS, 1>::length() const
 template<typename T, size_t ROWS>
 MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::normalize() const
 {
-	return (*this / length());
+	T len = length();
+	if (len)
+		return (*this / len);
+	return *this;
 }
 
 template<typename T, size_t ROWS>
