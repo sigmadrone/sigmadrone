@@ -64,11 +64,11 @@ VisChart2d = function (
       eventCallback(event);
     }
   });
-
+  
   this.graph2d.on('click', function(event) {
     if (event.what == "background") {
-      self.rangeMin = event.value[0] - (self.rangeMax-self.rangeMin)/4;
-      self.rangeMax = event.value[0] + (self.rangeMax-self.rangeMin)/4;
+      self.rangeMin = event.value[0] - (self.rangeMax-self.rangeMin)/2.2;
+      self.rangeMax = event.value[0] + (self.rangeMax-self.rangeMin)/2.2;
       self.graph2d.setOptions(
         { dataAxis: { left: { range: { min: self.rangeMin, max: self.rangeMax } } } }
       );
@@ -78,8 +78,8 @@ VisChart2d = function (
   this.graph2d.on('contextmenu', function(props) {
     if (props.what == "background") {
       props.event.preventDefault();
-      self.rangeMin = props.value[0] - (self.rangeMax-self.rangeMin)*4;
-      self.rangeMax = props.value[0] + (self.rangeMax-self.rangeMin)*4;
+      self.rangeMin = props.value[0] - (self.rangeMax-self.rangeMin)*2.2;
+      self.rangeMax = props.value[0] + (self.rangeMax-self.rangeMin)*2.2;
       if (self.rangeMin < self.originalRangeMin || self.rangeMax > self.originalRangeMax) {
         self.rangeMin = self.originalRangeMin;
         self.rangeMax = self.originalRangeMax;
