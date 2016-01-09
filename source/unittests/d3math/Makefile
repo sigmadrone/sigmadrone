@@ -22,7 +22,8 @@ LIBS		+= $(addprefix -L,../../libattitude/$(OUTDIR) ../../libcmdargs/$(OUTDIR) .
 LIBS		+= $(addprefix -L,../../liblogger/$(OUTDIR) ../../libhttp/$(OUTDIR) ../../librexjson/$(OUTDIR) ../../librexjsonrpc/$(OUTDIR))
 TARGET1		= $(OUTDIR)/d3math_unittest
 OBJS1		= \
-		$(OUTDIR)/d3math_unittest.o \
+		$(OUTDIR)/matrix.o \
+		$(OUTDIR)/vector.o \
 
 TARGETS		= $(TARGET1)
 

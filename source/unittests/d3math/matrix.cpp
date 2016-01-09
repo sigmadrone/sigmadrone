@@ -38,6 +38,10 @@ TEST(MatrixTest, mulitplication) {
 	EXPECT_EQ(-45 * 3, (Matrix3f(-1,-2,-3,-4,-5,-6,-7,-8,-9) * 3).sum());
 }
 
+TEST(MatrixTest, matrix_mulitplication) {
+	EXPECT_EQ(Vector3f(1,2,3), Matrix3f::identity() * Vector3f(1,2,3));
+}
+
 TEST(MatrixTest, division) {
 	EXPECT_EQ(45 / 3, (Matrix3f(1,2,3,4,5,6,7,8,9) / 3).sum());
 	EXPECT_EQ(27 / 3, (Matrix3f(1,2,3,4,5,6,7,8,-9) / 3).sum());
