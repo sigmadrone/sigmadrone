@@ -64,35 +64,46 @@ VisChart2d = function (
       eventCallback(event);
     }
   });
-  
+
+  var zoomInFactor = 0.8;
+  var zoomOutFactor = 1/zoomInFactor;
+  /*
+  this.graph2d.on('doubleClick', function(event) {
+    if (event.what == "background") {
+      self.zoomYAxis(event.value[0], zoomOutFactor * zoomOutFactor, false);
+    }
+  });
+  */
+
   this.graph2d.on('click', function(event) {
     if (event.what == "background") {
-      self.rangeMin = event.value[0] - (self.rangeMax-self.rangeMin)/2.2;
-      self.rangeMax = event.value[0] + (self.rangeMax-self.rangeMin)/2.2;
-      self.graph2d.setOptions(
-        { dataAxis: { left: { range: { min: self.rangeMin, max: self.rangeMax } } } }
-      );
+      self.zoomYAxis(event.value[0], zoomInFactor, false);
     }
   });
 
   this.graph2d.on('contextmenu', function(props) {
     if (props.what == "background") {
       props.event.preventDefault();
-      self.rangeMin = props.value[0] - (self.rangeMax-self.rangeMin)*2.2;
-      self.rangeMax = props.value[0] + (self.rangeMax-self.rangeMin)*2.2;
-      if (self.rangeMin < self.originalRangeMin || self.rangeMax > self.originalRangeMax) {
-        self.rangeMin = self.originalRangeMin;
-        self.rangeMax = self.originalRangeMax;
-      }
-      self.graph2d.setOptions(
-        { dataAxis: { left: { range: { min: self.rangeMin, max: self.rangeMax } } } }
-      );
+      self.zoomYAxis(props.value[0], zoomOutFactor, true);
     }
   });
 
   this.reset();
 
   this.constructed = true;
+}
+
+VisChart2d.prototype.zoomYAxis = function(mediumPoint, zoomFactor, restoreOriginalIf) {
+  var halfRange = (this.rangeMax-this.rangeMin)/2 * zoomFactor;
+  this.rangeMin = mediumPoint - halfRange;
+  this.rangeMax = mediumPoint + halfRange;
+  if (restoreOriginalIf && (this.rangeMin < this.originalRangeMin || this.rangeMax > this.originalRangeMax)) {
+    this.rangeMin = this.originalRangeMin;
+    this.rangeMax = this.originalRangeMax;
+  }
+  this.graph2d.setOptions(
+    { dataAxis: { left: { range: { min: this.rangeMin, max: this.rangeMax } } } }
+  );
 }
 
 VisChart2d.prototype.enableDisableGroup = function(groupName, enable) {
