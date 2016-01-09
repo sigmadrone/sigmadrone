@@ -43,3 +43,9 @@ TEST(MatrixTest, division) {
 	EXPECT_EQ(27 / 3, (Matrix3f(1,2,3,4,5,6,7,8,-9) / 3).sum());
 	EXPECT_EQ(-45 / 3, (Matrix3f(-1,-2,-3,-4,-5,-6,-7,-8,-9) / 3).sum());
 }
+
+TEST(MatrixTest, equal) {
+	EXPECT_TRUE(Matrix3f(1,2,3,4,5,6,7,8,9) == Matrix3f(1,2,3,4,5,6,7,8,9));
+	EXPECT_FALSE(Matrix3f(1,2,3,4,5,6,7,8,9) != Matrix3f(1,2,3,4,5,6,7,8,9));
+	EXPECT_TRUE(Matrix3f(1,2,3,4,5,6,7,8,9) != Matrix3f(100,2,3,4,5,6,7,8,9));
+}

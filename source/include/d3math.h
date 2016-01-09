@@ -130,6 +130,10 @@ public:
 	template<typename rhsT, size_t rhsROWS, size_t rhsCOLS>
 	MatrixBase<T, ROWS, rhsCOLS> operator*(const MatrixBase<rhsT, rhsROWS, rhsCOLS>& rhs) const;
 
+	// Boolean operators
+	bool operator==(const MatrixBase& m) const;
+	bool operator!=(const MatrixBase& m) const;
+
 	iterator begin();
 	iterator end();
 	const_iterator begin() const;
@@ -1303,6 +1307,23 @@ inline MatrixBase<T, ROWS, COLS>& MatrixBase<T, ROWS, COLS>::operator-=(const Ma
 {
 	return apply(m, [&](T& t, const T& u) {t -= u;});
 }
+
+// Boolean operators
+template<typename T, size_t ROWS, size_t COLS>
+bool MatrixBase<T, ROWS, COLS>::operator==(const MatrixBase& m) const
+{
+	for (auto i = begin(), j = m.begin(); i != end(); i++, j++)
+		if(*i != *j)
+			return false;
+	return true;
+}
+
+template<typename T, size_t ROWS, size_t COLS>
+bool MatrixBase<T, ROWS, COLS>::operator!=(const MatrixBase& m) const
+{
+	return !operator==(m);
+}
+
 
 template<typename T, size_t ROWS, size_t COLS>
 template<typename rhsT, size_t rhsROWS, size_t rhsCOLS>
