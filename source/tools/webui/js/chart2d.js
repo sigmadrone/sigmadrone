@@ -148,7 +148,7 @@ VisChart2d.prototype.createOptions = function() {
     //clickToUse:true,
     showMajorLabels:false,
     showMinorLabels:true,
-    height: '300px',
+    height: '330px',
     interpolation: true,
   };
 }

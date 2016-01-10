@@ -625,7 +625,7 @@
     "#chart-status-id",
     "Sensors",
     ['AccX', 'AccY', 'AccZ', 'Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z', 'TorqX', 'TorqY', 'TorqZ'],
-    -1.0, 1.0,
+    -1, 1,
     ['GyroX', 'GyroY', 'GyroZ'],
     onChartEvent
   );
@@ -646,7 +646,7 @@
     null,
     "VectorZError",
     ['V:X', 'V:Y', 'V:Z', 'TgtV:X', 'TgtV:Y', 'TgtV:Z'],
-    -1.0, 1.0,
+    -1.25, 1.25,
     [],
     onChartEvent
   );
@@ -685,7 +685,7 @@
   }
   function onToggleChartZVecYData(element) {
     errorChart.enableDisableGroup('V:Y', element.checked);
-    errorChart.enableDisableGroup('V:Y', element.checked);
+    errorChart.enableDisableGroup('TgtV:Y', element.checked);
   }
   function onToggleChartTgtQtZData(element) {
     errorChart.enableDisableGroup('V:Z', element.checked);
@@ -962,11 +962,7 @@
       // For display purposes convert the attitude quaternion to the
       // world coordinate system.
       //
-      if (droneState.attitude.w * droneState.target.w < 0) {
-        droneState.attitude *= -1;
-      } else {
-        droneState.attitude = qtConjugate(droneState.attitude);
-      }
+      droneState.attitude = qtConjugate(droneState.attitude);
 
       droneState.zVector = qtRotateVector(droneState.attitude, [0,0,1]);
       droneState.zVectorTarget = qtRotateVector(droneState.target, [0,0,1]);
