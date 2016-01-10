@@ -944,6 +944,18 @@
 
       droneState = response.result;
 
+      //
+      // For display purposes convert the attitude quaternion to the
+      // world coordinate system.
+      //
+      if (droneState.attitude.w * droneState.target.w < 0) {
+        droneState.attitude *= -1;
+      } else {
+        droneState.attitude.x *= -1;
+        droneState.attitude.y *= -1;
+        droneState.attitude.z *= -1;
+      }
+
       if (collectDataButton.isOn()) {
         droneState.serial = droneState.iteration;
         updateSensorChart([droneState]);
