@@ -495,12 +495,12 @@
           <div class="row row-padded"></div>
           <hr class="featurette-divider">
 
-          <h4 class="graph-title">Motors and Attitude</h4>
+          <h4 class="graph-title">Current and Target Vector</h4>
           <a href="#motor-chart-ydata-select-id" id="motor-chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
             <span class="glyphicon glyphicon-triangle-right"></span>Filter Data
           </a>
           <div id = "motor-chart-ydata-select-id" class="col-xs-12 collapse">
-            <div class="row">
+            <!--div class="row">
               <div class="col-xs-3 col-md-2 col-data">
                 <div class="checkbox">
                   <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM1Data(this)">M1</label>
@@ -525,29 +525,24 @@
             <div class="row">
               <div class="col-xs-3 col-md-2 col-data">
                 <div class="checkbox">
-                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtXData(this)">Qt:X</label>
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartZVecXData(this)">ZVec:X</label>
                 </div>
               </div>
               <div class="col-xs-3 col-md-2">
                 <div class="checkbox">
-                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtYData(this)">Qt:Y</label>
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartZVecYData(this)">ZVec:Y</label>
                 </div>
               </div>
               <div class="col-xs-3 col-md-2">
                 <div class="checkbox">
-                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtZData(this)">Qt:Z</label>
-                </div>
-              </div>
-              <div class="col-xs-3 col-md-2">
-                <div class="checkbox">
-                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtWData(this)">Qt:W</label>
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartTgtQtZData(this)">ZVec:Z</label>
                 </div>
               </div>
             </div>
             <div class="row row-padded"></div>
           </div>
 
-          <div id="motor-chart-id"></div>
+          <div id="error-chart-id"></div>
 
           <div class="row row-padded">
             <span id="chart-status-id"></span>
@@ -624,7 +619,7 @@
   var droneRpcUrl;
   var rpcClient = new RpcClient();
   var sensorChart = null;
-  var motorChart = null;
+  var errorChart = null;
   sensorChart = new VisChart2d(
     document.getElementById("sensor-chart-id"),
     "#chart-status-id",
@@ -635,13 +630,24 @@
     onChartEvent
   );
 
-  motorChart = new VisChart2d(
-    document.getElementById("motor-chart-id"),
+/*
+  errorChart = new VisChart2d(
+    document.getElementById("error-chart-id"),
     null,
     "Motors",
     ['Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z', 'TgtQ:W', 'TgtQ:X', 'TgtQ:Y', 'TgtQ:Z'],
     -1.0, 1.0,
     ['M1', 'M2', 'M3', 'M4'],
+    onChartEvent
+  );*/
+
+  errorChart = new VisChart2d(
+    document.getElementById("error-chart-id"),
+    null,
+    "VectorZError",
+    ['V:X', 'V:Y', 'V:Z', 'TgtV:X', 'TgtV:Y', 'TgtV:Z'],
+    -1.0, 1.0,
+    [],
     onChartEvent
   );
 
@@ -649,7 +655,7 @@
     if (event.hasOwnProperty('start') && event.hasOwnProperty('end')) {
       if (syncGraphButton.isOn()) {
         sensorChart.setRange(event.start, event.end);
-        motorChart.setRange(event.start, event.end);
+        errorChart.setRange(event.start, event.end);
       }
     }
   }
@@ -667,25 +673,23 @@
   function onToggleChartQtXData(element) { sensorChart.enableDisableGroup('Qt:X', element.checked); }
   function onToggleChartQtYData(element) { sensorChart.enableDisableGroup('Qt:Y', element.checked); }
   function onToggleChartQtZData(element) { sensorChart.enableDisableGroup('Qt:Z', element.checked); }
-  function onToggleChartM1Data(element) { motorChart.enableDisableGroup('M1', element.checked); }
-  function onToggleChartM2Data(element) { motorChart.enableDisableGroup('M2', element.checked); }
-  function onToggleChartM3Data(element) { motorChart.enableDisableGroup('M3', element.checked); }
-  function onToggleChartM4Data(element) { motorChart.enableDisableGroup('M4', element.checked); }
-  function onToggleChartTgtQtWData(element) {
-    motorChart.enableDisableGroup('Qt:W', element.checked);
-    motorChart.enableDisableGroup('TgtQ:W', element.checked);
+  /*
+  function onToggleChartM1Data(element) { errorChart.enableDisableGroup('M1', element.checked); }
+  function onToggleChartM2Data(element) { errorChart.enableDisableGroup('M2', element.checked); }
+  function onToggleChartM3Data(element) { errorChart.enableDisableGroup('M3', element.checked); }
+  function onToggleChartM4Data(element) { errorChart.enableDisableGroup('M4', element.checked); }
+  */
+  function onToggleChartZVecXData(element) {
+    errorChart.enableDisableGroup('V:X', element.checked);
+    errorChart.enableDisableGroup('TgtV:X', element.checked);
   }
-  function onToggleChartTgtQtXData(element) {
-    motorChart.enableDisableGroup('Qt:X', element.checked);
-    motorChart.enableDisableGroup('TgtQ:X', element.checked);
-  }
-  function onToggleChartTgtQtYData(element) {
-    motorChart.enableDisableGroup('Qt:Y', element.checked);
-    motorChart.enableDisableGroup('TgtQ:Y', element.checked);
+  function onToggleChartZVecYData(element) {
+    errorChart.enableDisableGroup('V:Y', element.checked);
+    errorChart.enableDisableGroup('V:Y', element.checked);
   }
   function onToggleChartTgtQtZData(element) {
-    motorChart.enableDisableGroup('Qt:Z', element.checked);
-    motorChart.enableDisableGroup('TgtQ:Z', element.checked);
+    errorChart.enableDisableGroup('V:Z', element.checked);
+    errorChart.enableDisableGroup('TgtV:Z', element.checked);
   }
 
   function quaternion2str(q) {
@@ -915,16 +919,8 @@
 
   function updateMotorChart(sensorDataStream) {
     for (var i = 0; i < sensorDataStream.length; ++i) {
-      var samples = [
-        sensorDataStream[i].attitude.w,
-        sensorDataStream[i].attitude.x,
-        sensorDataStream[i].attitude.y,
-        sensorDataStream[i].attitude.z,
-        sensorDataStream[i].target.w,
-        sensorDataStream[i].target.x,
-        sensorDataStream[i].target.y,
-        sensorDataStream[i].target.z].concat(sensorDataStream[i].motors);
-      motorChart.update(samples, sensorDataStream[i].serial);
+      var samples = sensorDataStream[i].zVector.concat(sensorDataStream[i].zVectorTarget);
+      errorChart.update(samples, sensorDataStream[i].serial);
     }
   }
 
@@ -935,6 +931,24 @@
       updateSensorChart(response.result);
       updateMotorChart(response.result);
     }
+  }
+
+  function qtConjugate(q) {
+    return { w: q.w, x: -q.x, y: -q.y, z: -q.z };
+  }
+
+  function qtMultiply(q1, q2) {
+    return {
+      w: q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z,
+			x: q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
+			y: q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
+			z: q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w
+    };
+  }
+
+  function qtRotateVector(qt, vector) {
+    var qvector = qtMultiply(qtMultiply(qt, {w: 0, x: vector[0], y: vector[1], z: vector[2]}), qtConjugate(qt));
+    return [qvector.x, qvector.y, qvector.z];
   }
 
   function updateDroneState(response) {
@@ -951,10 +965,11 @@
       if (droneState.attitude.w * droneState.target.w < 0) {
         droneState.attitude *= -1;
       } else {
-        droneState.attitude.x *= -1;
-        droneState.attitude.y *= -1;
-        droneState.attitude.z *= -1;
+        droneState.attitude = qtConjugate(droneState.attitude);
       }
+
+      droneState.zVector = qtRotateVector(droneState.attitude, [0,0,1]);
+      droneState.zVectorTarget = qtRotateVector(droneState.target, [0,0,1]);
 
       if (collectDataButton.isOn()) {
         droneState.serial = droneState.iteration;
@@ -1098,10 +1113,10 @@
       $("#collect-data-btn").addClass("disabled");
       redrawGraph = true;
       sensorChart.updateStatus("DRAWING");
-      motorChart.updateStatus("DRAWING");
+      errorChart.updateStatus("DRAWING");
     } else {
       sensorChart.reset();
-      motorChart.reset();
+      errorChart.reset();
     }
   }
 
@@ -1122,7 +1137,7 @@
       if (redrawGraph) {
         redrawGraph = false;
         sensorChart.draw();
-        motorChart.draw();
+        errorChart.draw();
         $("#collect-data-btn").removeClass("disabled");
       }
       if (rpcClient.failureCount() > 5) {
