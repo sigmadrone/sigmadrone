@@ -410,9 +410,9 @@
             </div>
           </div> <!--div class="row row-padded"-->
           <hr class="featurette-divider">
-          <h5 class="graph-title">Sensors, Atittude and Torque</h5>
+          <h4 class="graph-title">Sensors, Attitude and Torque</h4>
           <a href="#sensor-chart-ydata-select-id" id="sensor-chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
-            <span class="glyphicon glyphicon-triangle-right"></span>Y Axis Data
+            <span class="glyphicon glyphicon-triangle-right"></span>Filter Data
           </a>
           <div id = "sensor-chart-ydata-select-id" class="col-xs-12 collapse">
             <div class="row">
@@ -492,11 +492,12 @@
           </div>
           <div id="sensor-chart-id"></div>
 
+          <div class="row row-padded"></div>
           <hr class="featurette-divider">
 
-          <h5 class="graph-title">Motors and Attitude</h5>
+          <h4 class="graph-title">Motors and Attitude</h4>
           <a href="#motor-chart-ydata-select-id" id="motor-chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
-            <span class="glyphicon glyphicon-triangle-right"></span>Y Axis Data
+            <span class="glyphicon glyphicon-triangle-right"></span>Filter Data
           </a>
           <div id = "motor-chart-ydata-select-id" class="col-xs-12 collapse">
             <div class="row">
@@ -1018,8 +1019,8 @@
     toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
     toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
     toggleCollapsable("#flight-ctl-id", "#flight-ctl-btn", "Flight Control");
-    toggleCollapsable("#sensor-chart-ydata-select-id", "#sensor-chart-data-select-bt", "Y Axis Data");
-    toggleCollapsable("#motor-chart-ydata-select-id", "#motor-chart-data-select-bt", "Y Axis Data");
+    toggleCollapsable("#sensor-chart-ydata-select-id", "#sensor-chart-data-select-bt", "Filter Data");
+    toggleCollapsable("#motor-chart-ydata-select-id", "#motor-chart-data-select-bt", "Filter Data");
     toggleStatusMessage(true);
 
     m1 = new JustGage({
