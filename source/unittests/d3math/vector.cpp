@@ -44,3 +44,12 @@ TEST(VectorTest, equal) {
 	EXPECT_FALSE(Vector3f(1,2,3) != Vector3f(1,2,3));
 	EXPECT_TRUE(Vector3f(1,2,3) != Vector3f(100,2,3));
 }
+
+TEST(VectorTest, at) {
+	Vector3f v;
+	v.at(0) = 1;
+	v[1] = 2;
+	v.z() = 3;
+	EXPECT_TRUE(Vector3f(1,2,3) == v);
+	EXPECT_FALSE(std::isnan(v[1]));
+}
