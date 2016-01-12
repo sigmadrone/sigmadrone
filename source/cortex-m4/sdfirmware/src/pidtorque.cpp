@@ -39,7 +39,7 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt, floa
 {
 	Vector3f torq;
 	Vector3f Zset = set_Q_.rotate(Vector3f(0.0, 0.0, 1.0));
-	Vector3f Zin = (~in_Q).rotate(Vector3f(0.0, 0.0, 1.0));
+	Vector3f Zin = in_Q.conjugate().rotate(Vector3f(0.0, 0.0, 1.0));
 	QuaternionF Qtorq = QuaternionF::fromVectors(Zin, Zset);
 	Vector3f error = Qtorq.axis().normalize() * Qtorq.angle() * -1.0;
 
