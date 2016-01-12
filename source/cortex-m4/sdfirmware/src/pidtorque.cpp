@@ -58,11 +58,17 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt, floa
 			angle_rad += 2.0 * M_PI;
 		}
 	}
+
+	Vector3f limit_yaw(0, 0, yaw_factor/3.0);
 	error_z = error_z * angle_rad;
-	torq.at(2) = pid_controller_yaw_.get_pid(
-			error_z,
-			dt.seconds_float(),
-			Vector3f(0,0,yaw_factor/3.0)).at(2);
+	Vector3f torq_yaw = pid_controller_yaw_.get_pid(error_z, dt.seconds_float());
+	torq_yaw = torq_yaw.clip(-limit_yaw, limit_yaw);
+	torq.at(2) = torq_yaw.at(2);
+
+//	torq.at(2) = pid_controller_yaw_.get_pid(
+//			error_z,
+//			dt.seconds_float(),
+//			Vector3f(0,0,yaw_factor/3.0)).at(2);
 #else
 	// targetQ = attitudeQ * errQ; ==> (~attitudeQ) * attitudeQ * errQ = (~attitudeQ) * targetQ;
 	// ==> errQ = (~attitudeQ) * targetQ;

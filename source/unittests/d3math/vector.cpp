@@ -61,7 +61,8 @@ TEST(VectorTest, at)
 
 TEST(VectorTest, clip)
 {
-	EXPECT_EQ(Vector3f(1, 1, 1), Vector3f(1, 2, 10).clip( { -1, -1, -1 }, { 1, 1, 1 }));
+	Vector3f limit(1, 1, 1);
+	EXPECT_EQ(Vector3f(1, 1, 1), Vector3f(1, 2, 10).clip(-limit, limit));
 	EXPECT_EQ(Vector3f(1, 0.5, 1), Vector3f(1, 0.5, 10).clip( { -1, -1, -1 }, { 1, 1, 1 }));
 	EXPECT_EQ(Vector3f(1, 1, -1), Vector3f(1, 2, -10).clip( { -1, -1, -1 }, { 1, 1, 1 }));
 	EXPECT_EQ(Vector3f(-1, -1, -1), Vector3f(-1, -2, -10).clip( { -1, -1, -1 }, { 1, 1, 1 }));

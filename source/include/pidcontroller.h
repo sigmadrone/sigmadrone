@@ -69,11 +69,6 @@ public:
 		return derivative * kd_;
 	}
 
-	PidVector get_d(const PidVector& err, FLOAT dt, const PidVector& abs_limit)
-	{
-		return limit_vector(get_d(err, dt), &abs_limit);
-	}
-
 	PidVector get_p(const PidVector& err)
 	{
 		return err * kp_;
@@ -83,16 +78,7 @@ public:
 			const PidVector& err,
 			FLOAT dt)
 	{
-		return _get_i(err,dt,0);
-	}
-
-
-	PidVector get_i(
-			const PidVector& err,
-			FLOAT dt,
-			const PidVector& limit)
-	{
-		return _get_i(err,dt,&limit);
+		return get_i(err, dt, 0);
 	}
 
 	PidVector get_i(
@@ -100,36 +86,14 @@ public:
 			FLOAT dt,
 			FLOAT leakRate) // 0..1
 	{
-		return _get_i(err,dt,leakRate,0);
-	}
-
-	PidVector get_i(
-			const PidVector& err,
-			FLOAT dt,
-			FLOAT leakRate, // 0..1
-			const PidVector& limit)
-	{
-		integral_err_ = integral_err_ - integral_err_*leakRate;
-		return _get_i(err,dt,&limit);
+		integral_err_ -= integral_err_ * leakRate;
+		integral_err_ = integral_err_ + err * dt;
+		return integral_err_ * ki_;
 	}
 
 	PidVector get_pid(const PidVector& err, FLOAT dt)
 	{
-		return get_p(err) + get_d(err, dt) + get_i(err,dt);
-	}
-
-	PidVector get_pid(const PidVector& err, FLOAT dt, const PidVector& abs_limit)
-	{
-		return limit_vector(get_pid(err, dt), &abs_limit);
-	}
-
-	PidVector get_pid(
-				const PidVector& err,
-				FLOAT dt,
-				FLOAT leakRate,
-				const PidVector& abs_limit)
-	{
-		return limit_vector(get_pid(err,dt,leakRate),&abs_limit);
+		return get_p(err) + get_d(err, dt) + get_i(err, dt);
 	}
 
 	PidVector get_pid(
@@ -137,17 +101,12 @@ public:
 			FLOAT dt,
 			FLOAT leakRate)
 	{
-		return get_p(err) + get_d(err, dt) + get_i(err,dt,leakRate);
+		return get_p(err) + get_d(err, dt) + get_i(err, dt, leakRate);
 	}
 
 	PidVector get_pd(const PidVector& err, FLOAT dt)
 	{
 		return get_p(err) + get_d(err, dt);
-	}
-
-	PidVector get_pd(const PidVector& err, FLOAT dt, const PidVector& abs_limit)
-	{
-		return limit_vector(get_pd(err,dt),&abs_limit);
 	}
 
 	const PidVector& integral_error() const { return integral_err_; }
@@ -167,30 +126,10 @@ public:
 private:
 	PidVector _get_i(
 			const PidVector& err,
-			FLOAT dt,
-			const PidVector* limit)
+			FLOAT dt)
 	{
-		integral_err_ = limit_vector(integral_err_ + err * dt,limit);
+		integral_err_ = integral_err_ + err * dt;
 		return integral_err_ * ki_;
-	}
-
-	static FLOAT min_value(FLOAT a, FLOAT b) {
-		return a < b ? a : b;
-	}
-	static FLOAT max_value(FLOAT a, FLOAT b) {
-		return a > b ? a : b;
-	}
-
-	static PidVector limit_vector(const PidVector& v, const PidVector* abs_limit)
-	{
-		PidVector limited_vec;
-		if (!!abs_limit) {
-			for (size_t i = 0; i < M; i++) {
-				limited_vec.at(i,0) = min_value(v.at(i,0),abs_limit->at(i,0));
-				limited_vec.at(i,0) = max_value(limited_vec.at(i,0),-abs_limit->at(i,0));
-			}
-		}
-		return limited_vec;
 	}
 
 private:
@@ -213,8 +152,5 @@ private:
 
 typedef PidController<float, 3> PidController3f;
 typedef PidController<float, 4> PidController4f;
-
-typedef PidController<double, 3> PidController3d;
-typedef PidController<double, 4> PidController4d;
 
 #endif /* PIDCONTROLLER_H_ */
