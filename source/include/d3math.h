@@ -28,6 +28,7 @@
 #include <array>
 #include <type_traits>
 #include <numeric>
+#include <algorithm>
 
 
 #ifndef M_PI
@@ -94,6 +95,7 @@ public:
 	T sum() const;
 	T min() const;
 	T max() const;
+	MatrixBase clip(const MatrixBase& lower, const MatrixBase& upper) const;
 
 	void set_row(size_t m, const MatrixBase<T, 1, COLS>& r);
 	void set_column(size_t n, const MatrixBase<T, ROWS, 1>& c);
@@ -191,6 +193,8 @@ public:
 	MatrixMN operator%(const T& x) const							{ return base::operator%(x); }
 	MatrixMN operator-() const										{ return base::operator-();  }
 
+	MatrixMN clip(const MatrixBase<T, ROWS, COLS>& lower, const MatrixBase<T, ROWS, COLS>& upper) const;
+
 	template<typename rhsT, size_t rhsROWS, size_t rhsCOLS>
 	MatrixMN<T, ROWS, rhsCOLS> operator*(const MatrixBase<rhsT, rhsROWS, rhsCOLS>& rhs) const { return base::operator*(rhs); }
 
@@ -246,6 +250,8 @@ public:
 
 	template<typename rhsT, size_t rhsROWS, size_t rhsCOLS>
 	MatrixMN<T, ROWS, rhsCOLS>	operator*(const MatrixBase<rhsT, rhsROWS, rhsCOLS>& rhs) const { return base::operator*(rhs); }
+
+	MatrixMN clip(const MatrixBase<T, ROWS, 1>& lower, const MatrixBase<T, ROWS, 1>& upper) const;
 
 	T length_squared() const;
 	T length() const;
@@ -1226,6 +1232,14 @@ T MatrixBase<T, ROWS, COLS>::max() const
 	return ret;
 }
 
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::clip(const MatrixBase<T, ROWS, COLS>& lower, const MatrixBase<T, ROWS, COLS>& upper) const
+{
+	MatrixBase<T, ROWS, COLS> ret;
+	for (size_t i = 0; i < data.size(); i++)
+		ret.data.at(i) = std::max(lower.data.at(i), std::min(data.at(i), upper.data.at(i)));
+	return ret;
+}
 
 template <typename T, size_t ROWS, size_t COLS>
 template <typename Functor>
@@ -1395,6 +1409,12 @@ MatrixBase<T, ROWS, COLS> MatrixBase<T, ROWS, COLS>::inverse() const
 }
 
 template <typename T, size_t ROWS, size_t COLS>
+MatrixMN<T, ROWS, COLS> MatrixMN<T, ROWS, COLS>::clip(const MatrixBase<T, ROWS, COLS>& lower, const MatrixBase<T, ROWS, COLS>& upper) const
+{
+	return base::clip(lower, upper);
+}
+
+template <typename T, size_t ROWS, size_t COLS>
 template <size_t RR, size_t CC>
 typename std::enable_if<RR == CC, MatrixMN<T, ROWS, COLS>>::type MatrixMN<T, ROWS, COLS>::identity()
 {
@@ -1466,6 +1486,12 @@ MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::reflection(const MatrixMN<T, 3, 1>& v) c
 	Quaternion<T> qv(0, v.at(0), v.at(1), v.at(2));
 	Quaternion<T> qr = (qn * qv * qn);
 	return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
+}
+
+template<typename T, size_t ROWS>
+MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::clip(const MatrixBase<T, ROWS, 1>& lower, const MatrixBase<T, ROWS, 1>& upper) const
+{
+	return base::clip(lower, upper);
 }
 
 template<typename T, size_t ROWS>
