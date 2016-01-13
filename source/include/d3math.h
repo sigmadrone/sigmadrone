@@ -312,6 +312,7 @@ public:
 	Quaternion<T>& operator*=(const Quaternion<T>& rhs);
 	bool operator==(const Quaternion<T>& rhs) const;
 	bool operator!=(const Quaternion<T>& rhs) const;
+	operator bool() const;
 	Quaternion<T> operator-() const;
 	Quaternion<T> operator~() const;
 	Quaternion<T> conjugate() const;
@@ -513,11 +514,16 @@ Quaternion<T>& Quaternion<T>::operator*=(const Quaternion<T>& rhs)
 template <typename T>
 bool Quaternion<T>::operator==(const Quaternion<T>& rhs) const
 {
-	const Quaternion<T>& lhs = *this;
 	return (std::fabs(w - rhs.w) < EPSILON) &&
 			(std::fabs(x - rhs.x) < EPSILON) &&
 			(std::fabs(y - rhs.y) < EPSILON) &&
 			(std::fabs(z - rhs.z) < EPSILON);
+}
+
+template <typename T>
+Quaternion<T>::operator bool() const
+{
+	return operator!=(Quaternion<T>());
 }
 
 template <typename T>
@@ -847,10 +853,14 @@ void Quaternion<T>::decomposeTwistSwing(
 		Quaternion<T>& twist)
 {
 	MatrixMN<T, 3, 1> rotation_axis(rotation.x, rotation.y, rotation.z);
-	// return projection v1 on to v2 (parallel component)
-	// here can be optimized if direction is unit
-	MatrixMN<T, 3, 1> proj = direction.projection(rotation_axis);
+	MatrixMN<T, 3, 1> proj = direction.normalize().projection(rotation_axis);
 	twist = Quaternion<T>(rotation.w, proj.at(0), proj.at(1), proj.at(2)).normalize();
+	if (!twist) {
+		/*
+		 * If this is the singularity case, initialize the twist to identity
+		 */
+		twist = Quaternion<T>::identity;
+	}
 	swing = rotation * twist.conjugate();
 }
 
@@ -862,7 +872,7 @@ void Quaternion<T>::decomposeSwingTwist(
 		Quaternion<T>& twist)
 {
 	MatrixMN<T, 3, 1> rotation_axis(rotation.x, rotation.y, rotation.z);
-	MatrixMN<T, 3, 1> perp = direction.perpendicular(rotation_axis);
+	MatrixMN<T, 3, 1> perp = direction.normalize().perpendicular(rotation_axis);
 	swing = Quaternion<T>(rotation.w, perp.at(0), perp.at(1), perp.at(2)).normalize();
 	twist = rotation * swing.conjugate();
 }
