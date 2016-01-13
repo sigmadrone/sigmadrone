@@ -33,7 +33,7 @@ public:
 	Throttle GetThrottle();
 
 private:
-	PidController<float, 1> pid_;
+	PidController<float> pid_;
 	Throttle throttle_;
 	FlightMode flight_mode_;
 	Distance max_error_;

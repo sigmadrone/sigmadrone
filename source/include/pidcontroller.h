@@ -24,44 +24,32 @@
 
 #include "d3math.h"
 
-template <class FLOAT, int M>
+template <class T>
 class PidController
 {
 public:
-
-	static constexpr FLOAT MAX_VALUE = std::numeric_limits<FLOAT>::infinity();
-
-	typedef MatrixMN<FLOAT, M, 1> PidVector;
-
-	PidController(
-			FLOAT kp,
-			FLOAT ki,
-			FLOAT kd,
-			FLOAT fCutoff = -1)
+	PidController(float kp, float ki, float kd, float fCutoff = -1)
 	{
-		reset(kp,ki,kd,fCutoff);
+		reset(kp, ki, kd, fCutoff);
 	}
-	void reset(
-			FLOAT kp,
-			FLOAT ki,
-			FLOAT kd,
-			FLOAT fCutoff = -1)
+
+	void reset(float kp, float ki, float kd, float fCutoff = -1)
 	{
 		kp_ = kp;
 		ki_ = ki;
 		kd_ = kd;
-		err_.clear();
-		integral_err_.clear();
-		last_der_err_.clear();
-		last_input_.clear();
+		err_ = 0;
+		integral_err_ = 0;
+		last_der_err_ = 0;
+		last_input_ = 0;
 		filter_ = (fCutoff > 0.0) ? (1 / (2 * M_PI * fCutoff)) : 0;
 	}
 
-	PidVector get_d(const PidVector& err, FLOAT dt)
+	T get_d(const T& err, float dt)
 	{
-		PidVector derivative = (err - last_input_) / dt;
+		T derivative = (err - last_input_) / dt;
 		if (filter_ != 0.0) {
-			FLOAT filter = dt / (filter_ + dt);
+			float filter = dt / (filter_ + dt);
 			derivative = last_der_err_ + (derivative - last_der_err_) * filter;
 		}
 		last_input_ = err;
@@ -69,47 +57,42 @@ public:
 		return derivative * kd_;
 	}
 
-	PidVector get_p(const PidVector& err)
+	T get_p(const T& err)
 	{
 		return err * kp_;
 	}
 
-	PidVector get_i(
-			const PidVector& err,
-			FLOAT dt)
+	T get_i(const T& err, float dt)
 	{
 		return get_i(err, dt, 0);
 	}
 
-	PidVector get_i(
-			const PidVector& err,
-			FLOAT dt,
-			FLOAT leakRate) // 0..1
+	T get_i(const T& err, float dt, float leakRate /* 0..1 */)
 	{
 		integral_err_ -= integral_err_ * leakRate;
 		integral_err_ = integral_err_ + err * dt;
 		return integral_err_ * ki_;
 	}
 
-	PidVector get_pid(const PidVector& err, FLOAT dt)
+	T get_pid(const T& err, float dt)
 	{
 		return get_p(err) + get_d(err, dt) + get_i(err, dt);
 	}
 
-	PidVector get_pid(
-			const PidVector& err,
-			FLOAT dt,
-			FLOAT leakRate)
+	T get_pid(const T& err, float dt, float leakRate)
 	{
 		return get_p(err) + get_d(err, dt) + get_i(err, dt, leakRate);
 	}
 
-	PidVector get_pd(const PidVector& err, FLOAT dt)
+	T get_pd(const T& err, float dt)
 	{
 		return get_p(err) + get_d(err, dt);
 	}
 
-	const PidVector& integral_error() const { return integral_err_; }
+	const T& integral_error() const
+	{
+		return integral_err_;
+	}
 
 	void set_kp(float kp) { kp_ = kp; }
 	void set_ki(float ki) { ki_ = ki; }
@@ -117,40 +100,31 @@ public:
 	float get_kp() const { return kp_; }
 	float get_ki() const { return ki_; }
 	float get_kd() const { return kd_; }
-	void set_kp_ki_kd(float kp, float ki, float kd) {
+	void set_kp_ki_kd(float kp, float ki, float kd)
+	{
 		set_kp(kp);
 		set_ki(ki);
 		set_kd(kd);
 	}
 
 private:
-	PidVector _get_i(
-			const PidVector& err,
-			FLOAT dt)
-	{
-		integral_err_ = integral_err_ + err * dt;
-		return integral_err_ * ki_;
-	}
-
-private:
-	PidVector err_;
-	PidVector integral_err_;   // accumulated integral error
-	PidVector last_der_err_; // last derivative err
-	PidVector last_input_;
-	FLOAT kp_; /*proportional gain*/
-	FLOAT ki_; /*integral gain*/
-	FLOAT kd_; /*derivative gain*/
+	T err_;
+	T integral_err_;   // accumulated integral error
+	T last_der_err_; // last derivative err
+	T last_input_;
+	float kp_; /*proportional gain*/
+	float ki_; /*integral gain*/
+	float kd_; /*derivative gain*/
 
 	//
 	// Low pass derivative filter, filtering out sudden jumps in the derivative
 	// err. Calculated as 1 / (2 * PI * Fc)
 	//
-	FLOAT filter_;
+	float filter_;
 };
 
 
 
-typedef PidController<float, 3> PidController3f;
-typedef PidController<float, 4> PidController4f;
+typedef PidController<Vector3f> PidController3f;
 
 #endif /* PIDCONTROLLER_H_ */
