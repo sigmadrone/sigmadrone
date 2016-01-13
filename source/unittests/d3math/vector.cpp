@@ -14,6 +14,26 @@
 // pair of braces.  You can use a bunch of macros to indicate the
 // success or failure of a test.  EXPECT_TRUE and EXPECT_EQ are
 // examples of such macros.  For a complete list, see gtest.h.
+
+TEST(VectorTest, init)
+{
+	Vector3f v1{1, 2, 3};
+	Vector3f v2{1, 2};
+	Vector3f v3{-1};
+
+	EXPECT_EQ(Vector3f(1, 2, 3), v1);
+	EXPECT_EQ(Vector3f(1, 2, 0), v2);
+	EXPECT_EQ(Vector3f(-1, 0, 0), v3);
+
+	v1 = 0;
+	EXPECT_EQ(Vector3f(0, 0, 0), v1);
+
+	v1 = 1;
+	EXPECT_EQ(Vector3f(1, 1, 1), v1);
+
+}
+
+
 TEST(VectorTest, min)
 {
 	EXPECT_EQ(1, Vector3f(1, 2, 3).min());

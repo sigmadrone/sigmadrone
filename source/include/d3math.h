@@ -985,11 +985,11 @@ inline MatrixBase<T, ROWS, COLS>::MatrixBase(ARGS... args) : MatrixBase() {
 }
 
 template <typename T, size_t ROWS, size_t COLS>
-inline MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<std::initializer_list<T>>& list) {
-	assert(list.size() == ROWS);
+inline MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<std::initializer_list<T>>& list) : MatrixBase() {
+	assert(list.size() <= ROWS);
 	iterator it = data.begin();
 	for (auto row : list) {
-		assert(row.size() == COLS);
+		assert(row.size() <= COLS);
 		for (auto elem : row) {
 			*it++ = elem;
 		}
@@ -997,8 +997,8 @@ inline MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<std::in
 }
 
 template <typename T, size_t ROWS, size_t COLS>
-inline MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<T>& list) {
-	assert(list.size() == ROWS * COLS);
+inline MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<T>& list) : MatrixBase() {
+	assert(list.size() <= ROWS * COLS);
 	iterator it = data.begin();
 	for (auto elem : list) {
 		*it++ = elem;
