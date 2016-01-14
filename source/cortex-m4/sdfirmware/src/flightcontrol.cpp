@@ -22,6 +22,8 @@
 #include "flightcontrol.h"
 #include <stdio.h>
 #include "colibripwm.h"
+#include "pidpilot.h"
+#include "tripilot.h"
 
 FlightControl::FlightControl() :
         rc_receiver_(colibri::PWM_RX_CONSTS,
@@ -34,9 +36,12 @@ FlightControl::FlightControl() :
 				TimeSpan::from_microseconds(1910)),
 		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)),
 		motor_power_(PB_2),
-		pilot_(),
+		pilot_(new PidPilot()),
 		altitude_track_()
 {
+#ifdef USE_TRIPILOT
+	pilot_.reset(new TriPilot());
+#endif
 }
 
 void FlightControl::start_receiver()
@@ -73,8 +78,8 @@ void FlightControl::set_throttle(const std::vector<Throttle>& thrVec)
 
 void FlightControl::send_throttle_to_motors()
 {
-	set_throttle({pilot_.motors().at(0), pilot_.motors().at(1),
-		pilot_.motors().at(2), pilot_.motors().at(3)});
+	set_throttle({pilot_->motors().at(0), pilot_->motors().at(1),
+		pilot_->motors().at(2), pilot_->motors().at(3)});
 }
 
 /*

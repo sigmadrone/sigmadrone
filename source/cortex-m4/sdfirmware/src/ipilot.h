@@ -19,29 +19,27 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#include "units.h"
-#include "d3math.h"
-#include "pidcontroller.h"
+#ifndef _IPILOT_H_
+#define _IPILOT_H_
 
-#ifndef _PIDTORQUE_H_
-#define _PIDTORQUE_H_
+#include "dronestate.h"
+#undef USE_TRIPILOT
 
-#define PILOT_Z_COMPENSATE
-
-class PidTorque {
+class IPilot
+{
 public:
-	PidTorque();
-	~PidTorque();
+	virtual ~IPilot() = default;
+	virtual void set_pid_coefficents(const DroneState&) = 0;
+	virtual void update_state(DroneState& state) = 0;
 
-	void set_target(const QuaternionF &set_q);
-	Vector3f get_torque(const QuaternionF &in_q, const TimeSpan& dt, float yaw_factor);
+	virtual void set_min_thrust(float minRev) = 0;
+	virtual void set_max_thrust(float maxRev) = 0;
+	virtual void set_target_thrust(float thrust) = 0;
 
-public:
-	QuaternionF twist_;
-	QuaternionF set_Q_;
-	PidController3f pid_controller_;
-	PidController3f pid_controller_yaw_;
+	virtual const Vector3f& torque_correction() const = 0;
+	virtual const Vector4f& motors() const  = 0;
+	virtual float get_min_thrust() const = 0;
+	virtual float get_max_thrust() const = 0;
 };
 
-#endif
-
+#endif // _IPILOT_H_
