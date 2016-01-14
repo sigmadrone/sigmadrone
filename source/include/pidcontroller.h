@@ -38,23 +38,23 @@ public:
 		kp_ = kp;
 		ki_ = ki;
 		kd_ = kd;
-		err_ = 0;
 		integral_err_ = 0;
-		last_der_err_ = 0;
+		last_derivative_err_ = 0;
 		last_input_ = 0;
 		filter_ = (fCutoff > 0.0) ? (1 / (2 * M_PI * fCutoff)) : 0;
 	}
 
 	T get_d(const T& err, float dt)
 	{
-		T derivative = (err - last_input_) / dt;
-		if (filter_ != 0.0) {
-			float filter = dt / (filter_ + dt);
-			derivative = last_der_err_ + (derivative - last_der_err_) * filter;
+		T derivative_err = (err - last_input_) / dt;
+		if (filter_ > 0.0) {
+			float alpha = dt / (filter_ + dt);
+			T filtered_derivative_err = derivative_err * alpha +  last_derivative_err_ * (1 - alpha);
+			last_derivative_err_ = derivative_err;
+			derivative_err = filtered_derivative_err;
 		}
 		last_input_ = err;
-		last_der_err_ = derivative;
-		return derivative * kd_;
+		return derivative_err * kd_;
 	}
 
 	T get_p(const T& err)
@@ -108,9 +108,8 @@ public:
 	}
 
 private:
-	T err_;
 	T integral_err_;   // accumulated integral error
-	T last_der_err_; // last derivative err
+	T last_derivative_err_; // last derivative err
 	T last_input_;
 	float kp_; /*proportional gain*/
 	float ki_; /*integral gain*/
