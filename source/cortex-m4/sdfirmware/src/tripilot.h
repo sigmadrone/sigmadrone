@@ -27,6 +27,7 @@
 #include "pidtorque.h"
 #include "pidcontroller.h"
 #include "ipilot.h"
+#include "propeller.h"
 
 class TriPilot : public IPilot
 {
@@ -59,7 +60,7 @@ private:
 	PidController3f pid_pitchroll_;
 	PidController3f pid_yaw_;
 	Vector3f torque_correction_;
-	Vector3f m0_, m1_, m2_, m3_;
+	std::vector<Propeller> propellers_;
 };
 
 

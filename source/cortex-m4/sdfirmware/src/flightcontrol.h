@@ -44,6 +44,8 @@ public:
 	void start_receiver();
 	void stop_receiver();
 	QuaternionF target_q() const;
+	QuaternionF target_twist() const;
+	QuaternionF target_swing() const;
 	Throttle base_throttle() const;
 	void set_throttle(const std::vector<Throttle>& thrVec);
 	void send_throttle_to_motors();

@@ -62,6 +62,8 @@ public:
 			const TimeSpan& min_duty_cycle = TimeSpan::from_milliseconds(1),
 			const TimeSpan& max_duty_cycle = TimeSpan::from_milliseconds(2));
 	QuaternionF target_quaternion() const;
+	QuaternionF target_twist() const;
+	QuaternionF target_swing() const;
 	Throttle base_throttle() const;
 	bool motors_armed() const;
 	bool previous_motors_armed() const;
@@ -69,14 +71,14 @@ public:
 	float get_yaw() const;
 	float get_pitch() const;
 	float get_roll() const;
-	void reset_yaw_quaternion(const QuaternionF&);
+	void reset_twist_quaternion(const QuaternionF&);
 
 private:
 	float get_value_as_float(uint32_t channelno);
 private:
 	PwmPulse pwm_converter_;
-	QuaternionF quaternion_;
-	QuaternionF quaternion_yaw_;
+	QuaternionF target_twist_;		/* Yaw */
+	QuaternionF target_swing_;		/* Combined rotation of Pitch and Roll */
 	Throttle throttle_;
 	const RcChannelMapper& mapper_;
 	RcReceiver& receiver_;

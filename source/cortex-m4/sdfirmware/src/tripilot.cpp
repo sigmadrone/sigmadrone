@@ -27,14 +27,10 @@ TriPilot::TriPilot()
 	target_thrust_ = 0.0;
 
 	Vector3f thrust_dir(0, 0, -1);
-	m0_ = Vector3f::cross(Vector3f(-1, -1,  0), thrust_dir).normalize();
-	m1_ = Vector3f::cross(Vector3f(-1,  1,  0), thrust_dir).normalize();
-	m2_ = Vector3f::cross(Vector3f( 1,  1,  0), thrust_dir).normalize();
-	m3_ = Vector3f::cross(Vector3f( 1, -1,  0), thrust_dir).normalize();
-	m0_.at(2) = -0.5;
-	m1_.at(2) = 0.5;
-	m2_.at(2) = -0.5;
-	m3_.at(2) = 0.5;
+	propellers_.push_back(Propeller(Vector3f(-1, -1,  0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f(-1,  1,  0), thrust_dir, Propeller::CCW));
+	propellers_.push_back(Propeller(Vector3f( 1,  1,  0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f( 1,  -1,  0), thrust_dir, Propeller::CCW));
 }
 
 TriPilot::~TriPilot()
@@ -52,20 +48,20 @@ Vector3f TriPilot::get_torque(const QuaternionF &in_Q, const TimeSpan& dt, float
 	Vector3f torq;
 	Vector3f Zset = set_Q_.rotate(Vector3f(0.0, 0.0, 1.0));
 	Vector3f Zin = in_Q.conjugate().rotate(Vector3f(0.0, 0.0, 1.0));
-	QuaternionF Qtorq = QuaternionF::fromVectors(Zin, Zset);
-	Vector3f error = Qtorq.axis().normalize() * Qtorq.angle() * -1.0;
+	QuaternionF XYtorq = QuaternionF::fromVectors(Zin, Zset);
+	Vector3f error = XYtorq.axis().normalize() * XYtorq.angle() * -1.0;
 
 	torq = pid_pitchroll_.get_pid(error, dt.seconds_float());
 
-#if 0
+#if 1
 	// targetQ = attitudeQ * errQ; ==> (~attitudeQ) * attitudeQ * errQ = (~attitudeQ) * targetQ;
 	// ==> errQ = (~attitudeQ) * targetQ;
-	Qtorq = (~in_Q) * set_Q_;
-	QuaternionF swing;
-	QuaternionF::decomposeTwistSwing(Qtorq, Vector3f(0,0,1), swing, twist_);
-	Vector3f error_z = twist_.axis().normalize() * twist_.angle() * 1.0;
+	QuaternionF Ztorq = (~in_Q) * set_Q_;
+	QuaternionF twist, swing;
+	QuaternionF::decomposeTwistSwing(Ztorq, Vector3f(0,0,1), swing, twist);
+	Vector3f error_z = twist.axis().normalize() * twist.angle();
 	error_z.at(0) = error_z.at(1) = 0.0;
-	torq.at(2) = pid_controller_yaw_.get_d(error_z, dt.seconds_float()).at(2);
+	torq.at(2) = pid_yaw_.get_d(error_z, dt.seconds_float()).at(2);
 	error.at(2) = error_z.at(2);
 #endif
 
@@ -89,33 +85,27 @@ void TriPilot::update_state(DroneState& state)
 	//  0.6 --> (450/1000) * (22.5/100)
 	//  0.6 --> 0.10125 kg.m
 	static const float rpm_coeff = 0.6 / (101.25/1000.0) / 2.0;
-	torque_rpm.at(0) = torque_correction_.at(0) * rpm_coeff;
-	torque_rpm.at(1) = torque_correction_.at(1) * rpm_coeff;
-	torque_rpm.at(2) = torque_correction_.at(2) * rpm_coeff;
+	torque_rpm = torque_correction_ * rpm_coeff;
 
 	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
 	torque_rpm = torque_rpm + torque_bias;
 	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * state.yaw_ * target_thrust_);
+	torque_rpm += torque_yaw;
 
 	motors_ = Vector4f(
-			target_thrust_ + Vector3f::dot(torque_rpm, m0_) + Vector3f::dot(torque_yaw, m0_),
-			target_thrust_ + Vector3f::dot(torque_rpm, m1_) + Vector3f::dot(torque_yaw, m1_),
-			target_thrust_ + Vector3f::dot(torque_rpm, m2_) + Vector3f::dot(torque_yaw, m2_),
-			target_thrust_ + Vector3f::dot(torque_rpm, m3_) + Vector3f::dot(torque_yaw, m3_));
-
+			target_thrust_ + torque_rpm.dot(propellers_.at(0).torque_dir()),
+			target_thrust_ + torque_rpm.dot(propellers_.at(1).torque_dir()),
+			target_thrust_ + torque_rpm.dot(propellers_.at(2).torque_dir()),
+			target_thrust_ + torque_rpm.dot(propellers_.at(3).torque_dir()));
 	set_and_scale_motors(motors_.at(0), motors_.at(1), motors_.at(2), motors_.at(3));
 	state.motors_ = motors();
 	state.pid_torque_ = torque_rpm;
 	return;
 }
 
-void TriPilot::set_and_scale_motors(
-		float m1,
-		float m2,
-		float m3,
-		float m4)
+void TriPilot::set_and_scale_motors(float m1, float m2, float m3, float m4)
 {
-	Vector4f mv(m1,m2,m3,m4);
+	Vector4f mv(m1, m2, m3, m4);
 	float min_val = mv.min();
 	if (min_val < min_thrust_) {
 		mv = mv + (min_thrust_ - min_val);
@@ -127,7 +117,7 @@ void TriPilot::set_and_scale_motors(
 	max_val = mv.max();
 	min_val = mv.min();
 	if (min_val < min_thrust_ || max_val > max_thrust_) {
-		float scale = (max_thrust_-min_thrust_)/(max_val-min_val);
+		float scale = (max_thrust_ - min_thrust_) / (max_val - min_val);
 		mv = mv - min_val;
 		mv = mv * scale;
 		mv = mv + min_thrust_;
