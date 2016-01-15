@@ -253,6 +253,8 @@ struct DroneState {
 	 */
 	QuaternionF attitude_;
 	QuaternionF target_;
+	QuaternionF target_twist_;
+	QuaternionF target_swing_;
 	Vector4f motors_;
 	Vector3f pid_torque_;
 	QuaternionF twist_;

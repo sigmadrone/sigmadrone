@@ -28,7 +28,7 @@ template <class T>
 class PidController
 {
 public:
-	PidController(float kp, float ki, float kd, float fCutoff = -1)
+	PidController(float kp = 0, float ki = 0, float kd = 0, float fCutoff = -1)
 	{
 		reset(kp, ki, kd, fCutoff);
 	}

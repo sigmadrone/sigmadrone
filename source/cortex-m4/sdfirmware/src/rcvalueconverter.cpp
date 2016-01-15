@@ -30,7 +30,7 @@ RcValueConverter::RcValueConverter(
 		const TimeSpan& min_duty_cycle,
 		const TimeSpan& max_duty_cycle) :
 			    pwm_converter_(min_duty_cycle, max_duty_cycle),
-				quaternion_yaw_(1,0,0,0),
+				target_twist_(1,0,0,0),
 				mapper_(mapper),
 				receiver_(receiver),
 				scale_factor_(scale_factor),
@@ -58,14 +58,14 @@ void RcValueConverter::update()
 		yaw_ = -1 * ((yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_ * 2);
 		TimeSpan dt = receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().decoded_period();
 		Vector3f ang_vel(0.0f, 0.0f, yaw_);
-		quaternion_yaw_ *= QuaternionF::fromAngularVelocity(ang_vel, dt.seconds_float());
+		target_twist_ *= QuaternionF::fromAngularVelocity(ang_vel, dt.seconds_float());
 	} else {
 		yaw_ = 0;
 	}
 	pitch_ = (pitch > 0.0) ? ((pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_) : 0.0f;
 	roll_ = (roll > 0.0) ? (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_ : 0.0f;
 
-	quaternion_ = QuaternionF::fromAngularVelocity(Vector3f(roll_, pitch_, 0), 1.0) * quaternion_yaw_;
+	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(roll_, pitch_, 0), 1.0);
 
 	/*
 	 * Note: on Spektrum DX8 by _default_ GEAR switch set to 0 results in max pulse and
@@ -80,9 +80,9 @@ void RcValueConverter::update()
 	last_gear_ = gear;
 }
 
-void RcValueConverter::reset_yaw_quaternion(const QuaternionF& current_q)
+void RcValueConverter::reset_twist_quaternion(const QuaternionF& current_q)
 {
-	quaternion_yaw_ = QuaternionF(current_q.w, 0, 0, current_q.z).normalize();
+	target_twist_ = QuaternionF(current_q.w, 0, 0, current_q.z).normalize();
 }
 
 float RcValueConverter::get_value_as_float(uint32_t channelno)
@@ -92,7 +92,17 @@ float RcValueConverter::get_value_as_float(uint32_t channelno)
 }
 
 QuaternionF RcValueConverter::target_quaternion() const {
-	return quaternion_;
+	return 	target_swing_ * target_twist_;
+}
+
+QuaternionF RcValueConverter::target_twist() const
+{
+	return target_twist_;
+}
+
+QuaternionF RcValueConverter::target_swing() const
+{
+	return target_swing_;
 }
 
 Throttle RcValueConverter::base_throttle() const {

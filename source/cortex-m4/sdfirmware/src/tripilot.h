@@ -19,21 +19,21 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#ifndef PIDPILOT_H_
-#define PIDPILOT_H_
+#ifndef TRIPILOT_H_
+#define TRIPILOT_H_
 
 #include "units.h"
 #include "dronestate.h"
 #include "pidtorque.h"
 #include "pidcontroller.h"
-
 #include "ipilot.h"
+#include "propeller.h"
 
-class PidPilot : public IPilot
+class TriPilot : public IPilot
 {
 public:
-	PidPilot();
-	virtual ~PidPilot();
+	TriPilot();
+	virtual ~TriPilot();
 	virtual void set_pid_coefficents(const DroneState&);
 	virtual void update_state(DroneState& state);
 
@@ -47,12 +47,8 @@ public:
 	virtual float get_max_thrust() const { return max_thrust_; }
 
 private:
-	void set_and_scale_motors(
-			float w0,
-			float w1,
-			float w2,
-			float w3
-			);
+	void set_and_scale_motors(float w0, float w1, float w2, float w3);
+	Vector3f get_torque(const QuaternionF &in_Q, const TimeSpan& dt, float yaw_factor);
 
 private:
 	Vector4f motors_;
@@ -60,9 +56,11 @@ private:
 	float max_thrust_;
 	float target_thrust_;
 
-	PidTorque pid_;
+	QuaternionF set_Q_;
+	PidController3f pid_pitchroll_;
+	PidController3f pid_yaw_;
 	Vector3f torque_correction_;
-	Vector3f m0_, m1_, m2_, m3_;
+	std::vector<Propeller> propellers_;
 };
 
 

@@ -22,6 +22,8 @@
 #include "flightcontrol.h"
 #include <stdio.h>
 #include "colibripwm.h"
+#include "pidpilot.h"
+#include "tripilot.h"
 
 FlightControl::FlightControl() :
         rc_receiver_(colibri::PWM_RX_CONSTS,
@@ -34,9 +36,12 @@ FlightControl::FlightControl() :
 				TimeSpan::from_microseconds(1910)),
 		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)),
 		motor_power_(PB_2),
-		pilot_(),
+		pilot_(new PidPilot()),
 		altitude_track_()
 {
+#ifdef USE_TRIPILOT
+	pilot_.reset(new TriPilot());
+#endif
 }
 
 void FlightControl::start_receiver()
@@ -52,6 +57,16 @@ void FlightControl::stop_receiver()
 QuaternionF FlightControl::target_q() const
 {
 	return alarm_.is_none() ? rc_values_.target_quaternion() : QuaternionF(1,0,0,0);
+}
+
+QuaternionF FlightControl::target_twist() const
+{
+	return alarm_.is_none() ? rc_values_.target_twist() : QuaternionF(1,0,0,0);
+}
+
+QuaternionF FlightControl::target_swing() const
+{
+	return alarm_.is_none() ? rc_values_.target_swing() : QuaternionF(1,0,0,0);
 }
 
 Throttle FlightControl::base_throttle() const
@@ -73,8 +88,8 @@ void FlightControl::set_throttle(const std::vector<Throttle>& thrVec)
 
 void FlightControl::send_throttle_to_motors()
 {
-	set_throttle({pilot_.motors().at(0), pilot_.motors().at(1),
-		pilot_.motors().at(2), pilot_.motors().at(3)});
+	set_throttle({pilot_->motors().at(0), pilot_->motors().at(1),
+		pilot_->motors().at(2), pilot_->motors().at(3)});
 }
 
 /*
@@ -99,7 +114,7 @@ void FlightControl::motor_power_on_off(bool power_on)
 void FlightControl::update_state(DroneState& state)
 {
 	if (rc_values_.base_throttle().get() < 0.1) {
-		rc_values_.reset_yaw_quaternion(state.attitude_);
+		rc_values_.reset_twist_quaternion(state.attitude_);
 	}
 
 	if (!rc_values_.motors_armed()) {
@@ -107,6 +122,8 @@ void FlightControl::update_state(DroneState& state)
 	}
 
 	state.target_ = target_q();
+	state.target_twist_ = target_twist();
+	state.target_swing_ = target_swing();
 
 	process_servo_start_stop_command();
 	altitude_tracker().update_state(state);

@@ -22,14 +22,16 @@
 #ifndef FLIGHTCONTROL_H_
 #define FLIGHTCONTROL_H_
 
+#include <memory>
 #include <stdint.h>
 #include "digitalout.h"
 #include "servocontroller.h"
 #include "rcreceiver.h"
 #include "rcvalueconverter.h"
-#include "pidpilot.h"
+#include "ipilot.h"
 #include "alarm.h"
 #include "altitudetracker.h"
+#include "ipilot.h"
 
 static const float RC_VALUE_SCALE_FACTOR = 1.0;
 
@@ -42,6 +44,8 @@ public:
 	void start_receiver();
 	void stop_receiver();
 	QuaternionF target_q() const;
+	QuaternionF target_twist() const;
+	QuaternionF target_swing() const;
 	Throttle base_throttle() const;
 	void set_throttle(const std::vector<Throttle>& thrVec);
 	void send_throttle_to_motors();
@@ -63,7 +67,7 @@ public:
 
 	inline RcReceiver& rc_receiver() { return rc_receiver_; }
 	inline ServoController& servo() { return servo_ctrl_; }
-	inline PidPilot& pilot() { return pilot_; }
+	inline IPilot& pilot() { return *pilot_; }
 	inline AltitudeTracker& altitude_tracker() { return altitude_track_; }
 
 private:
@@ -80,7 +84,7 @@ private:
 	RcValueConverter rc_values_;
 	ServoController servo_ctrl_;
 	DigitalOut motor_power_;
-	PidPilot pilot_;
+	std::unique_ptr<IPilot> pilot_;
 	Alarm alarm_;
 	Alarm most_critical_alarm_;
 	AltitudeTracker altitude_track_;
