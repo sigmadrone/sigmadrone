@@ -57,6 +57,7 @@ protected:
 	rexjson::value rpc_yaw_kp(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_yaw_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_yaw_ki(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_pid_filter_freq(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 	rexjson::value rpc_yaw_bias(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_pitch_bias(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);

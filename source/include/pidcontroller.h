@@ -41,7 +41,7 @@ public:
 		integral_err_ = 0;
 		last_derivative_err_ = 0;
 		last_input_ = 0;
-		filter_ = (fCutoff > 0.0) ? (1 / (2 * M_PI * fCutoff)) : 0;
+		set_derivative_filter(fCutoff);
 	}
 
 	T get_d(const T& err, float dt)
@@ -105,6 +105,10 @@ public:
 		set_kp(kp);
 		set_ki(ki);
 		set_kd(kd);
+	}
+	void set_derivative_filter(float fCutoff)
+	{
+		filter_ = (fCutoff > 0.0) ? (1 / (2 * M_PI * fCutoff)) : 0;
 	}
 
 private:

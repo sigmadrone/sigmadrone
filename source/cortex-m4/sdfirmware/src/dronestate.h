@@ -71,6 +71,7 @@ struct DroneState {
 		, roll_bias_(0.0)
 		, base_throttle_(0.0)
         , yaw_throttle_factor_(0.75)
+	    , pid_filter_freq_(80)
 	    , flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
 	    , motors_armed_(false)
 	    , iteration_(0)
@@ -133,6 +134,7 @@ struct DroneState {
 		ret["yaw_bias"] = yaw_bias_;
 		ret["pitch_bias"] = pitch_bias_;
 		ret["roll_bias"] = roll_bias_;
+		ret["pid_filter_freq"] = pid_filter_freq_;
 		if (!most_critical_alarm_.is_none()) {
 			ret["crit_alarm"] = most_critical_alarm_.to_string();
 			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
@@ -157,6 +159,7 @@ struct DroneState {
 		ret["yaw_bias"] = yaw_bias_;
 		ret["pitch_bias"] = pitch_bias_;
 		ret["roll_bias"] = roll_bias_;
+		ret["pid_filter_freq"] = pid_filter_freq_;
 		return ret;
 	}
 
@@ -180,6 +183,7 @@ struct DroneState {
 			try {
 				accelerometer_correction_period_ = bootconfig["accelerometer_correction_period"].get_real();
 			} catch (std::exception& e) {}
+			try { pid_filter_freq_ = bootconfig["pid_filter_freq"].get_real(); } catch (std::exception& e) {}
 		} catch (std::exception& e) {
 		}
 	}
@@ -230,6 +234,7 @@ struct DroneState {
 	float roll_bias_;
 	float base_throttle_;
 	float yaw_throttle_factor_;
+	float pid_filter_freq_;
 	FlightMode flight_mode_;
 	bool motors_armed_;
 

@@ -42,6 +42,7 @@ PidPilot::~PidPilot() {
 void PidPilot::set_pid_coefficents(const DroneState& state)
 {
 	pid_.pid_controller_.set_kp_ki_kd(state.kp_, state.ki_, state.kd_);
+	pid_.pid_controller_.set_derivative_filter(state.pid_filter_freq_);
 	pid_.pid_controller_yaw_.set_kp_ki_kd(state.yaw_kp_, state.yaw_ki_, state.yaw_kd_);
 }
 

@@ -55,6 +55,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Da
 	add("sd_accelerometer_adjustment", &UartRpcServer::rpc_accelerometer_adjustment);
 	add("sd_flight_ceiling", &UartRpcServer::rpc_flight_ceiling);
 	add("sd_restore_config", &UartRpcServer::rpc_restore_config);
+	add("sd_pid_filter_freq", &UartRpcServer::rpc_pid_filter_freq);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -642,6 +643,31 @@ rexjson::value UartRpcServer::rpc_set_configdata(UART* , rexjson::array& params,
 	configdata_.program((void*)configstr.c_str(), configstr.size());
 	return configstr;
 }
+
+rexjson::value UartRpcServer::rpc_pid_filter_freq(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_pid_filter_freq\n"
+	            "\nGet/Set the cutoff frequency (Hz) of the first order low pass filter applied"
+	            "\nto the derivative component of the PID controller."
+				"\nIf no parameter is passed, then the currently set frequency will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. frequency        (real, optional) New cutoff frequency, 0 - disables the filter.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() != rexjson::null_type))
+		dronestate_.pid_filter_freq_ = params[0].get_real();
+	return dronestate_.pid_filter_freq_;
+}
+
 
 void UartRpcServer::jsonrpc_request_handler(UART* uart)
 {
