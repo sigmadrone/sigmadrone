@@ -35,6 +35,11 @@ struct DataStreamEntry {
 	QuaternionF attitude_;
 	QuaternionF target_attitude_;
 
+	QuaternionF attitude_swing_;
+	QuaternionF attitude_twist_;
+	QuaternionF target_swing_;
+	QuaternionF target_twist_;
+
 	DataStreamEntry() : serial_(0) {}
 	void reset() {
 		serial_ = 0;
@@ -57,6 +62,11 @@ public:
 	void set_correction_torque(const Vector3f& value);
 	void set_attitude(const QuaternionF& value);
 	void set_target_attitude(const QuaternionF& value);
+	void set_attitude_swing(const QuaternionF& value);
+	void set_attitude_twist(const QuaternionF& value);
+	void set_target_swing(const QuaternionF& value);
+	void set_target_twist(const QuaternionF& value);
+
 	void commit();
 	bool retrieve(DataStreamEntry& entry);
 
