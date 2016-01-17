@@ -103,8 +103,8 @@ public:
 	MatrixBase<T, ROWS, 1> column(size_t n) const;
 	MatrixBase<T, COLS, ROWS> transpose() const;
 
-	T* operator[](size_t row);
-	const T* operator[](size_t row)	const;
+	T* operator[](int row);
+	const T* operator[](int row)	const;
 	operator const T*()	const;
 	operator T*();
 
@@ -260,8 +260,8 @@ public:
 	const T& at(size_t row, size_t col) const;
 	T& at(size_t row);
 	const T& at(size_t row) const;
-	T& operator[](size_t row);
-	const T& operator[](size_t row)	const;
+	T& operator[](int row);
+	const T& operator[](int row)	const;
 	T& x();
 	const T& x() const;
 	T& y();
@@ -1040,13 +1040,13 @@ typename MatrixBase<T, ROWS, COLS>::const_iterator MatrixBase<T, ROWS, COLS>::en
 }
 
 template <typename T, size_t ROWS, size_t COLS>
-T* MatrixBase<T, ROWS, COLS>::operator[](size_t row)
+T* MatrixBase<T, ROWS, COLS>::operator[](int row)
 {
 	return &data[row * COLS];
 }
 
 template <typename T, size_t ROWS, size_t COLS>
-const T* MatrixBase<T, ROWS, COLS>::operator[](size_t row) const
+const T* MatrixBase<T, ROWS, COLS>::operator[](int row) const
 {
 	return &data[row * COLS];
 }
@@ -1550,13 +1550,13 @@ const T& MatrixMN<T, ROWS, 1>::at(size_t row, size_t col) const
 }
 
 template<typename T, size_t ROWS>
-T& MatrixMN<T, ROWS, 1>::operator[](size_t row)
+T& MatrixMN<T, ROWS, 1>::operator[](int row)
 {
 	return at(row);
 }
 
 template<typename T, size_t ROWS>
-const T& MatrixMN<T, ROWS, 1>::operator[](size_t row) const
+const T& MatrixMN<T, ROWS, 1>::operator[](int row) const
 {
 	return at(row);
 }
