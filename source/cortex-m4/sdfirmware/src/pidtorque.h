@@ -26,8 +26,6 @@
 #ifndef _PIDTORQUE_H_
 #define _PIDTORQUE_H_
 
-#define PILOT_Z_COMPENSATE
-
 class PidTorque {
 public:
 	PidTorque();
@@ -39,8 +37,9 @@ public:
 public:
 	QuaternionF twist_;
 	QuaternionF set_Q_;
-	PidController3f pid_controller_;
-	PidController3f pid_controller_yaw_;
+	PidController<float> pid_roll_;
+	PidController<float> pid_pitch_;
+	PidController<float> pid_yaw_;
 };
 
 #endif

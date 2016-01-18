@@ -22,7 +22,7 @@
 #include "pidtorque.h"
 
 PidTorque::PidTorque() :
-	set_Q_(1), pid_controller_(0.0,0.0,0.0,100), pid_controller_yaw_(0.0,0.0,0.0)
+	set_Q_(1), pid_roll_(0.0,0.0,0.0,80.0), pid_pitch_(0.0,0.0,0.0,100), pid_yaw_(0.0,0.0,0.0)
 {
 }
 
@@ -43,9 +43,9 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt, floa
 	QuaternionF Qtorq = QuaternionF::fromVectors(Zin, Zset);
 	Vector3f error = Qtorq.axis().normalize() * Qtorq.angle() * -1.0;
 
-	torq = pid_controller_.get_pid(error,dt.seconds_float());
+	torq.at(0) = pid_roll_.get_pid(error.at(0),dt.seconds_float());
+	torq.at(1) = pid_pitch_.get_pid(error.at(1),dt.seconds_float());
 
-#ifdef PILOT_Z_COMPENSATE
 	// targetQ = attitudeQ * errQ; ==> (~attitudeQ) * attitudeQ * errQ = (~attitudeQ) * targetQ;
 	// ==> errQ = (~attitudeQ) * targetQ;
 	Qtorq = (~in_Q) * set_Q_;
@@ -59,22 +59,11 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt, floa
 		}
 	}
 
-	Vector3f limit_yaw(0, 0, yaw_factor/3.0);
 	error_z = error_z * angle_rad;
-	Vector3f torq_yaw = pid_controller_yaw_.get_pid(error_z, dt.seconds_float());
-	torq_yaw = torq_yaw.clip(-limit_yaw, limit_yaw);
-	torq.at(2) = torq_yaw.at(2);
-#else
-	// targetQ = attitudeQ * errQ; ==> (~attitudeQ) * attitudeQ * errQ = (~attitudeQ) * targetQ;
-	// ==> errQ = (~attitudeQ) * targetQ;
-	Qtorq = (~in_Q) * set_Q_;
-	QuaternionF swing;
-	QuaternionF::decomposeTwistSwing(Qtorq, Vector3f(0,0,1), swing, twist_);
-	Vector3f error_z = twist_.axis().normalize() * twist_.angle() * 1.0;
-	error_z.at(0) = error_z.at(1) = 0.0;
-	torq.at(2) = pid_controller_yaw_.get_d(error_z, dt.seconds_float()).at(2);
-	error.at(2) = error_z.at(2);
-#endif
+	float torq_yaw = pid_yaw_.get_pid(error_z.at(2), dt.seconds_float());
+	float limit_yaw = yaw_factor/3.0;
+	torq_yaw = std::max(-limit_yaw, std::min(torq_yaw, limit_yaw));
+	torq.at(2) = torq_yaw;
 
 	return torq;
 }
