@@ -48,7 +48,7 @@ public:
 
 private:
 	void set_and_scale_motors(float w0, float w1, float w2, float w3);
-	Vector3f get_torque(const QuaternionF &in_Q, const TimeSpan& dt, float yaw_factor);
+	Vector3f get_torque(const DroneState& state);
 
 private:
 	Vector4f motors_;
@@ -56,9 +56,7 @@ private:
 	float max_thrust_;
 	float target_thrust_;
 
-	QuaternionF set_Q_;
-	PidController3f pid_pitchroll_;
-	PidController3f pid_yaw_;
+	PidController3f pid_;
 	Vector3f torque_correction_;
 	std::vector<Propeller> propellers_;
 };
