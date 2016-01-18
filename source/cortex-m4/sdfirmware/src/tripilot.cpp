@@ -21,6 +21,8 @@
 #include "tripilot.h"
 
 TriPilot::TriPilot()
+	: pid_pitchroll_(0.0, 0.0, 0.0, 100)
+	, pid_yaw_(0.0, 0.0, 0.0)
 {
 	min_thrust_ = 0.0;
 	max_thrust_ = 1.0;
@@ -91,6 +93,9 @@ void TriPilot::update_state(DroneState& state)
 	torque_rpm = torque_rpm + torque_bias;
 	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * state.yaw_ * target_thrust_);
 	torque_rpm += torque_yaw;
+
+	if (torque_rpm.length() > target_thrust_)
+		torque_rpm = torque_rpm.normalize() * target_thrust_;
 
 	motors_ = Vector4f(
 			target_thrust_ + torque_rpm.dot(propellers_.at(0).torque_dir()),

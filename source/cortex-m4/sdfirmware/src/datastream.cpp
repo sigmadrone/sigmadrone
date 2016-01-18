@@ -57,6 +57,25 @@ void DataStream::set_target_attitude(const QuaternionF& value)
 	entry_.target_attitude_ = value;
 }
 
+void DataStream::set_attitude_swing(const QuaternionF& value)
+{
+	entry_.attitude_swing_ = value;
+}
+
+void DataStream::set_attitude_twist(const QuaternionF& value)
+{
+	entry_.attitude_twist_ = value;
+}
+
+void DataStream::set_target_swing(const QuaternionF& value)
+{
+	entry_.target_swing_ = value;
+}
+
+void DataStream::set_target_twist(const QuaternionF& value)
+{
+	entry_.target_twist_ = value;
+}
 
 /*
  * Serialize the current DataStreamEntry and reset its value to default ones.

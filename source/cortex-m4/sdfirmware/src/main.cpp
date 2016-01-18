@@ -76,7 +76,7 @@ TimeStamp isr_ts;
 DroneState* drone_state = 0;
 
 FlashMemory configdata(&flashregion, sizeof(flashregion), FLASH_SECTOR_23, 1);
-DataStream datastream(24);
+DataStream datastream(4);
 
 UART uart2({
 	{PD_3, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},		/* USART2_CTS_PIN */
@@ -365,8 +365,13 @@ void main_task(void *pvParameters)
 		datastream.set_accelerometer(drone_state->accel_);
 		datastream.set_attitude(drone_state->attitude_);
 		datastream.set_target_attitude(drone_state->target_);
+		datastream.set_target_twist(drone_state->target_twist_);
+		datastream.set_target_swing(drone_state->target_swing_);
 
-
+		QuaternionF attitude_twist, attitude_swing;
+		QuaternionF::decomposeTwistSwing(drone_state->attitude_, Vector3f(0,0,1), attitude_swing, attitude_twist);
+		datastream.set_attitude_twist(attitude_twist);
+		datastream.set_attitude_swing(attitude_swing);
 		datastream.commit();
 		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
 			console_update_time.time_stamp();
