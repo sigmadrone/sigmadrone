@@ -21,8 +21,7 @@
 #include "tripilot.h"
 
 TriPilot::TriPilot()
-	: pid_pitchroll_(0.0, 0.0, 0.0, 100)
-	, pid_yaw_(0.0, 0.0, 0.0)
+	: pid_(0.0, 0.0, 0.0, 80)
 {
 	min_thrust_ = 0.0;
 	max_thrust_ = 1.0;
@@ -41,45 +40,44 @@ TriPilot::~TriPilot()
 
 void TriPilot::set_pid_coefficents(const DroneState& state)
 {
-	pid_pitchroll_.set_kp_ki_kd(state.kp_, state.ki_, state.kd_);
-	pid_yaw_.set_kp_ki_kd(state.yaw_kp_, state.yaw_ki_, state.yaw_kd_);
+	pid_.set_kp_ki_kd(state.kp_, state.ki_, state.kd_);
+	pid_.set_derivative_filter(state.pid_filter_freq_);
 }
 
-Vector3f TriPilot::get_torque(const QuaternionF &in_Q, const TimeSpan& dt, float yaw_factor)
+Vector3f TriPilot::get_torque(const DroneState& state)
 {
 	Vector3f torq;
-	Vector3f Zset = set_Q_.rotate(Vector3f(0.0, 0.0, 1.0));
-	Vector3f Zin = in_Q.conjugate().rotate(Vector3f(0.0, 0.0, 1.0));
-	QuaternionF XYtorq = QuaternionF::fromVectors(Zin, Zset);
-	Vector3f error = XYtorq.axis().normalize() * XYtorq.angle() * -1.0;
-
-	torq = pid_pitchroll_.get_pid(error, dt.seconds_float());
-
-#if 1
-	// targetQ = attitudeQ * errQ; ==> (~attitudeQ) * attitudeQ * errQ = (~attitudeQ) * targetQ;
-	// ==> errQ = (~attitudeQ) * targetQ;
-	QuaternionF Ztorq = (~in_Q) * set_Q_;
 	QuaternionF twist, swing;
-	QuaternionF::decomposeTwistSwing(Ztorq, Vector3f(0,0,1), swing, twist);
-	Vector3f error_z = twist.axis().normalize() * twist.angle();
-	error_z.at(0) = error_z.at(1) = 0.0;
-	torq.at(2) = pid_yaw_.get_d(error_z, dt.seconds_float()).at(2);
-	error.at(2) = error_z.at(2);
-#endif
+	QuaternionF::decomposeTwistSwing(~state.attitude_, Vector3f(0,0,1), swing, twist);
 
+	// targetSwing = attitudeSwing * errorSwing; ==> ~attitudeSwing * targetSwing = ~attitudeSwing * attitudeSwing * errorSwing;
+	QuaternionF errorSwing = (~swing) * state.target_swing_;
+	/*
+	 * RcValueConverter::reset_twist_quaternion():
+	 * QuaternionF swing;
+	 * QuaternionF::decomposeTwistSwing(~current_q, Vector3f(0,0,1), swing, target_twist_);
+	 *
+	 * RcValueConverter::update()
+	 * yaw_ = ((yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_ * 2);
+	 *
+	 * then we can have:
+	 * QuaternionF errorTwist = (~twist) * state.target_twist_;
+	 */
+	QuaternionF errorTwist = (~twist) * (~state.target_twist_);
+	Vector3f error_xy = errorSwing.axis().normalize() * errorSwing.angle() * -1.0;
+	Vector3f error_z = errorTwist.axis().normalize() * errorTwist.angle() * -1.0;
+	Vector3f error = error_xy + error_z;
+	torq = pid_.get_pid(error, state.dt_.seconds_float());
 	return torq;
 }
-
 
 void TriPilot::update_state(DroneState& state)
 {
 	Vector3f torque_rpm;
 
-	set_Q_ = state.target_;
 	set_target_thrust(state.base_throttle_);
 	set_pid_coefficents(state);
-
-	torque_correction_ = get_torque(state.attitude_, state.dt_, state.yaw_throttle_factor_);
+	torque_correction_ = get_torque(state);
 
 
 	//  From the motor trust measurement:
