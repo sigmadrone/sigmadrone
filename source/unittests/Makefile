@@ -1,4 +1,5 @@
 SUBDIRS += d3math
+SUBDIRS += iirfilt
 
 all:
 	@for dir in $(SUBDIRS); do \
