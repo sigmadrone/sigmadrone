@@ -29,6 +29,8 @@
 #include <type_traits>
 #include <numeric>
 #include <algorithm>
+#include <complex>
+#include <cmath>
 
 
 #ifndef M_PI
@@ -64,6 +66,11 @@ public:
 	MatrixBase();
 	MatrixBase(const std::initializer_list<std::initializer_list<T>>& list);
 	MatrixBase(const std::initializer_list<T>& list);
+
+	MatrixBase(const MatrixBase<std::complex<T>, ROWS, COLS>& m);
+
+	template <typename From>
+	MatrixBase(const MatrixBase<From, ROWS, COLS>& m);
 
 	template<typename... ARGS>
 	explicit MatrixBase(ARGS... args);
@@ -167,7 +174,11 @@ public:
 	MatrixMN() : MatrixBase<T, ROWS, COLS>() {} ;
 	MatrixMN(const std::initializer_list<std::initializer_list<T>>& list) : MatrixBase<T, ROWS, COLS>(list) {}
 	MatrixMN(const std::initializer_list<T>& list) : MatrixBase<T, ROWS, COLS>(list) {}
-	MatrixMN(const MatrixBase<T, ROWS, COLS>& m) : MatrixBase<T, ROWS, COLS>(m) {} ;
+	MatrixMN(const MatrixBase<T, ROWS, COLS>& m) : MatrixBase<T, ROWS, COLS>(m) {}
+	MatrixMN(const MatrixBase<std::complex<T>, ROWS, COLS>& m) : MatrixBase<std::complex<T>, ROWS, COLS>(m) {}
+
+	template <typename From>
+	MatrixMN(const MatrixBase<From, ROWS, COLS>& m) : MatrixBase<T, ROWS, COLS>(m) {};
 
 	template<typename... ARGS>
 	explicit MatrixMN(ARGS... args) : MatrixBase<T, ROWS, COLS>(args...) {};
@@ -214,6 +225,10 @@ public:
 	MatrixMN(const std::initializer_list<std::initializer_list<T>>& list) : MatrixBase<T, ROWS, 1>(list) {}
 	MatrixMN(const std::initializer_list<T>& list) : MatrixBase<T, ROWS, 1>(list) {}
 	MatrixMN(const MatrixBase<T, ROWS, 1>& m) : MatrixBase<T, ROWS, 1>(m) {}
+	MatrixMN(const MatrixBase<std::complex<T>, ROWS, 1>& m) : MatrixBase<T, ROWS, 1>(m) {}
+
+	template <typename From>
+	MatrixMN(const MatrixBase<From, ROWS, 1>& m) : MatrixBase<T, ROWS, 1>(m) {}
 
 	template<typename... ARGS>
 	explicit MatrixMN(ARGS... args) : MatrixBase<T, ROWS, 1>(args...) {}
@@ -276,6 +291,9 @@ public:
 
 	template<size_t RR = ROWS, size_t CC = 1>
 	static typename std::enable_if<RR == CC, MatrixMN<T, ROWS, 1>>::type identity();
+
+	static MatrixMN<std::complex<T>, ROWS, 1> fft(const std::vector<MatrixMN<T, ROWS, 1>>& x, size_t k);
+	static MatrixMN<T, ROWS, 1> ifft(const std::vector<MatrixMN<std::complex<T>, ROWS, 1>>& y, size_t k);
 };
 
 
@@ -379,6 +397,7 @@ typedef MatrixMN<int, 2, 1> Vector2i;
 typedef MatrixMN<float, 3, 1> Vector3f;
 typedef MatrixMN<double, 3, 1> Vector3d;
 typedef MatrixMN<int, 3, 1> Vector3i;
+typedef MatrixMN<std::complex<float>, 3, 1> Vector3c;
 
 typedef MatrixMN<float, 4, 1> Vector4f;
 typedef MatrixMN<double, 4, 1> Vector4d;
@@ -982,20 +1001,20 @@ void MatrixBase<T, ROWS, COLS>::init(iterator& it, T x)
 }
 
 template <typename T, size_t ROWS, size_t COLS>
-inline MatrixBase<T, ROWS, COLS>::MatrixBase() {
+MatrixBase<T, ROWS, COLS>::MatrixBase() {
 	for (auto& i : data)
 		i = static_cast<T>(0);
 }
 
 template <typename T, size_t ROWS, size_t COLS>
 template<typename... ARGS>
-inline MatrixBase<T, ROWS, COLS>::MatrixBase(ARGS... args) : MatrixBase() {
+MatrixBase<T, ROWS, COLS>::MatrixBase(ARGS... args) : MatrixBase() {
 	auto it = begin();
 	init(it, args...);
 }
 
 template <typename T, size_t ROWS, size_t COLS>
-inline MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<std::initializer_list<T>>& list) : MatrixBase() {
+MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<std::initializer_list<T>>& list) : MatrixBase() {
 	assert(list.size() <= ROWS);
 	iterator it = data.begin();
 	for (auto row : list) {
@@ -1007,13 +1026,29 @@ inline MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<std::in
 }
 
 template <typename T, size_t ROWS, size_t COLS>
-inline MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<T>& list) : MatrixBase() {
+MatrixBase<T, ROWS, COLS>::MatrixBase(const std::initializer_list<T>& list) : MatrixBase() {
 	assert(list.size() <= ROWS * COLS);
 	iterator it = data.begin();
 	for (auto elem : list) {
 		*it++ = elem;
 	}
 }
+
+template <typename T, size_t ROWS, size_t COLS>
+template <typename From>
+MatrixBase<T, ROWS, COLS>::MatrixBase(const MatrixBase<From, ROWS, COLS>& m)
+{
+	for (size_t i = 0; i < data.size(); i++)
+		data[i] = static_cast<T>(m.data[i]);
+}
+
+template <typename T, size_t ROWS, size_t COLS>
+MatrixBase<T, ROWS, COLS>::MatrixBase(const MatrixBase<std::complex<T>, ROWS, COLS>& m)
+{
+	for (size_t i = 0; i < data.size(); i++)
+		data[i] = m.data[i].real();
+}
+
 
 template <typename T, size_t ROWS, size_t COLS>
 typename MatrixBase<T, ROWS, COLS>::iterator MatrixBase<T, ROWS, COLS>::begin()
@@ -1624,6 +1659,36 @@ typename std::enable_if<RR == CC, MatrixMN<T, ROWS, 1>>::type MatrixMN<T, ROWS, 
 	MatrixMN<T, ROWS, 1> ret;
 	ret.init_identity();
 	return ret;
+}
+
+template <typename T, size_t ROWS>
+MatrixMN<std::complex<T>, ROWS, 1> MatrixMN<T, ROWS, 1>::fft(const std::vector<MatrixMN<T, ROWS, 1>>& x, size_t k)
+{
+	std::complex<T> j(0, 1.0);
+	T pi = std::acos(-1);
+	size_t N = x.size();
+	MatrixMN<std::complex<T>, ROWS, 1> ret;
+
+	for (size_t n = 0; n < N; n++) {
+		MatrixMN<std::complex<T>, ROWS, 1> xn = x[n];
+		ret += xn * std::exp(j * pi * (T)-2.0f * (T)(k * n)/(T)N);
+	}
+	return ret;
+}
+
+template <typename T, size_t ROWS>
+MatrixMN<T, ROWS, 1> MatrixMN<T, ROWS, 1>::ifft(const std::vector<MatrixMN<std::complex<T>, ROWS, 1>>& y, size_t k)
+{
+	std::complex<T> j(0, 1.0);
+	T pi = std::acos(-1);
+	size_t N = y.size();
+
+	MatrixMN<std::complex<T>,3,1> temp;
+	for (size_t n = 0; n < N; n++) {
+		temp += y[n] * std::exp(j * pi * (T)2.0f * (T)(k * n)/(T)N);
+	}
+	MatrixMN<T, ROWS, 1> re = temp/static_cast<T>(N);
+	return re;
 }
 
 template<typename T>
