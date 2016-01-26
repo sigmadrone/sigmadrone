@@ -55,6 +55,7 @@
 #include "adc.h"
 #include "battery.h"
 #include "gpsreader.h"
+#include "iirfilt.h"
 
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
@@ -216,6 +217,24 @@ static Vector3f CalculateGyroBias(L3GD20& gyro, uint32_t num_samples)
 	return gyro_bias;
 }
 
+static Vector3f ReadAccelerometer(
+		LSM303D& acc,
+		IirSensorPreFilter1d* xfilt,
+		IirSensorPreFilter1d* yfilt,
+		IirSensorPreFilter1d* zfilt)
+{
+	Vector3f acc_filtered;
+	uint8_t count = acc.GetFifoSourceFSS();
+	for (uint8_t i = 0; i < count; i++) {
+		LSM303D::AxesAcc_t axes = {0,0,0};
+		acc.GetAcc(&axes);
+		acc_filtered[0] += xfilt->do_filter(axes.AXIS_X);
+		acc_filtered[1] += yfilt->do_filter(axes.AXIS_Y);
+		acc_filtered[2] += zfilt->do_filter(axes.AXIS_Z);
+	}
+	return acc_filtered / count;
+}
+
 void main_task(void *pvParameters)
 {
 	(void) pvParameters;
@@ -235,7 +254,6 @@ void main_task(void *pvParameters)
 	uint8_t gyr_wtm = 3;
 	uint8_t acc_wtm = 17;
 	L3GD20::AxesDPS_t gyr_axes;
-	LSM303D::AxesAcc_t acc_axes;
 	LSM303D::AxesMag_t mag_axes;
 	attitudetracker att;
 	TimeStamp console_update_time;
@@ -244,7 +262,9 @@ void main_task(void *pvParameters)
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
 	UartRpcServer rpcserver(*drone_state, configdata, datastream);
-	AccelLowPassFilter* accel_lpf = new AccelLowPassFilter();
+	IirSensorPreFilter1d* accel_iir_lpf_x = new IirSensorPreFilter1d();
+	IirSensorPreFilter1d* accel_iir_lpf_y = new IirSensorPreFilter1d();
+	IirSensorPreFilter1d* accel_iir_lpf_z = new IirSensorPreFilter1d();
 	AccelLowPassFilter* mag_lpf = new AccelLowPassFilter();
 	Vector3f gyro_bias;
 
@@ -283,7 +303,7 @@ void main_task(void *pvParameters)
 
 	accel.SetHPFMode(LSM303D::HPM_NORMAL_MODE_RES);
 	accel.SetFilterDataSel(LSM303D::MEMS_DISABLE);
-	accel.SetODR(LSM303D::ODR_400Hz);
+	accel.SetODR(LSM303D::ODR_800Hz);
 	accel.SetFullScale(LSM303D::FULLSCALE_8);
 	accel.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
 	accel.FIFOModeSet(LSM303D::FIFO_STREAM_MODE);
@@ -344,11 +364,14 @@ void main_task(void *pvParameters)
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
 
-		if (accel.GetFifoAcc(&acc_axes)) {
-			drone_state->accel_raw_ = acc_align * Vector3f(acc_axes.AXIS_X, acc_axes.AXIS_Y, acc_axes.AXIS_Z);
+		drone_state->accel_raw_ = acc_align * ReadAccelerometer(
+				accel, accel_iir_lpf_x, accel_iir_lpf_y, accel_iir_lpf_z);
+		if (drone_state->accel_raw_.length_squared() > 0) {
 			Vector3f accel_adjusted = drone_state->accel_raw_ + drone_state->accelerometer_adjustment_;
-			drone_state->accel_ = accel_lpf->do_filter(accel_adjusted.normalize());
+			//drone_state->accel_ = accel_lpf->do_filter(accel_adjusted.normalize());
+			drone_state->accel_ = accel_adjusted.normalize();
 		}
+
 		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
 
 		accel.GetMag(&mag_axes);
