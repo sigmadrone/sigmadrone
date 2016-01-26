@@ -67,25 +67,38 @@ private:
 
 
 /*
- * IIR LPF, calculated using Chebyshev's method:
+ * IIR LPF, calculated using the elliptic method:
  *  Order=6
  *  Fc=10Hz
  *  Attenuation=40dB
  */
 template <typename T>
-class IirSensorPreFilter: public IirFilter<T, 7>  {
+class IirSensorPreFilter10Hz: public IirFilter<T, 7>  {
 public:
-	IirSensorPreFilter() : IirFilter<T, 7>(
+	IirSensorPreFilter10Hz() : IirFilter<T, 7>(
 			{ 0.009130213043213, -0.053785884660517, 0.132987927812535, -0.176664445470034,
 		      0.132987927812535,  -0.053785884660517,   0.009130213043213},
 			{1.0, -5.763011904477186, 13.843008765719702, -17.739823971400483,
-				   12.791644394232126, -4.920788915790463, 0.788971698636730})
-	{
-	}
+				   12.791644394232126, -4.920788915790463, 0.788971698636730}) {}
 };
 
-//typedef IirSensorPreFilter<float,3> IirSensorPreFilter3f;
-typedef IirSensorPreFilter<float> IirSensorPreFilter1f;
-typedef IirSensorPreFilter<double> IirSensorPreFilter1d;
+ /*
+  * IIR LPF, calculated using the Chebyshev 2nd method:
+  *  Order=6
+  *  Fc=5Hz
+  *  Attenuation=40dB
+  */
+ template <typename T>
+ class IirSensorPreFilter5Hz: public IirFilter<T, 7>  {
+ public:
+ 	IirSensorPreFilter5Hz() : IirFilter<T, 7>(
+ 			{ 0.009490307141041, -0.056679620583394, 0.141306795302753, -0.188234962613877,
+		      0.141306795302753, -0.056679620583394, 0.009490307141041},
+ 			{1.0, -5.881527464347489, 14.414639972281712, -18.843021855934243,
+ 			 13.856507112731949, -5.434871112577345, 0.888273348952340}) {}
+ };
+
+typedef IirSensorPreFilter5Hz<float> IirSensorPreFilter1f;
+typedef IirSensorPreFilter5Hz<double> IirSensorPreFilter1d;
 
 #endif // __IIRFILT_H__
