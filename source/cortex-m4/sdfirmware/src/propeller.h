@@ -45,7 +45,7 @@ public:
 	 *
 	 * z_to_xy_torque_ratio - roughly captures how the z torque relates to the xy torque magnitude.
 	 */
-	Propeller(Vector3f position, Vector3f thrust_dir, RotationDir rot, float z_to_xy_torque_ratio = 0.5)
+	Propeller(Vector3f position, Vector3f thrust_dir, RotationDir rot, float z_to_xy_torque_ratio = 0.75)
 		: position_(position)
 		, thrust_dir_(thrust_dir)
 	{

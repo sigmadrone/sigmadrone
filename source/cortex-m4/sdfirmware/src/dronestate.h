@@ -61,7 +61,7 @@ struct DroneState {
 		, yaw_kp_(0.24)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.10)
-		, accelerometer_correction_period_(5.0)
+		, accelerometer_correction_period_(2.0)
 		, gyro_factor_(1.25)
 		, yaw_(0.0)
 		, pitch_(0.0)
