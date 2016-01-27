@@ -19,25 +19,24 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#ifndef ACCELLOWPASSFILTER_H_
-#define ACCELLOWPASSFILTER_H_
+#ifndef SENSORS_PREFILTERS_H_
+#define SENSORS_PREFILTERS_H_
 
 #include "firfilt.h"
 #include "iirfilt.h"
 
-struct MagLowPassPreFilter3d {
-	MagLowPassPreFilter3d() : filter_() {
-		static const float oneHzCutoff_18[] = {
-				0.0086, 0.0120, 0.0216, 0.0362, 0.0537, 0.0719, 0.0883, 0.1006, 0.1072, 0.1072,
-				0.1006, 0.0883, 0.0719, 0.0537, 0.0362, 0.0216, 0.0120, 0.0086
-		};
-		filter_.init_coeff(oneHzCutoff_18);
-	}
-	Vector3f do_filter(const Vector3f accel) { return filter_.do_filter(accel); }
-private:
-	FirFilter<float, 18, 3> filter_;
+class MagLowPassPreFilter3d : public FirFilter<Vector3f, float, 18> {
+	using Base = FirFilter<Vector3f, float, 18>;
+public:
+	MagLowPassPreFilter3d() : Base(
+			{0.0086, 0.0120, 0.0216, 0.0362, 0.0537, 0.0719, 0.0883, 0.1006, 0.1072, 0.1072,
+		0.1006, 0.0883, 0.0719, 0.0537, 0.0362, 0.0216, 0.0120, 0.0086}) {}
 };
 
 typedef IirLowPassFilter5Hz<Vector3d, double> AccelLowPassPreFilter3d;
 
-#endif /* ACCELLOWPASSFILTER_H_ */
+static const size_t PRESSURE_FILTER_ORDER = 25;
+typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> PressurePreFilter;
+typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> TemperaturePreFilter;
+
+#endif /* SENSORS_PREFILTERS_H_ */

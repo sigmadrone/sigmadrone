@@ -105,9 +105,6 @@ public:
 			return m_GyroQ;
 		}
 
-		//m_GyroLpf.DoFilter(gyroData.at(0),gyroData.at(1),gyroData.at(2));
-
-
 		/*calculate the acc estimate*/
 		Vector3f accEst = m_GyroQ.rotate(m_OrigAcc);
 		/*calculate the acc error*/
@@ -149,8 +146,6 @@ private:
 	Vector3f m_AccBias;
 	QuaternionF m_MagQ;
 	QuaternionF m_GyroQ;
-	LpPreFilter3d m_GyroLpf;
-	LpPreFilter3d m_AccLpf;
 	double m_Kp; /*proportional gain*/
 	double m_Ki; /*integral gain*/
 	double m_Kd; /*derivative gain*/

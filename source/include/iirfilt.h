@@ -25,7 +25,6 @@
 #include <string.h>
 #include "d3math.h"
 
-
 template <typename DataType, typename CoeffType, const size_t N>
 class IirFilter
 {
@@ -34,7 +33,7 @@ public:
 	using Denominator = std::array<CoeffType,N>;
 	using State = std::array<DataType,N>;
 
-	IirFilter() { out_ = 0; }
+	IirFilter()  { reset(); }
 	IirFilter(const Nominator& coeff_nom, const Denominator& coeff_denom) :
 		nominator_(coeff_nom), denominator_(coeff_denom) { reset(); }
 
@@ -42,8 +41,10 @@ public:
 
 	void reset()
 	{
-		state_ = State();
-		out_ = 0;
+		for (auto& s : state_) {
+			s = static_cast<DataType>(0);
+		}
+		out_ = static_cast<DataType>(0);
 	}
 	const DataType& do_filter(const DataType& in)
 	{

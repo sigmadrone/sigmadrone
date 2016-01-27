@@ -25,88 +25,40 @@
 #include <string.h>
 #include "d3math.h"
 
-template<typename T, int N>
-struct FiltVector{
-	typedef MatrixMN<T, N, 1> type;
-};
-
-template <typename T, const size_t N, const size_t DIM>
+template <typename DataType, typename CoeffType, const size_t N>
 class FirFilter
 {
 public:
-	FirFilter()
-	{
-		reset();
-		memset(coeff_,0,sizeof(coeff_));
-		coeff_[0] = 1.0;
-	}
-	FirFilter(const T coeff[N])
-	{
-		reset();
-		memcpy(coeff_,coeff,sizeof(coeff_));
-	}
-	__inline ~FirFilter() {}
-	__inline void reset()
-	{
-		memset(state_,0,sizeof(state_));
-		memset(output_,0,sizeof(output_));
-		ptr_ = 0;
-	}
-	void init_coeff(const T coeff[N])
-	{
-		memcpy(coeff_,coeff,sizeof(coeff_));
-		reset();
-	}
-	const T* do_filter(const T in[DIM])
-	{
-		for (size_t i = 0; i < DIM; i++)
-		{
-			output_[i] = 0.0;
-			state_[i][ptr_] = in[i];
-			for (size_t j = 0; j < N; j++)
-			{
-				output_[i] += state_[i][ptr_] * coeff_[j];
-				retreat_ptr();
-			}
-		}
-		advance_ptr();  /*prepare for the next input sample*/
-		return output_;
-	}
+	using Nominator = std::array<CoeffType,N>;
+	using State = std::array<DataType,N>;
 
-	typename FiltVector<T,DIM>::type
-	do_filter(const typename FiltVector<T,DIM>::type& in)
+	FirFilter() { reset(); }
+	FirFilter(const Nominator& nominator): nominator_(nominator) { reset(); }
+	~FirFilter() = default;
+
+	void reset()
 	{
-		typename FiltVector<T,DIM>::type out;
-		do_filter((const T*)in);
-		for (size_t i = 0; i < DIM; ++i) {
-			out.at(i,0) = output_[i];
+		for (auto& s : state_) {
+			s = static_cast<DataType>(0);
 		}
-		return out;
+		out_ = static_cast<DataType>(0);
 	}
-	const T* /*[N]*/ get_coeff() const { return coeff_; }
-	const T* /*[DIM]*/ get_output() const { return output_; }
+	const DataType& do_filter(const DataType& in)
+	{
+		out_ = in * nominator_[0] + state_[0];
+		for (size_t i = 1; i < N; ++i) {
+			state_[i-1] = in * nominator_[i] + state_[i];
+		}
+		return out_;
+	}
+	const Nominator& nominator() const { return nominator_; }
+	const DataType& output()     const { return out_; }
 
 private:
-	__inline void advance_ptr() { ptr_ = (ptr_ + 1) % N; }
-	__inline void retreat_ptr() { ptr_ = (0 == ptr_) ? N-1 : ptr_-1; }
-
-private:
-	T state_[DIM][N];
-	T coeff_[N];
-	T output_[DIM];
-	size_t ptr_;
+	State state_;
+	Nominator nominator_;
+	DataType out_;
 };
-
-template<const size_t N>
-struct FirFilter3f {
-  typedef FirFilter<float, N, 3> type;
-};
-
-template<const size_t N>
-struct FirFilter3d {
-  typedef FirFilter<double, N, 3> type;
-};
-
 
 /*
  * class LpPreFilter3d
@@ -117,46 +69,31 @@ struct FirFilter3d {
  * 20 dB attenuation is achieved at 0.3*Fs/2; 40 dB @ 0.4*Fs/2
  */
 
-class LpPreFilter3d
+class LpPreFilter3d : public FirFilter<Vector3d, double, 11>
 {
+	using Base = FirFilter<Vector3d, double, 11>;
 public:
-	LpPreFilter3d(): fir_filter_()
-	{
-		static double s_Coeff[] = {
-			0.0143f, 0.0303f, 0.0723f, 0.1245f, 0.1670f, 0.1833f,
-			0.1670f, 0.1245f, 0.0723f, 0.0303f, 0.0143f
-		};
-		fir_filter_.init_coeff(s_Coeff);
-	}
+	LpPreFilter3d() : Base({0.0143f, 0.0303f, 0.0723f, 0.1245f, 0.1670f, 0.1833f,
+		0.1670f, 0.1245f, 0.0723f, 0.0303f, 0.0143f}) {}
+};
 
-	__inline void Reset() { fir_filter_.reset(); }
-	const double* DoFilter(double in[3])
-	{
-		return fir_filter_.do_filter(in);
-	}
-	const double* DoFilter(double a, double b, double c)
-	{
-		double in[3] = {a,b,c};
-		return fir_filter_.do_filter(in);
-	}
-	Vector3f DoFilter(const Vector3f& in)
-	{
-		Vector3f out;
-		double inArr[3] = {in.at(0,0),in.at(1,0),in.at(2,0)};
-		DoFilter(inArr);
-		out.at(0,0) = fir_filter_.get_output()[0];
-		out.at(1,0) = fir_filter_.get_output()[1];
-		out.at(2,0) = fir_filter_.get_output()[2];
-		return out;
-	}
-	const double* GetCoeff() { return fir_filter_.get_coeff(); }
-	const double* GetOutput() { return fir_filter_.get_output(); }
+template<typename DataType, typename CoeffType, const size_t N>
+class MovingAverageFilter: public FirFilter<DataType, CoeffType, N>
+{
+	using Base = FirFilter<DataType, CoeffType, N>;
+	using Nominator = std::array<CoeffType,N>;
 
-	static const size_t s_Order = 11;
-	static const size_t s_Dim = 3;
+public:
+	MovingAverageFilter() : Base(GenerateCoefficients()) {}
 
 private:
-	FirFilter<double, s_Order, s_Dim> fir_filter_;
+	static Nominator GenerateCoefficients()
+	{
+		Nominator nom;
+		nom.fill(static_cast<CoeffType>(1) / N);
+		return nom;
+	}
 };
+
 
 #endif // __FIRFILT_H__

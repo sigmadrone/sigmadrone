@@ -26,16 +26,6 @@
 Bmp180Reader::Bmp180Reader(BMP180& bmp)
 	: bmp_(bmp)
 {
-	static float filt_coeff[fir_filter_order];
-	static const float single_coeff = 1.0f/(float)fir_filter_order;
-
-	for (size_t i = 0; i < fir_filter_order; ++i) {
-		filt_coeff[i] = single_coeff;
-	}
-
-	pressure_filter_.init_coeff(filt_coeff);
-	temperature_filter_.init_coeff(filt_coeff);
-
 }
 
 Bmp180Reader::~Bmp180Reader()
@@ -53,7 +43,7 @@ float Bmp180Reader::pressure_hpa(bool do_read_sensor)
 	if (do_read_sensor) {
 		read_pressure();
 	}
-	return *pressure_filter_.get_output();
+	return pressure_filter_.output();
 }
 
 float Bmp180Reader::temperature_celsius(bool do_read_sensor)
@@ -61,7 +51,7 @@ float Bmp180Reader::temperature_celsius(bool do_read_sensor)
 	if (do_read_sensor) {
 		read_temperature();
 	}
-	return *temperature_filter_.get_output();
+	return temperature_filter_.output();
 }
 
 Distance Bmp180Reader::convert_hpa_to_altitude(float hpa)
@@ -73,19 +63,19 @@ void Bmp180Reader::read_pressure()
 {
 	bmp_.update_pressure();
 	float pressure = (float)bmp_.get_pressure() / 100.0f;
-	pressure_filter_.do_filter(&pressure);
+	pressure_filter_.do_filter(pressure);
 }
 
 void Bmp180Reader::read_temperature()
 {
 	bmp_.update_temperature();
 	float temperature = (float)bmp_.get_temperature();
-	temperature_filter_.do_filter(&temperature);
+	temperature_filter_.do_filter(temperature);
 }
 
 void Bmp180Reader::calibrate()
 {
-	for (size_t i = 0; i < fir_filter_order; ++i) {
+	for (size_t i = 0; i < PRESSURE_FILTER_ORDER; ++i) {
 		read_pressure();
 		read_temperature();
 		vTaskDelay(50 / portTICK_RATE_MS);

@@ -50,7 +50,7 @@
 #include "librexjson/rexjson++.h"
 #include "libattitude/attitudetracker.h"
 #include "bmp180reader.h"
-#include "accellowpassfilter.h"
+#include "sensorsprefilters.h"
 #include "flashmemory.h"
 #include "adc.h"
 #include "battery.h"

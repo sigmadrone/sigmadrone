@@ -23,8 +23,8 @@
 #define BMP180READER_H_
 
 #include "units.h"
-#include "firfilt.h"
 #include "bmp180.h"
+#include "sensorsprefilters.h"
 
 struct Bmp180Reader {
 public:
@@ -40,11 +40,8 @@ public:
 	static Distance convert_hpa_to_altitude(float hpa);
 
 private:
-	static const size_t fir_filter_order = 25;
-	typedef FirFilter<float, fir_filter_order, 1> LpfFilter;
-
-	LpfFilter pressure_filter_;
-	LpfFilter temperature_filter_;
+	PressurePreFilter pressure_filter_;
+	TemperaturePreFilter temperature_filter_;
 	BMP180& bmp_;
 };
 
