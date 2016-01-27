@@ -42,19 +42,15 @@ public:
 	 * The propeller will create two types of torque:
 	 * 1. XY-plane torque which is the (radius * thrust)
 	 * 2. Z torque, which is opposite to the direction of rotation
-	 *
-	 * z_to_xy_torque_ratio - roughly captures how the z torque relates to the xy torque magnitude.
 	 */
-	Propeller(Vector3f position, Vector3f thrust_dir, RotationDir rot, float z_to_xy_torque_ratio = 0.75)
+	Propeller(Vector3f position, Vector3f thrust_dir, RotationDir rot)
 		: position_(position)
 		, thrust_dir_(thrust_dir)
 	{
 		/*
 		 * Calculates the direction of the torque_vector
 		 */
-		Vector3f thrust_torque = position.cross(thrust_dir).normalize();
-		Vector3f rotation_torque = thrust_dir * thrust_torque.length() * z_to_xy_torque_ratio * -rot;
-		torque_dir_ = (thrust_torque + rotation_torque).normalize();
+		torque_dir_ = (position.cross(thrust_dir) + thrust_dir * -rot).normalize();
 	}
 
 	const Vector3f& thrust_dir() const { return thrust_dir_; }
