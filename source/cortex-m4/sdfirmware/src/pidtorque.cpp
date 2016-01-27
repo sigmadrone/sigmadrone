@@ -22,7 +22,7 @@
 #include "pidtorque.h"
 
 PidTorque::PidTorque() :
-	set_Q_(1), pid_roll_(0.0,0.0,0.0,80.0), pid_pitch_(0.0,0.0,0.0,100), pid_yaw_(0.0,0.0,0.0)
+	set_Q_(1), pid_roll_(0.0,0.0,0.0,80.0), pid_pitch_(0.0,0.0,0.0,80), pid_yaw_(0.0,0.0,0.0)
 {
 }
 
