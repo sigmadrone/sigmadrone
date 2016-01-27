@@ -219,18 +219,14 @@ static Vector3f CalculateGyroBias(L3GD20& gyro, uint32_t num_samples)
 
 static Vector3f ReadAccelerometer(
 		LSM303D& acc,
-		IirSensorPreFilter1d* xfilt,
-		IirSensorPreFilter1d* yfilt,
-		IirSensorPreFilter1d* zfilt)
+		AccelLowPassPreFilter3d* lpf_filt)
 {
 	Vector3f acc_filtered;
 	uint8_t count = acc.GetFifoSourceFSS();
 	for (uint8_t i = 0; i < count; i++) {
 		LSM303D::AxesAcc_t axes = {0,0,0};
 		acc.GetAcc(&axes);
-		acc_filtered[0] += xfilt->do_filter(axes.AXIS_X);
-		acc_filtered[1] += yfilt->do_filter(axes.AXIS_Y);
-		acc_filtered[2] += zfilt->do_filter(axes.AXIS_Z);
+		acc_filtered += lpf_filt->do_filter(Vector3d(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
 	}
 	return acc_filtered / count;
 }
@@ -262,10 +258,8 @@ void main_task(void *pvParameters)
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
 	UartRpcServer rpcserver(*drone_state, configdata, datastream);
-	IirSensorPreFilter1d* accel_iir_lpf_x = new IirSensorPreFilter1d();
-	IirSensorPreFilter1d* accel_iir_lpf_y = new IirSensorPreFilter1d();
-	IirSensorPreFilter1d* accel_iir_lpf_z = new IirSensorPreFilter1d();
-	AccelLowPassFilter* mag_lpf = new AccelLowPassFilter();
+	AccelLowPassPreFilter3d* accel_lpf = new AccelLowPassPreFilter3d();
+	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
 	Vector3f gyro_bias;
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
@@ -364,11 +358,9 @@ void main_task(void *pvParameters)
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
 
-		drone_state->accel_raw_ = acc_align * ReadAccelerometer(
-				accel, accel_iir_lpf_x, accel_iir_lpf_y, accel_iir_lpf_z);
+		drone_state->accel_raw_ = acc_align * ReadAccelerometer(accel, accel_lpf);
 		if (drone_state->accel_raw_.length_squared() > 0) {
 			Vector3f accel_adjusted = drone_state->accel_raw_ + drone_state->accelerometer_adjustment_;
-			//drone_state->accel_ = accel_lpf->do_filter(accel_adjusted.normalize());
 			drone_state->accel_ = accel_adjusted.normalize();
 		}
 

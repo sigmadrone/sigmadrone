@@ -26,43 +26,43 @@
 #include "d3math.h"
 
 
-template <typename T, const size_t N>
+template <typename DataType, typename CoeffType, const size_t N>
 class IirFilter
 {
 public:
+	using Nominator = std::array<CoeffType,N>;
+	using Denominator = std::array<CoeffType,N>;
+	using State = std::array<DataType,N>;
 
-	using CoeffNominator = MatrixMN<T, N, 1>;
-	using CoeffDenominator = MatrixMN<T, N, 1>;
-
-	IirFilter() { reset(); }
-	IirFilter(const CoeffNominator& coeff_nom, const CoeffDenominator& coeff_denom) :
+	IirFilter() { out_ = 0; }
+	IirFilter(const Nominator& coeff_nom, const Denominator& coeff_denom) :
 		nominator_(coeff_nom), denominator_(coeff_denom) { reset(); }
 
 	~IirFilter() = default;
 
 	void reset()
 	{
-		memset(state_,0,sizeof(state_));
+		state_ = State();
 		out_ = 0;
 	}
-	const T& do_filter(const T& in)
+	const DataType& do_filter(const DataType& in)
 	{
-		out_ = nominator_[0] * in + state_[0];
+		out_ = in * nominator_[0] + state_[0];
 		for (size_t i = 1; i < N; ++i) {
-			state_[i-1] = nominator_[i] * in + state_[i] - denominator_[i] * out_;
+			state_[i-1] = in * nominator_[i] + state_[i] - out_ * denominator_[i];
 		}
 		return out_;
 	}
 
-	const CoeffNominator& get_coeff_nom() const { return nominator_.get_coeff(); }
-	const CoeffDenominator& get_coeff_denom() const { return denominator_.get_coeff(); }
-	const T& get_output() const { return out_; }
+	const Nominator& nominator() const { return nominator_; }
+	const Denominator& denominator() const { return denominator_; }
+	const DataType& output() const { return out_; }
 
 private:
-	T state_[N];
-	CoeffNominator nominator_;
-	CoeffDenominator denominator_;
-	T out_;
+	State state_;
+	Nominator nominator_;
+	Denominator denominator_;
+	DataType out_;
 };
 
 
@@ -72,10 +72,10 @@ private:
  *  Fc=10Hz
  *  Attenuation=40dB
  */
-template <typename T>
-class IirSensorPreFilter10Hz: public IirFilter<T, 7>  {
+template <typename DataType, typename CoeffType>
+class IirLowPassFilter10Hz: public IirFilter<DataType, CoeffType, 7>  {
 public:
-	IirSensorPreFilter10Hz() : IirFilter<T, 7>(
+	IirLowPassFilter10Hz() : IirFilter<DataType, CoeffType, 7>(
 			{ 0.009130213043213, -0.053785884660517, 0.132987927812535, -0.176664445470034,
 		      0.132987927812535,  -0.053785884660517,   0.009130213043213},
 			{1.0, -5.763011904477186, 13.843008765719702, -17.739823971400483,
@@ -88,17 +88,14 @@ public:
   *  Fc=5Hz
   *  Attenuation=40dB
   */
- template <typename T>
- class IirSensorPreFilter5Hz: public IirFilter<T, 7>  {
+ template <typename DataType, typename CoeffType>
+ class IirLowPassFilter5Hz: public IirFilter<DataType, CoeffType, 7>  {
  public:
- 	IirSensorPreFilter5Hz() : IirFilter<T, 7>(
+ 	IirLowPassFilter5Hz() : IirFilter<DataType, CoeffType, 7>(
  			{ 0.009490307141041, -0.056679620583394, 0.141306795302753, -0.188234962613877,
 		      0.141306795302753, -0.056679620583394, 0.009490307141041},
  			{1.0, -5.881527464347489, 14.414639972281712, -18.843021855934243,
  			 13.856507112731949, -5.434871112577345, 0.888273348952340}) {}
  };
-
-typedef IirSensorPreFilter5Hz<float> IirSensorPreFilter1f;
-typedef IirSensorPreFilter5Hz<double> IirSensorPreFilter1d;
 
 #endif // __IIRFILT_H__
