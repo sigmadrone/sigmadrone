@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 11 27
+Sheet 11 28
 Title ""
 Date ""
 Rev ""
@@ -479,26 +479,84 @@ Text Notes 7500 7500 2    60   ~ 0
 Text Notes 7500 7600 2    60   ~ 0
 ???
 $Sheet
-S 900  8900 1650 550 
+S 900  8200 1650 550 
 U 565FC76D
 F0 "Wandboard RTC" 60
 F1 "wnd_rtc.sch" 60
-F2 "RTC_SDA" B R 2550 9000 60 
-F3 "RTC_SCL" I R 2550 9100 60 
-F4 "RTC_INT" O R 2550 9200 60 
+F2 "RTC_SDA" B R 2550 8300 60 
+F3 "RTC_SCL" I R 2550 8400 60 
+F4 "RTC_INT" O R 2550 8500 60 
 $EndSheet
 $Sheet
-S 900  8150 1650 450 
+S 900  7450 1650 450 
 U 56693441
 F0 "Wandboard EEPROM" 60
 F1 "wnd_eeprom.sch" 60
-F2 "EEPROM_SDA" B R 2550 8250 60 
-F3 "EEPROM_SCL" I R 2550 8350 60 
+F2 "EEPROM_SDA" B R 2550 7550 60 
+F3 "EEPROM_SCL" I R 2550 7650 60 
 $EndSheet
 $Sheet
-S 900  7200 1650 700 
+S 900  6500 1650 700 
 U 567A4150
 F0 "Wandboard OTG to Cortex USB FS2" 60
 F1 "wnd_usb_otg_to_cortex_usb_fs2.sch" 60
 $EndSheet
+$Sheet
+S 900  9100 1650 1900
+U 56AAE817
+F0 "Wandboard Service" 60
+F1 "wnd_service.sch" 60
+$EndSheet
+Text Label 8500 7500 0    60   ~ 0
+GPIO3_IO12
+Text Label 9100 7500 0    60   ~ 0
+EIM_DA12
+Text Label 9100 7800 0    60   ~ 0
+EIM_DA8
+Text Label 8500 7800 0    60   ~ 0
+GPIO3_IO08
+Text Label 8500 7900 0    60   ~ 0
+GPIO_19
+Wire Wire Line
+	8500 7700 9600 7700
+Wire Wire Line
+	8500 7800 9600 7800
+Wire Wire Line
+	8500 7900 9600 7900
+Text Label 8500 7700 0    60   ~ 0
+GPIO3_IO26
+Text Label 9100 7700 0    60   ~ 0
+EIM_D26
+Wire Wire Line
+	8500 7500 9600 7500
+Text Label 11600 7500 2    60   ~ 0
+EIM_DA11
+Text Label 12200 7500 2    60   ~ 0
+GPIO3_IO11
+Text Label 11600 7600 2    60   ~ 0
+EIM_D27
+Text Label 12200 7600 2    60   ~ 0
+GPIO3_IO27
+Text Label 11600 7700 2    60   ~ 0
+EIM_BCLK
+Text Label 12200 7700 2    60   ~ 0
+GPIO6_IO31
+Text Label 11600 7800 2    60   ~ 0
+ENET_RX_ER
+Text Label 12200 7800 2    60   ~ 0
+GPIO1_IO26
+Text Label 11600 7900 2    60   ~ 0
+SD3_RST
+Text Label 12200 7900 2    60   ~ 0
+GPIO7_IO08
+Wire Wire Line
+	11000 7500 12200 7500
+Wire Wire Line
+	11000 7600 12200 7600
+Wire Wire Line
+	11000 7700 12200 7700
+Wire Wire Line
+	11000 7800 12200 7800
+Wire Wire Line
+	11000 7900 12200 7900
 $EndSCHEMATC

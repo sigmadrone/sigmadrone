@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 1 27
+Sheet 1 28
 Title "Colibri WND"
 Date ""
 Rev "A1"
