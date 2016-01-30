@@ -72,7 +72,7 @@ void AltitudeTracker::update_state(DroneState& drone_state)
 		highest_altitude_ = drone_state.altitude_;
 	}
 
-	if (!is_flight_ceiling_hit()) {
+	if (drone_state.enforce_flight_ceiling_ && !is_flight_ceiling_hit()) {
 		if (current_altitude_ > starting_altitude_ + flight_ceiling_) {
 			if (++alarm_count_ > ALARM_COUNT_THRESHOLD) {
 				flight_ceiling_hit_ = true;

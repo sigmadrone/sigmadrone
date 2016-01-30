@@ -74,6 +74,7 @@ struct DroneState {
 	    , pid_filter_freq_(80)
 	    , flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
 	    , motors_armed_(false)
+		, enforce_flight_ceiling_(false)
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING) { }
 
@@ -237,6 +238,7 @@ struct DroneState {
 	float pid_filter_freq_;
 	FlightMode flight_mode_;
 	bool motors_armed_;
+	bool enforce_flight_ceiling_;
 
 	/*
 	 * Time it took to read sensors
