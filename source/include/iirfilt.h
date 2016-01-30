@@ -69,9 +69,9 @@ private:
 
 /*
  * IIR LPF, calculated using the elliptic method:
- *  Order=6
- *  Fc=10Hz
- *  Attenuation=40dB
+ *  Order       = 6
+ *  Fc          = 0.025 * Fs / 2 (10Hz when Fs is 800 Hz)
+ *  Attenuation = 40dB
  */
 template <typename DataType, typename CoeffType>
 class IirLowPassFilter10Hz: public IirFilter<DataType, CoeffType, 7>  {
@@ -85,9 +85,9 @@ public:
 
  /*
   * IIR LPF, calculated using the Chebyshev 2nd method:
-  *  Order=6
-  *  Fc=5Hz
-  *  Attenuation=40dB
+  *  Order       = 6
+  *  Fc          = 0.0125 * Fs / 2 (5 Hz when Fs is 800 Hz)
+  *  Attenuation = 40dB
   */
  template <typename DataType, typename CoeffType>
  class IirLowPassFilter5Hz: public IirFilter<DataType, CoeffType, 7>  {
