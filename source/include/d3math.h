@@ -95,7 +95,7 @@ public:
 
 	T& at(size_t row, size_t col);
 	const T& at(size_t row, size_t col) const;
-	std::string to_string() const;
+	std::string to_string(size_t prec = 2) const;
 	void clear();
 	void swap_rows(size_t m, size_t n);
 	void swap_columns(size_t m, size_t n);
@@ -345,7 +345,7 @@ public:
 	MatrixMN<T, 4, 4> rotMatrix4() const;
 	MatrixMN<T, 3, 3> rotMatrix3() const;
 	Quaternion<T> reciprocal();
-	std::string toString() const;
+	std::string toString(size_t prec = 2) const;
 
 	static T dot(const Quaternion<T>& u, const Quaternion<T>& v);
 	static T theta(const Quaternion<T>& u, const Quaternion<T>& v);
@@ -697,16 +697,16 @@ MatrixMN<T, 4, 4> Quaternion<T>::rotMatrix4() const
 template <typename TT>
 std::ostream& operator<<(std::ostream& os, const Quaternion<TT>& q)
 {
-	os.setf(std::ios::fixed, std::ios::floatfield);
-	os.precision(2);
 	os << std::showpos << q.w << std::showpos << q.x << "i" << std::showpos << q.y << "j" << std::showpos << q.z << "k";
 	return os;
 }
 
 template <typename T>
-std::string Quaternion<T>::toString() const
+std::string Quaternion<T>::toString(size_t prec) const
 {
 	std::stringstream oss;
+	oss.setf(std::ios::fixed, std::ios::floatfield);
+	oss.precision(prec);
 	oss << *this;
 	return oss.str();
 }
@@ -954,8 +954,6 @@ void MatrixBase<T, ROWS, COLS>::init_identity()
 template <typename TT, size_t RR, size_t CC>
 std::ostream& operator<<(std::ostream& os, const MatrixBase<TT, RR, CC>& m)
 {
-	os.setf(std::ios::fixed, std::ios::floatfield);
-	os.precision(2);
 	for (size_t i = 0; i < m.rows; i++) {
 		for (size_t j = 0; j < m.cols; j++) {
 			os.width(7);
@@ -967,9 +965,11 @@ std::ostream& operator<<(std::ostream& os, const MatrixBase<TT, RR, CC>& m)
 }
 
 template <typename T, size_t ROWS, size_t COLS>
-inline std::string MatrixBase<T, ROWS, COLS>::to_string() const
+inline std::string MatrixBase<T, ROWS, COLS>::to_string(size_t prec) const
 {
 	std::stringstream oss;
+	oss.setf(std::ios::fixed, std::ios::floatfield);
+	oss.precision(prec);
 	oss << *this;
 	return oss.str();
 }
