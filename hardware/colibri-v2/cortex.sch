@@ -44,28 +44,28 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-Text Label 1350 2550 0    60   ~ 0
+Text Label 1650 2550 0    60   ~ 0
 JTDI
-Text HLabel 1300 2550 0    60   Input ~ 0
+Text HLabel 1400 2550 0    60   Input ~ 0
 TDI
-Text Label 1350 2450 0    60   ~ 0
+Text Label 1650 2450 0    60   ~ 0
 JTCK/SWCLK
-Text Label 1350 2350 0    60   ~ 0
+Text Label 1650 2350 0    60   ~ 0
 JTMS/SWDIO
-Text HLabel 1300 2350 0    60   Input ~ 0
+Text HLabel 1400 2350 0    60   Input ~ 0
 TMS/SWDIO
-Text HLabel 1300 2450 0    60   Input ~ 0
+Text HLabel 1400 2450 0    60   Input ~ 0
 TCK/SWCLK
-Text Label 1350 4100 0    60   ~ 0
+Text Label 2100 4100 0    60   ~ 0
 NJTRST
 Text HLabel 7650 7850 0    60   Input ~ 0
 RESET#
-Text HLabel 1100 4100 0    60   Input ~ 0
+Text HLabel 1400 4100 0    60   Input ~ 0
 TRST
-Text Label 1350 4000 0    60   ~ 0
+Text Label 2100 4000 0    60   ~ 0
 JTDO
-Text HLabel 1100 4000 0    60   Input ~ 0
-TDO
+Text HLabel 1400 4000 0    60   Input ~ 0
+TDO/SWO
 $Comp
 L GND #PWR?
 U 1 1 557C9331
@@ -126,72 +126,18 @@ F 6 "Farnell" H 11150 9200 60  0001 C CNN "Provider"
 	1    11150 9200
 	0    1    1    0   
 $EndComp
-Text Label 2100 1050 0    60   ~ 0
-PA0
-Text Label 2100 1150 0    60   ~ 0
-PA1
-Text Label 2100 1250 0    60   ~ 0
-PA2
-Text Label 2100 1350 0    60   ~ 0
-PA3
-Text Label 2100 1450 0    60   ~ 0
-PA4
-Text Label 2100 1550 0    60   ~ 0
-PA5
-Text Label 2100 1650 0    60   ~ 0
-PA6
-Text Label 2100 1750 0    60   ~ 0
-PA7
-Text Label 2100 1850 0    60   ~ 0
-PA8
-Text Label 2100 1950 0    60   ~ 0
-PA9
-Text Label 2100 2050 0    60   ~ 0
-PA10
-Text Label 2100 2150 0    60   ~ 0
-PA11
-Text Label 2100 2250 0    60   ~ 0
-PA12
-Text Label 2100 2350 0    60   ~ 0
-PA13
-Text Label 2100 2450 0    60   ~ 0
-PA14
-Text Label 2100 2550 0    60   ~ 0
-PA15
 Text Label 2100 3700 0    60   ~ 0
 PB0
 Text Label 2100 3800 0    60   ~ 0
 PB1
 Text Label 2100 3900 0    60   ~ 0
 PB2
-Text Label 2100 4000 0    60   ~ 0
-PB3
-Text Label 2100 4100 0    60   ~ 0
-PB4
 Text Label 2100 4200 0    60   ~ 0
 PB5
-Text Label 2100 4300 0    60   ~ 0
-PB6
-Text Label 2100 4400 0    60   ~ 0
-PB7
 Text Label 2100 4500 0    60   ~ 0
-PB8
-Text Label 2100 4600 0    60   ~ 0
-PB9
-Text Label 2100 4700 0    60   ~ 0
-PB10
-Text Label 2100 4800 0    60   ~ 0
-PB11
-Text Label 2100 4900 0    60   ~ 0
-PB12
-Text Label 2100 5000 0    60   ~ 0
-PB13
-Text Label 2100 5100 0    60   ~ 0
-PB14
-Text Label 2100 5200 0    60   ~ 0
-PB15
+I2C1_SCL
 Text Label 2100 6350 0    60   ~ 0
-PC0
+FMC_SDNWE
 Text Label 2100 6450 0    60   ~ 0
 PC1
 Text Label 2100 6550 0    60   ~ 0
@@ -203,57 +149,43 @@ PC4
 Text Label 2100 6850 0    60   ~ 0
 PC5
 Text Label 2100 6950 0    60   ~ 0
-PC6
+TIM8_CH1
 Text Label 2100 7050 0    60   ~ 0
-PC7
+TIM8_CH2
 Text Label 2100 7150 0    60   ~ 0
-PC8
+TIM8_CH3
 Text Label 2100 7250 0    60   ~ 0
-PC9
+TIM8_CH4
 Text Label 2100 7350 0    60   ~ 0
-PC10
+USART3_TX
 Text Label 2100 7450 0    60   ~ 0
-PC11
+USART3_RX
 Text Label 2100 7550 0    60   ~ 0
 PC12
-Text Label 2100 7650 0    60   ~ 0
-PC13
-Text Label 2100 7750 0    60   ~ 0
-PC14
-Text Label 2100 7850 0    60   ~ 0
-PC15
 Text Label 2100 9000 0    60   ~ 0
-PD0
+FMC_D2
 Text Label 2100 9100 0    60   ~ 0
-PD1
+FMC_D3
 Text Label 2100 9200 0    60   ~ 0
 PD2
 Text Label 2100 9300 0    60   ~ 0
-PD3
+USART2_CTS
 Text Label 2100 9400 0    60   ~ 0
-PD4
+USART2_RTS
 Text Label 2100 9500 0    60   ~ 0
-PD5
+USART2_TX
 Text Label 2100 9600 0    60   ~ 0
-PD6
+USART2_RX
 Text Label 2100 9700 0    60   ~ 0
 PD7
 Text Label 2100 9800 0    60   ~ 0
-PD8
+FMC_D13
 Text Label 2100 9900 0    60   ~ 0
-PD9
+FMC_D14
 Text Label 2100 10000 0    60   ~ 0
-PD10
-Text Label 2100 10100 0    60   ~ 0
-PD11
+FMC_D15
 Text Label 2100 10200 0    60   ~ 0
-PD12
-Text Label 2100 10300 0    60   ~ 0
-PD13
-Text Label 2100 10400 0    60   ~ 0
-PD14
-Text Label 2100 10500 0    60   ~ 0
-PD15
+TIM4_CH1
 Text Label 5300 1050 0    60   ~ 0
 PE0
 Text Label 5300 1150 0    60   ~ 0
@@ -438,8 +370,6 @@ Text Label 12250 7900 2    60   ~ 0
 VCAP1
 Text Label 12250 8250 2    60   ~ 0
 VCAP2
-Text Label 1350 7250 0    60   ~ 0
-I2C3_SDA
 Text Label 12250 9000 2    60   ~ 0
 PH0
 Text Label 12250 9400 2    60   ~ 0
@@ -492,12 +422,8 @@ Text Label 4500 1550 0    60   ~ 0
 SPI4_MISO
 Text Label 4500 1650 0    60   ~ 0
 SPI4_MOSI
-Text HLabel 1300 1050 0    60   Input ~ 0
+Text HLabel 1400 3900 0    60   Input ~ 0
 BUTTON_0
-Text Label 1350 1150 0    60   ~ 0
-MEMS_GYR_INT2
-Text Label 1350 1250 0    60   ~ 0
-MEMS_GYR_INT1
 Text Label 13700 6200 0    60   ~ 0
 PC12
 Text Label 13700 6300 0    60   ~ 0
@@ -516,19 +442,17 @@ Text HLabel 15200 6200 2    60   Input ~ 0
 MEMS_ACC_INT2
 Text HLabel 15200 6300 2    60   Input ~ 0
 MEMS_ACC_INT1
-Text Label 1350 9700 0    60   ~ 0
-MEMS_ACC_NCS
 Text Label 4500 4400 0    60   ~ 0
 SPI5_SCK
 Text Label 4500 4500 0    60   ~ 0
 SPI5_MISO
 Text Label 4500 4600 0    60   ~ 0
 SPI5_MOSI
-Text HLabel 4400 6550 0    60   Input ~ 0
+Text HLabel 4600 6550 0    60   Input ~ 0
 BUTTON_1
-Text HLabel 4400 6650 0    60   Input ~ 0
+Text HLabel 4600 6650 0    60   Input ~ 0
 BUTTON_2
-Text HLabel 4400 6950 0    60   Input ~ 0
+Text HLabel 4600 6950 0    60   Input ~ 0
 BUTTON_3
 $Comp
 L +3V3 #PWR?
@@ -1023,9 +947,9 @@ F 6 "Farnell" V 11800 6700 30  0001 C CNN "Provider"
 $EndComp
 Text Label 12250 7100 2    60   ~ 0
 OSC-OUT
-Text Label 1350 7750 0    60   ~ 0
+Text Label 2100 7750 0    60   ~ 0
 OSC-IN
-Text Label 1350 7850 0    60   ~ 0
+Text Label 2100 7850 0    60   ~ 0
 OSC-OUT
 $Comp
 L R_SMT R?
@@ -1060,45 +984,45 @@ $EndComp
 $Comp
 L STM32F429NI U?
 U 1 1 563C83B2
-P 3100 1800
-F 0 "U?" H 3500 3000 60  0000 C CNN
-F 1 "STM32F429NI" H 3300 500 60  0000 C CNN
-F 2 "" H 3200 1400 60  0000 C CNN
-F 3 "" H 3200 1400 60  0000 C CNN
-	1    3100 1800
+P 3400 1800
+F 0 "U?" H 3800 3000 60  0000 C CNN
+F 1 "STM32F429NI" H 3600 500 60  0000 C CNN
+F 2 "" H 3500 1400 60  0000 C CNN
+F 3 "" H 3500 1400 60  0000 C CNN
+	1    3400 1800
 	1    0    0    -1  
 $EndComp
 $Comp
 L STM32F429NI U?
 U 2 1 563C9EE6
-P 3100 4450
-F 0 "U?" H 3500 5650 60  0000 C CNN
-F 1 "STM32F429NI" H 3300 3150 60  0000 C CNN
-F 2 "" H 3200 4050 60  0000 C CNN
-F 3 "" H 3200 4050 60  0000 C CNN
-	2    3100 4450
+P 3400 4450
+F 0 "U?" H 3800 5650 60  0000 C CNN
+F 1 "STM32F429NI" H 3600 3150 60  0000 C CNN
+F 2 "" H 3500 4050 60  0000 C CNN
+F 3 "" H 3500 4050 60  0000 C CNN
+	2    3400 4450
 	1    0    0    -1  
 $EndComp
 $Comp
 L STM32F429NI U?
 U 3 1 563CA105
-P 3100 7100
-F 0 "U?" H 3500 8300 60  0000 C CNN
-F 1 "STM32F429NI" H 3300 5800 60  0000 C CNN
-F 2 "" H 3200 6700 60  0000 C CNN
-F 3 "" H 3200 6700 60  0000 C CNN
-	3    3100 7100
+P 3400 7100
+F 0 "U?" H 3800 8300 60  0000 C CNN
+F 1 "STM32F429NI" H 3600 5800 60  0000 C CNN
+F 2 "" H 3500 6700 60  0000 C CNN
+F 3 "" H 3500 6700 60  0000 C CNN
+	3    3400 7100
 	1    0    0    -1  
 $EndComp
 $Comp
 L STM32F429NI U?
 U 4 1 563CA230
-P 3100 9750
-F 0 "U?" H 3500 10950 60  0000 C CNN
-F 1 "STM32F429NI" H 3300 8450 60  0000 C CNN
-F 2 "" H 3200 9350 60  0000 C CNN
-F 3 "" H 3200 9350 60  0000 C CNN
-	4    3100 9750
+P 3400 9750
+F 0 "U?" H 3800 10950 60  0000 C CNN
+F 1 "STM32F429NI" H 3600 8450 60  0000 C CNN
+F 2 "" H 3500 9350 60  0000 C CNN
+F 3 "" H 3500 9350 60  0000 C CNN
+	4    3400 9750
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -1264,15 +1188,15 @@ F 6 "Farnell" H 11430 1070 30  0001 L CNN "Provider"
 	0    -1   -1   0   
 $EndComp
 Wire Wire Line
-	1300 2350 2400 2350
+	1400 2350 2700 2350
 Wire Wire Line
-	1300 2450 2400 2450
+	1400 2450 2700 2450
 Wire Wire Line
-	1300 2550 2400 2550
+	1400 2550 2700 2550
 Wire Wire Line
-	1100 4000 2400 4000
+	1400 4000 2700 4000
 Wire Wire Line
-	1100 4100 2400 4100
+	1400 4100 2700 4100
 Wire Wire Line
 	7650 7850 8650 7850
 Wire Wire Line
@@ -1456,91 +1380,83 @@ Wire Wire Line
 Wire Wire Line
 	10200 9400 10400 9400
 Wire Wire Line
-	1300 1050 2400 1050
+	1400 1050 2700 1050
 Wire Wire Line
-	1350 1150 2400 1150
+	1400 1150 2700 1150
 Wire Wire Line
-	1350 1250 2400 1250
+	1400 1250 2700 1250
 Wire Wire Line
-	2100 1350 2400 1350
+	1400 1350 2700 1350
 Wire Wire Line
-	2100 1450 2400 1450
+	1400 1450 2700 1450
 Wire Wire Line
-	2100 1550 2400 1550
+	1400 1550 2700 1550
 Wire Wire Line
-	2100 1650 2400 1650
+	1400 1650 2700 1650
 Wire Wire Line
-	2100 1750 2400 1750
+	1400 1750 2700 1750
 Wire Wire Line
-	2100 1850 2400 1850
+	1400 1850 2700 1850
 Wire Wire Line
-	1300 1950 2400 1950
+	1400 1950 2700 1950
 Wire Wire Line
-	1300 2050 2400 2050
+	1400 2050 2700 2050
 Wire Wire Line
-	1300 2150 2400 2150
+	1400 2150 2700 2150
 Wire Wire Line
-	1300 2250 2400 2250
+	1500 2250 2700 2250
 Wire Wire Line
-	2400 3700 2100 3700
+	2700 3700 1400 3700
 Wire Wire Line
-	2400 3800 2100 3800
+	2700 3800 1400 3800
 Wire Wire Line
-	2400 3900 2100 3900
+	2700 3900 1400 3900
 Wire Wire Line
-	1350 4200 2400 4200
+	1400 4200 2700 4200
 Wire Wire Line
-	1350 4300 2400 4300
+	1400 4300 2700 4300
 Wire Wire Line
-	2400 4400 2100 4400
+	2700 4400 1400 4400
 Wire Wire Line
-	2400 4500 2100 4500
+	2700 4500 1400 4500
 Wire Wire Line
-	2400 4600 2100 4600
+	2700 4600 1400 4600
 Wire Wire Line
-	2400 4700 2100 4700
+	2700 5000 1400 5000
 Wire Wire Line
-	2400 4800 2100 4800
+	2700 5100 1400 5100
 Wire Wire Line
-	2400 4900 2100 4900
+	2700 5200 1400 5200
 Wire Wire Line
-	2400 5000 2100 5000
+	2100 6350 2700 6350
 Wire Wire Line
-	2400 5100 2100 5100
+	2700 6450 1400 6450
 Wire Wire Line
-	2400 5200 2100 5200
+	1400 6550 2700 6550
 Wire Wire Line
-	2100 6350 2400 6350
+	2700 6650 1400 6650
 Wire Wire Line
-	2400 6450 2100 6450
+	2700 6750 1400 6750
 Wire Wire Line
-	2100 6550 2400 6550
+	2700 6850 1400 6850
 Wire Wire Line
-	2400 6650 2100 6650
+	1400 6950 2700 6950
 Wire Wire Line
-	2400 6750 2100 6750
+	2700 7050 1400 7050
 Wire Wire Line
-	2400 6850 2100 6850
+	2700 7150 1400 7150
 Wire Wire Line
-	2100 6950 2400 6950
+	1400 7250 2700 7250
 Wire Wire Line
-	2400 7050 2100 7050
+	2700 7350 1400 7350
 Wire Wire Line
-	2400 7150 2100 7150
+	2700 7450 1400 7450
 Wire Wire Line
-	1350 7250 2400 7250
+	2700 7550 1400 7550
 Wire Wire Line
-	2400 7350 2100 7350
+	2100 7750 2700 7750
 Wire Wire Line
-	2400 7450 2100 7450
-Wire Wire Line
-	2400 7550 2100 7550
-Wire Wire Line
-	2400 7650 2100 7650
-Wire Wire Line
-	1350 7750 2400 7750
-Wire Wire Line
-	1350 7850 2400 7850
+	2100 7850 2700 7850
 Wire Wire Line
 	10200 9000 10200 9750
 Connection ~ 10200 9400
@@ -1603,15 +1519,15 @@ Wire Wire Line
 Wire Wire Line
 	5300 6450 5600 6450
 Wire Wire Line
-	4400 6550 5600 6550
+	4600 6550 5600 6550
 Wire Wire Line
-	4400 6650 5600 6650
+	4600 6650 5600 6650
 Wire Wire Line
 	5300 6750 5600 6750
 Wire Wire Line
 	5300 6850 5600 6850
 Wire Wire Line
-	4400 6950 5600 6950
+	4600 6950 5600 6950
 Wire Wire Line
 	5300 7050 5600 7050
 Wire Wire Line
@@ -1711,37 +1627,29 @@ Wire Wire Line
 Wire Wire Line
 	8300 7050 8650 7050
 Wire Wire Line
-	2100 9000 2400 9000
+	2100 9000 2700 9000
 Wire Wire Line
-	2100 9100 2400 9100
+	2100 9100 2700 9100
 Wire Wire Line
-	2400 9200 2100 9200
+	2700 9200 1400 9200
 Wire Wire Line
-	2400 9300 2100 9300
+	2700 9300 2100 9300
 Wire Wire Line
-	2400 9400 2100 9400
+	2700 9400 2100 9400
 Wire Wire Line
-	2400 9500 2100 9500
+	2700 9500 1400 9500
 Wire Wire Line
-	2400 9600 2100 9600
+	2700 9600 1400 9600
 Wire Wire Line
-	1350 9700 2400 9700
+	1400 9700 2700 9700
 Wire Wire Line
-	2100 9800 2400 9800
+	2100 9800 2700 9800
 Wire Wire Line
-	2100 9900 2400 9900
+	2100 9900 2700 9900
 Wire Wire Line
-	2100 10000 2400 10000
+	2100 10000 2700 10000
 Wire Wire Line
-	2100 10100 2400 10100
-Wire Wire Line
-	2100 10200 2400 10200
-Wire Wire Line
-	2100 10300 2400 10300
-Wire Wire Line
-	2100 10400 2400 10400
-Wire Wire Line
-	2100 10500 2400 10500
+	1400 10200 2700 10200
 Wire Wire Line
 	8300 7650 8650 7650
 Wire Wire Line
@@ -2028,21 +1936,21 @@ F 3 "" H 7550 9950 60  0000 C CNN
 $EndComp
 Wire Wire Line
 	7550 9800 7550 9950
-Text Label 1350 1950 0    60   ~ 0
+Text Label 2100 4300 0    60   ~ 0
 USART1_TX
-Text Label 1350 2050 0    60   ~ 0
+Text Label 2100 4400 0    60   ~ 0
 USART1_RX
-Text HLabel 1300 1950 0    60   Output ~ 0
+Text HLabel 1400 4300 0    60   Output ~ 0
 USART1_TX
-Text HLabel 1300 2050 0    60   Input ~ 0
+Text HLabel 1400 4400 0    60   Input ~ 0
 USART1_RX
-Text HLabel 1300 2150 0    60   Output ~ 0
+Text HLabel -750 1850 0    60   Output ~ 0
 USART1_CTS
-Text HLabel 1300 2250 0    60   Input ~ 0
+Text HLabel -750 1950 0    60   Input ~ 0
 USART1_RTS
-Text Label 1350 2150 0    60   ~ 0
+Text Label -600 1850 0    60   ~ 0
 USART1_CTS
-Text Label 1350 2250 0    60   ~ 0
+Text Label -600 1950 0    60   ~ 0
 USART1_RTS
 Wire Wire Line
 	14750 1400 15000 1400
@@ -2140,5 +2048,264 @@ F 5 "9331700" V 9200 9100 30  0001 C CNN "Part"
 F 6 "Farnell" V 9250 9100 30  0001 C CNN "Provider"
 	1    9000 9100
 	1    0    0    -1  
+$EndComp
+Text Label 2250 1650 0    60   ~ 0
+TIM3_CH1
+Text Label 2250 1550 0    60   ~ 0
+TIM2_CH1
+Text Label 2250 1250 0    60   ~ 0
+TIM9_CH1
+Text Label 2250 1050 0    60   ~ 0
+TIM5_CH1
+Text Label 2250 1150 0    60   ~ 0
+PA1
+Text Label 2250 1350 0    60   ~ 0
+PA3
+Text Label 2250 1450 0    60   ~ 0
+PA4
+Text Label 2250 1750 0    60   ~ 0
+PA7
+Text Label 2250 1850 0    60   ~ 0
+TIM1_CH1
+Text Label 2250 1950 0    60   ~ 0
+TIM1_CH2
+Text Label 2250 2050 0    60   ~ 0
+TIM1_CH3
+Text Label 2250 2150 0    60   ~ 0
+TIM1_CH4
+Text HLabel 1400 1050 0    60   Input ~ 0
+IN_PWM_04
+Text HLabel 1400 1150 0    60   Input ~ 0
+MEMS_GYR_INT1
+Text HLabel 1400 1250 0    60   Input ~ 0
+IN_PWM_05
+Text HLabel 1400 1350 0    60   Input ~ 0
+MEMS_GYR_INT2
+Text HLabel 1400 1450 0    60   Input ~ 0
+MODULE_RSTn
+Text HLabel 1400 1550 0    60   Input ~ 0
+IN_PWM_01
+Text HLabel 1400 1650 0    60   Input ~ 0
+IN_PWM_02
+Text HLabel 1400 1750 0    60   Input ~ 0
+MODULE_ON/OFF
+Text HLabel 1400 1850 0    60   Output ~ 0
+SRV_PWM_0
+Text HLabel 1400 1950 0    60   Output ~ 0
+SRV_PWM_1
+Text HLabel 1400 2050 0    60   Output ~ 0
+SRV_PWM_2
+Text HLabel 1400 2150 0    60   Output ~ 0
+SRV_PWM_3
+Text Label 1500 1950 0    60   ~ 0
+OTG_FS_VBUS
+Text Label 1500 2050 0    60   ~ 0
+OTG_FS_ID
+Text Label 1500 2150 0    60   ~ 0
+OTG_FS_DM
+Text Label 1500 2250 0    60   ~ 0
+OTG_FS_DP
+Wire Wire Line
+	1400 2850 2250 2850
+Wire Wire Line
+	1400 2950 2250 2950
+Wire Wire Line
+	1400 3050 2250 3050
+Wire Wire Line
+	1400 3150 2250 3150
+Text HLabel 1400 2850 0    60   BiDi ~ 0
+OTG_FS_VBUS
+Text HLabel 1400 2950 0    60   Output ~ 0
+OTG_FS_ID
+Text HLabel 1400 3050 0    60   BiDi ~ 0
+OTG_FS_DM
+Text Label 2250 2850 2    60   ~ 0
+OTG_FS_VBUS
+Text Label 2250 2950 2    60   ~ 0
+OTG_FS_ID
+Text Label 2250 3050 2    60   ~ 0
+OTG_FS_DM
+Text Label 2250 3150 2    60   ~ 0
+OTG_FS_DP
+Text HLabel 1400 3150 0    60   BiDi ~ 0
+OTG_FS_DP
+Text HLabel 1400 3700 0    60   Output ~ 0
+VH_CTRL
+Text HLabel 1400 3800 0    60   Output ~ 0
+V_SENS_CTRL
+Text HLabel 1400 4200 0    60   Input ~ 0
+GPS_TIME_PULSE
+Text HLabel 1400 4500 0    60   Output ~ 0
+PS_I2C1_SCL
+Text HLabel 1400 4600 0    60   BiDi ~ 0
+PS_I2C1_SDA
+Text Label 2100 4600 0    60   ~ 0
+I2C1_SDA
+Text HLabel 1400 4900 0    60   Output ~ 0
+PCA9685_OE
+Text HLabel 1400 5000 0    60   BiDi ~ 0
+OTG_HS_VBUS
+Text HLabel 1400 5100 0    60   BiDi ~ 0
+OTG_HS_DM
+Text HLabel 1400 5200 0    60   BiDi ~ 0
+OTG_HS_DP
+Text Label 2100 5000 0    60   ~ 0
+OTG_HS_VBUS
+Text Label 2100 5100 0    60   ~ 0
+OTG_HS_DM
+Text Label 2100 5200 0    60   ~ 0
+OTG_HS_DP
+Text Label 2100 4700 0    60   ~ 0
+I2C2_SCL
+Wire Wire Line
+	2700 4700 1400 4700
+Wire Wire Line
+	2700 4800 1400 4800
+Text Label 2100 4800 0    60   ~ 0
+I2C2_SDA
+Text Label 2100 4900 0    60   ~ 0
+PB12
+Text HLabel 1400 4800 0    60   BiDi ~ 0
+PCA9685_SDA
+Text HLabel 1400 4700 0    60   Output ~ 0
+PCA9685_SCL
+Wire Wire Line
+	1400 4900 2700 4900
+Text HLabel 1400 6450 0    60   Output ~ 0
+MEMS_GYRO_CS
+Text HLabel 1400 6550 0    60   Input ~ 0
+Vsys_MSRMNT
+Text HLabel 1400 6650 0    60   Input ~ 0
+Adapter_AV#
+Text HLabel 1400 6750 0    60   Output ~ 0
+C_OTG_FS_PSO
+Text HLabel 1400 6850 0    60   Input ~ 0
+C_OTG_FS_OC
+Text HLabel 1400 6950 0    60   Output ~ 0
+SRV_PWM_4
+Text HLabel 1400 7050 0    60   Output ~ 0
+SRV_PWM_5
+Text HLabel 1400 7150 0    60   Output ~ 0
+SRV_PWM_6
+Text HLabel 1400 7250 0    60   Output ~ 0
+SRV_PWM_7
+Text HLabel 1400 7350 0    60   Output ~ 0
+GPS_TXD
+Text HLabel 1400 7450 0    60   Input ~ 0
+GPS_RXD
+Text HLabel 1400 7550 0    60   Input ~ 0
+MEMS_ACC_INT2
+NoConn ~ 2700 7650
+Text HLabel 1400 9200 0    60   Input ~ 0
+MEMS_ACC_INT2
+Text HLabel 1400 9700 0    60   Output ~ 0
+MEMS_ACC_CS
+NoConn ~ 2700 10100
+Text HLabel 1400 10200 0    60   Input ~ 0
+IN_PWM_03
+Text Label 2100 10400 0    60   ~ 0
+FMC_D0
+Text Label 2100 10500 0    60   ~ 0
+FMC_D1
+Wire Wire Line
+	2100 10400 2700 10400
+Wire Wire Line
+	2100 10500 2700 10500
+NoConn ~ 2700 10300
+Text Label 2700 8250 2    60   ~ 0
+USART2_CTS
+Text Label 2700 8550 2    60   ~ 0
+USART2_RTS
+Wire Wire Line
+	1950 8250 2700 8250
+Text HLabel 1400 9500 0    60   Output ~ 0
+WB_UART_RX
+Text HLabel 1400 9600 0    60   Input ~ 0
+WB_UART_TX
+Text HLabel 1200 8250 0    60   Input ~ 0
+WB_UART_RTS
+Text HLabel 1200 8550 0    60   Output ~ 0
+WB_UART_CTS
+$Comp
+L R_SMT R?
+U 1 1 56AEA34F
+P 1800 8100
+F 0 "R?" V 1750 8250 50  0000 C CNN
+F 1 "0R/5%" V 1750 7850 50  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 1950 8100 30  0001 C CNN
+F 3 "" V 1880 8100 30  0000 C CNN
+F 4 "0603" V 1800 8100 20  0000 C CNN "SMT"
+F 5 "1469739" V 2000 8100 30  0001 C CNN "Part"
+F 6 "Farnell" V 2050 8100 30  0001 C CNN "Provider"
+	1    1800 8100
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	1200 8250 1650 8250
+Wire Wire Line
+	1950 8100 2050 8100
+Wire Wire Line
+	2050 8100 2050 8250
+Connection ~ 2050 8250
+Wire Wire Line
+	1950 8550 2700 8550
+Wire Wire Line
+	1950 8400 2050 8400
+Wire Wire Line
+	2050 8400 2050 8550
+Connection ~ 2050 8550
+Wire Wire Line
+	1650 8550 1200 8550
+Wire Wire Line
+	1650 8400 1400 8400
+Wire Wire Line
+	1400 8400 1400 8250
+Connection ~ 1400 8250
+Wire Wire Line
+	1650 8100 1300 8100
+Wire Wire Line
+	1300 8100 1300 8550
+Connection ~ 1300 8550
+$Comp
+L R_SMT R?
+U 1 1 56AEA777
+P 1800 8250
+F 0 "R?" V 1750 8400 50  0000 C CNN
+F 1 "0R/5%" V 1750 8000 50  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 1950 8250 30  0001 C CNN
+F 3 "" V 1880 8250 30  0000 C CNN
+F 4 "0603" V 1800 8250 20  0000 C CNN "SMT"
+F 5 "1469739" V 2000 8250 30  0001 C CNN "Part"
+F 6 "Farnell" V 2050 8250 30  0001 C CNN "Provider"
+	1    1800 8250
+	0    1    1    0   
+$EndComp
+$Comp
+L R_SMT R?
+U 1 1 56AEA841
+P 1800 8400
+F 0 "R?" V 1750 8550 50  0000 C CNN
+F 1 "0R/5%" V 1750 8150 50  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 1950 8400 30  0001 C CNN
+F 3 "" V 1880 8400 30  0000 C CNN
+F 4 "0603" V 1800 8400 20  0000 C CNN "SMT"
+F 5 "1469739" V 2000 8400 30  0001 C CNN "Part"
+F 6 "Farnell" V 2050 8400 30  0001 C CNN "Provider"
+	1    1800 8400
+	0    1    1    0   
+$EndComp
+$Comp
+L R_SMT R?
+U 1 1 56AEAB50
+P 1800 8550
+F 0 "R?" V 1750 8700 50  0000 C CNN
+F 1 "0R/5%" V 1750 8300 50  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 1950 8550 30  0001 C CNN
+F 3 "" V 1880 8550 30  0000 C CNN
+F 4 "0603" V 1800 8550 20  0000 C CNN "SMT"
+F 5 "1469739" V 2000 8550 30  0001 C CNN "Part"
+F 6 "Farnell" V 2050 8550 30  0001 C CNN "Provider"
+	1    1800 8550
+	0    1    1    0   
 $EndComp
 $EndSCHEMATC
