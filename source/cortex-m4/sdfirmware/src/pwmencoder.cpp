@@ -25,7 +25,7 @@ PwmEncoder::PwmEncoder(HwTimer::Id timer_id,
 		const TimeSpan& pwm_period,
 		const std::vector<PinName>& out_pin_names,
 		const std::vector<uint32_t>& channels) :
-		timer_(timer_id, pwm_period, Frequency::from_kilohertz(4500)),
+		timer_(timer_id, pwm_period, Frequency::from_megahertz(26)),
 		channels_(channels)
 {
 	for (auto pin_name : out_pin_names) {

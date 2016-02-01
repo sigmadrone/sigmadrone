@@ -46,10 +46,11 @@ struct PwmPulse {
 	}
 	inline TimeSpan to_timespan(float value) {
 		assert(value >= 0 && value <= 1.0);
-		float usecs = static_cast<float>((max_-min_).microseconds()) * value +
-				static_cast<float>(min_.microseconds());
-		return TimeSpan::from_microseconds(usecs);
+		float nsecs = static_cast<float>((max_-min_).nanoseconds()) * value +
+				static_cast<float>(min_.nanoseconds());
+		return TimeSpan::from_nanoseconds(nsecs);
 	}
+
 private:
 	TimeSpan min_;
 	TimeSpan max_;
@@ -89,6 +90,8 @@ private:
 	float yaw_;
 	float pitch_;
 	float roll_;
+	float pitch_bias_;
+	float roll_bias_;
 
 };
 

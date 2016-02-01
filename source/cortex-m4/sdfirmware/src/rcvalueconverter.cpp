@@ -18,7 +18,6 @@
  *  Martin Stoilov <martin@sigmadrone.org>
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
-
 #include "rcvalueconverter.h"
 
 static const float MAX_EULER_FROM_RC = M_PI / 4.0;
@@ -39,7 +38,9 @@ RcValueConverter::RcValueConverter(
 				prev_motors_armed_(false),
 				yaw_(0.0),
 				pitch_(0.0),
-				roll_(0.0)
+				roll_(0.0),
+				pitch_bias_(0.0),
+				roll_bias_(0.0)
 {
 	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
 	update();
@@ -62,9 +63,8 @@ void RcValueConverter::update()
 	} else {
 		yaw_ = 0;
 	}
-	pitch_ = (pitch > 0.0) ? ((pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_) : 0.0f;
-	roll_ = (roll > 0.0) ? (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_ : 0.0f;
-
+	pitch_ = (pitch > 0.0) ? ((pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_)  - pitch_bias_: 0.0f;
+	roll_ = (roll > 0.0) ? ((roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_) - roll_bias_: 0.0f;
 	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(roll_, pitch_, 0), 1.0);
 
 	/*
