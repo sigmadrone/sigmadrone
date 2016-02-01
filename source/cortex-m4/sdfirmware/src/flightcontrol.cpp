@@ -34,7 +34,7 @@ FlightControl::FlightControl() :
 				RC_VALUE_SCALE_FACTOR,
 				TimeSpan::from_microseconds(1100),
 				TimeSpan::from_microseconds(1910)),
-		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)),
+		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(350)),
 		motor_power_(PB_2),
 		pilot_(new PidPilot()),
 		altitude_track_()
@@ -79,10 +79,10 @@ Throttle FlightControl::base_throttle() const
 
 void FlightControl::set_throttle(const std::vector<Throttle>& thrVec)
 {
-	PwmPulse pulse(TimeSpan::from_milliseconds(1), TimeSpan::from_milliseconds(2));
+	PwmPulse pulse(TimeSpan::from_microseconds(1000), TimeSpan::from_microseconds(2200));
 	for (size_t i = 0; i < thrVec.size(); ++i) {
-		servo_ctrl_.set_pwm_pulse(i, pulse.to_timespan(
-				(base_throttle().get() >= 0.1) ? thrVec[i].get() : 0.0));
+		TimeSpan pulsetime = (base_throttle().get() <= 0.075) ? pulse.to_timespan(0.0) : pulse.to_timespan(thrVec[i].get());
+		servo_ctrl_.set_pwm_pulse(i, pulsetime);
 	}
 }
 
