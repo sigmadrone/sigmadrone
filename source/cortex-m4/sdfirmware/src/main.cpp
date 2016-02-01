@@ -326,6 +326,7 @@ void main_task(void *pvParameters)
 	 */
 	dronestate_boot_config(*drone_state);
 
+	printf("Etering infinite loop...\n");
 	// Infinite loop
 	while (1) {
 		uint32_t msg;
@@ -388,35 +389,13 @@ void main_task(void *pvParameters)
 		datastream.set_attitude_twist(attitude_twist);
 		datastream.set_attitude_swing(attitude_swing);
 		datastream.commit();
-		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
+		if (false && console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
 			console_update_time.time_stamp();
 			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));
 			printf("Accel     : %5.3f %5.3f %5.3f\n", drone_state->accel_.at(0), drone_state->accel_.at(1), drone_state->accel_.at(2));
-			printf("Mag       : %5.3f %5.3f %5.3f\n", drone_state->mag_.at(0), drone_state->mag_.at(1), drone_state->mag_.at(2));
 			printf("dT        : %lu uSec\n", (uint32_t)drone_state->dt_.microseconds());
 			printf("Q         : %5.3f %5.3f %5.3f %5.3f\n", drone_state->attitude_.w, drone_state->attitude_.x, drone_state->attitude_.y,
 					drone_state->attitude_.z);
-			QuaternionF tq = flight_ctl.target_q();
-			printf("Target Q  : %5.3f %5.3f %5.3f %5.3f\n", tq.w, tq.x, tq.y, tq.z);
-			printf("Throttle  : %.8f\n", flight_ctl.base_throttle().get());
-			printf("Motors    : %1.3f %1.3f %1.3f %1.3f\n", drone_state->motors_.at(0), drone_state->motors_.at(1),
-					drone_state->motors_.at(2), drone_state->motors_.at(3));
-			printf("Altit, m  : %5.3f\n", drone_state->altitude_.meters());
-			printf("Temper, C :%5.1f\n", drone_state->temperature_);
-			printf("Battery   : %2.2fV %2.2f%% %s\n", drone_state->battery_voltage_.volts(),
-					drone_state->battery_percentage_, drone_state->battery_type_.c_str());
-			printf("GPS       : SAT %lu LON %3.6f LAT %3.6f ALT %4.2f SPEED %3.2f kmph COURSE %3.6f\n", drone_state->satellite_count_,
-					drone_state->longitude_, drone_state->latitude_, drone_state->gps_altitude_.meters(),
-					drone_state->speed_over_ground_, drone_state->course_);
-
-			//printf("Torq :  %1.3f %1.3f %1.3f\n", state.pid_torque_.at(0), state.pid_torque_.at(1),
-				//	state.pid_torque_.at(2));
-			printf("Servo      : %s\n", flight_ctl.servo().is_started() ? "armed" : "disarmed");
-			if (!drone_state->alarm_.is_none()) {
-				printf("%s %s, data: %s, @%5.3f sec\n", drone_state->alarm_.to_string(),
-						drone_state->alarm_.severity_to_string(), drone_state->alarm_.data().c_str(),
-						drone_state->alarm_.when().seconds_float());
-			}
 			printf("\n");
 		}
 
