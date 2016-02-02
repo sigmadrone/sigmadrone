@@ -26,8 +26,8 @@ TriPilot::TriPilot()
 	min_thrust_ = 0.0;
 	max_thrust_ = 1.0;
 	target_thrust_ = 0.0;
-	max_integral_error_ = 0.2;
-	leak_rate_ = 0.001;
+	max_integral_error_ = 0.7;
+	leak_rate_ = 0.005;
 
 	Vector3f thrust_dir(0, 0, -1);
 	propellers_.push_back(Propeller(Vector3f(-1, -1,  0), thrust_dir, Propeller::CW));
@@ -70,19 +70,20 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	Vector3f error_z = errorTwist.axis().normalize() * errorTwist.angle() * -1.0;
 	Vector3f error = error_xy + error_z;
 
-#ifdef USE_INTEGRAL
+#ifndef USE_INTEGRAL
 	Vector3f integral_error = pid_.get_integral_error();
 	if (integral_error.length() > max_integral_error_) {
 		integral_error = integral_error.normalize() * max_integral_error_;
 		pid_.set_integral_error(integral_error);
 	}
 	torq = pid_.get_pid(error, state.dt_.seconds_float(), leak_rate_);
-	if (Vector2f(state.pitch_, state.roll_).length() > 0.03) {
+	if (Vector2f(state.pitch_, state.roll_).length() > 0.3) {
 		/*
 		 * Don't track the integral error if we are not in home position.
 		 */
 		pid_.set_integral_error(integral_error);
 	}
+
 #else
 	torq = pid_.get_pid(error, state.dt_.seconds_float());
 #endif
@@ -122,6 +123,10 @@ void TriPilot::update_state(DroneState& state)
 	set_and_scale_motors(motors_.at(0), motors_.at(1), motors_.at(2), motors_.at(3));
 	state.motors_ = motors();
 	state.pid_torque_ = torque_rpm;
+
+//	Vector3f integral_error = pid_.get_integral_error();
+//	std::cout << integral_error.transpose().to_string(5) << "(" << integral_error.transpose() * state.ki_ * rpm_coeff << ")" << std::endl;
+//	std::cout << state.motors_.transpose();
 	return;
 }
 
