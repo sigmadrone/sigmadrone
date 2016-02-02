@@ -55,6 +55,8 @@ private:
 	float min_thrust_;
 	float max_thrust_;
 	float target_thrust_;
+	float max_integral_error_;
+	float leak_rate_;
 
 	PidController3f pid_;
 	Vector3f torque_correction_;

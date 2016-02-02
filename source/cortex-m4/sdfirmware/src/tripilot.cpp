@@ -26,6 +26,8 @@ TriPilot::TriPilot()
 	min_thrust_ = 0.0;
 	max_thrust_ = 1.0;
 	target_thrust_ = 0.0;
+	max_integral_error_ = 0.2;
+	leak_rate_ = 0.001;
 
 	Vector3f thrust_dir(0, 0, -1);
 	propellers_.push_back(Propeller(Vector3f(-1, -1,  0), thrust_dir, Propeller::CW));
@@ -67,7 +69,19 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	Vector3f error_xy = errorSwing.axis().normalize() * errorSwing.angle() * -1.0;
 	Vector3f error_z = errorTwist.axis().normalize() * errorTwist.angle() * -1.0;
 	Vector3f error = error_xy + error_z;
-	torq = pid_.get_pid(error, state.dt_.seconds_float());
+
+	Vector3f integral_error = pid_.get_integral_error();
+	if (integral_error.length() > max_integral_error_) {
+		integral_error = integral_error.normalize() * max_integral_error_;
+		pid_.set_integral_error(integral_error);
+	}
+	torq = pid_.get_pid(error, state.dt_.seconds_float(), leak_rate_);
+	if (Vector2f(state.pitch_, state.roll_).length() > 0.03) {
+		/*
+		 * Don't track the integral error if we are not in home position.
+		 */
+		pid_.set_integral_error(integral_error);
+	}
 	return torq;
 }
 
