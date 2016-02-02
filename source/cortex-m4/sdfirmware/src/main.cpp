@@ -247,8 +247,8 @@ void main_task(void *pvParameters)
 			});
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi5, 1);
-	uint8_t gyr_wtm = 3;
-	uint8_t acc_wtm = 17;
+	constexpr uint8_t gyr_wtm = 3;
+	constexpr uint8_t acc_wtm = 17;
 	L3GD20::AxesDPS_t gyr_axes;
 	LSM303D::AxesMag_t mag_axes;
 	attitudetracker att;
@@ -261,7 +261,6 @@ void main_task(void *pvParameters)
 	AccelLowPassPreFilter3d* accel_lpf = new AccelLowPassPreFilter3d();
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
 	Vector3f gyro_bias;
-	MovingAverageFilter<Vector3f, float, 5> gyrofilter_;
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
@@ -294,7 +293,7 @@ void main_task(void *pvParameters)
 	gyro.HPFEnable(L3GD20::MEMS_ENABLE);
 	gyro.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
 	gyro.SetHPFCutOFF(L3GD20::HPFCF_0);
-	gyro.SetODR(L3GD20::ODR_760Hz_BW_35);
+	gyro.SetODR(L3GD20::ODR_760Hz_BW_30);
 
 	accel.SetHPFMode(LSM303D::HPM_NORMAL_MODE_RES);
 	accel.SetFilterDataSel(LSM303D::MEMS_DISABLE);
@@ -353,19 +352,12 @@ void main_task(void *pvParameters)
 				 0,-1, 0,
 				 0, 0,-1);
 
-#ifdef USE_GIROFILTER
-		for (size_t i = 0; i < static_cast<size_t>(gyr_samples); i++) {
-			gyro.GetFifoAngRateDPS(&gyr_axes);
-			gyrofilter_.do_filter(gyro_align * (Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyro_bias) * drone_state->gyro_factor_);
-		}
-		att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
-#else
 		if (gyr_samples >= gyr_wtm) {
 			gyro.GetFifoAngRateDPS(&gyr_axes);
 			drone_state->gyro_ = gyro_align * (Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyro_bias) * drone_state->gyro_factor_;
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
-#endif
+
 		drone_state->accel_raw_ = acc_align * ReadAccelerometer(accel, accel_lpf);
 		if (drone_state->accel_raw_.length_squared() > 0) {
 			Vector3f accel_adjusted = drone_state->accel_raw_ + drone_state->accelerometer_adjustment_;
