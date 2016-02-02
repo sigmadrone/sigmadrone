@@ -354,8 +354,7 @@ void main_task(void *pvParameters)
 
 		if (gyr_samples >= gyr_wtm) {
 			gyro.GetFifoAngRateDPS(&gyr_axes);
-			drone_state->gyro_raw_ = gyro_align * (Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyro_bias);
-			drone_state->gyro_ = drone_state->gyro_raw_ * drone_state->gyro_factor_;
+			drone_state->gyro_ = gyro_align * (Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyro_bias) * drone_state->gyro_factor_;
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
 

@@ -81,7 +81,6 @@ struct DroneState {
 	rexjson::value to_json()
 	{
 		rexjson::object ret;
-		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
 		ret["accel_raw"] = matrix_to_json_value(accel_raw_);
 		ret["mag_raw"] = matrix_to_json_value(mag_raw_);
 		ret["gyro"] = matrix_to_json_value(gyro_);
@@ -192,7 +191,6 @@ struct DroneState {
 	/*
 	 * Sensors - input attributes
 	 */
-	Vector3f gyro_raw_;
 	Vector3f accel_raw_;
 	Vector3f mag_raw_;
 	Vector3f gyro_;
