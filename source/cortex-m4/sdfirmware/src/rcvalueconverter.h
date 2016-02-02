@@ -78,7 +78,7 @@ public:
 private:
 	float get_value_as_float(uint32_t channelno);
 private:
-	MovingAverageFilter<Vector3f, float, 5> avgfilter_;
+	MovingAverageFilter<Vector3f, float, 30> avgfilter_;
 	PwmPulse pwm_converter_;
 	QuaternionF target_twist_;		/* Yaw */
 	QuaternionF target_swing_;		/* Combined rotation of Pitch and Roll */

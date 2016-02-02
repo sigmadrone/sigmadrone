@@ -39,8 +39,8 @@ RcValueConverter::RcValueConverter(
 				yaw_(0.0),
 				pitch_(0.0),
 				roll_(0.0),
-				pitch_bias_(0.0),
-				roll_bias_(0.0)
+				pitch_bias_(0.03),
+				roll_bias_(0.03)
 {
 	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
 	update();
@@ -63,7 +63,7 @@ void RcValueConverter::update()
 	if (yaw > 0.0 && (fabs(yaw-0.5f) > 0.05)) {
 		yaw_ = -1 * ((yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_ * 2);
 		TimeSpan dt = receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().decoded_period();
-		Vector3f ang_vel(0.0f, 0.0f, yaw_);
+		Vector3f ang_vel(0.0f, 0.0f, yaw_ * 1.25f);
 		target_twist_ *= QuaternionF::fromAngularVelocity(ang_vel, dt.seconds_float());
 	} else {
 		yaw_ = 0;
