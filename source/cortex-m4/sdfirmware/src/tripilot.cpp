@@ -70,6 +70,7 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	Vector3f error_z = errorTwist.axis().normalize() * errorTwist.angle() * -1.0;
 	Vector3f error = error_xy + error_z;
 
+#ifdef USE_INTEGRAL
 	Vector3f integral_error = pid_.get_integral_error();
 	if (integral_error.length() > max_integral_error_) {
 		integral_error = integral_error.normalize() * max_integral_error_;
@@ -82,6 +83,10 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 		 */
 		pid_.set_integral_error(integral_error);
 	}
+#else
+	torq = pid_.get_pid(error, state.dt_.seconds_float());
+#endif
+
 	return torq;
 }
 
