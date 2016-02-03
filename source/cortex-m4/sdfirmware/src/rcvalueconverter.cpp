@@ -39,8 +39,8 @@ RcValueConverter::RcValueConverter(
 				yaw_(0.0),
 				pitch_(0.0),
 				roll_(0.0),
-				pitch_bias_(0.03),
-				roll_bias_(0.03)
+				pitch_bias_(0.0),
+				roll_bias_(0.0)
 {
 	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
 	update();
