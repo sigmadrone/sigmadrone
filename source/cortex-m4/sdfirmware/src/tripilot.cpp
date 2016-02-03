@@ -26,8 +26,8 @@ TriPilot::TriPilot()
 	min_thrust_ = 0.0;
 	max_thrust_ = 1.0;
 	target_thrust_ = 0.0;
-	max_integral_error_ = 0.7;
-	leak_rate_ = 0.005;
+	max_integral_error_ = 2.5;
+	leak_rate_ = 0.015;
 
 	Vector3f thrust_dir(0, 0, -1);
 	propellers_.push_back(Propeller(Vector3f(-1, -1,  0), thrust_dir, Propeller::CW));
@@ -77,9 +77,10 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 		pid_.set_integral_error(integral_error);
 	}
 
-	torq = pid_.get_p(error) +
+	torq =
+			pid_.get_p(error) +
 			pid_.get_d(error, state.dt_.seconds_float()) +
-			((target_thrust_ > 0.3) ? pid_.get_i(error_xy, state.dt_.seconds_float(), leak_rate_) : Vector3f(0.0f));
+			pid_.get_i((target_thrust_ > 0.05) ? error_xy : Vector3f(0.0f), 4.0f/5.0f * state.dt_.seconds_float(), state.dt_.seconds_float()/8.0f);
 
 #else
 	torq = pid_.get_pid(error, state.dt_.seconds_float());
@@ -92,7 +93,7 @@ void TriPilot::update_state(DroneState& state)
 {
 	Vector3f torque_rpm;
 
-	set_target_thrust(state.base_throttle_);
+	set_target_thrust(0.75 * state.base_throttle_);
 	set_pid_coefficents(state);
 	torque_correction_ = get_torque(state);
 
@@ -113,16 +114,18 @@ void TriPilot::update_state(DroneState& state)
 		torque_rpm = torque_rpm.normalize() * target_thrust_;
 
 	motors_ = Vector4f(
-			target_thrust_ + torque_rpm.dot(propellers_.at(0).torque_dir()),
-			target_thrust_ + torque_rpm.dot(propellers_.at(1).torque_dir()),
-			target_thrust_ + torque_rpm.dot(propellers_.at(2).torque_dir()),
-			target_thrust_ + torque_rpm.dot(propellers_.at(3).torque_dir()));
+			torque_rpm.dot(propellers_.at(0).torque_dir()),
+			torque_rpm.dot(propellers_.at(1).torque_dir()),
+			torque_rpm.dot(propellers_.at(2).torque_dir()),
+			torque_rpm.dot(propellers_.at(3).torque_dir()));
+	motors_ += target_thrust_;
+
 	set_and_scale_motors(motors_.at(0), motors_.at(1), motors_.at(2), motors_.at(3));
 	state.motors_ = motors();
 	state.pid_torque_ = torque_rpm;
 
 //	Vector3f integral_error = pid_.get_integral_error();
-//	std::cout << integral_error.transpose().to_string(5) << "(" << integral_error.transpose() * state.ki_ * rpm_coeff << ")" << std::endl;
+//	std::cout << integral_error.transpose().to_string(5) << "(" << state.motors_.transpose() << ")" << "dt: " << state.dt_.seconds_float() << std::endl;
 //	std::cout << state.motors_.transpose();
 	return;
 }
