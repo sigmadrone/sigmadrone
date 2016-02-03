@@ -76,13 +76,10 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 		integral_error = integral_error.normalize() * max_integral_error_;
 		pid_.set_integral_error(integral_error);
 	}
-	torq = pid_.get_pid(error, state.dt_.seconds_float(), leak_rate_);
-	if (Vector2f(state.pitch_, state.roll_).length() > 0.3) {
-		/*
-		 * Don't track the integral error if we are not in home position.
-		 */
-		pid_.set_integral_error(integral_error);
-	}
+
+	torq = pid_.get_p(error) +
+			pid_.get_d(error, state.dt_.seconds_float()) +
+			((target_thrust_ > 0.3) ? pid_.get_i(error_xy, state.dt_.seconds_float(), leak_rate_) : Vector3f(0.0f));
 
 #else
 	torq = pid_.get_pid(error, state.dt_.seconds_float());
