@@ -25,7 +25,6 @@
 #include "rcchannelmapper.h"
 #include "d3math.h"
 #include "rcreceiver.h"
-#include "firfilt.h"
 
 struct PwmPulse {
 	PwmPulse(const TimeSpan& min_duty, const TimeSpan& max_duty) : min_(min_duty), max_(max_duty) {
@@ -78,7 +77,6 @@ public:
 private:
 	float get_value_as_float(uint32_t channelno);
 private:
-	MovingAverageFilter<Vector3f, float, 30> avgfilter_;
 	PwmPulse pwm_converter_;
 	QuaternionF target_twist_;		/* Yaw */
 	QuaternionF target_swing_;		/* Combined rotation of Pitch and Roll */

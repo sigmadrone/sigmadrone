@@ -63,8 +63,8 @@ public:
 
 	T get_i(const T& err, float dt, float leakRate /* 0..1 */)
 	{
-		integral_err_ *= (1.0f - leakRate);
-		integral_err_ += err * dt;
+		integral_err_ -= integral_err_ * leakRate;
+		integral_err_ = integral_err_ + err * dt;
 		return integral_err_ * ki_;
 	}
 
@@ -113,14 +113,9 @@ public:
 		return get_p(err) + get_d_fused(err, dt);
 	}
 
-	const T& get_integral_error() const
+	const T& integral_error() const
 	{
 		return integral_err_;
-	}
-
-	void set_integral_error(const T& err)
-	{
-		integral_err_ = err;
 	}
 
 	void set_kp(float kp) { kp_ = kp; }
