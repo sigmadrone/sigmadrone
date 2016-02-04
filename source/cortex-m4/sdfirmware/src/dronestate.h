@@ -55,9 +55,9 @@ struct DroneState {
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
-		, kp_(0.130)
+		, kp_(0.120)
 		, ki_(0.0)
-		, kd_(0.02)
+		, kd_(0.020)
 		, yaw_kp_(0.24)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.10)
@@ -75,6 +75,7 @@ struct DroneState {
 	    , flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
 	    , motors_armed_(false)
 		, enforce_flight_ceiling_(false)
+		, track_magnetometer_(false)
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING) { }
 
@@ -101,7 +102,6 @@ struct DroneState {
 		ret["attitude"] = quaternion_to_json_value(attitude_);
 		ret["target"] = quaternion_to_json_value(target_);
 		ret["motors"] = matrix_to_json_value(motors_);
-		ret["pid_torque"] = matrix_to_json_value(pid_torque_);
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
@@ -237,6 +237,7 @@ struct DroneState {
 	FlightMode flight_mode_;
 	bool motors_armed_;
 	bool enforce_flight_ceiling_;
+	bool track_magnetometer_;
 
 	/*
 	 * Time it took to read sensors
@@ -256,7 +257,6 @@ struct DroneState {
 	QuaternionF target_twist_;
 	QuaternionF target_swing_;
 	Vector4f motors_;
-	Vector3f pid_torque_;
 	QuaternionF twist_;
 
 	/*
