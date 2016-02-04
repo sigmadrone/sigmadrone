@@ -54,11 +54,10 @@ void RcValueConverter::update()
 	float throttle = get_value_as_float(mapper_.channel_no(RC_CHANNEL_THROTTLE));
 	float gear = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR));
 
-	avgfilter_.do_filter(Vector4f(pitch, roll, yaw, throttle));
+	avgfilter_.do_filter(Vector3f(pitch, roll, yaw));
 	pitch = avgfilter_.output()[0];
 	roll = avgfilter_.output()[1];
 	yaw = avgfilter_.output()[2];
-	throttle = avgfilter_.output()[3];
 
 	throttle_ = Throttle(throttle * scale_factor_);
 	if (yaw > 0.0 && (fabs(yaw-0.5f) > 0.05)) {
