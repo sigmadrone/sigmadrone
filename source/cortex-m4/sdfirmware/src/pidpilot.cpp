@@ -99,8 +99,6 @@ void PidPilot::update_state(DroneState& state)
 
 	state.motors_ = motors();
 
-	state.pid_torque_ = torque_rpm;
-
 	return;
 }
 

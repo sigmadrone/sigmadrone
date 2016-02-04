@@ -369,7 +369,8 @@ void main_task(void *pvParameters)
 		accel.GetMag(&mag_axes);
 		drone_state->mag_raw_ = acc_align * Vector3f(mag_axes.AXIS_X, mag_axes.AXIS_Y, mag_axes.AXIS_Z);
 		drone_state->mag_ = mag_lpf->do_filter(drone_state->mag_raw_.normalize());
-		att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
+		if (drone_state->track_magnetometer_)
+			att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
 
 		drone_state->attitude_ = att.get_attitude();
 
