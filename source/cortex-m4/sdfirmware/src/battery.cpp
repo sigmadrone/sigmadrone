@@ -37,7 +37,8 @@ Battery::~Battery() {}
 
 void Battery::update(Voltage new_measurement)
 {
-	if (new_measurement > max_voltage()) {
+	if ((new_measurement > voltage_ + lipo_1cell_min_v_) ||
+		(new_measurement < voltage_ - lipo_1cell_min_v_)) {
 		// newly measured voltage is too big, have to try to re-detect the battery
 		// type
 		type_ = TYPE_AUTO_DETECT;

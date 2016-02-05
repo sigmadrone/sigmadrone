@@ -190,7 +190,7 @@ static const Altitude INVALID_ALTITUDE = Altitude::from_meters(Altitude::INVALID
 
 struct Voltage: public ScaledUnit<float> {
 	static Voltage from_microvolts(float uV) { return Voltage(from_microunit(uV).unit()); }
-	static Voltage from_millvolts(float mV) { return Voltage(from_milliunit(mV).unit()); }
+	static Voltage from_millivolts(float mV) { return Voltage(from_milliunit(mV).unit()); }
 	static Voltage from_volts(float V) { return Voltage(from_baseunit(V).unit()); }
 	static Voltage from_kilovolts(float kV) { return Voltage(from_kilounit(kV).unit()); }
 	Voltage() : ScaledUnit(0) {}
