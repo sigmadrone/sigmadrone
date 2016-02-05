@@ -27,7 +27,6 @@ TriPilot::TriPilot()
 	max_thrust_ = 1.0;
 	target_thrust_ = 0.0;
 	max_integral_torque_ = 0.3;
-	leak_rate_ = 0.015;
 
 	Vector3f thrust_dir(0, 0, -1);
 	propellers_.push_back(Propeller(Vector3f(-1, -1,  0), thrust_dir, Propeller::CW));
@@ -59,7 +58,7 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	QuaternionF::decomposeTwistSwing(~state.attitude_, Vector3f(0,0,1), swing, twist);
 
 	// targetSwing = attitudeSwing * errorSwing; ==> ~attitudeSwing * targetSwing = ~attitudeSwing * attitudeSwing * errorSwing;
-	QuaternionF errorSwing = (~swing) * state.target_swing_;
+	QuaternionF errorSwing = (~swing) * target_swing_;
 	/*
 	 * RcValueConverter::reset_twist_quaternion():
 	 * QuaternionF swing;
@@ -71,13 +70,12 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	 * then we can have:
 	 * QuaternionF errorTwist = (~twist) * state.target_twist_;
 	 */
-	QuaternionF errorTwist = (~twist) * (~state.target_twist_);
+	QuaternionF errorTwist = (~twist) * (~target_twist_);
 	Vector3f error_xy = errorSwing.axis().normalize() * errorSwing.angle() * -1.0;
 	Vector3f error_z = errorTwist.axis().normalize() * errorTwist.angle() * -1.0;
 	Vector3f error = error_xy + error_z;
 	Vector3f torq_p, torq_i, torq_d;
 
-#ifndef USE_INTEGRAL
 	float ki = pid_.get_ki() * rpm_coeff;
 	Vector3f integral_error = pid_.get_integral_error();
 	if (integral_error.length() * ki > max_integral_torque_ * target_thrust_) {
@@ -91,11 +89,6 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	torq = torq_p + torq_d + torq_i;
 	if (torq.length() > target_thrust_ * 0.45)
 		torq = torq.normalize() * target_thrust_ * 0.45;
-
-#else
-	torq = pid_.get_pid(error, state.dt_.seconds_float());
-#endif
-
 	return torq;
 }
 
@@ -105,9 +98,24 @@ void TriPilot::update_state(DroneState& state)
 	set_pid_coefficents(state);
 	torque_correction_ = get_torque(state);
 
+	avgfilter_.do_filter(Vector3f(state.pitch_, state.roll_, state.yaw_));
+	float pitch = avgfilter_.output()[0];
+	float roll = avgfilter_.output()[1];
+	float yaw = avgfilter_.output()[2];
+
+	/*
+	 * Update the target twist and swing
+	 */
+	Vector3f ang_vel(0.0f, 0.0f, yaw);
+	target_twist_ *= QuaternionF::fromAngularVelocity(ang_vel, state.dt_.seconds_float());
+	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(roll, pitch, 0), 1.0);
+
+	if (target_thrust_ < 0.1)
+		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
+
 	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
 	torque_correction_ += torque_bias;
-	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * state.yaw_ * target_thrust_);
+	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * yaw * target_thrust_);
 	torque_correction_ += torque_yaw;
 
 	Vector4f motors = Vector4f(
@@ -116,12 +124,21 @@ void TriPilot::update_state(DroneState& state)
 			torque_correction_.dot(propellers_.at(2).torque_dir()),
 			torque_correction_.dot(propellers_.at(3).torque_dir()));
 	motors += target_thrust_;
-	motors_ = state.motors_ = set_and_scale_motors(motors);
+	motors_ = state.motors_ = clip_motors(motors);
 
 //	std::cout << motors.transpose() << std::endl;
 //	Vector3f integral_error = pid_.get_integral_error();
 //	std::cout << integral_error.transpose().to_string(5) << "(" << state.motors_.transpose() << ")" << "dt: " << state.dt_.seconds_float() << std::endl;
 	return;
+}
+
+Vector4f TriPilot::clip_motors(const Vector4f& motors)
+{
+	Vector4f ret;
+
+	for (size_t i = 0; i < ret.data.size(); i++)
+		ret[i] = std::max(min_thrust_, std::min(motors[i], max_thrust_));
+	return ret;
 }
 
 Vector4f TriPilot::set_and_scale_motors(const Vector4f& motors)
@@ -153,14 +170,15 @@ const Vector4f& TriPilot::motors() const
 
 void TriPilot::set_min_thrust(float min)
 {
-	min_thrust_ = fmax(0.0,min);
+	min_thrust_ = fmax(0.0, min);
 }
 
 void TriPilot::set_max_thrust(float max)
 {
-	max_thrust_ = fmin(1.0,max);
+	max_thrust_ = fmin(1.0, max);
 }
 
-void TriPilot::set_target_thrust(float thr) {
+void TriPilot::set_target_thrust(float thr)
+{
 	target_thrust_ = fmax(fmin(max_thrust_, thr), min_thrust_);
 }

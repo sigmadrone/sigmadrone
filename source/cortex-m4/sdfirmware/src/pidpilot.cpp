@@ -57,8 +57,6 @@ void PidPilot::update_state(DroneState& state)
 	set_pid_coefficents(state);
 
 	torque_correction_ = pid_.get_torque(state.attitude_, state.dt_, state.yaw_throttle_factor_);
-	state.twist_ = pid_.twist_;
-
 
 
 	//  From the motor trust measurement:

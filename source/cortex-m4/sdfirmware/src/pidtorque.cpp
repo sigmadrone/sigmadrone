@@ -43,8 +43,8 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt, floa
 	QuaternionF Qtorq = QuaternionF::fromVectors(Zin, Zset);
 	Vector3f error = Qtorq.axis().normalize() * Qtorq.angle() * -1.0;
 
-	torq.at(0) = pid_roll_.get_pid(error.at(0),dt.seconds_float());
-	torq.at(1) = pid_pitch_.get_pid(error.at(1),dt.seconds_float());
+	torq.at(0) = pid_roll_.get_pd(error.at(0),dt.seconds_float());
+	torq.at(1) = pid_pitch_.get_pd(error.at(1),dt.seconds_float());
 
 	// targetQ = attitudeQ * errQ; ==> (~attitudeQ) * attitudeQ * errQ = (~attitudeQ) * targetQ;
 	// ==> errQ = (~attitudeQ) * targetQ;
@@ -60,7 +60,7 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt, floa
 	}
 
 	error_z = error_z * angle_rad;
-	float torq_yaw = pid_yaw_.get_pid(error_z.at(2), dt.seconds_float());
+	float torq_yaw = pid_yaw_.get_pd(error_z.at(2), dt.seconds_float());
 	float limit_yaw = yaw_factor/3.0;
 	torq_yaw = std::max(-limit_yaw, std::min(torq_yaw, limit_yaw));
 	torq.at(2) = torq_yaw;

@@ -121,7 +121,6 @@ struct DroneState {
 		ret["accel_adjustment"] = matrix_to_json_value(accelerometer_adjustment_);
 		ret["battery_percentage"] = battery_percentage_;
 		ret["battery_type"] = battery_type_;
-		ret["twist"] = quaternion_to_json_value(twist_);
 		ret["kp"] = kp_;
 		ret["ki"] = ki_;
 		ret["kd"] = kd_;
@@ -254,10 +253,7 @@ struct DroneState {
 	 */
 	QuaternionF attitude_;
 	QuaternionF target_;
-	QuaternionF target_twist_;
-	QuaternionF target_swing_;
 	Vector4f motors_;
-	QuaternionF twist_;
 
 	/*
 	 * Safety...

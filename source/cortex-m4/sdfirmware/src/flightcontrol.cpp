@@ -59,16 +59,6 @@ QuaternionF FlightControl::target_q() const
 	return alarm_.is_none() ? rc_values_.target_quaternion() : QuaternionF(1,0,0,0);
 }
 
-QuaternionF FlightControl::target_twist() const
-{
-	return alarm_.is_none() ? rc_values_.target_twist() : QuaternionF(1,0,0,0);
-}
-
-QuaternionF FlightControl::target_swing() const
-{
-	return alarm_.is_none() ? rc_values_.target_swing() : QuaternionF(1,0,0,0);
-}
-
 Throttle FlightControl::base_throttle() const
 {
 	if (alarm_.is_none() || rc_values_.base_throttle() < EMERGENCY_THROTTLE) {
@@ -122,9 +112,6 @@ void FlightControl::update_state(DroneState& state)
 	}
 
 	state.target_ = target_q();
-	state.target_twist_ = target_twist();
-	state.target_swing_ = target_swing();
-
 	process_servo_start_stop_command();
 	altitude_tracker().update_state(state);
 	safety_check(state);
