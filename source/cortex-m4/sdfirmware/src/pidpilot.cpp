@@ -59,14 +59,9 @@ void PidPilot::update_state(DroneState& state)
 	torque_correction_ = pid_.get_torque(state.attitude_, state.dt_, state.yaw_throttle_factor_);
 
 
-	//  From the motor trust measurement:
-	//  0.6 --> 450g * 22.5cm
-	//  0.6 --> (450/1000) * (22.5/100)
-	//  0.6 --> 0.10125 kg.m
-	static const float rpm_coeff = 0.6 / (101.25/1000.0) / 2.0;
-	torque_rpm.at(0) = torque_correction_.at(0) * rpm_coeff;
-	torque_rpm.at(1) = torque_correction_.at(1) * rpm_coeff;
-	torque_rpm.at(2) = torque_correction_.at(2) * rpm_coeff;
+	torque_rpm.at(0) = torque_correction_.at(0);
+	torque_rpm.at(1) = torque_correction_.at(1);
+	torque_rpm.at(2) = torque_correction_.at(2);
 
 	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
 	torque_rpm = torque_rpm + torque_bias;

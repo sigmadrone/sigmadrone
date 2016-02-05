@@ -55,9 +55,9 @@ struct DroneState {
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
-		, kp_(0.140)
-		, ki_(0.075)
-		, kd_(0.020)
+		, kp_(0.150 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
+		, ki_(0.070 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
+		, kd_(0.020 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
 		, yaw_kp_(0.24)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.10)
