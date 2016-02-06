@@ -22,6 +22,7 @@
 #include "units.h"
 #include "d3math.h"
 #include "pidcontroller.h"
+#include "dronestate.h"
 
 #ifndef _PIDTORQUE_H_
 #define _PIDTORQUE_H_
@@ -32,7 +33,7 @@ public:
 	~PidTorque();
 
 	void set_target(const QuaternionF &set_q);
-	Vector3f get_torque(const QuaternionF &in_q, const TimeSpan& dt, float yaw_factor);
+	Vector3f get_torque(const DroneState& state);
 
 public:
 	QuaternionF twist_;

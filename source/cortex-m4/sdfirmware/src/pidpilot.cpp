@@ -56,7 +56,7 @@ void PidPilot::update_state(DroneState& state)
 	set_target_thrust(state.base_throttle_);
 	set_pid_coefficents(state);
 
-	torque_correction_ = pid_.get_torque(state.attitude_, state.dt_, state.yaw_throttle_factor_);
+	torque_correction_ = pid_.get_torque(state);
 	state.twist_ = pid_.twist_;
 
 

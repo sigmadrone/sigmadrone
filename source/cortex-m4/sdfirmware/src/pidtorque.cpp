@@ -35,16 +35,27 @@ void PidTorque::set_target(const QuaternionF &setQ)
 	set_Q_ = setQ;
 }
 
-Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt, float yaw_factor)
+Vector3f PidTorque::get_torque(const DroneState& state)
 {
 	Vector3f torq;
+	const QuaternionF &in_Q = state.attitude_;
+	const TimeSpan& dt = state.dt_;
 	Vector3f Zset = set_Q_.rotate(Vector3f(0.0, 0.0, 1.0));
 	Vector3f Zin = in_Q.conjugate().rotate(Vector3f(0.0, 0.0, 1.0));
 	QuaternionF Qtorq = QuaternionF::fromVectors(Zin, Zset);
 	Vector3f error = Qtorq.axis().normalize() * Qtorq.angle() * -1.0;
 
-	torq.at(0) = pid_roll_.get_pid(error.at(0),dt.seconds_float());
-	torq.at(1) = pid_pitch_.get_pid(error.at(1),dt.seconds_float());
+	torq[0] = pid_roll_.get_p(error[0]) + pid_roll_.get_d_median(error[0],dt.seconds_float());
+	torq[0] += pid_roll_.get_i(
+			(state.base_throttle_ > 0.05) ? torq[0] : 0,
+			dt.seconds_float(),
+			dt.seconds_float()/20.0f);
+
+	torq[1] = pid_pitch_.get_p(error[1]) + pid_pitch_.get_d_median(error[1],dt.seconds_float());
+	torq[1] += pid_roll_.get_i(
+			(state.base_throttle_ > 0.05) ? torq[1] : 0,
+			dt.seconds_float(),
+			dt.seconds_float()/20.0f);
 
 	// targetQ = attitudeQ * errQ; ==> (~attitudeQ) * attitudeQ * errQ = (~attitudeQ) * targetQ;
 	// ==> errQ = (~attitudeQ) * targetQ;
@@ -60,9 +71,9 @@ Vector3f PidTorque::get_torque(const QuaternionF &in_Q, const TimeSpan& dt, floa
 	}
 
 	error_z = error_z * angle_rad;
-	float torq_yaw = pid_yaw_.get_pid(error_z.at(2), dt.seconds_float());
-	float limit_yaw = yaw_factor/3.0;
-	torq_yaw = std::max(-limit_yaw, std::min(torq_yaw, limit_yaw));
+	float torq_yaw = pid_yaw_.get_pd(error_z.at(2), dt.seconds_float());
+	float yaw_factor = state.yaw_throttle_factor_ / 3.0;
+	torq_yaw = std::max(-yaw_factor, std::min(torq_yaw, yaw_factor));
 	torq.at(2) = torq_yaw;
 
 	return torq;
