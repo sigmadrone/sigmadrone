@@ -55,13 +55,13 @@ struct DroneState {
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
-		, kp_(0.150 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
-		, ki_(0.070 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
-		, kd_(0.020 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
+		, kp_(0.140 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
+		, ki_(0.060 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
+		, kd_(0.017 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
 		, yaw_kp_(0.24)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.10)
-		, accelerometer_correction_period_(5.0)
+		, accelerometer_correction_period_(4.5)
 		, gyro_factor_(1.25)
 		, yaw_(0.0)
 		, pitch_(0.0)

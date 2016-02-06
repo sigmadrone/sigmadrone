@@ -67,17 +67,18 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	}
 	torq_p = pid_.get_p(error);
 	torq_d = pid_.get_d(error, state.dt_.seconds_float());
-	torq_i = pid_.get_i((target_thrust_ > 0.05) ? error_xy : Vector3f(0.0f), state.dt_.seconds_float(), state.dt_.seconds_float()/8.0f);
+	torq_i = pid_.get_i(error_xy, 1.50f * state.dt_.seconds_float(), state.dt_.seconds_float() / 4.0f);
 	torq = torq_p + torq_d + torq_i;
 	if (torq.length() > target_thrust_ * 0.55)
 		torq = torq.normalize() * target_thrust_ * 0.55;
 
 #if 0
+	Vector3f torqdisp = torq_i;
 	Vector4f motors = Vector4f(
-			torq.dot(propellers_.at(0).torque_dir()),
-			torq.dot(propellers_.at(1).torque_dir()),
-			torq.dot(propellers_.at(2).torque_dir()),
-			torq.dot(propellers_.at(3).torque_dir()));
+			torqdisp.dot(propellers_.at(0).torque_dir()),
+			torqdisp.dot(propellers_.at(1).torque_dir()),
+			torqdisp.dot(propellers_.at(2).torque_dir()),
+			torqdisp.dot(propellers_.at(3).torque_dir()));
 	std::cout << "(" << motors.transpose().to_string(4) << ") " << torq.length() / target_thrust_ * 100.0f << " % "<< std::endl;
 #endif
 
