@@ -70,7 +70,7 @@ struct DroneState {
 		, pitch_bias_(0.0)
 		, roll_bias_(0.0)
 		, base_throttle_(0.0)
-        , yaw_throttle_factor_(0.75)
+        , yaw_throttle_factor_(1.25)
 	    , pid_filter_freq_(80)
 	    , flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
 	    , motors_armed_(false)
