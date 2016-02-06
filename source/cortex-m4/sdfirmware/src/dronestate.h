@@ -57,7 +57,7 @@ struct DroneState {
 	    , gps_altitude_(Altitude::from_meters(-100))
 		, kp_(0.140 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
 		, ki_(0.060 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
-		, kd_(0.017 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
+		, kd_(0.020 * 3.0)		/* Removed rpm_coef from the calculation and added it here, i.e. 3.0 */
 		, yaw_kp_(0.24)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.10)
@@ -75,7 +75,7 @@ struct DroneState {
 	    , flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
 	    , motors_armed_(false)
 		, enforce_flight_ceiling_(false)
-		, track_magnetometer_(false)
+		, track_magnetometer_(true)
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING) { }
 
