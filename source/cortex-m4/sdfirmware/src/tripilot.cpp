@@ -66,7 +66,7 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 		pid_.set_integral_error(integral_error);
 	}
 	torq_p = pid_.get_p(error);
-	torq_d = pid_.get_d(error, state.dt_.seconds_float());
+	torq_d = pid_.get_d_median(error, state.dt_.seconds_float());
 	torq_i = pid_.get_i(error_xy, 1.50f * state.dt_.seconds_float(), state.dt_.seconds_float() / 4.0f);
 	torq = torq_p + torq_d + torq_i;
 	if (torq.length() > target_thrust_ * 0.55)
