@@ -90,20 +90,9 @@ void TriPilot::update_state(DroneState& state)
 	set_target_thrust(0.7 * state.base_throttle_);
 	set_pid_coefficents(state);
 	torque_correction_ = get_torque(state);
-
-	avgfilter_.do_filter(Vector3f(state.pitch_, state.roll_, state.yaw_));
-#if USE_AVGFILTER
-	float pitch = avgfilter_.output()[0];
-	float roll = avgfilter_.output()[1];
-	float yaw = avgfilter_.output()[2];
-#else
-	float pitch = state.pitch_;
-	float roll = state.roll_;
-	float yaw = state.yaw_;
-#endif
-	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(-roll, -pitch, 0), 1.0);
+	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(-state.roll_, -state.pitch_, 0), 1.0);
 	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
-	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * yaw * target_thrust_);
+	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * state.yaw_ * target_thrust_);
 	if (torque_yaw.length() > 0.01) {
 		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
 	}
@@ -130,28 +119,6 @@ Vector4f TriPilot::clip_motors(const Vector4f& motors)
 	for (size_t i = 0; i < ret.data.size(); i++)
 		ret[i] = std::max(min_thrust_, std::min(motors[i], max_thrust_));
 	return ret;
-}
-
-Vector4f TriPilot::set_and_scale_motors(const Vector4f& motors)
-{
-	Vector4f mv(motors);
-	float min_val = mv.min();
-	if (min_val < min_thrust_) {
-		mv = mv + (min_thrust_ - min_val);
-	}
-	float max_val = mv.max();
-	if (max_val > max_thrust_) {
-		mv = mv - (max_val - max_thrust_);
-	}
-	max_val = mv.max();
-	min_val = mv.min();
-	if (min_val < min_thrust_ || max_val > max_thrust_) {
-		float scale = (max_thrust_ - min_thrust_) / (max_val - min_val);
-		mv = mv - min_val;
-		mv = mv * scale;
-		mv = mv + min_thrust_;
-	}
-	return motors;
 }
 
 const Vector4f& TriPilot::motors() const

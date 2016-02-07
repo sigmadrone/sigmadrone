@@ -28,7 +28,6 @@
 #include "pidcontroller.h"
 #include "ipilot.h"
 #include "propeller.h"
-#include "firfilt.h"
 
 class TriPilot : public IPilot
 {
@@ -49,11 +48,9 @@ public:
 
 private:
 	Vector4f clip_motors(const Vector4f& motors);
-	Vector4f set_and_scale_motors(const Vector4f& motors);
 	Vector3f get_torque(const DroneState& state);
 
 private:
-	MovingAverageFilter<Vector3f, float, 5> avgfilter_;
 	Vector4f motors_;
 	float min_thrust_;
 	float max_thrust_;
