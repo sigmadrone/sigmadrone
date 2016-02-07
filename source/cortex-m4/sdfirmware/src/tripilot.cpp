@@ -92,10 +92,15 @@ void TriPilot::update_state(DroneState& state)
 	torque_correction_ = get_torque(state);
 
 	avgfilter_.do_filter(Vector3f(state.pitch_, state.roll_, state.yaw_));
+#if USE_AVGFILTER
 	float pitch = avgfilter_.output()[0];
 	float roll = avgfilter_.output()[1];
 	float yaw = avgfilter_.output()[2];
-
+#else
+	float pitch = state.pitch_;
+	float roll = state.roll_;
+	float yaw = state.yaw_;
+#endif
 	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(-roll, -pitch, 0), 1.0);
 	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
 	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * yaw * target_thrust_);
