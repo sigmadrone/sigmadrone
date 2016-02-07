@@ -52,7 +52,7 @@ Vector3f PidTorque::get_torque(const DroneState& state)
 			dt.seconds_float()/20.0f);
 
 	torq[1] = pid_pitch_.get_p(error[1]) + pid_pitch_.get_d_median(error[1],dt.seconds_float());
-	torq[1] += pid_roll_.get_i(
+	torq[1] += pid_pitch_.get_i(
 			(state.base_throttle_ > 0.05) ? torq[1] : 0,
 			dt.seconds_float(),
 			dt.seconds_float()/20.0f);
