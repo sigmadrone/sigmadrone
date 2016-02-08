@@ -47,7 +47,7 @@ public:
 	virtual float get_max_thrust() const { return max_thrust_; }
 
 private:
-	void set_and_scale_motors(float w0, float w1, float w2, float w3);
+	Vector4f clip_motors(const Vector4f& motors);
 	Vector3f get_torque(const DroneState& state);
 
 private:
@@ -55,9 +55,13 @@ private:
 	float min_thrust_;
 	float max_thrust_;
 	float target_thrust_;
+	float max_integral_torque_;
 
+	QuaternionF target_swing_;
+	QuaternionF target_twist_;
 	PidController3f pid_;
 	Vector3f torque_correction_;
+	Vector3f swing_;
 	std::vector<Propeller> propellers_;
 };
 

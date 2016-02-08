@@ -68,6 +68,7 @@ protected:
 	rexjson::value rpc_set_yaw_throttle_factor(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_flight_ceiling(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_restore_config(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_set_mag_tracking(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 
 protected:

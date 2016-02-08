@@ -26,6 +26,7 @@ TriPilot::TriPilot()
 	min_thrust_ = 0.0;
 	max_thrust_ = 1.0;
 	target_thrust_ = 0.0;
+	max_integral_torque_ = 0.25;
 
 	Vector3f thrust_dir(0, 0, -1);
 	propellers_.push_back(Propeller(Vector3f(-1, -1,  0), thrust_dir, Propeller::CW));
@@ -51,23 +52,38 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	QuaternionF::decomposeTwistSwing(~state.attitude_, Vector3f(0,0,1), swing, twist);
 
 	// targetSwing = attitudeSwing * errorSwing; ==> ~attitudeSwing * targetSwing = ~attitudeSwing * attitudeSwing * errorSwing;
-	QuaternionF errorSwing = (~swing) * state.target_swing_;
-	/*
-	 * RcValueConverter::reset_twist_quaternion():
-	 * QuaternionF swing;
-	 * QuaternionF::decomposeTwistSwing(~current_q, Vector3f(0,0,1), swing, target_twist_);
-	 *
-	 * RcValueConverter::update()
-	 * yaw_ = ((yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_ * 2);
-	 *
-	 * then we can have:
-	 * QuaternionF errorTwist = (~twist) * state.target_twist_;
-	 */
-	QuaternionF errorTwist = (~twist) * (~state.target_twist_);
-	Vector3f error_xy = errorSwing.axis().normalize() * errorSwing.angle() * -1.0;
-	Vector3f error_z = errorTwist.axis().normalize() * errorTwist.angle() * -1.0;
+	QuaternionF errorSwing = (~swing) * (~target_swing_);
+	QuaternionF errorTwist = (~twist) * (~target_twist_);
+	Vector3f error_xy = errorSwing.axis().normalize() * errorSwing.angle() * -1.0f;
+	Vector3f error_z = errorTwist.axis().normalize() * errorTwist.angle() * -1.0f;
 	Vector3f error = error_xy + error_z;
-	torq = pid_.get_pid(error, state.dt_.seconds_float());
+	Vector3f torq_p, torq_i, torq_d;
+
+	float ki = pid_.get_ki();
+	Vector3f integral_error = pid_.get_integral_error();
+	if (integral_error.length() * ki > max_integral_torque_ * target_thrust_) {
+		integral_error = integral_error.normalize() * (max_integral_torque_ * target_thrust_ / ki);
+		pid_.set_integral_error(integral_error);
+	}
+	torq_p = pid_.get_p(error);
+	torq_d = pid_.get_d_median(error, state.dt_.seconds_float());
+	torq_i = pid_.get_i(error_xy, 1.50f * state.dt_.seconds_float(), state.dt_.seconds_float() / 10.0f);
+	torq = torq_p + torq_d + torq_i;
+	if (fabs(torq.z()) > target_thrust_ * 0.25)
+		torq.z() = target_thrust_ * 0.25;
+	if (target_thrust_ < 0.45 && torq.length() > target_thrust_ * 0.50)
+		torq = torq.normalize() * target_thrust_ * 0.50;
+
+#if 0
+	Vector3f torqdisp = torq_i;
+	Vector4f motors = Vector4f(
+			torqdisp.dot(propellers_.at(0).torque_dir()),
+			torqdisp.dot(propellers_.at(1).torque_dir()),
+			torqdisp.dot(propellers_.at(2).torque_dir()),
+			torqdisp.dot(propellers_.at(3).torque_dir()));
+	std::cout << "(" << motors.transpose().to_string(4) << ") " << torq.length() / target_thrust_ * 100.0f << " % "<< std::endl;
+#endif
+
 	return torq;
 }
 
@@ -78,54 +94,35 @@ void TriPilot::update_state(DroneState& state)
 	set_target_thrust(state.base_throttle_);
 	set_pid_coefficents(state);
 	torque_correction_ = get_torque(state);
-
-
-	//  From the motor trust measurement:
-	//  0.6 --> 450g * 22.5cm
-	//  0.6 --> (450/1000) * (22.5/100)
-	//  0.6 --> 0.10125 kg.m
-	static const float rpm_coeff = 0.6 / (101.25/1000.0) / 2.0;
-	torque_rpm = torque_correction_ * rpm_coeff;
-
+	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(-state.roll_, -state.pitch_, 0), 1.0);
 	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
-	torque_rpm = torque_rpm + torque_bias;
 	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * state.yaw_ * target_thrust_);
-	torque_rpm += torque_yaw;
+	if (torque_yaw.length() > 0.01) {
+		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
+	}
+	if (target_thrust_ < 0.1) {
+		pid_.set_integral_error(Vector3f(0));
+		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
+	}
+	torque_correction_ += torque_yaw;
 
-	if (torque_rpm.length() > target_thrust_)
-		torque_rpm = torque_rpm.normalize() * target_thrust_;
-
-	motors_ = Vector4f(
-			target_thrust_ + torque_rpm.dot(propellers_.at(0).torque_dir()),
-			target_thrust_ + torque_rpm.dot(propellers_.at(1).torque_dir()),
-			target_thrust_ + torque_rpm.dot(propellers_.at(2).torque_dir()),
-			target_thrust_ + torque_rpm.dot(propellers_.at(3).torque_dir()));
-	set_and_scale_motors(motors_.at(0), motors_.at(1), motors_.at(2), motors_.at(3));
-	state.motors_ = motors();
-	state.pid_torque_ = torque_rpm;
+	Vector4f motors = Vector4f(
+			torque_correction_.dot(propellers_.at(0).torque_dir()),
+			torque_correction_.dot(propellers_.at(1).torque_dir()),
+			torque_correction_.dot(propellers_.at(2).torque_dir()),
+			torque_correction_.dot(propellers_.at(3).torque_dir()));
+	motors += target_thrust_;
+	motors_ = state.motors_ = clip_motors(motors);
 	return;
 }
 
-void TriPilot::set_and_scale_motors(float m1, float m2, float m3, float m4)
+Vector4f TriPilot::clip_motors(const Vector4f& motors)
 {
-	Vector4f mv(m1, m2, m3, m4);
-	float min_val = mv.min();
-	if (min_val < min_thrust_) {
-		mv = mv + (min_thrust_ - min_val);
-	}
-	float max_val = mv.max();
-	if (max_val > max_thrust_) {
-		mv = mv - (max_val - max_thrust_);
-	}
-	max_val = mv.max();
-	min_val = mv.min();
-	if (min_val < min_thrust_ || max_val > max_thrust_) {
-		float scale = (max_thrust_ - min_thrust_) / (max_val - min_val);
-		mv = mv - min_val;
-		mv = mv * scale;
-		mv = mv + min_thrust_;
-	}
-	motors_ = mv;
+	Vector4f ret;
+
+	for (size_t i = 0; i < ret.data.size(); i++)
+		ret[i] = std::max(min_thrust_, std::min(motors[i], max_thrust_));
+	return ret;
 }
 
 const Vector4f& TriPilot::motors() const
@@ -135,14 +132,15 @@ const Vector4f& TriPilot::motors() const
 
 void TriPilot::set_min_thrust(float min)
 {
-	min_thrust_ = fmax(0.0,min);
+	min_thrust_ = fmax(0.0, min);
 }
 
 void TriPilot::set_max_thrust(float max)
 {
-	max_thrust_ = fmin(1.0,max);
+	max_thrust_ = fmin(1.0, max);
 }
 
-void TriPilot::set_target_thrust(float thr) {
+void TriPilot::set_target_thrust(float thr)
+{
 	target_thrust_ = fmax(fmin(max_thrust_, thr), min_thrust_);
 }

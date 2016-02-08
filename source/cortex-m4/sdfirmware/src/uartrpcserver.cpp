@@ -56,6 +56,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Da
 	add("sd_flight_ceiling", &UartRpcServer::rpc_flight_ceiling);
 	add("sd_restore_config", &UartRpcServer::rpc_restore_config);
 	add("sd_pid_filter_freq", &UartRpcServer::rpc_pid_filter_freq);
+	add("sd_set_mag_tracking", &UartRpcServer::rpc_set_mag_tracking);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -504,6 +505,29 @@ rexjson::value UartRpcServer::rpc_set_gyro_factor(UART* , rexjson::array& params
 	dronestate_.gyro_factor_ = factor;
 	return dronestate_.gyro_factor_;
 }
+
+rexjson::value UartRpcServer::rpc_set_mag_tracking(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_bool_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_set_mag_tracking\n"
+				"\nSet Turn on/off magnetometer tracking."
+				"\n"
+				"Arguments:\n"
+				"1. on          (bool) On/Off\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	bool on = params[0].get_bool();
+	dronestate_.track_magnetometer_ = on;
+	return dronestate_.track_magnetometer_;
+}
+
 
 rexjson::value UartRpcServer::rpc_set_yaw_throttle_factor(UART* , rexjson::array& params, rpc_exec_mode mode)
 {

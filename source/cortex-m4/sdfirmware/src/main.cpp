@@ -404,8 +404,6 @@ void main_task(void *pvParameters)
 		datastream.set_accelerometer(drone_state->accel_);
 		datastream.set_attitude(drone_state->attitude_);
 		datastream.set_target_attitude(drone_state->target_);
-		datastream.set_target_twist(drone_state->target_twist_);
-		datastream.set_target_swing(drone_state->target_swing_);
 
 		QuaternionF attitude_twist, attitude_swing;
 		QuaternionF::decomposeTwistSwing(drone_state->attitude_, Vector3f(0,0,1), attitude_swing, attitude_twist);
