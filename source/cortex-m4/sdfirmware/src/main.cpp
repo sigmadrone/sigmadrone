@@ -196,31 +196,11 @@ void uart_task(void *pvParameters)
 	}
 }
 
-
-static Vector3f CalculateGyroBias(L3GD20& gyro, uint32_t num_samples)
-{
-	Vector3f gyro_bias;
-	L3GD20::AxesDPS_t gyro_axes;
-
-	gyro.GetFifoAngRateDPS(&gyro_axes); // Drain the fifo
-	for (uint32_t i = 0; i < num_samples; i++) {
-		uint32_t msg;
-		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
-		}
-		gyro.GetFifoAngRateDPS(&gyro_axes);
-		gyro_bias.at(0) += gyro_axes.AXIS_X;
-		gyro_bias.at(1) += gyro_axes.AXIS_Y;
-		gyro_bias.at(2) += gyro_axes.AXIS_Z;
-	}
-	gyro_bias = gyro_bias / (float)num_samples;
-
-	return gyro_bias;
-}
-
 static Vector3f ReadAccelerometer(
 		LSM303D& acc,
 		AccelLowPassPreFilter3d* lpf_filt)
 {
+	static uint64_t totalAccelSamples = 0;
 	Vector3f acc_filtered;
 	uint8_t count = acc.GetFifoSourceFSS();
 	for (uint8_t i = 0; i < count; i++) {
@@ -228,7 +208,41 @@ static Vector3f ReadAccelerometer(
 		acc.GetAcc(&axes);
 		acc_filtered += lpf_filt->do_filter(Vector3d(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
 	}
+	totalAccelSamples += count;
 	return acc_filtered / count;
+}
+
+static bool filterGyro = true;
+static Vector3f ReadGyro(
+		L3GD20& gyro,
+		uint32_t watermark,
+		GyroPreFilter* gyro_filt)
+{
+	Vector3f gyro_data;
+	uint8_t gyro_samples = gyro.GetFifoSourceReg() & 0x1F;
+	if (gyro_samples >= watermark) {
+		L3GD20::AxesDPS_t axes;
+		for (size_t i = 0; i < gyro_samples; ++i) {
+			gyro.GetAngRateDPS(&axes);
+			//gyro_data += gyro_filt->do_filter(Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
+			gyro_data += Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z);
+		}
+	}
+	return gyro_data / gyro_samples;
+}
+
+static Vector3f CalculateGyroBias(L3GD20& gyro, uint32_t num_samples, GyroPreFilter* gyro_filt)
+{
+	Vector3f gyro_bias;
+	L3GD20::AxesDPS_t gyro_axes;
+	gyro.GetFifoAngRateDPS(&gyro_axes); // Drain the fifo
+	for (uint32_t i = 0; i < num_samples; i++) {
+		uint32_t msg;
+		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
+		}
+		gyro_bias += ReadGyro(gyro, 1, gyro_filt);
+	}
+	return gyro_bias / (float)num_samples;
 }
 
 void main_task(void *pvParameters)
@@ -260,7 +274,10 @@ void main_task(void *pvParameters)
 	UartRpcServer rpcserver(*drone_state, configdata, datastream);
 	AccelLowPassPreFilter3d* accel_lpf = new AccelLowPassPreFilter3d();
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
+	GyroPreFilter* gyro_lpf = new GyroPreFilter();
 	Vector3f gyro_bias;
+	TimeSpan idleTime;
+	TimeStamp idleTs;
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
@@ -283,7 +300,7 @@ void main_task(void *pvParameters)
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	gyro.SetMode(L3GD20::NORMAL);
-	gyro.SetFullScale(L3GD20::FULLSCALE_500);
+	gyro.SetFullScale(L3GD20::FULLSCALE_250);
 	gyro.SetBDU(L3GD20::MEMS_ENABLE);
 	gyro.SetWaterMark(gyr_wtm);
 	gyro.FIFOModeEnable(L3GD20::FIFO_STREAM_MODE);
@@ -312,7 +329,7 @@ void main_task(void *pvParameters)
 
 	printf("Calibrating...\n");
 
-	gyro_bias = CalculateGyroBias(gyro, 800);
+	gyro_bias = CalculateGyroBias(gyro, 800, gyro_lpf);
 
 	flight_ctl.start_receiver();
 
@@ -326,14 +343,19 @@ void main_task(void *pvParameters)
 	 */
 	dronestate_boot_config(*drone_state);
 
+	sample_dt.time_stamp();
+
 	// Infinite loop
 	while (1) {
 		uint32_t msg;
 
 		drone_state->iteration_++;
 
+		idleTs.time_stamp();
 		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
 		}
+		idleTime += idleTs.elapsed();
+
 		ctx_switch_time = isr_ts.elapsed();
 		drone_state->dt_ = sample_dt.elapsed();
 		sample_dt.time_stamp();
@@ -351,9 +373,9 @@ void main_task(void *pvParameters)
 				 0,-1, 0,
 				 0, 0,-1);
 
-		if (gyr_samples >= gyr_wtm) {
-			gyro.GetFifoAngRateDPS(&gyr_axes);
-			drone_state->gyro_raw_ = gyro_align * (Vector3f(gyr_axes.AXIS_X, gyr_axes.AXIS_Y, gyr_axes.AXIS_Z) - gyro_bias);
+		drone_state->gyro_raw_ = ReadGyro(gyro, gyr_wtm, gyro_lpf);
+		if (drone_state->gyro_raw_.length_squared() > 0) {
+			drone_state->gyro_raw_ = gyro_align * (drone_state->gyro_raw_ - gyro_bias);
 			drone_state->gyro_ = drone_state->gyro_raw_ * drone_state->gyro_factor_;
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
@@ -388,6 +410,7 @@ void main_task(void *pvParameters)
 		datastream.set_attitude_twist(attitude_twist);
 		datastream.set_attitude_swing(attitude_swing);
 		datastream.commit();
+#if 0
 		if (console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
 			console_update_time.time_stamp();
 			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));
@@ -419,6 +442,7 @@ void main_task(void *pvParameters)
 			}
 			printf("\n");
 		}
+#endif
 
 #if 0
 		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
