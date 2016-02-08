@@ -343,6 +343,8 @@ void main_task(void *pvParameters)
 	 */
 	dronestate_boot_config(*drone_state);
 
+	printf("Entering main loop...\n");
+
 	sample_dt.time_stamp();
 
 	// Infinite loop
