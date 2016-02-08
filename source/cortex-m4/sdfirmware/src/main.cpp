@@ -300,7 +300,7 @@ void main_task(void *pvParameters)
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	gyro.SetMode(L3GD20::NORMAL);
-	gyro.SetFullScale(L3GD20::FULLSCALE_250);
+	gyro.SetFullScale(L3GD20::FULLSCALE_500);
 	gyro.SetBDU(L3GD20::MEMS_ENABLE);
 	gyro.SetWaterMark(gyr_wtm);
 	gyro.FIFOModeEnable(L3GD20::FIFO_STREAM_MODE);
@@ -310,7 +310,7 @@ void main_task(void *pvParameters)
 	gyro.HPFEnable(L3GD20::MEMS_ENABLE);
 	gyro.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
 	gyro.SetHPFCutOFF(L3GD20::HPFCF_0);
-	gyro.SetODR(L3GD20::ODR_760Hz_BW_35);
+	gyro.SetODR(L3GD20::ODR_760Hz_BW_30);
 
 	accel.SetHPFMode(LSM303D::HPM_NORMAL_MODE_RES);
 	accel.SetFilterDataSel(LSM303D::MEMS_DISABLE);
