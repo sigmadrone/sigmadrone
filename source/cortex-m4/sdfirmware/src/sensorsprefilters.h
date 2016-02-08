@@ -35,6 +35,51 @@ public:
 
 typedef IirLowPassFilter5Hz<Vector3d, double> AccelLowPassPreFilter3d;
 
+/*
+  * IIR LPF
+  *  Order=2
+  *  Fc=20 Hz
+  *  Fs=760 Hz
+  */
+template <typename DataType>
+class IirLpfFs760Fc20: public IirFilter<DataType, double, 3>  {
+public:
+	IirLpfFs760Fc20() : IirFilter<DataType, double, 3>(
+			 {0.00610841465080494, 0.0122168293016099, 0.00610841465080494},
+			 {1.000000000000000, -1.76706147650352, 0.791495135106737}) {}
+};
+
+/*
+  * IIR LPF
+  *  Order=2
+  *  Fc=50 Hz
+  *  Fs=760 Hz
+  */
+template <typename DataType>
+class IirLpfFs760Fc50: public IirFilter<DataType, double, 3>  {
+public:
+	IirLpfFs760Fc50() : IirFilter<DataType, double, 3>(
+			 {0.032797487266435,0.065594974532871,0.032797487266435},
+			 {1.000000000000000,-1.426392036019501,0.557558198508524}) {}
+};
+
+template <typename DataType>
+class FirLpfFs760Fc20 : public FirFilter<DataType, float, 7> {
+public:
+	FirLpfFs760Fc20() : FirFilter<DataType, float, 7>(
+			{ 0.000160,0.027691,0.242240,0.459815,0.242240,0.027691,0.000160}) {}
+};
+
+template <typename DataType>
+class FirLpfFs760Fc10 : public FirFilter<DataType, float, 5> {
+public:
+	FirLpfFs760Fc10() : FirFilter<DataType, float, 5>(
+			{ 0.000248354104054,0.155912925734534,0.687677440322823,0.155912925734535,0.000248354104054}) {}
+};
+
+typedef FirLpfFs760Fc10<Vector3f> GyroPreFilter;
+
+
 static const size_t PRESSURE_FILTER_ORDER = 25;
 typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> PressurePreFilter;
 typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> TemperaturePreFilter;
