@@ -959,7 +959,8 @@ std::ostream& operator<<(std::ostream& os, const MatrixBase<TT, RR, CC>& m)
 			os.width(7);
 			os << m.at(i, j) << " ";
 		}
-		os << std::endl;
+		if (i + 1 < m.rows)
+			os << std::endl;
 	}
 	return os;
 }
