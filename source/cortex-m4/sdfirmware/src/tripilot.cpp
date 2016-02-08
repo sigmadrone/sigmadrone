@@ -89,9 +89,7 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 
 void TriPilot::update_state(DroneState& state)
 {
-	Vector3f torque_rpm;
-
-	set_target_thrust(state.base_throttle_);
+	set_target_thrust(0.7 * state.base_throttle_);
 	set_pid_coefficents(state);
 	torque_correction_ = get_torque(state);
 	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(-state.roll_, -state.pitch_, 0), 1.0);
