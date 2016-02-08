@@ -34,7 +34,7 @@ FlightControl::FlightControl() :
 				RC_VALUE_SCALE_FACTOR,
 				TimeSpan::from_microseconds(1100),
 				TimeSpan::from_microseconds(1910)),
-		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(400)),
+		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(350)),
 		motor_power_(PB_2),
 		pilot_(new PidPilot()),
 		altitude_track_()
