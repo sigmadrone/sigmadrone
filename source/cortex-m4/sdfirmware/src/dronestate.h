@@ -107,6 +107,7 @@ struct DroneState {
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
 		ret["motors_armed"] = motors_armed_;
+		ret["pid_torque"] = matrix_to_json_value(pid_torque_);
 		if (!alarm_.is_none()) {
 			ret["alarm"] = alarm_.to_string();
 			if (alarm_.data().size() > 0) {
