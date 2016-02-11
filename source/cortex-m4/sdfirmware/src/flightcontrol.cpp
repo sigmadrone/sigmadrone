@@ -72,7 +72,7 @@ void FlightControl::set_throttle(const std::vector<Throttle>& thrVec)
 	PwmPulse pulse(TimeSpan::from_milliseconds(1), TimeSpan::from_milliseconds(2));
 	for (size_t i = 0; i < thrVec.size(); ++i) {
 		servo_ctrl_.set_pwm_pulse(i, pulse.to_timespan(
-				(base_throttle().get() >= 0.1) ? thrVec[i].get() : 0.0));
+				(base_throttle().get() >= 0.075) ? thrVec[i].get() : 0.0));
 	}
 }
 

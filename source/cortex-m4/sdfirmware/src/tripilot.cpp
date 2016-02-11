@@ -21,7 +21,8 @@
 #include "tripilot.h"
 
 TriPilot::TriPilot()
-	: pid_(0.0, 0.0, 0.0, 80)
+	: pf_(0.24, 1.7)
+	, pid_(0.0, 0.0, 0.0, 80)
 {
 	min_thrust_ = 0.0;
 	max_thrust_ = 1.0;
@@ -69,6 +70,7 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	torq_d = pid_.get_d_median(error, state.dt_.seconds_float());
 	torq_i = pid_.get_i(error_xy, 1.50f * state.dt_.seconds_float(), state.dt_.seconds_float() / 10.0f);
 	torq = torq_p + torq_d + torq_i;
+	torq = torq.normalize() * std::sqrt(torq.length());
 	if (fabs(torq.z()) > target_thrust_ * 0.25)
 		torq.z() = target_thrust_ * 0.25;
 	if (target_thrust_ < 0.45 && torq.length() > target_thrust_ * 0.50)
@@ -104,13 +106,23 @@ void TriPilot::update_state(DroneState& state)
 	}
 	torque_correction_ += torque_yaw;
 
-	Vector4f motors = Vector4f(
+	Vector4f torq4 = Vector4f(
 			torque_correction_.dot(propellers_.at(0).torque_dir()),
 			torque_correction_.dot(propellers_.at(1).torque_dir()),
 			torque_correction_.dot(propellers_.at(2).torque_dir()),
 			torque_correction_.dot(propellers_.at(3).torque_dir()));
-	motors += target_thrust_;
-	motors_ = state.motors_ = clip_motors(motors);
+	Vector4f torq4_scaled = torq4 * 0.59;
+	Vector4f props = Vector4f(
+		pf_.nvelocity_delta(torq4_scaled[0], target_thrust_),
+		pf_.nvelocity_delta(torq4_scaled[1], target_thrust_),
+		pf_.nvelocity_delta(torq4_scaled[2], target_thrust_),
+		pf_.nvelocity_delta(torq4_scaled[3], target_thrust_)
+	);
+
+//	std::cout << torq4.transpose() << "( " << props.transpose() << " )" << std::endl;
+	torq4 += target_thrust_;
+	props += target_thrust_;
+	motors_ = state.motors_ = clip_motors(props);
 	return;
 }
 

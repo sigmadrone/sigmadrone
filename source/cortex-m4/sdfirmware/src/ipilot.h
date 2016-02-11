@@ -23,7 +23,6 @@
 #define _IPILOT_H_
 
 #include "dronestate.h"
-#undef USE_TRIPILOT
 
 class IPilot
 {

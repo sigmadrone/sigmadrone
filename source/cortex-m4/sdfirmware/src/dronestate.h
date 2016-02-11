@@ -22,6 +22,8 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
+#undef USE_TRIPILOT
+
 #include "units.h"
 #include "d3math.h"
 #include "alarm.h"
@@ -55,9 +57,15 @@ struct DroneState {
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
+#ifdef USE_TRIPILOT
+		, kp_(0.18)
+		, ki_(0.08)
+		, kd_(0.048)
+#else
 		, kp_(0.24)
 		, ki_(0.6)
 		, kd_(0.06)
+#endif
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)

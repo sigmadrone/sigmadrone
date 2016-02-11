@@ -50,7 +50,7 @@ public:
 		/*
 		 * Calculates the direction of the torque_vector
 		 */
-		torque_dir_ = (position.cross(thrust_dir) + thrust_dir * -rot).normalize();
+		torque_dir_ = position.cross(thrust_dir) + thrust_dir * -rot;
 	}
 
 	const Vector3f& thrust_dir() const { return thrust_dir_; }

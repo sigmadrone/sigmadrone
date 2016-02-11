@@ -28,10 +28,12 @@
 #include "pidcontroller.h"
 #include "ipilot.h"
 #include "propeller.h"
+#include "airflowforce.h"
 
 class TriPilot : public IPilot
 {
 public:
+	static constexpr float Ro = 1.225; // Air density
 	TriPilot();
 	virtual ~TriPilot();
 	virtual void set_pid_coefficents(const DroneState&);
@@ -51,6 +53,7 @@ private:
 	Vector3f get_torque(const DroneState& state);
 
 private:
+	AirflowForce<float> pf_;
 	Vector4f motors_;
 	float min_thrust_;
 	float max_thrust_;
