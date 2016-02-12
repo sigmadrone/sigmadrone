@@ -70,9 +70,10 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	torq_d = pid_.get_d_median(error, state.dt_.seconds_float());
 	torq_i = pid_.get_i(error_xy, 1.50f * state.dt_.seconds_float(), state.dt_.seconds_float() / 10.0f);
 	torq = torq_p + torq_d + torq_i;
-	torq = torq.normalize() * std::sqrt(torq.length());
 	if (fabs(torq.z()) > target_thrust_ * 0.25)
 		torq.z() = target_thrust_ * 0.25;
+	if (target_thrust_ < 0.45 && torq.length() > target_thrust_ * 0.50)
+		torq = torq.normalize() * target_thrust_ * 0.50;
 
 #if 0
 	Vector3f torqdisp = torq_i;
@@ -103,29 +104,28 @@ void TriPilot::update_state(DroneState& state)
 		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
 	}
 	torque_correction_ += torque_yaw;
-	float target_rpm = pf_.nvelocity(target_thrust_);
 
-	Vector4f torq4 = Vector4f(
-		torque_correction_.dot(propellers_.at(0).torque_dir()),
-		torque_correction_.dot(propellers_.at(1).torque_dir()),
-		torque_correction_.dot(propellers_.at(2).torque_dir()),
-		torque_correction_.dot(propellers_.at(3).torque_dir()));
+	Vector4f motors = Vector4f(
+			torque_correction_.dot(propellers_.at(0).torque_dir()),
+			torque_correction_.dot(propellers_.at(1).torque_dir()),
+			torque_correction_.dot(propellers_.at(2).torque_dir()),
+			torque_correction_.dot(propellers_.at(3).torque_dir()));
+
 	Vector4f torq_rpm = Vector4f(
-		pf_.nvelocity_delta(torq4[0], target_rpm),
-		pf_.nvelocity_delta(torq4[1], target_rpm),
-		pf_.nvelocity_delta(torq4[2], target_rpm),
-		pf_.nvelocity_delta(torq4[3], target_rpm)
+		pf_.nvelocity_delta(motors[0], target_thrust_),
+		pf_.nvelocity_delta(motors[1], target_thrust_),
+		pf_.nvelocity_delta(motors[2], target_thrust_),
+		pf_.nvelocity_delta(motors[3], target_thrust_)
 	);
 
-	if (torq_rpm.length() > 0.5 * target_rpm)
-		torq_rpm = torq_rpm.normalize() * 0.5 * target_rpm;
-	torq4 += target_thrust_;
-	torq_rpm += target_rpm;
-//	std::cout << torq4.transpose() << "( " << props.transpose() << " )" << std::endl;
+	torq_rpm += target_thrust_;
+	motors += target_thrust_;
+	std::cout << motors.transpose() << "( " << torq_rpm.transpose() << " ), target_thrust: " << target_thrust_ << std::endl;
 
 	motors_ = state.motors_ = clip_motors(torq_rpm);
 	return;
 }
+
 
 Vector4f TriPilot::clip_motors(const Vector4f& motors)
 {
