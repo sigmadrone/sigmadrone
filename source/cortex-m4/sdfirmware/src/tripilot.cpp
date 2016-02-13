@@ -70,21 +70,12 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	torq_d = pid_.get_d_median(error, state.dt_.seconds_float());
 	torq_i = pid_.get_i(error_xy, 1.50f * state.dt_.seconds_float(), state.dt_.seconds_float() / 10.0f);
 	torq = torq_p + torq_d + torq_i;
-	if (fabs(torq.z()) > target_thrust_ * 0.25)
-		torq.z() = target_thrust_ * 0.25;
 	if (target_thrust_ < 0.1)
 		torq *= std::pow(target_thrust_ / 0.1, 2.0f);
-
-#if 0
-	Vector3f torqdisp = torq_i;
-	Vector4f motors = Vector4f(
-			torqdisp.dot(propellers_.at(0).torque_dir()),
-			torqdisp.dot(propellers_.at(1).torque_dir()),
-			torqdisp.dot(propellers_.at(2).torque_dir()),
-			torqdisp.dot(propellers_.at(3).torque_dir()));
-	std::cout << "(" << motors.transpose().to_string(4) << ") " << torq.length() / target_thrust_ * 100.0f << " % "<< std::endl;
-#endif
-
+	torq.z() *= 1.5;
+	if (fabs(torq.z()) > target_thrust_ * 0.25)
+		torq.z() = target_thrust_ * 0.25;
+//	std::cout << "Twist angle error: " << errorTwist.angle() << "( " << torq.transpose() << " )" << std::endl;
 	return torq;
 }
 
@@ -92,7 +83,8 @@ void TriPilot::update_state(DroneState& state)
 {
 	set_target_thrust(0.7 * state.base_throttle_);
 	set_pid_coefficents(state);
-	torque_correction_ = get_torque(state);
+
+//	target_twist_ *= QuaternionF::fromAngularVelocity(Vector3f(0.0f, 0.0f, 5.0 * state.yaw_), state.dt_.seconds_float());
 	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(-state.roll_, -state.pitch_, 0), 1.0);
 	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
 	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * state.yaw_ * target_thrust_);
@@ -103,21 +95,13 @@ void TriPilot::update_state(DroneState& state)
 		pid_.set_integral_error(Vector3f(0));
 		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
 	}
+	torque_correction_ = get_torque(state);
 	torque_correction_ += torque_yaw;
-
 	Vector4f motors = Vector4f(
-			torque_correction_.dot(propellers_.at(0).torque_dir()),
-			torque_correction_.dot(propellers_.at(1).torque_dir()),
-			torque_correction_.dot(propellers_.at(2).torque_dir()),
-			torque_correction_.dot(propellers_.at(3).torque_dir()));
-
-//	Vector4f torq_rpm = Vector4f(
-//		pf_.nvelocity_delta(motors[0], target_thrust_),
-//		pf_.nvelocity_delta(motors[1], target_thrust_),
-//		pf_.nvelocity_delta(motors[2], target_thrust_),
-//		pf_.nvelocity_delta(motors[3], target_thrust_)
-//	);
-//	torq_rpm += target_thrust_;
+		torque_correction_.dot(propellers_.at(0).torque_dir()),
+		torque_correction_.dot(propellers_.at(1).torque_dir()),
+		torque_correction_.dot(propellers_.at(2).torque_dir()),
+		torque_correction_.dot(propellers_.at(3).torque_dir()));
 	motors += target_thrust_;
 	Vector4f torq_rpm = Vector4f(
 		pf_.nvelocity(motors[0]),
