@@ -72,8 +72,8 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	torq = torq_p + torq_d + torq_i;
 	if (fabs(torq.z()) > target_thrust_ * 0.25)
 		torq.z() = target_thrust_ * 0.25;
-	if (target_thrust_ < 0.45 && torq.length() > target_thrust_ * 0.50)
-		torq = torq.normalize() * target_thrust_ * 0.50;
+	if (target_thrust_ < 0.1)
+		torq *= std::pow(target_thrust_ / 0.1, 2.0f);
 
 #if 0
 	Vector3f torqdisp = torq_i;
@@ -111,16 +111,21 @@ void TriPilot::update_state(DroneState& state)
 			torque_correction_.dot(propellers_.at(2).torque_dir()),
 			torque_correction_.dot(propellers_.at(3).torque_dir()));
 
-	Vector4f torq_rpm = Vector4f(
-		pf_.nvelocity_delta(motors[0], target_thrust_),
-		pf_.nvelocity_delta(motors[1], target_thrust_),
-		pf_.nvelocity_delta(motors[2], target_thrust_),
-		pf_.nvelocity_delta(motors[3], target_thrust_)
-	);
-
-	torq_rpm += target_thrust_;
+//	Vector4f torq_rpm = Vector4f(
+//		pf_.nvelocity_delta(motors[0], target_thrust_),
+//		pf_.nvelocity_delta(motors[1], target_thrust_),
+//		pf_.nvelocity_delta(motors[2], target_thrust_),
+//		pf_.nvelocity_delta(motors[3], target_thrust_)
+//	);
+//	torq_rpm += target_thrust_;
 	motors += target_thrust_;
-	std::cout << motors.transpose() << "( " << torq_rpm.transpose() << " ), target_thrust: " << target_thrust_ << std::endl;
+	Vector4f torq_rpm = Vector4f(
+		pf_.nvelocity(motors[0]),
+		pf_.nvelocity(motors[1]),
+		pf_.nvelocity(motors[2]),
+		pf_.nvelocity(motors[3])
+	);
+//	std::cout << motors.transpose() << "( " << torq_rpm.transpose() << " ), target_thrust: " << target_thrust_ << std::endl;
 
 	motors_ = state.motors_ = clip_motors(torq_rpm);
 	return;

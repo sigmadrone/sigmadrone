@@ -58,9 +58,9 @@ struct DroneState {
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
 #ifdef USE_TRIPILOT
-		, kp_(0.18)
-		, ki_(0.08)
-		, kd_(0.048)
+		, kp_(0.13)
+		, ki_(0.03)
+		, kd_(0.03)
 #else
 		, kp_(0.24)
 		, ki_(0.6)
