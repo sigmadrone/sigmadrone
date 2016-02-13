@@ -63,6 +63,7 @@ private:
 	QuaternionF target_swing_;
 	QuaternionF target_twist_;
 	PidController3f pid_;
+	PidController3f pidz_;
 	Vector3f torque_correction_;
 	Vector3f swing_;
 	std::vector<Propeller> propellers_;

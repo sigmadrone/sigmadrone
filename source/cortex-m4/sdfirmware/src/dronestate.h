@@ -61,9 +61,9 @@ struct DroneState {
 		, kp_(0.14)
 		, ki_(0.03)
 		, kd_(0.03)
-		, yaw_kp_(0.014)
+		, yaw_kp_(0.045)
 		, yaw_ki_(0.0)
-		, yaw_kd_(0.003)
+		, yaw_kd_(0.01)
 #else
 		, kp_(0.24)
 		, ki_(0.6)

@@ -23,6 +23,7 @@
 TriPilot::TriPilot()
 	: pf_(0.24, 1.0)
 	, pid_(0.0, 0.0, 0.0, 80)
+	, pidz_(0.0, 0.0, 0.0, 80)
 {
 	min_thrust_ = 0.0;
 	max_thrust_ = 1.0;
@@ -44,11 +45,13 @@ void TriPilot::set_pid_coefficents(const DroneState& state)
 {
 	pid_.set_kp_ki_kd(state.kp_, state.ki_, state.kd_);
 	pid_.set_derivative_filter(state.pid_filter_freq_);
+	pidz_.set_kp_ki_kd(state.yaw_kp_, state.yaw_ki_, state.yaw_kd_);
+	pidz_.set_derivative_filter(state.pid_filter_freq_);
 }
 
 Vector3f TriPilot::get_torque(const DroneState& state)
 {
-	Vector3f torq;
+	Vector3f torq_xy, torq_z, torq;
 	QuaternionF twist, swing;
 	QuaternionF::decomposeTwistSwing(~state.attitude_, Vector3f(0,0,1), swing, twist);
 
@@ -57,8 +60,6 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	QuaternionF errorTwist = (~twist) * (~target_twist_);
 	Vector3f error_xy = errorSwing.axis().normalize() * errorSwing.angle() * -1.0f;
 	Vector3f error_z = errorTwist.axis().normalize() * errorTwist.angle() * -1.0f;
-	Vector3f error = error_xy + error_z;
-	Vector3f torq_p, torq_i, torq_d;
 
 	float ki = pid_.get_ki();
 	Vector3f integral_error = pid_.get_integral_error();
@@ -66,16 +67,17 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 		integral_error = integral_error.normalize() * (max_integral_torque_ * target_thrust_ / ki);
 		pid_.set_integral_error(integral_error);
 	}
-	torq_p = pid_.get_p(error);
-	torq_d = pid_.get_d_median(error, state.dt_.seconds_float());
-	torq_i = pid_.get_i(error_xy, 1.50f * state.dt_.seconds_float(), state.dt_.seconds_float() / 10.0f);
-	torq = torq_p + torq_d + torq_i;
+	torq_xy += pid_.get_p(error_xy);
+	torq_xy += pid_.get_d_median(error_xy, state.dt_.seconds_float());
+	torq_xy += pid_.get_i(error_xy, 1.50f * state.dt_.seconds_float(), state.dt_.seconds_float() / 10.0f);
+	torq_z += pidz_.get_p(error_z);
+	torq_z += pidz_.get_d_median(error_z, state.dt_.seconds_float());
+	if (torq_z.length() > target_thrust_ * 0.6)
+		torq_z = torq_z.normalize() * target_thrust_ * 0.6;
+	torq = torq_xy + torq_z;
 	if (target_thrust_ < 0.1)
 		torq *= std::pow(target_thrust_ / 0.1, 2.0f);
-	torq.z() *= 1.5;
-	if (fabs(torq.z()) > target_thrust_ * 0.25)
-		torq.z() = target_thrust_ * 0.25;
-//	std::cout << "Twist angle error: " << errorTwist.angle() << "( " << torq.transpose() << " )" << std::endl;
+//	std::cout << "Twist error: " << errorTwist.toString(4) << "( " << torq.transpose().to_string(4) << " )" << torq_z.transpose().to_string(4) << std::endl;
 	return torq;
 }
 
@@ -84,10 +86,9 @@ void TriPilot::update_state(DroneState& state)
 	set_target_thrust(0.7 * state.base_throttle_);
 	set_pid_coefficents(state);
 
-//	target_twist_ *= QuaternionF::fromAngularVelocity(Vector3f(0.0f, 0.0f, 5.0 * state.yaw_), state.dt_.seconds_float());
 	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(-state.roll_, -state.pitch_, 0), 1.0);
 	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
-	Vector3f torque_yaw(0.0, 0.0, state.yaw_throttle_factor_ * state.yaw_ * target_thrust_);
+	Vector3f torque_yaw(0.0, 0.0, 2.0 * state.yaw_throttle_factor_ * state.yaw_ * target_thrust_);
 	if (torque_yaw.length() > 0.01) {
 		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
 	}
