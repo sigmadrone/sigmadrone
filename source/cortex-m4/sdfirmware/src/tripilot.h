@@ -60,6 +60,7 @@ private:
 	float target_thrust_;
 	float max_integral_torque_;
 
+	Vector3f target_yawv_;
 	QuaternionF target_swing_;
 	QuaternionF target_twist_;
 	PidController3f pid_;

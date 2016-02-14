@@ -77,7 +77,8 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	torq = torq_xy + torq_z;
 	if (target_thrust_ < 0.1)
 		torq *= std::pow(target_thrust_ / 0.1, 2.0f);
-//	std::cout << "Twist error: " << errorTwist.toString(4) << "( " << torq.transpose().to_string(4) << " )" << torq_z.transpose().to_string(4) << std::endl;
+//	std::cout << "Twist error: " << errorTwist.toString(4) << "( " << torq.transpose().to_string(4) << " )" << target_twist_.toString(4)
+//			<< ", target_yawv_ rad/s: " << target_yawv_.transpose() << std::endl;
 	return torq;
 }
 
@@ -86,18 +87,17 @@ void TriPilot::update_state(DroneState& state)
 	set_target_thrust(0.7 * state.base_throttle_);
 	set_pid_coefficents(state);
 
+	target_yawv_ = Vector3f(0.0f, 0.0f, 10.0f * state.yaw_throttle_factor_ * state.yaw_);
+	if (target_yawv_.length() > M_PI * target_thrust_)
+		target_yawv_ = target_yawv_.normalize() * M_PI * target_thrust_;
+	target_twist_ *= QuaternionF::fromAngularVelocity(target_yawv_, state.dt_.seconds_float());
 	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(-state.roll_, -state.pitch_, 0), 1.0);
 	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
-	Vector3f torque_yaw(0.0, 0.0, 2.0 * state.yaw_throttle_factor_ * state.yaw_ * target_thrust_);
-	if (torque_yaw.length() > 0.01) {
-		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
-	}
 	if (target_thrust_ < 0.1) {
 		pid_.set_integral_error(Vector3f(0));
 		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
 	}
 	torque_correction_ = get_torque(state);
-	torque_correction_ += torque_yaw;
 	Vector4f motors = Vector4f(
 		torque_correction_.dot(propellers_.at(0).torque_dir()),
 		torque_correction_.dot(propellers_.at(1).torque_dir()),
@@ -110,8 +110,6 @@ void TriPilot::update_state(DroneState& state)
 		pf_.nvelocity(motors[2]),
 		pf_.nvelocity(motors[3])
 	);
-//	std::cout << motors.transpose() << "( " << torq_rpm.transpose() << " ), target_thrust: " << target_thrust_ << std::endl;
-
 	motors_ = state.motors_ = clip_motors(torq_rpm);
 	return;
 }
