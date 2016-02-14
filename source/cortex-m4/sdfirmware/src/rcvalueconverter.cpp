@@ -55,7 +55,7 @@ void RcValueConverter::update()
 	float gear = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR));
 
 	throttle_ = Throttle(throttle * scale_factor_);
-	if (yaw > 0.0 && (fabs(yaw-0.5f) > 0.05)) {
+	if (yaw > 0.0 && (fabs(yaw-0.5f) > 0.0075)) {
 		yaw_ = -1 * ((yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_ * 2);
 		TimeSpan dt = receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().decoded_period();
 		Vector3f ang_vel(0.0f, 0.0f, yaw_);
