@@ -302,7 +302,7 @@ class Quaternion
 {
 public:
 	T w, x, y, z;
-	static constexpr double EPSILON = 4.37114e-05;
+	static constexpr T EPSILON = 4.37114e-05;
 
 public:
 	static Quaternion<T> identity;
@@ -340,12 +340,12 @@ public:
 	MatrixMN<T, 3, 1> rotate(const MatrixMN<T, 3, 1>& v) const;
 	Quaternion<T> ln() const;
 	Quaternion<T> exp() const;
-	double angle() const;
+	T angle() const;
 	MatrixMN<T,3,1> axis() const;
 	MatrixMN<T, 4, 4> rotMatrix4() const;
 	MatrixMN<T, 3, 3> rotMatrix3() const;
 	Quaternion<T> reciprocal();
-	std::string toString(size_t prec = 2) const;
+	std::string to_string(size_t prec = 2) const;
 
 	static T dot(const Quaternion<T>& u, const Quaternion<T>& v);
 	static T theta(const Quaternion<T>& u, const Quaternion<T>& v);
@@ -609,7 +609,7 @@ Quaternion<T> Quaternion<T>::ln() const
 	Quaternion<T> Q(*this);
 	MatrixMN<T,3,1> v = MatrixMN<T,3,1>(Q.x, Q.y, Q.z);
 	T lV = v.length();
-	double ac = std::acos(Q.w/Q.length());
+	T ac = std::acos(Q.w/Q.length());
 	return Quaternion<T>(std::log(Q.length()), v.at(0)/lV*ac, v.at(1)/lV*ac, v.at(2)/lV*ac);
 }
 
@@ -618,17 +618,17 @@ Quaternion<T> Quaternion<T>::exp() const
 {
 	MatrixMN<T,3,1> v(x, y, z);
 	T lV = v.length();
-	double c = std::cos(lV);
-	double s = std::sin(lV);
-	double e = std::exp(w);
+	T c = std::cos(lV);
+	T s = std::sin(lV);
+	T e = std::exp(w);
 	return Quaternion<T>(e*c, e*v.at(0)/lV*s, e*v.at(1)/lV*s, e*v.at(2)/lV*s);
 }
 
 template <typename T>
-double Quaternion<T>::angle() const
+T Quaternion<T>::angle() const
 {
     Quaternion<T> q = this->normalize();
-    return static_cast<double>(2*std::acos(q.w));
+    return static_cast<T>(2*std::acos(q.w));
 }
 
 template <typename T>
@@ -636,8 +636,8 @@ MatrixMN<T,3,1> Quaternion<T>::axis() const
 {
 	Quaternion<T> q = this->normalize();
 
-	double ca2 = q.w;
-	double sa2  = std::sqrt( 1.0 - ca2 * ca2 );
+	T ca2 = q.w;
+	T sa2  = std::sqrt( 1.0 - ca2 * ca2 );
 	if (fabs( sa2 ) < 0.0005)
 	  sa2 = 1;
 	return MatrixMN<T,3,1>(q.x/sa2, q.y/sa2, q.z/sa2);
@@ -702,7 +702,7 @@ std::ostream& operator<<(std::ostream& os, const Quaternion<TT>& q)
 }
 
 template <typename T>
-std::string Quaternion<T>::toString(size_t prec) const
+std::string Quaternion<T>::to_string(size_t prec) const
 {
 	std::stringstream oss;
 	oss.setf(std::ios::fixed, std::ios::floatfield);
@@ -714,7 +714,7 @@ std::string Quaternion<T>::toString(size_t prec) const
 template <typename T>
 MatrixMN<T,3,1> Quaternion<T>::angularVelocity(Quaternion<T> i, Quaternion<T> f, float dT)
 {
-	double dotprod = dot(i, f);
+	T dotprod = dot(i, f);
 	if (dotprod < 0.0)
 		f = -f;
 	if (dotprod < 1.0f && dotprod > -1.0f) {
@@ -784,8 +784,8 @@ Quaternion<T> Quaternion<T>::fromAngularVelocity(const MatrixMN<T,3,1>& omega /*
 template <typename T>
 Quaternion<T> Quaternion<T>::fromAxisRot(MatrixMN<T,3,1> axis, float rad)
 {
-	double sa2 = std::sin(rad / 2);
-	double ca2 = std::cos(rad / 2);
+	T sa2 = std::sin(rad / 2);
+	T ca2 = std::cos(rad / 2);
 
 	/*
 	 * Constructing quaternion from vector and angle requires the vector portion to be the unit vector.
@@ -812,7 +812,7 @@ Quaternion<T> Quaternion<T>::fromVectors(const MatrixMN<T, 3, 1>& u, const Matri
 	// Copy, since cannot modify local
 	MatrixMN<T, 3, 1> v0 = u.normalize();
 	MatrixMN<T, 3, 1> v1 = v.normalize();
-	double d = MatrixMN<T, 3, 1>::dot(v0, v1);
+	T d = MatrixMN<T, 3, 1>::dot(v0, v1);
 
 	// If dot == 1, vectors are the same
 	if (d > 1.0f - EPSILON) {
@@ -824,8 +824,8 @@ Quaternion<T> Quaternion<T>::fromVectors(const MatrixMN<T, 3, 1>& u, const Matri
 			axis = MatrixMN<T, 3, 1>::cross(MatrixMN<T, 3, 1>(0, 1, 0), v0);
 		q = fromAxisRot(axis, M_PI);
 	} else {
-		double s = std::sqrt((1 + d) * 2);
-		double invs = 1 / s;
+		T s = std::sqrt((1 + d) * 2);
+		T invs = 1 / s;
 		MatrixMN<T, 3, 1> c = MatrixMN<T, 3, 1>::cross(v0, v1);
 		q.x = c.at(0) * invs;
 		q.y = c.at(1) * invs;
@@ -840,7 +840,7 @@ Quaternion<T> Quaternion<T>::fromVectors(const MatrixMN<T, 3, 1>& u, const Matri
 template <typename T>
 Quaternion<T> Quaternion<T>::fromVectorsPartial(const MatrixMN<T,3,1>& u, const MatrixMN<T,3,1>& v, float part)
 {
-	double d = MatrixMN<T, 3, 1>::dot(u, v);
+	T d = MatrixMN<T, 3, 1>::dot(u, v);
 
 	// If dot == 1, vectors are the same
 	if (d >= (1.0f - EPSILON)) {
