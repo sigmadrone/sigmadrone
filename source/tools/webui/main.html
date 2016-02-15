@@ -185,6 +185,25 @@
 
         <hr class="featurette-divider">
 
+        <div class="row row-padded">
+          <a href="#rc-control-id" id="rc-control-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>RC Control
+          </a>
+          <div id="rc-control-id" class="col-xs-12 col-data collapse">
+            <div class="row">
+              <div class="col-xs-11 col-data"><span>Roll : </span><span id="roll-id">Roll me</span></div>
+            </div>
+            <div class="row">
+              <div class="col-xs-11 col-data"><span>Pitch: </span><span id="pitch-id">Pitch me</span></div>
+            </div>
+            <div class="row">
+              <div class="col-xs-11 col-data"><span>Yaw  : </span><span id="yaw-id">Yawn</span></div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="featurette-divider">
+
       </div> <!--div id="home" class="container tab-pane fade in active"-->
 
       <div id="control" class="tab-pane fade">
@@ -500,28 +519,6 @@
             <span class="glyphicon glyphicon-triangle-right"></span>Filter Data
           </a>
           <div id = "motor-chart-ydata-select-id" class="col-xs-12 collapse">
-            <!--div class="row">
-              <div class="col-xs-3 col-md-2 col-data">
-                <div class="checkbox">
-                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM1Data(this)">M1</label>
-                </div>
-              </div>
-              <div class="col-xs-3 col-md-2">
-                <div class="checkbox">
-                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM2Data(this)">M2</label>
-                </div>
-              </div>
-              <div class="col-xs-3 col-md-2">
-                <div class="checkbox">
-                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM3Data(this)">M3</label>
-                </div>
-              </div>
-              <div class="col-xs-3 col-md-2">
-                <div class="checkbox">
-                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartM4Data(this)">M4</label>
-                </div>
-              </div>
-            </div> <!--row-->
             <div class="row">
               <div class="col-xs-3 col-md-2 col-data">
                 <div class="checkbox">
@@ -629,17 +626,6 @@
     ['GyroX', 'GyroY', 'GyroZ'],
     onChartEvent
   );
-
-/*
-  errorChart = new VisChart2d(
-    document.getElementById("error-chart-id"),
-    null,
-    "Motors",
-    ['Qt:W', 'Qt:X', 'Qt:Y', 'Qt:Z', 'TgtQ:W', 'TgtQ:X', 'TgtQ:Y', 'TgtQ:Z'],
-    -1.0, 1.0,
-    ['M1', 'M2', 'M3', 'M4'],
-    onChartEvent
-  );*/
 
   errorChart = new VisChart2d(
     document.getElementById("error-chart-id"),
@@ -985,13 +971,6 @@
       $("#mag").text(vector2str(response.result.mag));
       $("#altitude").text(response.result.altitude_meters.toFixed(2));
 
-      /*
-      $("#motor1").text((response.result.motors[0]*100).toFixed(2));
-      $("#motor2").text((response.result.motors[1]*100).toFixed(2));
-      $("#motor3").text((response.result.motors[2]*100).toFixed(2));
-      $("#motor4").text((response.result.motors[3]*100).toFixed(2));
-      */
-
       if (response.result.motors_armed) {
         m1.refresh(response.result.motors[0] * 100);
         m2.refresh(response.result.motors[1] * 100);
@@ -1022,6 +1001,11 @@
       }
       $("#dt").text(response.result.dt/1000);
 
+      $("#roll-id").text(droneState.roll.toFixed(4));
+      $("#pitch-id").text(droneState.pitch.toFixed(4));
+      $("#yaw-id").text(droneState.yaw.toFixed(4));
+
+
       /*
        * Update the forms
        */
@@ -1038,6 +1022,7 @@
     toggleCollapsable("#sensors-id", "#sensors-btn", "Sensors");
     toggleCollapsable("#motors-id", "#motors-btn", "Motors");
     toggleCollapsable("#gps-id", "#gps-btn", "GPS");
+    toggleCollapsable("#rc-control-id", "#rc-control-btn", "RC Control");
     toggleCollapsable("#pidxy-id", "#pidxy-btn", "PID Controller XY");
     toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
     toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
