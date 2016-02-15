@@ -873,7 +873,7 @@
     $("#battery-icon").removeClass("fa-battery-3");
     $("#battery-icon").removeClass("fa-battery-4");
     $("#battery-icon").addClass(batIconClass);
-    $("#battery-percent").text(batteryPercent);
+    $("#battery-percent").text(batteryVoltage + "V " + batteryPercent);
   }
 
   function onRedrawMotorsArmedIcon(motorsArmed) {
@@ -889,7 +889,7 @@
   function onRedrawMotorsAndBatteryStatus(droneState) {
     onRedrawBatteryIcon(
       droneState.battery_percentage.toFixed(0),
-      droneState.battery_voltage.toFixed(0));
+      droneState.battery_voltage.toFixed(2));
 
     onRedrawMotorsArmedIcon(droneState.motors_armed);
 
