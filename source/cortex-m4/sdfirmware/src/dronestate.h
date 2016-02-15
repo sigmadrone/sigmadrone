@@ -146,6 +146,7 @@ struct DroneState {
 		ret["pitch_bias"] = pitch_bias_;
 		ret["roll_bias"] = roll_bias_;
 		ret["pid_filter_freq"] = pid_filter_freq_;
+		ret["track_magnetometer"] = track_magnetometer_;
 		if (!most_critical_alarm_.is_none()) {
 			ret["crit_alarm"] = most_critical_alarm_.to_string();
 			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
