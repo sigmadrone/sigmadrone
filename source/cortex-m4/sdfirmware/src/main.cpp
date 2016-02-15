@@ -381,12 +381,18 @@ void main_task(void *pvParameters)
 			drone_state->accel_ = accel_adjusted.normalize();
 		}
 
+#ifdef ALLOW_ACCELEROMETER_OFF
+		if (drone_state->track_accelerometer_)
+			att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
+#else
 		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
+#endif
 
 		accel.GetMag(&mag_axes);
 		drone_state->mag_raw_ = acc_align * Vector3f(mag_axes.AXIS_X, mag_axes.AXIS_Y, mag_axes.AXIS_Z);
 		drone_state->mag_ = mag_lpf->do_filter(drone_state->mag_raw_.normalize());
-		att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
+		if (drone_state->track_magnetometer_)
+			att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
 
 		drone_state->attitude_ = att.get_attitude();
 

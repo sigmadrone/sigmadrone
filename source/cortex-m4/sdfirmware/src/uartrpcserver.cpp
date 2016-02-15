@@ -57,6 +57,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Da
 	add("sd_restore_config", &UartRpcServer::rpc_restore_config);
 	add("sd_pid_filter_freq", &UartRpcServer::rpc_pid_filter_freq);
 	add("sd_set_mag_tracking", &UartRpcServer::rpc_set_mag_tracking);
+	add("sd_set_acc_tracking", &UartRpcServer::rpc_set_acc_tracking);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -526,6 +527,30 @@ rexjson::value UartRpcServer::rpc_set_mag_tracking(UART* , rexjson::array& param
 	bool on = params[0].get_bool();
 	dronestate_.track_magnetometer_ = on;
 	return dronestate_.track_magnetometer_;
+}
+
+rexjson::value UartRpcServer::rpc_set_acc_tracking(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_bool_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_set_acc_tracking\n"
+				"\nDANGAREOUS!!! Set Turn on/off Accelerometer tracking."
+				"\nThe accelerometer should not be turned off for "
+				"more than a few seconds."
+				"\n"
+				"Arguments:\n"
+				"1. on          (bool) On/Off\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	bool on = params[0].get_bool();
+	dronestate_.track_accelerometer_ = on;
+	return dronestate_.track_accelerometer_;
 }
 
 

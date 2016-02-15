@@ -87,6 +87,7 @@ struct DroneState {
 	    , motors_armed_(false)
 		, enforce_flight_ceiling_(false)
 		, track_magnetometer_(true)
+		, track_accelerometer_(true)
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING) { }
 
@@ -251,6 +252,7 @@ struct DroneState {
 	bool motors_armed_;
 	bool enforce_flight_ceiling_;
 	bool track_magnetometer_;
+	bool track_accelerometer_;
 
 	/*
 	 * Time it took to read sensors

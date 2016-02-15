@@ -69,6 +69,7 @@ protected:
 	rexjson::value rpc_flight_ceiling(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_restore_config(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_set_mag_tracking(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_set_acc_tracking(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 
 protected:
