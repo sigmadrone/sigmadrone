@@ -94,9 +94,6 @@ struct DroneState {
 	rexjson::value to_json()
 	{
 		rexjson::object ret;
-		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
-		ret["accel_raw"] = matrix_to_json_value(accel_raw_);
-		ret["mag_raw"] = matrix_to_json_value(mag_raw_);
 		ret["gyro"] = matrix_to_json_value(gyro_);
 		ret["accel"] = matrix_to_json_value(accel_);
 		ret["mag"] = matrix_to_json_value(mag_);
@@ -118,6 +115,7 @@ struct DroneState {
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
+		ret["base_throttle"] = base_throttle_;
 		ret["motors_armed"] = motors_armed_;
 		ret["pid_torque"] = matrix_to_json_value(pid_torque_);
 		if (!alarm_.is_none()) {
