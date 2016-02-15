@@ -191,13 +191,20 @@
           </a>
           <div id="rc-control-id" class="col-xs-12 col-data collapse">
             <div class="row">
-              <div class="col-xs-11 col-data"><span>Roll : </span><span id="roll-id">Roll me</span></div>
+              <div class="col-xs-3 col-md-1 col-data"><span>Roll:</span></div>
+              <div class="col-xs-8 col-data"><span id="roll-id">Roll me</span></div>
             </div>
             <div class="row">
-              <div class="col-xs-11 col-data"><span>Pitch: </span><span id="pitch-id">Pitch me</span></div>
+              <div class="col-xs-3 col-md-1 col-data"><span>Pitch:</span></div>
+              <div class="col-xs-8 col-data"><span id="pitch-id">Pitch me</span></div>
             </div>
             <div class="row">
-              <div class="col-xs-11 col-data"><span>Yaw  : </span><span id="yaw-id">Yawn</span></div>
+              <div class="col-xs-3 col-md-1 col-data"><span>Yaw:</span></div>
+              <div class="col-xs-8 col-data"><span id="yaw-id">Yawn</span></div>
+            </div>
+            <div class="row">
+              <div class="col-xs-3 col-md-1 col-data"><span>Throttle:</span></div>
+              <div class="col-xs-8 col-data"><span id="throttle-id">Yawn</span></div>
             </div>
           </div>
         </div>
@@ -1004,6 +1011,7 @@
       $("#roll-id").text(droneState.roll.toFixed(4));
       $("#pitch-id").text(droneState.pitch.toFixed(4));
       $("#yaw-id").text(droneState.yaw.toFixed(4));
+      $("#throttle-id").text(droneState.base_throttle.toFixed(4));
 
 
       /*
