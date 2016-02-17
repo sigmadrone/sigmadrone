@@ -87,13 +87,14 @@ void TriPilot::update_state(DroneState& state)
 	set_target_thrust(state.base_throttle_ * 0.65f);
 	set_pid_coefficents(state);
 	float max_w = 2.0f * M_PI * target_thrust_;
+	float roll = ((int)(roll_avg_.do_filter(state.roll_) * 1000)) / 1000.0f;
+	float pitch = ((int)(pitch_avg_.do_filter(state.pitch_) * 1000)) / 1000.0f;
 
 	target_yawv_ = Vector3f(0.0f, 0.0f, 18.0f * state.yaw_throttle_factor_ * state.yaw_);
 	if (target_yawv_.length() > max_w)
 		target_yawv_ = target_yawv_.normalize() * max_w;
 	target_twist_ *= QuaternionF::fromAngularVelocity(target_yawv_, state.dt_.seconds_float());
-	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(-state.roll_, -state.pitch_, 0), 1.0);
-	Vector3f torque_bias(state.roll_bias_, state.pitch_bias_, state.yaw_bias_);
+	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(-roll, -pitch, 0), 1.0);
 	if (target_thrust_ < 0.1) {
 		pid_.set_integral_error(Vector3f(0));
 		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
