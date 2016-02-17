@@ -34,9 +34,9 @@ class QmnNumber : public QmnAllowedTypes<T> {
 public:
 	// construction
 	QmnNumber();
-	explicit QmnNumber(int int_part);
-	explicit QmnNumber(float f);
-	explicit QmnNumber(double d);
+	QmnNumber(int int_part);
+	QmnNumber(float f);
+	QmnNumber(double d);
 	static QmnNumber from_int64(int64_t i);
 	~QmnNumber() = default;
 
@@ -49,22 +49,32 @@ public:
 	const QmnNumber& operator-=(const QmnNumber& rhs);
 	const QmnNumber& operator*=(const QmnNumber& rhs);
 	const QmnNumber& operator/=(const QmnNumber& rhs);
-	QmnNumber operator+(const QmnNumber& rhs) const {return QmnNumber(*this).operator+=(rhs);}
-	QmnNumber operator-(const QmnNumber& rhs) const {return QmnNumber(*this).operator-=(rhs);}
-	QmnNumber operator*(const QmnNumber& rhs) const {return QmnNumber(*this).operator*=(rhs);}
-	QmnNumber operator/(const QmnNumber& rhs) const {return QmnNumber(*this).operator/=(rhs);}
+	QmnNumber operator+(const QmnNumber& qmn) const {return QmnNumber(*this).operator+=(qmn);}
+	QmnNumber operator+(float f) const {return operator+(QmnNumber(f));}
+	QmnNumber operator+(double d) const {return operator+(QmnNumber(d));}
+	QmnNumber operator+(int i) const {return operator+(QmnNumber(i));}
+	QmnNumber operator-(const QmnNumber& qmn) const {return QmnNumber(*this).operator-=(qmn);}
+	QmnNumber operator-(float f) const {return operator-(QmnNumber(f));}
+	QmnNumber operator-(double d) const {return operator-(QmnNumber(d));}
+	QmnNumber operator-(int i) const {return operator-(QmnNumber(i));}
+	QmnNumber operator*(const QmnNumber& qmn) const {return QmnNumber(*this).operator*=(qmn);}
+	QmnNumber operator*(float f) const {return operator*(QmnNumber(f));}
+	QmnNumber operator*(double d) const {return operator*(QmnNumber(d));}
+	QmnNumber operator*(int i) const {return operator*(QmnNumber(i));}
+	QmnNumber operator/(const QmnNumber& qmn) const {return QmnNumber(*this).operator/=(qmn);}
+	QmnNumber operator/(float f) const {return operator/(QmnNumber(f));}
+	QmnNumber operator/(double d) const {return operator/(QmnNumber(d));}
+	QmnNumber operator/(int i) const {return operator/(QmnNumber(i));}
 	const QmnNumber& operator-() { qmn_number_ = -qmn_number_; return *this; }
 	operator double() const { return to_float<double>(); }
 	operator float() const { return to_float<float>(); }
 
 	static double eps() { return 1.0 / static_cast<double>(mult_factor_); }
-	static float eps_float() { return 1.0f / static_cast<float>(mult_factor_);}
+	static float eps_float() { return static_cast<float>(eps());}
 
 private:
-	template<typename Value>
-	void init(Value v);
-	template<typename F>
-	F to_float() const;
+	template<typename Value> void init(Value v);
+	template<typename F> F to_float() const;
 	static T saturate_add_sub(T a, T b, T result);
 	static T saturate(int64_t integer, T max_int, T min_int);
 	static inline int64_t min(int64_t a, int64_t b) { return a < b ? a : b; }
