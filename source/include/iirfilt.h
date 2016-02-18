@@ -24,6 +24,7 @@
 
 #include <string.h>
 #include "d3math.h"
+#include "fixedpoint.h"
 
 template <typename DataType, typename CoeffType, const size_t N>
 class IirFilter
@@ -83,6 +84,17 @@ public:
 				   12.791644394232126, -4.920788915790463, 0.788971698636730}) {}
 };
 
+template <typename DataType>
+class IirLpf10HzFixedPoint: public IirFilter<DataType, Q16dot48, 7>  {
+public:
+	IirLpf10HzFixedPoint() : IirFilter<DataType, Q16dot48, 7>(
+			{ 0.009130213043213, -0.053785884660517, 0.132987927812535, -0.176664445470034,
+			  0.132987927812535, -0.053785884660517, 0.009130213043213},
+			{1.0, -5.763011904477186, 13.843008765719702, -17.739823971400483,
+			      12.791644394232126,-4.920788915790463, 0.788971698636730}) {}
+};
+
+
  /*
   * IIR LPF, calculated using the Chebyshev 2nd method:
   *  Order       = 6
@@ -98,5 +110,15 @@ public:
  			{1.0, -5.881527464347489, 14.414639972281712, -18.843021855934243,
  			 13.856507112731949, -5.434871112577345, 0.888273348952340}) {}
  };
+
+ template <typename DataType>
+  class IirLpf5HzFixedPoint: public IirFilter<DataType, Q16dot48, 7>  {
+  public:
+  	IirLpf5HzFixedPoint() : IirFilter<DataType, Q16dot48, 7>(
+  			{ 0.009490307141041, -0.056679620583394, 0.141306795302753, -0.188234962613877,
+ 		      0.141306795302753, -0.056679620583394, 0.009490307141041},
+  			{1.0, -5.881527464347489, 14.414639972281712, -18.843021855934243,
+  			 13.856507112731949, -5.434871112577345, 0.888273348952340}) {}
+  };
 
 #endif // __IIRFILT_H__
