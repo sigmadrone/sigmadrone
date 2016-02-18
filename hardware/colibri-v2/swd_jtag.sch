@@ -97,12 +97,12 @@ $EndComp
 $Comp
 L CONN_02X01 P?
 U 1 1 55768A67
-P 7900 2800
-F 0 "P?" H 7900 2900 50  0000 C CNN
-F 1 "CONN_02X01" H 7900 2700 50  0000 C CNN
-F 2 "" H 7900 1600 60  0001 C CNN
-F 3 "" H 7900 1600 60  0000 C CNN
-	1    7900 2800
+P 7800 3100
+F 0 "P?" H 7800 3200 50  0000 C CNN
+F 1 "CONN_02X01" H 7800 3000 50  0000 C CNN
+F 2 "" H 7800 1900 60  0001 C CNN
+F 3 "" H 7800 1900 60  0000 C CNN
+	1    7800 3100
 	-1   0    0    1   
 $EndComp
 $Comp
@@ -250,7 +250,7 @@ Wire Wire Line
 Wire Wire Line
 	5600 2700 5900 2700
 Wire Wire Line
-	8150 2800 8500 2800
+	7950 2800 8500 2800
 Wire Wire Line
 	3300 1200 7950 1200
 Wire Wire Line
@@ -282,8 +282,6 @@ Text Label 4950 5000 2    60   ~ 0
 TDO/SWO
 Wire Wire Line
 	4000 5000 4950 5000
-Text Notes 9250 2650 0    60   ~ 12
-RESET# is pullud \nup on Buttons sheet
 Wire Wire Line
 	7650 1700 7650 2300
 Connection ~ 7650 2300
@@ -394,4 +392,28 @@ F 6 "Farnell" V 5700 2700 30  0001 C CNN "Provider"
 	1    5450 2700
 	0    1    1    0   
 $EndComp
+$Comp
+L R_SMT R?
+U 1 1 56C5EE4B
+P 7800 2800
+F 0 "R?" V 7870 2800 50  0000 C CNN
+F 1 "0R/5%" V 7730 2800 50  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 7950 2800 30  0001 C CNN
+F 3 "" V 7880 2800 30  0000 C CNN
+F 4 "0603" V 7800 2800 20  0000 C CNN "SMT"
+F 5 "1469739" V 8000 2800 30  0001 C CNN "Part"
+F 6 "Farnell" V 8050 2800 30  0001 C CNN "Provider"
+	1    7800 2800
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	7550 3100 7350 3100
+Wire Wire Line
+	7350 3100 7350 2800
+Connection ~ 7350 2800
+Wire Wire Line
+	8050 3100 8300 3100
+Wire Wire Line
+	8300 3100 8300 2800
+Connection ~ 8300 2800
 $EndSCHEMATC

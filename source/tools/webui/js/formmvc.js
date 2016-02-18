@@ -192,7 +192,8 @@ FlightCtlFormView.prototype.onRedrawData = function(droneState) {
   $(this.formId)[0].elements['torq-bias-roll'].value = droneState.roll_bias;
   $(this.formId)[0].elements['torq-bias-pitch'].value = droneState.pitch_bias;
   $(this.formId)[0].elements['torq-bias-yaw'].value = droneState.yaw_bias;
-
+  $(this.formId)[0].elements['torq-bias-yaw'].value = droneState.yaw_bias;
+  $(this.formId)[0].elements['track-magnetometer'].checked = droneState.track_magnetometer;
   $(this.formId)[0].elements['yaw-throttle-factor'].value = droneState.yaw_throttle_factor;
   return true;
 }
