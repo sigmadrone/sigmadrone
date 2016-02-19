@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 21 28
+Sheet 22 28
 Title ""
 Date ""
 Rev ""
@@ -81,15 +81,7 @@ Wire Wire Line
 Wire Wire Line
 	4800 4750 5050 4750
 Wire Wire Line
-	4800 4350 4800 4450
-Wire Wire Line
-	4800 4450 4800 4550
-Wire Wire Line
-	4800 4550 4800 4650
-Wire Wire Line
-	4800 4650 4800 4750
-Wire Wire Line
-	4800 4750 4800 5300
+	4800 4350 4800 5300
 Connection ~ 4800 4450
 Connection ~ 4800 4550
 Connection ~ 4800 4650
@@ -115,7 +107,6 @@ NoConn ~ 6650 3850
 NoConn ~ 6650 4050
 NoConn ~ 6650 4150
 NoConn ~ 6650 4250
-NoConn ~ 6650 4350
 NoConn ~ 5050 3450
 NoConn ~ 5050 3550
 NoConn ~ 5050 3950
@@ -150,17 +141,11 @@ F 3 "" H 3350 3150 60  0000 C CNN
 	0    -1   -1   0   
 $EndComp
 Wire Wire Line
-	2750 2200 2750 2600
-Wire Wire Line
-	2750 2600 2750 3150
+	2750 2200 2750 3150
 Wire Wire Line
 	2750 3150 3050 3150
 Wire Wire Line
-	3650 3150 4100 3150
-Wire Wire Line
-	4100 3150 4450 3150
-Wire Wire Line
-	4450 3150 5050 3150
+	3650 3150 5050 3150
 $Comp
 L +3V3 #PWR?
 U 1 1 56188264
@@ -173,9 +158,7 @@ F 3 "" H 2750 1300 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2750 1300 2750 1450
-Wire Wire Line
-	2750 1450 2750 1800
+	2750 1300 2750 1800
 $Comp
 L GND #PWR?
 U 1 1 561885FB
@@ -190,15 +173,9 @@ $EndComp
 Wire Wire Line
 	3750 1850 3750 1650
 Wire Wire Line
-	3750 1650 4100 1650
+	3750 1650 4850 1650
 Wire Wire Line
-	4100 1650 4450 1650
-Wire Wire Line
-	4450 1650 4850 1650
-Wire Wire Line
-	4100 1300 4100 1650
-Wire Wire Line
-	4100 1650 4100 1850
+	4100 1300 4100 1850
 Connection ~ 4100 1650
 Wire Wire Line
 	4100 2150 4100 3150
@@ -215,9 +192,7 @@ Wire Wire Line
 Wire Wire Line
 	1550 2000 1750 2000
 Wire Wire Line
-	2050 2000 2350 2000
-Wire Wire Line
-	2350 2000 2450 2000
+	2050 2000 2450 2000
 Wire Wire Line
 	2350 1850 2350 2000
 Connection ~ 2350 2000
@@ -228,9 +203,7 @@ Wire Wire Line
 Text HLabel 1550 3250 0    60   Input ~ 0
 Vbak
 Wire Wire Line
-	1550 3250 4850 3250
-Wire Wire Line
-	4850 3250 5050 3250
+	1550 3250 5050 3250
 $Comp
 L C_SMT C?
 U 1 1 56337F01
@@ -400,11 +373,7 @@ F 6 "Farnell" V 7950 2600 30  0001 C CNN "Provider"
 	-1   0    0    1   
 $EndComp
 Wire Wire Line
-	7600 2350 7700 2350
-Wire Wire Line
-	7700 2350 7900 2350
-Wire Wire Line
-	7900 2350 9300 2350
+	7600 2350 9300 2350
 Wire Wire Line
 	7700 2350 7700 2450
 Wire Wire Line
@@ -412,9 +381,7 @@ Wire Wire Line
 Wire Wire Line
 	7200 2750 7200 2850
 Wire Wire Line
-	7200 2850 7450 2850
-Wire Wire Line
-	7450 2850 7700 2850
+	7200 2850 7700 2850
 Wire Wire Line
 	7700 2850 7700 2750
 Wire Wire Line
@@ -474,13 +441,7 @@ $EndComp
 Wire Wire Line
 	5600 2050 5750 2050
 Wire Wire Line
-	5600 1650 5600 1750
-Wire Wire Line
-	5600 1750 5600 1950
-Wire Wire Line
-	5600 1950 5600 2050
-Wire Wire Line
-	5600 2050 5600 2200
+	5600 1650 5600 2200
 Wire Wire Line
 	5750 1950 5600 1950
 Connection ~ 5600 2050
@@ -515,9 +476,7 @@ F 5 "BGA 825L6S E6327CT-ND" H 9950 3750 60  0001 C CNN "Part"
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	7200 1850 7200 2350
-Wire Wire Line
-	7200 2350 7200 2450
+	7200 1850 7200 2450
 Wire Wire Line
 	6750 1850 7200 1850
 $Comp
@@ -575,19 +534,13 @@ $EndComp
 Wire Wire Line
 	9300 4400 9200 4400
 Wire Wire Line
-	9200 4300 9200 4400
+	9200 4300 9200 4600
 Wire Wire Line
-	9200 4400 9200 4600
-Wire Wire Line
-	8900 4000 9200 4000
-Wire Wire Line
-	9200 4000 9300 4000
+	8900 4000 9300 4000
 Wire Wire Line
 	9200 4100 9300 4100
 Wire Wire Line
-	9200 3650 9200 4000
-Wire Wire Line
-	9200 4000 9200 4100
+	9200 3650 9200 4100
 Connection ~ 9200 4000
 Wire Wire Line
 	9300 4300 9200 4300
@@ -633,15 +586,11 @@ F 3 "" H 9650 3000 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	9650 2850 9650 2950
-Wire Wire Line
-	9650 2950 9650 3000
+	9650 2850 9650 3000
 Wire Wire Line
 	9750 2850 9750 2950
 Wire Wire Line
-	9650 2950 9750 2950
-Wire Wire Line
-	9750 2950 9850 2950
+	9650 2950 9850 2950
 Connection ~ 9650 2950
 Wire Wire Line
 	9850 2950 9850 2850
@@ -695,4 +644,28 @@ F 3 "" H 9400 5700 60  0000 C CNN
 $EndComp
 Wire Wire Line
 	9200 5700 9400 5700
+Wire Wire Line
+	6650 4350 6800 4350
+Wire Wire Line
+	6800 4350 6800 6050
+Wire Wire Line
+	6800 6050 3800 6050
+Text HLabel 1500 6050 0    60   Output ~ 0
+GPS_TIME_PULSE
+Wire Wire Line
+	1500 6050 3500 6050
+$Comp
+L R_SMT R?
+U 1 1 56C94ECA
+P 3650 6050
+F 0 "R?" V 3600 6250 50  0000 C CNN
+F 1 "22R/5%" V 3600 5800 50  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 3800 6050 30  0001 C CNN
+F 3 "" V 3730 6050 30  0000 C CNN
+F 4 "0603" V 3650 6050 20  0000 C CNN "SMT"
+F 5 "9331891" V 3850 6050 30  0001 C CNN "Part"
+F 6 "Farnell" V 3900 6050 30  0001 C CNN "Provider"
+	1    3650 6050
+	0    1    1    0   
+$EndComp
 $EndSCHEMATC

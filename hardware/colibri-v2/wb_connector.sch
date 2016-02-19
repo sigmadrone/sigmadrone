@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A3 16535 11693
 encoding utf-8
-Sheet 11 28
+Sheet 10 28
 Title ""
 Date ""
 Rev ""
@@ -183,53 +183,7 @@ $EndSheet
 Wire Bus Line
 	2550 3600 2800 3600
 Wire Bus Line
-	2800 3600 2800 3700
-Wire Bus Line
-	2800 3700 2800 3800
-Wire Bus Line
-	2800 3800 2800 3900
-Wire Bus Line
-	2800 3900 2800 4000
-Wire Bus Line
-	2800 4000 2800 4100
-Wire Bus Line
-	2800 4100 2800 4200
-Wire Bus Line
-	2800 4200 2800 4300
-Wire Bus Line
-	2800 4300 2800 4400
-Wire Bus Line
-	2800 4400 2800 4500
-Wire Bus Line
-	2800 4500 2800 4600
-Wire Bus Line
-	2800 4600 2800 4700
-Wire Bus Line
-	2800 4700 2800 4800
-Wire Bus Line
-	2800 4800 2800 4900
-Wire Bus Line
-	2800 4900 2800 5000
-Wire Bus Line
-	2800 5000 2800 5100
-Wire Bus Line
-	2800 5100 2800 5200
-Wire Bus Line
-	2800 5200 2800 5300
-Wire Bus Line
-	2800 5300 2800 5400
-Wire Bus Line
-	2800 5400 2800 5500
-Wire Bus Line
-	2800 5500 2800 5600
-Wire Bus Line
-	2800 5600 2800 5700
-Wire Bus Line
-	2800 5700 2800 5800
-Wire Bus Line
-	2800 5800 2800 5900
-Wire Bus Line
-	2800 5900 2800 6000
+	2800 3600 2800 6000
 Entry Wire Line
 	2800 3700 2900 3800
 Entry Wire Line
@@ -606,25 +560,21 @@ Wire Wire Line
 Wire Wire Line
 	11050 7400 12250 7400
 Text Label 12250 6900 2    60   ~ 0
-nRESET_BTN
+RESET_BTNn
 Text Label 12250 6800 2    60   ~ 0
 PWR_BTN(ON/OFF)
 Wire Wire Line
 	11050 6900 12250 6900
 Wire Wire Line
 	11050 6800 12250 6800
-Text Label 9600 9950 2    60   ~ 0
-nRESET_BTN
 Text Label 9600 10150 2    60   ~ 0
 PWR_BTN(ON/OFF)
 Wire Wire Line
 	8650 10150 9600 10150
 Text HLabel 7650 9950 0    60   Input ~ 0
-nMODULE_RST
+MODULE_RSTn
 Wire Wire Line
-	9600 9950 8650 9950
-Wire Wire Line
-	8650 9950 7650 9950
+	7650 9950 9600 9950
 $Comp
 L +3V3 #PWR?
 U 1 1 56C94536
@@ -723,9 +673,7 @@ Wire Wire Line
 Wire Wire Line
 	8250 10950 8250 11000
 Wire Wire Line
-	8050 10500 8250 10500
-Wire Wire Line
-	8250 10500 8350 10500
+	8050 10500 8350 10500
 Wire Wire Line
 	8250 10500 8250 10650
 Wire Wire Line
@@ -733,4 +681,6 @@ Wire Wire Line
 Connection ~ 8250 10500
 Wire Wire Line
 	8650 10150 8650 10300
+Text Label 9600 9950 2    60   ~ 0
+RESET_BTNn
 $EndSCHEMATC

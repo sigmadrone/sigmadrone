@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A2 23386 16535
 encoding utf-8
-Sheet 2 28
+Sheet 28 28
 Title "Colibri WND"
 Date ""
 Rev "A1"
@@ -994,7 +994,7 @@ Text HLabel 1400 1400 0    60   Input ~ 0
 IN_PWM_01
 Text HLabel 1400 1500 0    60   Input ~ 0
 IN_PWM_02
-Text HLabel 1400 1600 0    60   Input ~ 0
+Text HLabel 1400 1600 0    60   Output ~ 0
 MODULE_ON/OFF
 Text HLabel 1400 1700 0    60   Output ~ 0
 SRV_PWM_0
@@ -1055,7 +1055,7 @@ PCA9685_SCL
 Text HLabel 1400 5300 0    60   Output ~ 0
 MEMS_GYRO_CS
 Text HLabel 1400 5400 0    60   Input ~ 0
-Vsys_MSRMNT
+VBAT_MSRMNT
 Text HLabel 1400 5500 0    60   Input ~ 0
 Adapter_AV#
 Text HLabel 1400 5600 0    60   Output ~ 0
