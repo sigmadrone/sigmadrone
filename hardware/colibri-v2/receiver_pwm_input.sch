@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 22 28
+Sheet 26 28
 Title ""
 Date ""
 Rev ""
@@ -44,13 +44,13 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
+Text HLabel 2150 4650 0    60   Output ~ 0
+RCV_PWM_5
 Text HLabel 2150 2300 0    60   Output ~ 0
-RCV_PWM_0
-Text HLabel 2150 2500 0    60   Output ~ 0
 RCV_PWM_1
-Text HLabel 2150 2700 0    60   Output ~ 0
+Text HLabel 2150 2500 0    60   Output ~ 0
 RCV_PWM_2
-Text HLabel 2150 2900 0    60   Output ~ 0
+Text HLabel 2150 2700 0    60   Output ~ 0
 RCV_PWM_3
 $Comp
 L CONN_01X03 P?
@@ -195,7 +195,7 @@ F 3 "" H 3200 2350 60  0000 C CNN
 	3    3200 2500
 	-1   0    0    -1  
 $EndComp
-Text HLabel 2150 4650 0    60   Output ~ 0
+Text HLabel 2150 2900 0    60   Output ~ 0
 RCV_PWM_4
 $Comp
 L CONN_01X03 P?

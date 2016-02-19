@@ -95,9 +95,7 @@ F 3 "" H 5200 2200 50  0000 C CNN
 	0    1    1    0   
 $EndComp
 Wire Wire Line
-	4550 2250 4550 2600
-Wire Wire Line
-	4550 2600 4550 2800
+	4550 2250 4550 2800
 $Comp
 L +3V3 #PWR?
 U 1 1 567A7B8E
@@ -132,9 +130,7 @@ Wire Wire Line
 Wire Wire Line
 	6450 2200 6700 2200
 Wire Wire Line
-	6700 2050 6700 2200
-Wire Wire Line
-	6700 2200 6700 2600
+	6700 2050 6700 2600
 Wire Wire Line
 	6700 2600 6450 2600
 $Comp
@@ -294,9 +290,7 @@ Wire Wire Line
 Wire Wire Line
 	6500 4000 5200 4000
 Wire Wire Line
-	5200 3000 5200 4000
-Wire Wire Line
-	5200 4000 5200 4300
+	5200 3000 5200 4300
 Wire Wire Line
 	5200 3000 5350 3000
 Text HLabel 7350 4300 2    60   BiDi ~ 0
@@ -354,9 +348,7 @@ Wire Wire Line
 Wire Wire Line
 	7350 4700 6800 4700
 Wire Wire Line
-	6500 4300 5200 4300
-Wire Wire Line
-	5200 4300 4850 4300
+	4850 4300 6500 4300
 Text Notes 8800 4850 1    120  ~ 24
 DEVICE
 Text Notes 2100 4850 1    120  ~ 24
@@ -372,13 +364,9 @@ USB_OTG_ID
 Wire Wire Line
 	4550 4300 3250 4300
 Wire Wire Line
-	3250 4500 6000 4500
+	3250 4500 6500 4500
 Wire Wire Line
-	6000 4500 6500 4500
-Wire Wire Line
-	3250 4700 5600 4700
-Wire Wire Line
-	5600 4700 6500 4700
+	3250 4700 6500 4700
 $Comp
 L R_SMT R?
 U 1 1 567AE976

@@ -553,9 +553,7 @@ F 6 "Farnell" H 9450 1850 30  0001 C CNN "Provider"
 	-1   0    0    -1  
 $EndComp
 Wire Wire Line
-	3350 1700 3350 1800
-Wire Wire Line
-	3350 1800 3350 2250
+	3350 1700 3350 2250
 Wire Wire Line
 	3350 1700 3200 1700
 Wire Wire Line
@@ -587,32 +585,16 @@ Wire Wire Line
 Wire Wire Line
 	6300 1700 6150 1700
 Wire Wire Line
-	6300 1050 6300 1200
+	6300 1050 6300 1800
 Wire Wire Line
-	6300 1200 6300 1700
-Wire Wire Line
-	6300 1700 6300 1800
-Wire Wire Line
-	10100 1200 10100 1500
-Wire Wire Line
-	10100 1500 10100 1800
-Wire Wire Line
-	10100 1800 10100 2100
-Wire Wire Line
-	10100 2100 10100 2400
+	10100 1200 10100 2400
 Connection ~ 10100 2100
 Wire Wire Line
 	2150 5700 2150 5600
 Wire Wire Line
-	1850 5150 2150 5150
+	1850 5150 2600 5150
 Wire Wire Line
-	2150 5150 2450 5150
-Wire Wire Line
-	2450 5150 2600 5150
-Wire Wire Line
-	2150 5050 2150 5150
-Wire Wire Line
-	2150 5150 2150 5300
+	2150 5050 2150 5300
 Connection ~ 2150 5150
 Wire Wire Line
 	1550 5150 1350 5150
@@ -623,11 +605,7 @@ Wire Wire Line
 Wire Wire Line
 	3050 4650 3350 4650
 Wire Wire Line
-	3350 4500 3350 4650
-Wire Wire Line
-	3350 4650 3350 5150
-Wire Wire Line
-	3350 5150 3350 5250
+	3350 4500 3350 5250
 Wire Wire Line
 	3350 5150 3200 5150
 Connection ~ 3350 4650
@@ -642,15 +620,9 @@ Connection ~ 2450 5150
 Wire Wire Line
 	2150 3950 2150 3850
 Wire Wire Line
-	1850 3400 2150 3400
+	1850 3400 2600 3400
 Wire Wire Line
-	2150 3400 2450 3400
-Wire Wire Line
-	2450 3400 2600 3400
-Wire Wire Line
-	2150 3300 2150 3400
-Wire Wire Line
-	2150 3400 2150 3550
+	2150 3300 2150 3550
 Connection ~ 2150 3400
 Wire Wire Line
 	1550 3400 1350 3400
@@ -661,11 +633,7 @@ Wire Wire Line
 Wire Wire Line
 	3050 2900 3350 2900
 Wire Wire Line
-	3350 2750 3350 2900
-Wire Wire Line
-	3350 2900 3350 3400
-Wire Wire Line
-	3350 3400 3350 3500
+	3350 2750 3350 3500
 Wire Wire Line
 	3350 3400 3200 3400
 Connection ~ 3350 2900
@@ -680,15 +648,9 @@ Connection ~ 2450 3400
 Wire Wire Line
 	2150 7400 2150 7300
 Wire Wire Line
-	1850 6850 2150 6850
+	1850 6850 2600 6850
 Wire Wire Line
-	2150 6850 2450 6850
-Wire Wire Line
-	2450 6850 2600 6850
-Wire Wire Line
-	2150 6750 2150 6850
-Wire Wire Line
-	2150 6850 2150 7000
+	2150 6750 2150 7000
 Connection ~ 2150 6850
 Wire Wire Line
 	1550 6850 1350 6850
@@ -699,11 +661,7 @@ Wire Wire Line
 Wire Wire Line
 	3050 6350 3350 6350
 Wire Wire Line
-	3350 6200 3350 6350
-Wire Wire Line
-	3350 6350 3350 6850
-Wire Wire Line
-	3350 6850 3350 6950
+	3350 6200 3350 6950
 Wire Wire Line
 	3350 6850 3200 6850
 Connection ~ 3350 6350
@@ -718,15 +676,9 @@ Connection ~ 2450 6850
 Wire Wire Line
 	5100 3950 5100 3850
 Wire Wire Line
-	4800 3400 5100 3400
+	4800 3400 5550 3400
 Wire Wire Line
-	5100 3400 5400 3400
-Wire Wire Line
-	5400 3400 5550 3400
-Wire Wire Line
-	5100 3300 5100 3400
-Wire Wire Line
-	5100 3400 5100 3550
+	5100 3300 5100 3550
 Connection ~ 5100 3400
 Wire Wire Line
 	4500 3400 4300 3400
@@ -737,11 +689,7 @@ Wire Wire Line
 Wire Wire Line
 	6000 2900 6300 2900
 Wire Wire Line
-	6300 2750 6300 2900
-Wire Wire Line
-	6300 2900 6300 3400
-Wire Wire Line
-	6300 3400 6300 3500
+	6300 2750 6300 3500
 Wire Wire Line
 	6300 3400 6150 3400
 Connection ~ 6300 2900
@@ -756,15 +704,9 @@ Connection ~ 5400 3400
 Wire Wire Line
 	5100 5700 5100 5600
 Wire Wire Line
-	4800 5150 5100 5150
+	4800 5150 5550 5150
 Wire Wire Line
-	5100 5150 5400 5150
-Wire Wire Line
-	5400 5150 5550 5150
-Wire Wire Line
-	5100 5050 5100 5150
-Wire Wire Line
-	5100 5150 5100 5300
+	5100 5050 5100 5300
 Connection ~ 5100 5150
 Wire Wire Line
 	4500 5150 4300 5150
@@ -775,11 +717,7 @@ Wire Wire Line
 Wire Wire Line
 	6000 4650 6300 4650
 Wire Wire Line
-	6300 4500 6300 4650
-Wire Wire Line
-	6300 4650 6300 5150
-Wire Wire Line
-	6300 5150 6300 5250
+	6300 4500 6300 5250
 Wire Wire Line
 	6300 5150 6150 5150
 Connection ~ 6300 4650
@@ -797,7 +735,7 @@ Connection ~ 6300 1700
 Wire Wire Line
 	5550 1800 5400 1800
 Wire Wire Line
-	5400 1800 5400 1700
+	5400 1700 5400 1800
 Connection ~ 5400 1700
 Wire Wire Line
 	3200 1800 3350 1800
@@ -840,11 +778,7 @@ F 3 "" H 5100 2250 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	4350 1700 5100 1700
-Wire Wire Line
-	5100 1700 5400 1700
-Wire Wire Line
-	5400 1700 5550 1700
+	4350 1700 5550 1700
 $Comp
 L R_SMT R?
 U 1 1 56537F92
@@ -986,7 +920,5 @@ F 6 "Farnell" V 5350 3700 30  0001 C CNN "Provider"
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2250 1700 2450 1700
-Wire Wire Line
-	2450 1700 2600 1700
+	2250 1700 2600 1700
 $EndSCHEMATC
