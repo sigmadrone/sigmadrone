@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 24 28
+Sheet 23 28
 Title ""
 Date ""
 Rev ""
@@ -45,7 +45,7 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 Text HLabel 2000 4350 0    60   BiDi ~ 0
-VBUS_FS
+OTG_FS_VBUS
 Text HLabel 2000 4450 0    60   BiDi ~ 0
 OTG_FS_DM
 Text HLabel 2000 4550 0    60   BiDi ~ 0

@@ -70,6 +70,10 @@ D Button
 K Switch
 $ENDCMP
 #
+$CMP VH
+K POWER, PWR
+$ENDCMP
+#
 $CMP Vbak
 K POWER, PWR
 $ENDCMP

@@ -683,4 +683,20 @@ Wire Wire Line
 	8650 10150 8650 10300
 Text Label 9600 9950 2    60   ~ 0
 RESET_BTNn
+Text HLabel 11600 5900 2    60   Output ~ 0
+WB_UART_CTS
+Text HLabel 11600 6200 2    60   Input ~ 0
+WB_UART_RTS
+Text HLabel 11600 6000 2    60   Output ~ 0
+WB_UART_TX
+Text HLabel 11600 6100 2    60   Input ~ 0
+WB_UART_RX
+Wire Wire Line
+	11050 5900 11600 5900
+Wire Wire Line
+	11050 6000 11600 6000
+Wire Wire Line
+	11050 6100 11600 6100
+Wire Wire Line
+	11050 6200 11600 6200
 $EndSCHEMATC

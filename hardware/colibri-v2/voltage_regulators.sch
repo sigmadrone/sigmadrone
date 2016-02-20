@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 23 28
+Sheet 26 28
 Title ""
 Date ""
 Rev ""
@@ -83,21 +83,11 @@ F 3 "" H 9650 1050 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	7600 1300 7900 1300
+	7600 1300 9650 1300
 Wire Wire Line
-	7900 1300 9100 1300
+	9650 1050 9650 1450
 Wire Wire Line
-	9100 1300 9650 1300
-Wire Wire Line
-	9650 1050 9650 1300
-Wire Wire Line
-	9650 1300 9650 1450
-Wire Wire Line
-	5900 1300 6400 1300
-Wire Wire Line
-	6400 1300 6750 1300
-Wire Wire Line
-	6750 1300 7000 1300
+	5900 1300 7000 1300
 $Comp
 L GND #PWR?
 U 1 1 56199A56
@@ -165,9 +155,7 @@ F 3 "" H 7900 3200 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	7900 1750 7900 1900
-Wire Wire Line
-	7900 1900 7900 2200
+	7900 1750 7900 2200
 Wire Wire Line
 	7900 2500 7900 3200
 Wire Wire Line
@@ -200,15 +188,9 @@ Wire Wire Line
 Wire Wire Line
 	6100 3000 6100 3200
 Wire Wire Line
-	1400 1300 2200 1300
+	1400 1300 4800 1300
 Wire Wire Line
-	2200 1300 3500 1300
-Wire Wire Line
-	3500 1300 4800 1300
-Wire Wire Line
-	3500 1750 3500 1950
-Wire Wire Line
-	3500 1950 3500 2200
+	3500 1750 3500 2200
 Wire Wire Line
 	3500 1450 3500 1300
 Connection ~ 3500 1300
@@ -250,9 +232,7 @@ $EndComp
 Wire Wire Line
 	4800 1900 4600 1900
 Wire Wire Line
-	4600 1900 4600 2100
-Wire Wire Line
-	4600 2100 4600 3200
+	4600 1900 4600 3200
 Wire Wire Line
 	4800 2100 4600 2100
 Connection ~ 4600 2100
@@ -507,23 +487,11 @@ F 6 "Farnell" V 7300 4250 60  0001 C CNN "Provider"
 	0    -1   -1   0   
 $EndComp
 Wire Wire Line
-	7600 4250 7900 4250
+	7600 4250 9650 4250
 Wire Wire Line
-	7900 4250 8550 4250
+	9650 4000 9650 4400
 Wire Wire Line
-	8550 4250 9100 4250
-Wire Wire Line
-	9100 4250 9650 4250
-Wire Wire Line
-	9650 4000 9650 4250
-Wire Wire Line
-	9650 4250 9650 4400
-Wire Wire Line
-	5900 4250 6400 4250
-Wire Wire Line
-	6400 4250 6750 4250
-Wire Wire Line
-	6750 4250 7000 4250
+	5900 4250 7000 4250
 $Comp
 L GND #PWR?
 U 1 1 56376E00
@@ -591,9 +559,7 @@ F 3 "" H 7900 6150 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	7900 4700 7900 4850
-Wire Wire Line
-	7900 4850 7900 5150
+	7900 4700 7900 5150
 Wire Wire Line
 	7900 5450 7900 6150
 Wire Wire Line
@@ -626,13 +592,9 @@ Wire Wire Line
 Wire Wire Line
 	6100 5950 6100 6150
 Wire Wire Line
-	2200 4250 3500 4250
+	2200 4250 4800 4250
 Wire Wire Line
-	3500 4250 4800 4250
-Wire Wire Line
-	3500 4700 3500 4900
-Wire Wire Line
-	3500 4900 3500 5150
+	3500 4700 3500 5150
 Wire Wire Line
 	3500 4400 3500 4250
 Connection ~ 3500 4250
@@ -674,9 +636,7 @@ $EndComp
 Wire Wire Line
 	4800 4850 4600 4850
 Wire Wire Line
-	4600 4850 4600 5050
-Wire Wire Line
-	4600 5050 4600 6150
+	4600 4850 4600 6150
 Wire Wire Line
 	4800 5050 4600 5050
 Connection ~ 4600 5050

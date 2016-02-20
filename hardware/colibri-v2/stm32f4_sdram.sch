@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 6 28
+Sheet 5 28
 Title ""
 Date ""
 Rev ""
@@ -230,11 +230,23 @@ Wire Wire Line
 Wire Wire Line
 	5800 3250 6600 3250
 Wire Wire Line
-	5800 4400 6600 4400
+	5800 4400 6000 4400
+Wire Wire Line
+	6000 4400 6600 4400
 Wire Wire Line
 	5800 3800 6000 3800
 Wire Wire Line
-	6000 3800 6000 4400
+	6000 3800 6000 3900
+Wire Wire Line
+	6000 3900 6000 4000
+Wire Wire Line
+	6000 4000 6000 4100
+Wire Wire Line
+	6000 4100 6000 4200
+Wire Wire Line
+	6000 4200 6000 4300
+Wire Wire Line
+	6000 4300 6000 4400
 Connection ~ 6000 4400
 Wire Wire Line
 	5800 3900 6000 3900
@@ -252,11 +264,23 @@ Wire Wire Line
 Wire Wire Line
 	5800 4300 6000 4300
 Wire Wire Line
-	3500 4400 4200 4400
+	3500 4400 3950 4400
+Wire Wire Line
+	3950 4400 4200 4400
 Wire Wire Line
 	4200 3800 3950 3800
 Wire Wire Line
-	3950 3800 3950 4400
+	3950 3800 3950 3900
+Wire Wire Line
+	3950 3900 3950 4000
+Wire Wire Line
+	3950 4000 3950 4100
+Wire Wire Line
+	3950 4100 3950 4200
+Wire Wire Line
+	3950 4200 3950 4300
+Wire Wire Line
+	3950 4300 3950 4400
 Connection ~ 3950 4400
 Wire Wire Line
 	3950 3900 4200 3900
@@ -296,16 +320,40 @@ F 3 "" H 2400 6250 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2400 5250 2400 5600
+	2400 5250 2400 5350
 Wire Wire Line
-	2400 5350 7200 5350
+	2400 5350 2400 5600
+Wire Wire Line
+	2400 5350 3200 5350
+Wire Wire Line
+	3200 5350 4000 5350
+Wire Wire Line
+	4000 5350 4800 5350
+Wire Wire Line
+	4800 5350 5600 5350
+Wire Wire Line
+	5600 5350 6400 5350
+Wire Wire Line
+	6400 5350 7200 5350
 Wire Wire Line
 	7200 5350 7200 5600
 Connection ~ 2400 5350
 Wire Wire Line
-	2400 5900 2400 6250
+	2400 5900 2400 6200
 Wire Wire Line
-	2400 6200 7200 6200
+	2400 6200 2400 6250
+Wire Wire Line
+	2400 6200 3200 6200
+Wire Wire Line
+	3200 6200 4000 6200
+Wire Wire Line
+	4000 6200 4800 6200
+Wire Wire Line
+	4800 6200 5600 6200
+Wire Wire Line
+	5600 6200 6400 6200
+Wire Wire Line
+	6400 6200 7200 6200
 Wire Wire Line
 	7200 6200 7200 5900
 Connection ~ 2400 6200
@@ -463,4 +511,16 @@ F 6 "Farnell" H 2430 5520 30  0001 L CNN "Provider"
 	1    2400 5750
 	1    0    0    -1  
 $EndComp
+Wire Bus Line
+	6900 2900 7800 2900
+Text HLabel 7800 2900 2    60   BiDi ~ 0
+FMC_D[0..15]
+Text Label 7000 2900 0    60   ~ 0
+FMC_D[0..15]
+Wire Bus Line
+	3250 2500 2400 2500
+Text HLabel 2400 2500 0    60   BiDi ~ 0
+FMC_A[0..11]
+Text Label 3200 2500 2    60   ~ 0
+FMC_A[0..11]
 $EndSCHEMATC
