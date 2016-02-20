@@ -369,7 +369,7 @@ void main_task(void *pvParameters)
 				 0, 0,-1);
 
 		drone_state->gyro_raw_ = ReadGyro(gyro, gyr_wtm);
-		if (drone_state->gyro_raw_.length_squared() > 0) {
+		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
 			drone_state->gyro_raw_ = gyro_align * (drone_state->gyro_raw_ - gyro_bias);
 			drone_state->gyro_ = drone_state->gyro_raw_ * drone_state->gyro_factor_;
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());

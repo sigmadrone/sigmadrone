@@ -593,6 +593,10 @@ Quaternion<T> Quaternion<T>::normalize() const
 		q.y /= len;
 		q.z /= len;
 	}
+	assert(!std::isnan(q.w));
+	assert(!std::isnan(q.x));
+	assert(!std::isnan(q.y));
+	assert(!std::isnan(q.z));
 	return q;
 }
 
