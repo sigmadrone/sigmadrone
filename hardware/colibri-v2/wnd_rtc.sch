@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 19 28
+Sheet 18 28
 Title ""
 Date ""
 Rev ""
@@ -203,8 +203,6 @@ Text HLabel 8250 3100 2    60   Output ~ 0
 RTC_INT
 NoConn ~ 6000 3300
 Wire Wire Line
-	6000 3100 8250 3100
-Wire Wire Line
 	6000 3500 8250 3500
 Wire Wire Line
 	6000 3700 8250 3700
@@ -268,4 +266,22 @@ Connection ~ 7250 3500
 Wire Wire Line
 	7600 2800 7600 3700
 Connection ~ 7600 3700
+$Comp
+L R_SMT R?
+U 1 1 56CA065D
+P 7900 3100
+F 0 "R?" V 7970 3100 50  0000 C CNN
+F 1 "0R/5%" V 7830 3100 50  0000 C CNN
+F 2 "Resistors_SMD:R_0603" V 8050 3100 30  0001 C CNN
+F 3 "" V 7980 3100 30  0000 C CNN
+F 4 "0603" V 7900 3100 20  0000 C CNN "SMT"
+F 5 "1469739" V 8100 3100 30  0001 C CNN "Part"
+F 6 "Farnell" V 8150 3100 30  0001 C CNN "Provider"
+	1    7900 3100
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	6000 3100 7750 3100
+Wire Wire Line
+	8050 3100 8250 3100
 $EndSCHEMATC

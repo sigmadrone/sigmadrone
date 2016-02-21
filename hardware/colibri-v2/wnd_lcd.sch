@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 18 28
+Sheet 17 28
 Title ""
 Date ""
 Rev ""
@@ -324,7 +324,7 @@ F 3 "" H 3700 5400 60  0000 C CNN
 	0    1    1    0   
 $EndComp
 Text HLabel 1800 6100 0    60   Input ~ 0
-DISP0_REST
+DISP0_RESET
 $Comp
 L +3V3 #PWR?
 U 1 1 561F7FD1
@@ -540,7 +540,7 @@ Connection ~ 9500 4950
 Wire Wire Line
 	9600 4150 9600 5050
 Wire Wire Line
-	9600 5050 8400 5050
+	8400 5050 10350 5050
 Wire Wire Line
 	9700 4150 9700 5150
 Connection ~ 9700 5150
@@ -1280,4 +1280,7 @@ F 6 "Farnell" H 9830 5620 30  0001 L CNN "Provider"
 	1    9800 5850
 	1    0    0    -1  
 $EndComp
+Text HLabel 10350 5050 2    60   Output ~ 0
+TP_BUSY
+Connection ~ 9600 5050
 $EndSCHEMATC

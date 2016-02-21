@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 12 28
+Sheet 11 28
 Title ""
 Date ""
 Rev ""
@@ -232,13 +232,13 @@ Wire Wire Line
 	5300 3250 6300 3250
 Connection ~ 6100 3250
 Text HLabel 9250 3250 2    60   Output ~ 0
-WB_FTDI_RXD
-Text HLabel 9250 3350 2    60   Input ~ 0
 WB_FTDI_TXD
+Text HLabel 9250 3350 2    60   Input ~ 0
+WB_FTDI_RXD
 Text HLabel 9250 3450 2    60   Output ~ 0
-WB_FTDI_CTS
-Text HLabel 9250 3550 2    60   Input ~ 0
 WB_FTDI_RTS
+Text HLabel 9250 3550 2    60   Input ~ 0
+WB_FTDI_CTS
 Text HLabel 9250 3950 2    60   Output ~ 0
 WB_FTDI_RI
 Wire Wire Line
@@ -294,11 +294,11 @@ Wire Wire Line
 Wire Wire Line
 	7900 4600 8300 4600
 Text HLabel 9250 3650 2    60   Output ~ 0
-WB_FTDI_DSR
+WB_FTDI_DTR
 Wire Wire Line
 	7700 3650 9250 3650
 Text HLabel 9250 3750 2    60   Input ~ 0
-WB_FTDI_DTR
+WB_FTDI_DSR
 Wire Wire Line
 	7700 3750 9250 3750
 Text HLabel 9250 3850 2    60   Input ~ 0

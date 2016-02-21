@@ -34,7 +34,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 17 28
+Sheet 16 28
 Title ""
 Date ""
 Rev ""
@@ -78,7 +78,7 @@ F 3 "" H 9850 3950 60  0000 C CNN
 	1    0    0    -1  
 $EndComp
 Text HLabel 1900 2000 0    60   Output ~ 0
-USB_H1_OC
+USB_HOST_OC
 $Comp
 L +3V3 #PWR?
 U 1 1 561A1B20
