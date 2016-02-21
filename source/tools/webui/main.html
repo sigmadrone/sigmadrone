@@ -1001,14 +1001,14 @@
       if (response.result.gps_satellites >= 3) {
         $("#gps-lat").text(response.result.gps_latitude);
         $("#gps-long").text(response.result.gps_longitude);
+        $("#gps-speed").text(response.result.gps_speed_kmph.toFixed(1));
+        $("#gps-course").text(response.result.gps_course_deg.toFixed(2));
       } else {
         $("#gps-lat").text("N/A");
         $("#gps-long").text("N/A");
       }
       $("#gps-satellites").text(response.result.gps_satellites);
-      if (response.result.gps_satellites > 5) {
-        $("#gps-speed").text(response.result.gps_speed_kmph.toFixed(1));
-        $("#gps-course").text(response.result.gps_course_deg.toFixed(2));
+      if (response.result.gps_satellites >= 4) {
         $("#gps-altitude").text(response.result.gps_altitude.toFixed(2));
       } else {
         $("#gps-speed").text('0');

@@ -95,8 +95,11 @@ VisChart2d = function (
 
 VisChart2d.prototype.zoomYAxis = function(mediumPoint, zoomFactor, restoreOriginalIf) {
   var halfRange = (this.rangeMax-this.rangeMin)/2 * zoomFactor;
-  this.rangeMin = mediumPoint - halfRange;
-  this.rangeMax = mediumPoint + halfRange;
+  if (Math.abs(mediumPoint) < halfRange * 0.1 / zoomFactor) {
+    mediumPoint = 0.0;
+  }
+  this.rangeMin = parseFloat((mediumPoint - halfRange).toFixed(3));
+  this.rangeMax = parseFloat((mediumPoint + halfRange).toFixed(3));
   if (restoreOriginalIf && (this.rangeMin < this.originalRangeMin || this.rangeMax > this.originalRangeMax)) {
     this.rangeMin = this.originalRangeMin;
     this.rangeMax = this.originalRangeMax;
