@@ -58,12 +58,13 @@ struct DroneState {
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
 #ifdef USE_TRIPILOT
-		, kp_(0.24)
-		, ki_(0.04)
-		, kd_(0.04)
+		, kp_(0.25)
+		, ki_(0.035)
+		, kd_(0.05)
 		, yaw_kp_(0.20)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.07)
+		, accelerometer_correction_period_(3.0)
 #else
 		, kp_(0.24)
 		, ki_(0.6)
@@ -71,8 +72,8 @@ struct DroneState {
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-#endif
 		, accelerometer_correction_period_(5.0)
+#endif
 		, gyro_factor_(1.25)
 		, yaw_(0.0)
 		, pitch_(0.0)
