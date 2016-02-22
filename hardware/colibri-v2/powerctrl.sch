@@ -1,35 +1,5 @@
 EESchema Schematic File Version 2
-LIBS:colibri-wnd-rescue
 LIBS:power
-LIBS:device
-LIBS:transistors
-LIBS:conn
-LIBS:linear
-LIBS:regul
-LIBS:74xx
-LIBS:cmos4000
-LIBS:adc-dac
-LIBS:memory
-LIBS:xilinx
-LIBS:microcontrollers
-LIBS:dsp
-LIBS:microchip
-LIBS:analog_switches
-LIBS:motorola
-LIBS:texas
-LIBS:intel
-LIBS:audio
-LIBS:interface
-LIBS:digital-audio
-LIBS:philips
-LIBS:display
-LIBS:cypress
-LIBS:siliconi
-LIBS:opto
-LIBS:atmel
-LIBS:contrib
-LIBS:valves
-LIBS:sigmadrone
 LIBS:colibri-wnd-cache
 EELAYER 25 0
 EELAYER END
@@ -388,20 +358,6 @@ F 1 "GND" H 4200 4100 50  0000 C CNN
 F 2 "" H 4200 4250 60  0000 C CNN
 F 3 "" H 4200 4250 60  0000 C CNN
 	1    4200 4250
-	1    0    0    -1  
-$EndComp
-$Comp
-L R_SMT R41
-U 1 1 564AE7A8
-P 3500 3350
-F 0 "R41" V 3570 3350 50  0000 C CNN
-F 1 "100K/5%" V 3430 3350 50  0000 C CNN
-F 2 "Resistors_SMD:R_0603" V 3650 3350 30  0001 C CNN
-F 3 "" V 3580 3350 30  0000 C CNN
-F 4 "0603" V 3500 3350 20  0000 C CNN "SMT"
-F 5 "9233628" V 3700 3350 30  0001 C CNN "Part"
-F 6 "Farnell" V 3750 3350 30  0001 C CNN "Provider"
-	1    3500 3350
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -886,12 +842,6 @@ Wire Wire Line
 Wire Wire Line
 	3200 3750 4200 3750
 Connection ~ 4200 3750
-Wire Wire Line
-	3500 3200 3500 3050
-Connection ~ 3500 3050
-Wire Wire Line
-	3500 3500 3500 3750
-Connection ~ 3500 3750
 Wire Wire Line
 	3850 3550 3850 3750
 Connection ~ 3850 3750
