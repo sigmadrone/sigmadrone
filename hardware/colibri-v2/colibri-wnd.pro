@@ -39,7 +39,6 @@ version=1
 version=1
 LibDir=../lib
 [eeschema/libraries]
-LibName1=colibri-wnd-rescue
 LibName2=power
 LibName3=device
 LibName4=transistors
