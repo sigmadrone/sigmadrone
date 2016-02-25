@@ -35,7 +35,7 @@
   (pad 17 smd rect (at -3.5 -0.85) (size 0.31 2.6) (layers F.Cu F.Paste F.Mask))
   (pad FN thru_hole oval (at -7.25 5.96) (size 1.7 2.75) (drill oval 1 2.1) (layers *.Cu *.Mask F.SilkS))
   (pad FN thru_hole oval (at -7.25 0) (size 1.7 3.5) (drill oval 1 2.7) (layers *.Cu *.Mask F.SilkS))
-  (model ../../../../../home/mstoilov/workspace-yocto/sigmadrone/hardware/lib3d/molex_500254_1927.wrl
+  (model lib3d/molex_500254_1927.wrl
     (at (xyz 0 0 0))
     (scale (xyz 1 1 1))
     (rotate (xyz 0 0 0))
