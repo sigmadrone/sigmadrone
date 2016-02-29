@@ -1,5 +1,10 @@
 EESchema-DOCLIB  Version 2.0
 #
+$CMP ABMM2
+D Four pin crystal
+K Quartz, Ceramic, Filter, Resonator
+$ENDCMP
+#
 $CMP CONN_03X08
 D Connector 01x03
 $ENDCMP
