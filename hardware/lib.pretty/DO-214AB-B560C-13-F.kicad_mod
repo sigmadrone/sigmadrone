@@ -1,11 +1,11 @@
-(module DO-214AB-B560C-13-F (layer F.Cu) (tedit 56D29A2A)
+(module DO-214AB-B560C-13-F (layer F.Cu) (tedit 56D4C350)
   (descr "Jedec DO-214AB diode package. Designed according to Fairchild SS32 datasheet.")
   (tags "DO-214AB schottky diode")
   (attr smd)
   (fp_text reference REF** (at 0 -4.2) (layer F.SilkS)
     (effects (font (size 1 1) (thickness 0.15)))
   )
-  (fp_text value DO-214AB-B560C-13-F (at 0 4.6) (layer F.SilkS) hide
+  (fp_text value DO-214AB-B560C-13-F (at 0 4.6) (layer F.Fab)
     (effects (font (size 1 1) (thickness 0.15)))
   )
   (fp_line (start 1 0) (end 2 0) (layer F.SilkS) (width 0.15))

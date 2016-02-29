@@ -1,8 +1,8 @@
-(module MOLEX_500254_1927 (layer F.Cu) (tedit 56CE82F3)
+(module MOLEX_500254_1927 (layer F.Cu) (tedit 56D4C3A7)
   (fp_text reference CN (at 7.635 -3.563) (layer F.SilkS)
     (effects (font (size 1.016 1.016) (thickness 0.254)))
   )
-  (fp_text value 500254_1927 (at 0 3.556) (layer F.SilkS) hide
+  (fp_text value 500254_1927 (at 0 3.556) (layer F.Fab)
     (effects (font (size 1.27 1.27) (thickness 0.254)))
   )
   (fp_line (start -7.5 4.25) (end -7.5 2) (layer F.SilkS) (width 0.15))
