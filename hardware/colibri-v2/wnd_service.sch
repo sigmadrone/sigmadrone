@@ -200,7 +200,7 @@ Text HLabel 9100 3650 0    60   Input ~ 0
 WB_LED1
 Text Notes 7600 3700 0    60   ~ 0
 PIN 261\nEIM_DA8 GPIO3_IO08
-Text Notes 6450 1600 0    60   ~ 0
+Text Notes 6500 1600 0    60   ~ 0
 PIN 259\nEIM_D26 GPIO3_IO26
 $Comp
 L Q_NMOS_GSD Q16

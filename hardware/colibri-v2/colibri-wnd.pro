@@ -1,4 +1,4 @@
-update=Wed 24 Feb 2016 02:53:11 PM PST
+update=Wed 02 Mar 2016 05:25:08 PM PST
 version=1
 last_client=kicad
 [pcbnew]
@@ -69,3 +69,4 @@ LibName27=atmel
 LibName28=contrib
 LibName29=valves
 LibName30=sigmadrone
+LibName31=/home/mkstoilo/workspace-yocto/sigmadrone/hardware/lib/sigmadrone
