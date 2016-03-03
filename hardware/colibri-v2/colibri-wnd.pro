@@ -1,4 +1,4 @@
-update=Wed 02 Mar 2016 05:25:08 PM PST
+update=Thu 03 Mar 2016 03:53:55 PM PST
 version=1
 last_client=kicad
 [pcbnew]
@@ -33,8 +33,6 @@ NetFmtName=
 SpiceForceRefPrefix=0
 SpiceUseNetNumbers=0
 LabSize=60
-[general]
-version=1
 [eeschema]
 version=1
 LibDir=../lib
@@ -70,3 +68,5 @@ LibName28=contrib
 LibName29=valves
 LibName30=sigmadrone
 LibName31=/home/mkstoilo/workspace-yocto/sigmadrone/hardware/lib/sigmadrone
+[general]
+version=1
