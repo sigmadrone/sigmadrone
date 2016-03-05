@@ -44,17 +44,6 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-$Comp
-L FT232RL U4
-U 1 1 558F3BD7
-P 7250 3800
-F 0 "U4" H 7600 4850 60  0000 C CNN
-F 1 "FT232RL" H 7000 2750 60  0000 C CNN
-F 2 "Housings_SSOP:SSOP-28_5.3x10.2mm_Pitch0.65mm" H 7250 3800 60  0001 C CNN
-F 3 "" H 7250 3800 60  0000 C CNN
-	1    7250 3800
-	1    0    0    -1  
-$EndComp
 Wire Wire Line
 	1950 3000 3550 3000
 Wire Wire Line
@@ -194,12 +183,6 @@ F 3 "" H 2150 5000 60  0000 C CNN
 $EndComp
 Wire Wire Line
 	2150 3400 2150 5000
-NoConn ~ 6550 3400
-NoConn ~ 6550 4000
-NoConn ~ 6550 4100
-NoConn ~ 7950 4100
-NoConn ~ 7950 4000
-NoConn ~ 7950 3900
 Wire Wire Line
 	6350 2900 6350 2000
 Wire Wire Line
@@ -215,7 +198,6 @@ Text HLabel 9500 3200 2    60   Output ~ 0
 C_FTDI_CTS
 Text HLabel 9500 3600 2    60   Output ~ 0
 C_FTDI_RI
-NoConn ~ 7950 3500
 Wire Wire Line
 	8650 3300 8950 3300
 Wire Wire Line
@@ -414,11 +396,8 @@ F 6 "Farnell" H 5980 4370 30  0001 L CNN "Provider"
 	1    5950 4600
 	1    0    0    -1  
 $EndComp
-NoConn ~ 7950 3600
 Wire Wire Line
 	7950 3600 9500 3600
-NoConn ~ 7950 3100
-NoConn ~ 7950 3200
 $Comp
 L PWR_FLAG #FLG044
 U 1 1 56CC9B04
@@ -493,4 +472,39 @@ $EndComp
 Wire Wire Line
 	2150 2000 2150 3000
 Connection ~ 2150 3000
+$Comp
+L FT232RQ U4
+U 1 1 56DAB925
+P 7250 3800
+F 0 "U4" H 7600 4850 60  0000 C CNN
+F 1 "FT232RQ" H 7000 2750 60  0000 C CNN
+F 2 "Housings_DFN_QFN:QFN-32-1EP_5x5mm_Pitch0.5mm" H 7250 2675 60  0001 C CNN
+F 3 "" H 7250 3800 60  0000 C CNN
+F 4 "1146033" H 7250 2525 60  0001 C CNN "Part"
+F 5 "Farnell" H 7250 2600 60  0001 C CNN "Provider"
+	1    7250 3800
+	1    0    0    -1  
+$EndComp
+NoConn ~ 6550 3800
+NoConn ~ 6550 4000
+NoConn ~ 6550 4100
+NoConn ~ 7950 3500
+NoConn ~ 7950 3900
+NoConn ~ 7950 4000
+NoConn ~ 7950 4100
+$Comp
+L GND #PWR046
+U 1 1 56DAC442
+P 8100 5000
+F 0 "#PWR046" H 8100 4750 50  0001 C CNN
+F 1 "GND" H 8100 4850 50  0000 C CNN
+F 2 "" H 8100 5000 60  0000 C CNN
+F 3 "" H 8100 5000 60  0000 C CNN
+	1    8100 5000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7950 4700 8100 4700
+Wire Wire Line
+	8100 4700 8100 5000
 $EndSCHEMATC
