@@ -119,6 +119,7 @@ struct TimeSpan : public ScaledUnit<uint64_t> {
 	static TimeSpan from_ticks(uint64_t ticks, const Frequency& freq) {
 		return from_nanoseconds(from_seconds(ticks).nanoseconds()/freq.hertz());
 	}
+	static TimeSpan from_hours(uint64_t hours) { return TimeSpan::from_seconds(hours*3600); }
 
 	inline TimeSpan() : ScaledUnit(0) {}
 	inline ~TimeSpan() {}
@@ -174,19 +175,45 @@ struct Distance: public ScaledUnit<float> {
 	float inches() const { return centimeters() / ONE_INCH_IN_CM; }
 
 	inline Distance operator*(float rhs) const { return Distance(unit() * rhs); }
+	inline const Distance& operator*=(float rhs) { *this = Distance(unit() * rhs);  return *this; }
 	inline Distance operator/(float rhs) const { return Distance(unit() / rhs); }
 	inline Distance operator+(const Distance& rhs) const { return Distance(unit() + rhs.unit()); }
+	inline const Distance& operator+=(const Distance& rhs) { *this = Distance(unit() + rhs.unit()); return *this; }
 	inline Distance operator-(const Distance& rhs) const { return Distance(unit() - rhs.unit()); }
+	inline Distance operator-=(const Distance& rhs) { *this = Distance(unit() - rhs.unit()); return *this; }
 	inline float operator/(const Distance& rhs) const { return unit()/rhs.unit(); }
 	inline bool is_valid() const { return unit() != INVALID_VALUE; }
 
+	Distance(int dummy) : ScaledUnit(0) {(void)dummy;}
 private:
 	Distance(float meters) : ScaledUnit(meters) {}
 };
 
-typedef Distance Altitude;
+struct Speed : public ScaledUnit<float> {
+	static constexpr float KMPH_TO_METERS_PER_SECOND = 3.6f;
+	static constexpr float METERS_PER_SECOND_TO_KMPH = 1.0f / KMPH_TO_METERS_PER_SECOND;
+	static Speed from_kmph(float kmph) { return Speed(kmph * KMPH_TO_METERS_PER_SECOND); }
+	static Speed from_meters_per_second(float mps) { return Speed(mps); }
+	Speed(const Distance& d, const TimeSpan& ts) : ScaledUnit(d.meters() / ts.seconds_float()) {}
+	inline float meters_per_second() { return unit(); }
+	inline float kmph() { return meters_per_second() * METERS_PER_SECOND_TO_KMPH; }
 
-static const Altitude INVALID_ALTITUDE = Altitude::from_meters(Altitude::INVALID_VALUE);
+	Speed() : ScaledUnit(0) {}
+	Speed operator*(float rhs) const { return Speed(unit() * rhs); }
+	Speed operator*=(float rhs) { *this = Speed(unit() * rhs); return *this; }
+	Speed operator/(float rhs) const { return Speed(unit() / rhs); }
+	Speed operator+(const Speed& rhs) const { return Speed(unit() + rhs.unit()); }
+	Speed operator+=(const Speed& rhs) { *this = Speed(unit() + rhs.unit()); return *this; }
+	Speed operator-(const Speed& rhs) const { return Speed(unit() - rhs.unit()); }
+	Speed operator-() { return Speed(-unit()); }
+	Speed operator-=(const Speed& rhs) { *this = Speed(unit() - rhs.unit()); return *this; }
+	float operator/(const Speed& rhs) const { return unit() / rhs.unit(); }
+	Speed(int dummy=0) : ScaledUnit(0) { (void)dummy;}
+private:
+	Speed(float meters_per_second) : ScaledUnit(meters_per_second) {}
+};
+
+typedef Distance Altitude;
 
 struct Voltage: public ScaledUnit<float> {
 	static Voltage from_microvolts(float uV) { return Voltage(from_microunit(uV).unit()); }
@@ -218,8 +245,22 @@ struct Throttle: public ScaledUnit<float> {
 		return (unit() < min ? min : (unit() > max ? max : unit()));
 	}
 	float get_unbound() const { return unit(); }
-private:
+	inline Throttle operator-(const Throttle& rhs) const { return Throttle(unit()-rhs.unit()); }
+	inline Throttle operator+(const Throttle& rhs) const { return Throttle(unit()+rhs.unit()); }
+	inline float operator/(const Throttle& rhs) const { return (float)unit()/(float)rhs.unit(); }
+	inline Throttle operator/(float f) const { return Throttle(unit()/f); }
+	inline Throttle operator*(float f) const { return Throttle(unit()*f); }
+	inline operator float() const { return get(); }
 };
+
+
+static const Altitude INVALID_ALTITUDE = Altitude::from_meters(Altitude::INVALID_VALUE);
+static const Distance ONE_METER = Distance::from_meters(1.0f);
+static const TimeSpan ONE_SECOND = TimeSpan::from_seconds(1.0f);
+static const Voltage ONE_VOLT = Voltage::from_volts(1.0f);
+static const Frequency ONE_HERTZ = Frequency::from_hertz(1.0f);
+
+inline Speed operator/(const Distance& distance, const TimeSpan& time) { return Speed(distance, time); }
 
 
 #endif /* UNITS_H_ */

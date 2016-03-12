@@ -122,6 +122,9 @@ void FlightControl::update_state(DroneState& state)
 	state.base_throttle_ = base_throttle().get();
 	state.motors_armed_ = rc_values_.motors_armed();
 
+	altitude_control_.update_state(state);
+	state.base_throttle_ = altitude_control_.get_throttle().get();
+
 	pilot().update_state(state);
 }
 
