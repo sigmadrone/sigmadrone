@@ -1,7 +1,7 @@
 (export (version D)
   (design
-    (source /home/mkstoilo/workspace-yocto/sigmadrone/hardware/colibri-v2/colibri-wnd.sch)
-    (date "Mon 14 Mar 2016 03:41:31 PM PDT")
+    (source /home/mstoilov/workspace-yocto/sigmadrone/hardware/colibri-v2/colibri-wnd.sch)
+    (date "Mon 14 Mar 2016 10:54:50 PM PDT")
     (tool "Eeschema 4.0.2-4+6225~38~ubuntu14.04.1-stable")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -6827,10 +6827,10 @@
   (libraries
     (library (logical conn)
       (uri /usr/share/kicad/library/conn.lib))
-    (library (logical device)
-      (uri /usr/share/kicad/library/device.lib))
     (library (logical sigmadrone)
-      (uri /home/mkstoilo/workspace-yocto/sigmadrone/hardware/lib/sigmadrone.lib)))
+      (uri /home/mstoilov/workspace-yocto/sigmadrone/hardware/lib/sigmadrone.lib))
+    (library (logical device)
+      (uri /usr/share/kicad/library/device.lib)))
   (nets
     (net (code 1) (name "/Power Control/Vsys")
       (node (ref C28) (pin 1))
