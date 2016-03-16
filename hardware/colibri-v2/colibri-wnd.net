@@ -1,7 +1,7 @@
 (export (version D)
   (design
-    (source /home/mstoilov/workspace-yocto/sigmadrone/hardware/colibri-v2/colibri-wnd.sch)
-    (date "Mon 14 Mar 2016 10:54:50 PM PDT")
+    (source /home/mkstoilo/workspace-yocto/sigmadrone/hardware/colibri-v2/colibri-wnd.sch)
+    (date "Tue 15 Mar 2016 05:41:09 PM PDT")
     (tool "Eeschema 4.0.2-4+6225~38~ubuntu14.04.1-stable")
     (sheet (number 1) (name /) (tstamps /)
       (title_block
@@ -978,7 +978,7 @@
       (tstamp 562F3B2E))
     (comp (ref U3)
       (value IS42S16400J-7BLI)
-      (footprint Sigmadrone:tfbga-54-35)
+      (footprint Sigmadrone:tfbga-54-32)
       (libsource (lib sigmadrone) (part IS42S16400J-7BLI))
       (sheetpath (names "/STM32F4 SDRAM/") (tstamps /55895050/))
       (tstamp 56CC32E5))
@@ -4517,7 +4517,7 @@
       (tstamp 565F00A4))
     (comp (ref U25)
       (value STM32F429NI)
-      (footprint Sigmadrone:tfbga-216-35)
+      (footprint Sigmadrone:tfbga-216-32)
       (libsource (lib sigmadrone) (part STM32F429NI))
       (sheetpath (names /cortex/) (tstamps /557677C0/))
       (tstamp 563CBDC7))
@@ -6828,7 +6828,7 @@
     (library (logical conn)
       (uri /usr/share/kicad/library/conn.lib))
     (library (logical sigmadrone)
-      (uri /home/mstoilov/workspace-yocto/sigmadrone/hardware/lib/sigmadrone.lib))
+      (uri /home/mkstoilo/workspace-yocto/sigmadrone/hardware/lib/sigmadrone.lib))
     (library (logical device)
       (uri /usr/share/kicad/library/device.lib)))
   (nets
