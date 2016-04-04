@@ -244,20 +244,6 @@ F 6 "Farnell" H 4580 1770 30  0001 L CNN "Provider"
 	1    0    0    -1  
 $EndComp
 $Comp
-L R_SMT R163
-U 1 1 566D21CE
-P 7450 2350
-F 0 "R163" V 7400 2550 50  0000 C CNN
-F 1 "0R/5%" V 7350 2350 50  0000 C CNN
-F 2 "Resistors_SMD:R_0402" V 7600 2350 30  0001 C CNN
-F 3 "" V 7530 2350 30  0000 C CNN
-F 4 "0402" V 7450 2350 20  0000 C CNN "SMT"
-F 5 "2008330" V 7650 2350 30  0001 C CNN "Part"
-F 6 "Farnell" V 7700 2350 30  0001 C CNN "Provider"
-	1    7450 2350
-	0    1    1    0   
-$EndComp
-$Comp
 L R_SMT R162
 U 1 1 566D248B
 P 7200 2600
@@ -559,11 +545,7 @@ Wire Wire Line
 	4550 1650 4550 1850
 Connection ~ 4150 1650
 Wire Wire Line
-	7600 2350 9300 2350
-Wire Wire Line
 	7700 2350 7700 2450
-Wire Wire Line
-	7300 2350 7200 2350
 Wire Wire Line
 	7200 2750 7200 2850
 Wire Wire Line
@@ -585,7 +567,6 @@ Wire Wire Line
 	7450 3250 7450 3350
 Wire Wire Line
 	7450 3350 6650 3350
-Connection ~ 7200 2350
 Wire Wire Line
 	5600 2050 5750 2050
 Wire Wire Line
@@ -625,7 +606,6 @@ Wire Wire Line
 	8300 4000 7900 4000
 Wire Wire Line
 	7900 4000 7900 2350
-Connection ~ 7700 2350
 Connection ~ 7900 2350
 Wire Wire Line
 	10650 4400 10900 4400
@@ -714,4 +694,6 @@ F 6 "Farnell" H 3250 2950 30  0001 C CNN "Provider"
 	1    3250 3150
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	7700 2350 9300 2350
 $EndSCHEMATC
