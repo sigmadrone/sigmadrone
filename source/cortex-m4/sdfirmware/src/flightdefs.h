@@ -34,7 +34,7 @@ enum FlightMode {
 	 * altitude, where the throttle position controls the desired altitude
 	 * relative to the take off point
 	 */
-	FLIGHT_MODE_AUTO_ALTITUDE = 1,
+	FLIGHT_MODE_ALTITUDE_HOLD = 1,
 
 	/*
 	 * The firmware controls the altitude and keeps the drone inside a circle

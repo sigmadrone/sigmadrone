@@ -195,8 +195,8 @@ struct Speed : public ScaledUnit<float> {
 	static Speed from_kmph(float kmph) { return Speed(kmph * KMPH_TO_METERS_PER_SECOND); }
 	static Speed from_meters_per_second(float mps) { return Speed(mps); }
 	Speed(const Distance& d, const TimeSpan& ts) : ScaledUnit(d.meters() / ts.seconds_float()) {}
-	inline float meters_per_second() { return unit(); }
-	inline float kmph() { return meters_per_second() * METERS_PER_SECOND_TO_KMPH; }
+	inline float meters_per_second() const { return unit(); }
+	inline float kmph() const { return meters_per_second() * METERS_PER_SECOND_TO_KMPH; }
 
 	Speed() : ScaledUnit(0) {}
 	Speed operator*(float rhs) const { return Speed(unit() * rhs); }
@@ -205,7 +205,7 @@ struct Speed : public ScaledUnit<float> {
 	Speed operator+(const Speed& rhs) const { return Speed(unit() + rhs.unit()); }
 	Speed operator+=(const Speed& rhs) { *this = Speed(unit() + rhs.unit()); return *this; }
 	Speed operator-(const Speed& rhs) const { return Speed(unit() - rhs.unit()); }
-	Speed operator-() { return Speed(-unit()); }
+	Speed operator-() const { return Speed(-unit()); }
 	Speed operator-=(const Speed& rhs) { *this = Speed(unit() - rhs.unit()); return *this; }
 	float operator/(const Speed& rhs) const { return unit() / rhs.unit(); }
 	Speed(int dummy=0) : ScaledUnit(0) { (void)dummy;}
@@ -240,11 +240,9 @@ private:
 struct Throttle: public ScaledUnit<float> {
 	static constexpr float MIN_VALUE = 0.0f;
 	static constexpr float MAX_VALUE = 1.0f;
-	inline Throttle(float throttle = 0.0) : ScaledUnit<float>(throttle) {}
-	inline float get(float min = MIN_VALUE, float max = MAX_VALUE) const {
-		return (unit() < min ? min : (unit() > max ? max : unit()));
-	}
-	float get_unbound() const { return unit(); }
+	inline Throttle(float throttle = 0.0, float min = MIN_VALUE, float max = MAX_VALUE) :
+			ScaledUnit(throttle < min ? min : (throttle > max ? max : throttle)) {}
+	inline float get() const {return unit(); }
 	inline Throttle operator-(const Throttle& rhs) const { return Throttle(unit()-rhs.unit()); }
 	inline Throttle operator+(const Throttle& rhs) const { return Throttle(unit()+rhs.unit()); }
 	inline float operator/(const Throttle& rhs) const { return (float)unit()/(float)rhs.unit(); }

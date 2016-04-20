@@ -90,6 +90,7 @@ struct DroneState {
 		, track_magnetometer_(true)
 		, track_accelerometer_(true)
 	    , iteration_(0)
+	    , throttle_(0.0f)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING) { }
 
 	rexjson::value to_json()
@@ -271,6 +272,8 @@ struct DroneState {
 	QuaternionF target_;
 	Vector4f motors_;
 	Vector3f pid_torque_;
+	float throttle_;
+	std::string flight_posture_;
 
 	/*
 	 * Safety...

@@ -127,11 +127,24 @@ void bmp180_task(void *pvParameters)
 				{PB_8, GPIO_MODE_AF_OD, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
 				{PB_9, GPIO_MODE_AF_OD, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
 		});
-	BMP180 bmp(i2c);
+	BMP180* bmp = 0;
 	TimeStamp led_toggle_ts;
 	GPSReader gps;
 
-	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
+	for (uint32_t i = 0; i < 8; ++i) {
+		try {
+			bmp = new BMP180(i2c);
+			break;
+		} catch (std::exception& e) {
+			i2c.reinit();
+			vTaskDelay(100 / portTICK_RATE_MS);
+			bmp = 0;
+		}
+	}
+
+	assert(bmp);
+
+	Bmp180Reader* bmp_reader = new Bmp180Reader(*bmp);
 
 	bmp_reader->calibrate();
 
