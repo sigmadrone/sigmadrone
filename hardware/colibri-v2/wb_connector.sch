@@ -420,8 +420,6 @@ Wire Wire Line
 Wire Wire Line
 	7650 7550 8450 7550
 Wire Wire Line
-	2550 2050 2550 2150
-Wire Wire Line
 	2550 2150 3600 2150
 Wire Wire Line
 	2550 2250 3600 2250
@@ -2605,8 +2603,6 @@ Wire Wire Line
 	2550 3150 2700 3150
 Text Label 3650 4050 2    60   ~ 0
 DISP0_VDDEN
-Text Label 3600 2050 2    60   ~ 0
-DISP0_BKLEN
 Wire Wire Line
 	2550 4050 3650 4050
 Wire Wire Line
@@ -2840,4 +2836,6 @@ F 3 "" H 1550 15250 50  0000 C CNN
 	1    1550 15250
 	1    0    0    -1  
 $EndComp
+Text Label 3600 2050 2    60   ~ 0
+DISP0_BKLEN
 $EndSCHEMATC

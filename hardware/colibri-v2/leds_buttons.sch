@@ -671,7 +671,7 @@ Connection ~ 6450 3150
 Wire Wire Line
 	5700 3250 5550 3250
 Wire Wire Line
-	5550 3150 5550 3250
+	5550 3250 5550 3150
 Connection ~ 5550 3150
 Wire Wire Line
 	3200 1400 3350 1400
