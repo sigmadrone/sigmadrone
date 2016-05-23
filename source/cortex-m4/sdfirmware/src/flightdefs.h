@@ -48,6 +48,10 @@ enum FlightMode {
 	FLIGHT_MODE_MISSION = 3
 };
 
+enum PilotType {
+	PILOT_TYPE_PID_LEGACY = 0,
+	PILOT_TYPE_PID_NEW = 1
+};
 
 
 #endif /* FLIGHTDEFS_H_ */

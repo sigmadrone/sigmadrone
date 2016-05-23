@@ -65,6 +65,7 @@ struct DroneState {
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.07)
 		, accelerometer_correction_period_(3.0)
+	    , pilot_type_(PILOT_TYPE_PID_NEW)
 #else
 		, kp_(0.24)
 		, ki_(0.6)
@@ -73,6 +74,7 @@ struct DroneState {
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
 		, accelerometer_correction_period_(5.0)
+	    , pilot_type_(PILOT_TYPE_PID_LEGACY)
 #endif
 		, gyro_factor_(1.25)
 		, yaw_(0.0)
@@ -201,6 +203,28 @@ struct DroneState {
 		}
 	}
 
+	void set_pilot_type(PilotType pilot_type)
+	{
+		pilot_type_ = pilot_type;
+		if (PILOT_TYPE_PID_NEW == pilot_type) {
+			kp_ = 0.25;
+			ki_ = 0.035;
+			kd_= 0.05;
+			yaw_kp_ = 0.20;
+			yaw_ki_= 0.0;
+			yaw_kd_ = 0.07;
+			accelerometer_correction_period_ = 3.0;
+		} else if (PILOT_TYPE_PID_LEGACY == pilot_type) {
+			kp_ = 0.24;
+			ki_ = 0.6;
+			kd_ = 0.06;
+			yaw_kp_ = 0.72;
+			yaw_ki_ = 0.0;
+			yaw_kd_ = 0.30;
+			accelerometer_correction_period_ = 5.0;
+		}
+	}
+
 	/*
 	 * Sensors - input attributes
 	 */
@@ -238,6 +262,7 @@ struct DroneState {
 	float altitude_kd_;
 	Vector3f accelerometer_adjustment_;
 	float accelerometer_correction_period_;
+	PilotType pilot_type_;
 	float gyro_factor_;
 	float yaw_;
 	float pitch_;

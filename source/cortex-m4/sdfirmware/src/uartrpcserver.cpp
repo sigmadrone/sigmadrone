@@ -58,6 +58,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Da
 	add("sd_pid_filter_freq", &UartRpcServer::rpc_pid_filter_freq);
 	add("sd_set_mag_tracking", &UartRpcServer::rpc_set_mag_tracking);
 	add("sd_set_acc_tracking", &UartRpcServer::rpc_set_acc_tracking);
+	add("sd_set_pilot_type", &UartRpcServer::rpc_set_pilot_type);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -539,7 +540,7 @@ rexjson::value UartRpcServer::rpc_set_acc_tracking(UART* , rexjson::array& param
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
 	            "sd_set_acc_tracking\n"
-				"\nDANGAREOUS!!! Set Turn on/off Accelerometer tracking."
+				"\nDANGEROUS!!! Set Turn on/off Accelerometer tracking."
 				"\nThe accelerometer should not be turned off for "
 				"more than a few seconds."
 				"\n"
@@ -551,6 +552,31 @@ rexjson::value UartRpcServer::rpc_set_acc_tracking(UART* , rexjson::array& param
 	bool on = params[0].get_bool();
 	dronestate_.track_accelerometer_ = on;
 	return dronestate_.track_accelerometer_;
+}
+
+rexjson::value UartRpcServer::rpc_set_pilot_type(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_str_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_set_pilot_type\n"
+				"\nSet the active pilot type. Don't do it during flight!\n"
+				"Arguments:\n"
+				"1. pilot_type          (string) pid_pilot_legacy | pid_pilot_new\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	const std::string& pilot_type = params[0].get_str();
+	if (pilot_type == "new" || pilot_type == "pid_new" || pilot_type == "pid_pilot_new") {
+		dronestate_.set_pilot_type(PILOT_TYPE_PID_NEW);
+	} else {
+		dronestate_.set_pilot_type(PILOT_TYPE_PID_LEGACY);
+	}
+	return pilot_type;
 }
 
 

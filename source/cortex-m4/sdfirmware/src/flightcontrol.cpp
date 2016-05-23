@@ -103,6 +103,14 @@ void FlightControl::motor_power_on_off(bool power_on)
 
 void FlightControl::update_state(DroneState& state)
 {
+	if (state.pilot_type_ != pilot_->get_pilot_type()) {
+		if (PILOT_TYPE_PID_NEW == state.pilot_type_) {
+			pilot_.reset(new TriPilot());
+		}  else if (PILOT_TYPE_PID_LEGACY == state.pilot_type_) {
+			pilot_.reset(new PidPilot());
+		}
+	}
+
 	if (rc_values_.base_throttle().get() < 0.1) {
 		rc_values_.reset_twist_quaternion(state.attitude_);
 	}
