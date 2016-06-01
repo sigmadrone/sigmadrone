@@ -30,9 +30,6 @@ namespace colibri {
  * Define the pins and timers specific to colibri schematics. The timers below are
  * reserved and should not be used for anything other than PWM encode/decode functions.
  */
-
-static const uint32_t PWM_OUT_CHANNEL_COUNT = 8;
-
 static const HwTimer::Id PWM_OUT_TIMER_1 = HwTimer::TIMER_1;
 static const HwTimer::Id PWM_OUT_TIMER_2 = HwTimer::TIMER_8;
 
@@ -47,8 +44,6 @@ static const PinName PWM_OUT_PIN_8 = PC_9;
 
 static const std::vector<PinName> PWM_OUT_PINS_1_4 = {PWM_OUT_PIN_1, PWM_OUT_PIN_2, PWM_OUT_PIN_3, PWM_OUT_PIN_4};
 static const std::vector<PinName> PWM_OUT_PINS_5_8 = {PWM_OUT_PIN_5, PWM_OUT_PIN_6, PWM_OUT_PIN_7, PWM_OUT_PIN_8};
-
-static const uint32_t PWM_IN_CHANNEL_COUNT = 4;
 
 static const PwmTxConsts PWM_TX_1_4 = { PWM_OUT_TIMER_1, PWM_OUT_PINS_1_4 };
 static const PwmTxConsts PWM_TX_5_8 = { PWM_OUT_TIMER_1, PWM_OUT_PINS_5_8 };
@@ -67,14 +62,14 @@ static const uint32_t PWM_IN_TIMER_3_PERIOD_CHANNELNO    = 1;
 static const uint32_t PWM_IN_TIMER_3_DUTYCYCLE_CHANNELNO = 2;
 static const uint32_t PWM_IN_TIMER_4_PERIOD_CHANNELNO    = 1;
 static const uint32_t PWM_IN_TIMER_4_DUTYCYCLE_CHANNELNO = 2;
-static const uint32_t PWM_IN_TIMER_5_PERIOD_CHANNELNO    = 2;
-static const uint32_t PWM_IN_TIMER_5_DUTYCYCLE_CHANNELNO = 1;
+static const uint32_t PWM_IN_TIMER_5_PERIOD_CHANNELNO    = 1;
+static const uint32_t PWM_IN_TIMER_5_DUTYCYCLE_CHANNELNO = 2;
 
 static const PinName PWM_IN_PIN_1 = PA_5;
 static const PinName PWM_IN_PIN_2 = PA_6;
 static const PinName PWM_IN_PIN_3 = PD_12;
 static const PinName PWM_IN_PIN_4 = PA_0;
-static const PinName PWM_IN_PIN_5 = PA_3;
+static const PinName PWM_IN_PIN_5 = PA_2;
 
 static const std::vector<PwmRxConsts> PWM_RX_CONSTS = {
 		{PWM_IN_TIMER_1, PWM_IN_PIN_1, PWM_IN_TIMER_1_PERIOD_CHANNELNO, PWM_IN_TIMER_1_DUTYCYCLE_CHANNELNO},
