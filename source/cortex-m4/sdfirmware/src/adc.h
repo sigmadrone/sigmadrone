@@ -28,7 +28,7 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_i2c.h"
 #include "stm32f429xx.h"
-#include "gpiopin.h"
+#include "colibrihwmap.h"
 #include "units.h"
 
 /*
@@ -76,7 +76,7 @@ class Voltmeter {
 public:
 	static constexpr float r1_div_ = 100.0f;
 	static constexpr float r2_div_ = 21.5f;
-	Voltmeter() : adc_(ADC1, ADC_CHANNEL_9, PB_1) {}
+	Voltmeter() : adc_(ADC1, ADC_CHANNEL_9, BATTERY_MONITOR_PIN) {}
 	Voltage measure()
 	{
 		return Voltage::from_volts(adc_.read_value_as_voltage() * (r1_div_+r2_div_) / r2_div_);

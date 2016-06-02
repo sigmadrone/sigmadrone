@@ -29,6 +29,7 @@
 #include "spimaster.h"
 #include "spislave.h"
 #include "uart.h"
+#include "colibrihwmap.h"
 
 extern unsigned int __relocated_vectors;
 
@@ -123,6 +124,6 @@ extern "C" void USART2_IRQHandler(void)
 
 extern "C" void EmergencyShutdown_Handler(void)
 {
-	DigitalOut(PB_2).write(0);
+	DigitalOut(SHUTDOWN_PIN).write(0);
 }
 

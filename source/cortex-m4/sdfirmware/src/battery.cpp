@@ -96,10 +96,11 @@ std::string Battery::type_as_string() const
 void Battery::auto_detect_type()
 {
 	if (type() == TYPE_AUTO_DETECT && !voltage().is_null()) {
-		for (uint32_t i = TYPE_LIPO_1S; i < TYPE_MAX; ++i)
-		if (voltage() <= lipo_1cell_max_v_ * i) {
-			type_ = static_cast<Type>(i);
-			break;
+		for (uint32_t i = TYPE_LIPO_1S; i < TYPE_MAX; ++i) {
+			if (voltage() <= lipo_1cell_max_v_ * i) {
+				type_ = static_cast<Type>(i);
+				break;
+			}
 		}
 	}
 }
