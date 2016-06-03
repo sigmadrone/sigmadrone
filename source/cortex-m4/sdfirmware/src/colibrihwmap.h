@@ -62,7 +62,47 @@ static const PinName PWM_IN_PIN_3 = PD_12;
 static const PinName PWM_IN_PIN_4 = PA_0;
 static const PinName PWM_IN_PIN_5 = PA_2;
 
-
 static const PinName BATTERY_MONITOR_PIN = PH_9;
+
+static const PinName GYRO_INT2_PIN = PA_3;
+static const PinName GYRO_CS_PIN = PC_1;
+
+static const PinName MOTOR_POWER_CTRL_PIN = PB_0;
+
+static const PinName GPS_POWER_CTRL_PIN = PG_14;
+
+static const PinName I2C1_SCL_PIN = PB_8;
+static const PinName I2C1_SDA_PIN = PB_9;
+
+static const PinName  GPS_USART3_TX_PIN = PC_10;
+static const PinName  GPS_USART3_RX_PIN = PC_11;
+
+static const PinName  USB_OTG_LED_PIN = PC_4;
+
+static const PinName USART2_CTS_PIN = PD_3;
+static const PinName USART2_RTS_PIN = PD_4;
+static const PinName USART2_TX_PIN  = PD_5;
+static const PinName USART2_RX_PIN  = PD_6;
+
+static const PinName ACCEL_CS_PIN = PD_7;
+
+static const PinName SPI5_SCK_PIN  = PF_7;
+static const PinName SPI5_MISO_PIN = PF_8;
+static const PinName SPI5_MOSI_PIN = PF_9;
+
+#define MEMS_SPI_SCK_PIN  SPI5_SCK_PIN
+#define MEMS_SPI_MISO_PIN SPI5_MISO_PIN
+#define MEMS_SPI_MOSI_PIN SPI5_MOSI_PIN
+
+static const PinName USART1_TX_PIN = PB_6;
+static const PinName USART1_RX_PIN = PB_7;
+#define TRACE_USART_TX_PIN USART1_TX_PIN
+#define TRACE_USART_RX_PIN USART1_RX_PIN
+
+static const PinName USER_SWITCH_1_PIN = PB_2;
+static const PinName USER_SWITCH_2_PIN = PG_2;
+static const PinName USER_SWITCH_3_PIN = PG_3;
+static const PinName USER_SWITCH_4_PIN = PG_6;
+static const PinName USER_SWITCH_5_PIN = PG_7;
 
 #endif /* COLIBRI_HW_MAP */
