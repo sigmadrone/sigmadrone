@@ -240,50 +240,6 @@ typedef enum {
     PK_6  = 0xA6,
     PK_7  = 0xA7,
 
-    // Arduino connector namings
-/*
-    A0          = PA_0,
-    A1          = PA_1,
-    A2          = PA_4,
-    A3          = PB_0,
-    A4          = PC_1,
-    A5          = PC_0,
-    D0          = PA_3,
-    D1          = PA_2,
-    D2          = PA_10,
-    D3          = PB_3,
-    D4          = PB_5,
-    D5          = PB_4,
-    D6          = PB_10,
-    D7          = PA_8,
-    D8          = PA_9,
-    D9          = PC_7,
-    D10         = PB_6,
-    D11         = PA_7,
-    D12         = PA_6,
-    D13         = PA_5,
-    D14         = PB_9,
-    D15         = PB_8,
-*/
-
-    // Generic signals namings
-    USER_LED1   = PG_13,
-    USER_LED2   = PG_14,
-    USER_LED3   = PG_13,
-    USER_LED4   = PG_14,
-    USER_BUTTON = PA_0,
-    SERIAL_TX   = PA_9,
-    SERIAL_RX   = PA_10,
-    USBTX       = PA_9,
-    USBRX       = PA_10,
-    I2C_SCL     = PB_8,
-    I2C_SDA     = PB_9,
-    SPI_MOSI    = PA_7,
-    SPI_MISO    = PA_6,
-    SPI_SCK     = PA_5,
-    SPI_CS      = PA_4,
-    PWM_OUT     = PB_3,
-
     // Not connected
     NC = (int)0xFFFFFFFF
 } PinName;
