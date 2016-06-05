@@ -98,6 +98,7 @@ static const PinName USART1_TX_PIN = PB_6;
 static const PinName USART1_RX_PIN = PB_7;
 #define TRACE_USART_TX_PIN USART1_TX_PIN
 #define TRACE_USART_RX_PIN USART1_RX_PIN
+#define TRACE_USART USART1
 
 static const PinName USER_SWITCH_1_PIN = PB_2;
 static const PinName USER_SWITCH_2_PIN = PG_2;
