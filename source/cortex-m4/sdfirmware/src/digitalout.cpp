@@ -62,8 +62,9 @@ void DigitalOut::clock_enable(unsigned int port)
 		case 5:	__GPIOF_CLK_ENABLE(); break;
 		case 6:	__GPIOG_CLK_ENABLE(); break;
 		case 7:	__GPIOH_CLK_ENABLE(); break;
-		case 8:	__GPIOJ_CLK_ENABLE(); break;
-		case 9:	__GPIOK_CLK_ENABLE(); break;
+		case 8:	__GPIOI_CLK_ENABLE(); break;
+		case 9:	__GPIOJ_CLK_ENABLE(); break;
+		case 10:__GPIOK_CLK_ENABLE(); break;
 	}
 }
 

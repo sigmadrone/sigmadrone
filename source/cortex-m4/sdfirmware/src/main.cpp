@@ -61,6 +61,13 @@ __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
 
 DigitalOut ledusb(USB_OTG_LED_PIN);
+DigitalOut led0(USER_LED0_PIN);
+DigitalOut led1(USER_LED1_PIN);
+DigitalOut led2(USER_LED2_PIN);
+DigitalOut led3(USER_LED3_PIN);
+DigitalOut led4(USER_LED4_PIN);
+DigitalOut pwr_on(PWR_ON_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
+
 DigitalIn gyro_int2(GYRO_INT2_PIN, DigitalIn::PullNone, DigitalIn::InterruptRising);
 DigitalIn user_sw1(USER_SWITCH_1_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw2(USER_SWITCH_2_PIN, DigitalIn::PullNone, DigitalIn::InterruptFalling);
@@ -139,7 +146,7 @@ void bmp180_task(void *pvParameters)
 	while (1) {
 		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
 			led_toggle_ts.time_stamp();
-			ledusb.toggle();
+			led0.toggle();
 		}
 
 		try {
@@ -422,7 +429,7 @@ void main_task(void *pvParameters)
 #if 0
 		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
 			led_toggle_ts.time_stamp();
-			ledusb.toggle();
+			led0.toggle();
 		}
 #endif
 
