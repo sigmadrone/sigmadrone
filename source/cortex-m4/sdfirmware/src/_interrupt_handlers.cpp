@@ -62,6 +62,11 @@ extern "C" void EXTI2_IRQHandler(void)
 	DigitalIn::vector_handler(2);
 }
 
+extern "C" void EXTI3_IRQHandler(void)
+{
+	DigitalIn::vector_handler(3);
+}
+
 extern "C" void EXTI4_IRQHandler(void)
 {
 	SPISlave::spi_chipselect_handler(4);
