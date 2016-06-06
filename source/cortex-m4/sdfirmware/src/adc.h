@@ -30,6 +30,9 @@
 #include "stm32f429xx.h"
 #include "colibrihwmap.h"
 #include "units.h"
+#include "digitalout.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 /*
  * Simple ADC class that supports only one regular channel, with data transfered over DMA
@@ -76,13 +79,22 @@ class Voltmeter {
 public:
 	static constexpr float r1_div_ = 100.0f;
 	static constexpr float r2_div_ = 21.5f;
-	Voltmeter() : adc_(ADC1, ADC_CHANNEL_9, BATTERY_MONITOR_PIN) {}
+	Voltmeter() : adc_(BATTERY_MONITOR_ADC, BATTERY_MONITOR_ADC_CHANNEL, BATTERY_MONITOR_PIN),
+			voltmeter_ctrl_(BATTERY_MONITOR_ONOFF_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0) {}
 	Voltage measure()
 	{
-		return Voltage::from_volts(adc_.read_value_as_voltage() * (r1_div_+r2_div_) / r2_div_);
+		voltmeter_ctrl_.write(1);
+		float voltage;
+		vTaskDelay(300 / portTICK_RATE_MS);
+		for (uint32_t i = 0; i < 8 && (voltage = adc_.read_value_as_voltage()) < 0.1; ++i) {
+			vTaskDelay(300 / portTICK_RATE_MS);
+		}
+		voltmeter_ctrl_.write(0);
+		return Voltage::from_volts(voltage * (r1_div_+r2_div_) / r2_div_);
 	}
 private:
 	ADCHandle adc_;
+	DigitalOut voltmeter_ctrl_;
 };
 
 };

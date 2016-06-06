@@ -179,7 +179,7 @@ void battery_task(void *pvParameters)
 		drone_state->battery_voltage_ = battery.voltage();
 		drone_state->battery_percentage_ = battery.charge_percentage();
 		drone_state->battery_type_ = battery.type_as_string();
-		vTaskDelay(1000 / portTICK_RATE_MS);
+		vTaskDelay(3000 / portTICK_RATE_MS);
 	}
 }
 
@@ -280,7 +280,7 @@ void main_task(void *pvParameters)
 	AccelLowPassPreFilter3d* accel_lpf = new AccelLowPassPreFilter3d();
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
 	Vector3f gyro_bias;
-	static bool print_to_console = false;
+	static bool print_to_console = true;
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
@@ -424,6 +424,13 @@ void main_task(void *pvParameters)
 			printf("dT        : %lu uSec\n", (uint32_t)drone_state->dt_.microseconds());
 			printf("Q         : %5.3f %5.3f %5.3f %5.3f\n\n", drone_state->attitude_.w, drone_state->attitude_.x, drone_state->attitude_.y,
 					drone_state->attitude_.z);
+#if 1
+			printf("Altitude  : %4.2f m\n", drone_state->altitude_.meters());
+			printf("GPS       : Lon: %3.4f Lat: %3.4f Sat %lu Alt: %4.2f m\n",
+					drone_state->longitude_, drone_state->latitude_,
+					drone_state->satellite_count_, drone_state->gps_altitude_.meters());
+			printf("Battery   : %2.1f V, %2.0f%%\n", drone_state->battery_voltage_.volts(), drone_state->battery_percentage_);
+#endif
 		}
 
 #if 0
