@@ -667,13 +667,13 @@ USART2_CTS
 Text Label 16550 13700 2    60   ~ 0
 USART2_RTS
 Text HLabel 1400 7950 0    60   Input ~ 0
-WB_UART_RX
+C_WB_UART_RX
 Text HLabel 1400 7850 0    60   Output ~ 0
-WB_UART_TX
+C_WB_UART_TX
 Text HLabel 12650 13700 0    60   Output ~ 0
-WB_UART_RTS
+C_WB_UART_RTS
 Text HLabel 12650 13400 0    60   Input ~ 0
-WB_UART_CTS
+C_WB_UART_CTS
 Text HLabel 1400 9750 0    60   Input ~ 0
 WB_SPI_CLK
 Text HLabel 1400 9950 0    60   Input ~ 0
