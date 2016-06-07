@@ -62,8 +62,6 @@ static const PinName PWM_IN_PIN_3 = PD_12;
 static const PinName PWM_IN_PIN_4 = PA_0;
 static const PinName PWM_IN_PIN_5 = PA_2;
 
-static const PinName BATTERY_MONITOR_PIN = PH_9;
-
 static const PinName GYRO_INT2_PIN = PA_3;
 static const PinName GYRO_CS_PIN = PC_1;
 
@@ -112,5 +110,10 @@ static const PinName USER_SWITCH_2_PIN = PG_2;
 static const PinName USER_SWITCH_3_PIN = PG_3;
 static const PinName USER_SWITCH_4_PIN = PG_6;
 static const PinName USER_SWITCH_5_PIN = PG_7;
+
+static const PinName BATTERY_MONITOR_PIN = PC_2;
+static const PinName BATTERY_MONITOR_ONOFF_PIN = PH_9;
+#define BATTERY_MONITOR_ADC ADC1
+#define BATTERY_MONITOR_ADC_CHANNEL ADC_CHANNEL_12
 
 #endif /* COLIBRI_HW_MAP */
