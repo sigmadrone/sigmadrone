@@ -366,13 +366,13 @@ void main_task(void *pvParameters)
 		att.accelerometer_correction_period(drone_state->accelerometer_correction_period_);
 
 		static const Matrix3f gyro_align(
+				 0,-1, 0,
 				-1, 0, 0,
-				 0, 1, 0,
 				 0, 0,-1);
 
 		static const Matrix3f acc_align(
-				 1, 0, 0,
-				 0,-1, 0,
+				 0, -1, 0,
+				 -1, 0, 0,
 				 0, 0,-1);
 
 		drone_state->gyro_raw_ = ReadGyro(gyro, gyr_wtm);
