@@ -36,7 +36,7 @@ static const std::vector<PinName> PWM_OUT_PINS_1_4 = {PWM_OUT_PIN_1, PWM_OUT_PIN
 static const std::vector<PinName> PWM_OUT_PINS_5_8 = {PWM_OUT_PIN_5, PWM_OUT_PIN_6, PWM_OUT_PIN_7, PWM_OUT_PIN_8};
 
 static const PwmTxConsts PWM_TX_1_4 = { PWM_OUT_TIMER_1, PWM_OUT_PINS_1_4 };
-static const PwmTxConsts PWM_TX_5_8 = { PWM_OUT_TIMER_1, PWM_OUT_PINS_5_8 };
+static const PwmTxConsts PWM_TX_5_8 = { PWM_OUT_TIMER_2, PWM_OUT_PINS_5_8 };
 
 static const std::vector<PwmRxConsts> PWM_RX_CONSTS = {
 		{PWM_IN_TIMER_1, PWM_IN_PIN_1, PWM_IN_TIMER_1_PERIOD_CHANNELNO, PWM_IN_TIMER_1_DUTYCYCLE_CHANNELNO},
