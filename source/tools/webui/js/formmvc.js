@@ -195,6 +195,11 @@ FlightCtlFormView.prototype.onRedrawData = function(droneState) {
   $(this.formId)[0].elements['torq-bias-yaw'].value = droneState.yaw_bias;
   $(this.formId)[0].elements['track-magnetometer'].checked = droneState.track_magnetometer;
   $(this.formId)[0].elements['yaw-throttle-factor'].value = droneState.yaw_throttle_factor;
+  if (droneState.pilot_type == "pid_pilot_new") {
+    $(this.formId)[0].elements['pilot-type-id'].value = "pid-pilot-new";
+  } else {
+    $(this.formId)[0].elements['pilot-type-id'].value = "pid-pilot-legacy";
+  }
   return true;
 }
 

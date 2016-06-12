@@ -18,6 +18,10 @@ body {
   letter-spacing: -1px;
 }
 
+select {
+  font-size: 16px;
+}
+
 .main {
 	padding: 0px;
 	margin-left: 10px;
