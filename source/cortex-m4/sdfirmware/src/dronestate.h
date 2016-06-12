@@ -155,6 +155,7 @@ struct DroneState {
 			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
 		}
 		ret["flight_mode"] = flight_mode_;
+		ret["pilot_type"] = std::string(PilotTypeAsStr(pilot_type_));
 		return ret;
 	}
 

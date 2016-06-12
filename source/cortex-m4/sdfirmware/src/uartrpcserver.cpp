@@ -571,11 +571,7 @@ rexjson::value UartRpcServer::rpc_set_pilot_type(UART* , rexjson::array& params,
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	const std::string& pilot_type = params[0].get_str();
-	if (pilot_type == "new" || pilot_type == "pid_new" || pilot_type == "pid_pilot_new") {
-		dronestate_.set_pilot_type(PILOT_TYPE_PID_NEW);
-	} else {
-		dronestate_.set_pilot_type(PILOT_TYPE_PID_LEGACY);
-	}
+	dronestate_.set_pilot_type(PilotTypeFromStr(pilot_type));
 	return pilot_type;
 }
 
