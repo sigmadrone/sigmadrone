@@ -60,7 +60,7 @@ struct DroneState {
 #ifdef USE_TRIPILOT
 		, kp_(0.25)
 		, ki_(0.035)
-		, kd_(0.05)
+		, kd_(0.045)
 		, yaw_kp_(0.20)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.07)
