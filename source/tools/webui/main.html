@@ -317,6 +317,17 @@
                   <input id="track-magnetometer" name="track-magnetometer" type="checkbox" onclick="onFlightCtlUserInput()">
                 </div>
               </div>
+              <div class="form-group" id="set-pilot-gr">
+                <div class="col-xs-4 col-md-2">
+                  <label for="set-pilot-gr">Set Pilot Type</label>
+                </div>
+                <div class="col-xs-4 col-md-3">
+                  <select name="pilot-type" id="pilot-type-id" onclick="onFlightCtlUserInput()">
+                    <option value="pid-pilot-legacy">Legacy</option>
+                    <option value="pid-pilot-new">New</option>
+                  </select>
+                </div>
+              </div>
               <label for="yaw-throttle-factor-gr">Yaw Throttle Factor</label>
               <div class="form-group" id="yaw-throttle-factor-gr">
                 <div class="col-xs-4 col-md-2">
@@ -819,6 +830,11 @@
     rpcClient.rpcCall(droneRpcUrl, "sd_set_mag_tracking", "[" + $myForm[0].elements['track-magnetometer'].checked + "]");
     rpcClient.rpcCall(droneRpcUrl, "roll_bias", "[" + $myForm[0].elements['torq-bias-roll'].value + "]");
     rpcClient.rpcCall(droneRpcUrl, "pitch_bias", "[" + $myForm[0].elements['torq-bias-pitch'].value + "]");
+    if ($myForm[0].elements['pilot-type-id'].value == "pid-pilot-new") {
+      rpcClient.rpcCall(droneRpcUrl, "sd_set_pilot_type", "[" + "\"pid_pilot_new\"" + "]");
+    } else {
+      rpcClient.rpcCall(droneRpcUrl, "sd_set_pilot_type", "[" + "\"pid_pilot_legacy\"" + "]");
+    }
     rpcClient.rpcCall(droneRpcUrl, "yaw_bias", "[" + $myForm[0].elements['torq-bias-yaw'].value + "]",
       function() {flightCtlView.onDataSubmitOK();},
       function() {flightCtlView.onDataSubmitFail();});
@@ -1021,7 +1037,6 @@
       $("#pitch-id").text(droneState.pitch.toFixed(4));
       $("#yaw-id").text(droneState.yaw.toFixed(4));
       $("#throttle-id").text(droneState.base_throttle.toFixed(4));
-
 
       /*
        * Update the forms
