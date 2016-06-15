@@ -61,11 +61,13 @@ __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
 
 DigitalOut ledusb(USB_OTG_LED_PIN);
-DigitalOut led0(USER_LED0_PIN);
 DigitalOut led1(USER_LED1_PIN);
 DigitalOut led2(USER_LED2_PIN);
 DigitalOut led3(USER_LED3_PIN);
 DigitalOut led4(USER_LED4_PIN);
+DigitalOut led5(USER_LED5_PIN);
+
+DigitalOut sesnsor_ctrl(SENSOR_CTRL_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0);
 DigitalOut pwr_on(PWR_ON_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
 
 DigitalIn gyro_int2(GYRO_INT2_PIN, DigitalIn::PullNone, DigitalIn::InterruptRising);
@@ -146,7 +148,7 @@ void bmp180_task(void *pvParameters)
 	while (1) {
 		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
 			led_toggle_ts.time_stamp();
-			led0.toggle();
+			led1.toggle();
 		}
 
 		try {
@@ -311,6 +313,8 @@ void main_task(void *pvParameters)
 	gyro_int2.callback(gyro_isr);
 
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
+
+
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	gyro.SetMode(L3GD20::NORMAL);
@@ -416,9 +420,11 @@ void main_task(void *pvParameters)
 		datastream.set_attitude_twist(attitude_twist);
 		datastream.set_attitude_swing(attitude_swing);
 		datastream.commit();
+
 		if (print_to_console && console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
 			console_update_time.time_stamp();
 			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));
+			printf("Gyro Raw  : %5.3f %5.3f %5.3f\n", drone_state->gyro_raw_.at(0), drone_state->gyro_raw_.at(1), drone_state->gyro_raw_.at(2));
 			printf("Accel     : %5.3f %5.3f %5.3f\n", drone_state->accel_.at(0), drone_state->accel_.at(1), drone_state->accel_.at(2));
 			printf("Mag       : %5.3f %5.3f %5.3f\n", drone_state->mag_.at(0), drone_state->mag_.at(1), drone_state->mag_.at(2));
 			printf("dT        : %lu uSec\n", (uint32_t)drone_state->dt_.microseconds());
