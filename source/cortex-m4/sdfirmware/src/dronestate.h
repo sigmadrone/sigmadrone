@@ -98,6 +98,7 @@ struct DroneState {
 	{
 		rexjson::object ret;
 		ret["gyro"] = matrix_to_json_value(gyro_);
+		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
 		ret["accel"] = matrix_to_json_value(accel_);
 		ret["mag"] = matrix_to_json_value(mag_);
 		ret["altitude_meters"] = altitude_.meters();
