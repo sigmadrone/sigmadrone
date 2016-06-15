@@ -61,11 +61,13 @@ __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
 
 DigitalOut ledusb(USB_OTG_LED_PIN);
-DigitalOut led0(USER_LED0_PIN);
 DigitalOut led1(USER_LED1_PIN);
 DigitalOut led2(USER_LED2_PIN);
 DigitalOut led3(USER_LED3_PIN);
 DigitalOut led4(USER_LED4_PIN);
+DigitalOut led5(USER_LED5_PIN);
+
+DigitalOut sesnsor_ctrl(SENSOR_CTRL_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0);
 DigitalOut pwr_on(PWR_ON_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
 
 DigitalIn gyro_int2(GYRO_INT2_PIN, DigitalIn::PullNone, DigitalIn::InterruptRising);
@@ -146,7 +148,7 @@ void bmp180_task(void *pvParameters)
 	while (1) {
 		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
 			led_toggle_ts.time_stamp();
-			led0.toggle();
+			led1.toggle();
 		}
 
 		try {
@@ -282,6 +284,17 @@ void main_task(void *pvParameters)
 	Vector3f gyro_bias;
 	static bool print_to_console = true;
 
+	static const Matrix3f gyro_align(
+	        0,-1, 0,
+           -1, 0, 0,
+		    0, 0,-1);
+
+	static const Matrix3f acc_align(
+	        0,-1, 0,
+           -1, 0, 0,
+	        0, 0,-1);
+
+
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
 	HAL_NVIC_SetPriority(DMA1_Stream5_IRQn, 1, 0);
@@ -300,6 +313,8 @@ void main_task(void *pvParameters)
 	gyro_int2.callback(gyro_isr);
 
 	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
+
+
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	gyro.SetMode(L3GD20::NORMAL);
@@ -332,7 +347,7 @@ void main_task(void *pvParameters)
 
 	printf("Calibrating...\n");
 
-	gyro_bias = CalculateGyroBias(gyro, 800);
+	gyro_bias = gyro_align * CalculateGyroBias(gyro, 800);
 
 	flight_ctl.start_receiver();
 
@@ -365,20 +380,9 @@ void main_task(void *pvParameters)
 
 		att.accelerometer_correction_speed(drone_state->accelerometer_correction_speed_);
 
-		static const Matrix3f gyro_align(
-				 0,-1, 0,
-				-1, 0, 0,
-				 0, 0,-1);
-
-		static const Matrix3f acc_align(
-				 0, -1, 0,
-				 -1, 0, 0,
-				 0, 0,-1);
-
-		drone_state->gyro_raw_ = ReadGyro(gyro, gyr_wtm);
+		drone_state->gyro_raw_ = gyro_align * ReadGyro(gyro, gyr_wtm);
 		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
-			drone_state->gyro_raw_ = gyro_align * (drone_state->gyro_raw_ - gyro_bias);
-			drone_state->gyro_ = drone_state->gyro_raw_ * drone_state->gyro_factor_;
+			drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_bias) * drone_state->gyro_factor_;
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
 
@@ -416,15 +420,21 @@ void main_task(void *pvParameters)
 		datastream.set_attitude_twist(attitude_twist);
 		datastream.set_attitude_swing(attitude_swing);
 		datastream.commit();
+
 		if (print_to_console && console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
 			console_update_time.time_stamp();
 			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));
+			printf("Gyro Raw  : %5.3f %5.3f %5.3f\n", drone_state->gyro_raw_.at(0), drone_state->gyro_raw_.at(1), drone_state->gyro_raw_.at(2));
 			printf("Accel     : %5.3f %5.3f %5.3f\n", drone_state->accel_.at(0), drone_state->accel_.at(1), drone_state->accel_.at(2));
 			printf("Mag       : %5.3f %5.3f %5.3f\n", drone_state->mag_.at(0), drone_state->mag_.at(1), drone_state->mag_.at(2));
 			printf("dT        : %lu uSec\n", (uint32_t)drone_state->dt_.microseconds());
 			printf("Q         : %5.3f %5.3f %5.3f %5.3f\n\n", drone_state->attitude_.w, drone_state->attitude_.x, drone_state->attitude_.y,
 					drone_state->attitude_.z);
 #if 1
+			printf("Motors    : %1.2f %1.2f %1.2f %1.2f\n", drone_state->motors_[0], drone_state->motors_[1],
+								drone_state->motors_[2], drone_state->motors_[3]);
+			printf("Throttle  : %1.2f\n", drone_state->base_throttle_);
+		    printf("Armed     : %d\n", drone_state->motors_armed_);
 			printf("Altitude  : %4.2f m\n", drone_state->altitude_.meters());
 			printf("GPS       : Lon: %3.4f Lat: %3.4f Sat %lu Alt: %4.2f m\n",
 					drone_state->longitude_, drone_state->latitude_,

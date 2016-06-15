@@ -116,6 +116,10 @@
             <div class="row">
               <div class="col-xs-11 col-data"><span id="gyro">x:0.000 y:0.000 z:0.000</span></div>
             </div>
+            <div class="row row-padded"> <div class="col-xs-11">Gyroscope Unbiased, deg/s</div> </div>
+            <div class="row">
+              <div class="col-xs-11 col-data"><span id="gyro-raw-id">x:0.000 y:0.000 z:0.000</span></div>
+            </div>
             <div class="row row-padded"> <div class="col-xs-11">Magnetometer</div> </div>
             <div class="row">
               <div class="col-xs-11 col-data"><span id="mag">x:0.000 y:0.000 z:0.000</span></div>
@@ -1000,6 +1004,7 @@
       $("#attQ").text(quaternion2str(response.result.attitude));
       $("#accel").text(vector2str(response.result.accel));
       $("#gyro").text(vector2str(response.result.gyro));
+      $("#gyro-raw-id").text(vector2str(response.result.gyro_raw));
       $("#mag").text(vector2str(response.result.mag));
       $("#altitude").text(response.result.altitude_meters.toFixed(2));
 
