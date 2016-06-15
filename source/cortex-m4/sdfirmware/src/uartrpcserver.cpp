@@ -480,8 +480,8 @@ rexjson::value UartRpcServer::rpc_set_accelerometer_correction_period(UART* , re
 	float period = params[0].get_real();
 	if (period < 0.25)
 		throw std::range_error("Invalid value");
-	dronestate_.accelerometer_correction_period_ = period;
-	return dronestate_.accelerometer_correction_period_;
+	dronestate_.accelerometer_correction_speed_ = period;
+	return dronestate_.accelerometer_correction_speed_;
 }
 
 rexjson::value UartRpcServer::rpc_set_gyro_factor(UART* , rexjson::array& params, rpc_exec_mode mode)

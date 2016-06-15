@@ -64,7 +64,7 @@ struct DroneState {
 		, yaw_kp_(0.20)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.07)
-		, accelerometer_correction_period_(3.0)
+		, accelerometer_correction_speed_(3.0)
 	    , pilot_type_(PILOT_TYPE_PID_NEW)
 #else
 		, kp_(0.24)
@@ -73,7 +73,7 @@ struct DroneState {
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-		, accelerometer_correction_period_(5.0)
+		, accelerometer_correction_speed_(3.0)
 	    , pilot_type_(PILOT_TYPE_PID_LEGACY)
 #endif
 		, gyro_factor_(1.25)
@@ -142,7 +142,7 @@ struct DroneState {
 		ret["yaw_kp"] = yaw_kp_;
 		ret["yaw_ki"] = yaw_ki_;
 		ret["yaw_kd"] = yaw_kd_;
-		ret["accelerometer_correction_period"] = accelerometer_correction_period_;
+		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
 		ret["gyro_factor"] = gyro_factor_;
 		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
 		ret["yaw_bias"] = yaw_bias_;
@@ -169,7 +169,7 @@ struct DroneState {
 		ret["yaw_kp"] = yaw_kp_;
 		ret["yaw_ki"] = yaw_ki_;
 		ret["yaw_kd"] = yaw_kd_;
-		ret["accelerometer_correction_period"] = accelerometer_correction_period_;
+		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
 		ret["gyro_factor"] = gyro_factor_;
 		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
 		ret["yaw_bias"] = yaw_bias_;
@@ -197,7 +197,7 @@ struct DroneState {
 			try { gyro_factor_ = bootconfig["gyro_factor"].get_real(); } catch (std::exception& e) {}
 			try { yaw_throttle_factor_ = bootconfig["yaw_throttle_factor"].get_real(); } catch (std::exception& e) {}
 			try {
-				accelerometer_correction_period_ = bootconfig["accelerometer_correction_period"].get_real();
+				accelerometer_correction_speed_ = bootconfig["accelerometer_correction_period"].get_real();
 			} catch (std::exception& e) {}
 			try { pid_filter_freq_ = bootconfig["pid_filter_freq"].get_real(); } catch (std::exception& e) {}
 		} catch (std::exception& e) {
@@ -210,11 +210,11 @@ struct DroneState {
 		if (PILOT_TYPE_PID_NEW == pilot_type) {
 			kp_ = 0.25;
 			ki_ = 0.035;
-			kd_= 0.05;
+			kd_= 0.045;
 			yaw_kp_ = 0.20;
 			yaw_ki_= 0.0;
 			yaw_kd_ = 0.07;
-			accelerometer_correction_period_ = 3.0;
+			accelerometer_correction_speed_ = 3.0;
 		} else if (PILOT_TYPE_PID_LEGACY == pilot_type) {
 			kp_ = 0.24;
 			ki_ = 0.6;
@@ -222,7 +222,7 @@ struct DroneState {
 			yaw_kp_ = 0.72;
 			yaw_ki_ = 0.0;
 			yaw_kd_ = 0.30;
-			accelerometer_correction_period_ = 5.0;
+			accelerometer_correction_speed_ = 5.0;
 		}
 	}
 
@@ -262,7 +262,7 @@ struct DroneState {
 	float altitude_ki_;
 	float altitude_kd_;
 	Vector3f accelerometer_adjustment_;
-	float accelerometer_correction_period_;
+	float accelerometer_correction_speed_;
 	PilotType pilot_type_;
 	float gyro_factor_;
 	float yaw_;

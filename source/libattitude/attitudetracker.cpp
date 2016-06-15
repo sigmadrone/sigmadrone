@@ -23,7 +23,7 @@
 #include <iostream>
 
 attitudetracker::attitudetracker(double accelerometer_correction_period, Vector3f earth_g)
-	: accelerometer_correction_period_(accelerometer_correction_period)
+	: accelerometer_correction_speed_(accelerometer_correction_period)
 	, earth_g_(earth_g)
 	, attitude_(QuaternionF::identity)
 {
@@ -53,9 +53,9 @@ void attitudetracker::set_earth_m(Vector3f earth_m)
 	earth_m_ = earth_m;
 }
 
-void attitudetracker::accelerometer_correction_period(double accelerometer_correction_period)
+void attitudetracker::accelerometer_correction_speed(double accelerometer_correction_speed)
 {
-	accelerometer_correction_period_ = accelerometer_correction_period;
+	accelerometer_correction_speed_ = accelerometer_correction_speed;
 }
 
 void attitudetracker::track_gyroscope(const Vector3f& omega, double dtime)
@@ -91,7 +91,7 @@ void attitudetracker::track_accelerometer(const Vector3f& g, double dtime)
 	 * Generate angular velocity to adjust our attitude in the
 	 * direction of the sensor reading.
 	 */
-	Vector3f w = QuaternionF::angularVelocity(QuaternionF::identity, q, accelerometer_correction_period_);
+	Vector3f w = QuaternionF::angularVelocity(QuaternionF::identity, q, q.angle() / DEG2RAD(accelerometer_correction_speed_));
 	if (w.length() == 0.0)
 		return;
 	QuaternionF deltaq = QuaternionF::fromAngularVelocity(-w, dtime);

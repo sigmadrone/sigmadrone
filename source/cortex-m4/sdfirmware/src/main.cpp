@@ -363,7 +363,7 @@ void main_task(void *pvParameters)
 		drone_state->dt_ = sample_dt.elapsed();
 		sample_dt.time_stamp();
 
-		att.accelerometer_correction_period(drone_state->accelerometer_correction_period_);
+		att.accelerometer_correction_speed(drone_state->accelerometer_correction_speed_);
 
 		static const Matrix3f gyro_align(
 				 0,-1, 0,

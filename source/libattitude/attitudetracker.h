@@ -35,7 +35,7 @@ public:
 	void track_gyroscope(const Vector3f& omega, double dtime);
 	void track_accelerometer(const Vector3f& g, double dtime);
 	void track_magnetometer(const Vector3f& m, double dtime);
-	void accelerometer_correction_period(double accelerometer_correction_period);
+	void accelerometer_correction_speed(double accelerometer_correction_speed);
 	/*
 	 * Return our attitude in the world coordinate system
 	 */
@@ -52,7 +52,7 @@ public:
 	 * The earth M vector reading while in initial position.
 	 */
 	Vector3f earth_m_;
-	double accelerometer_correction_period_;
+	double accelerometer_correction_speed_;
 
 protected:
 	/*
@@ -65,12 +65,6 @@ protected:
 	 * the world is rotating in our coordinate system.
 	 */
 	QuaternionF attitude_;
-
-	/*
-	 * Angular velocity integral
-	 */
-	Vector3f integral_w_;
-
 };
 
 #endif
