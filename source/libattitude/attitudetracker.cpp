@@ -109,8 +109,8 @@ void attitudetracker::track_gyro_drift(const Vector3f& acc, const Vector3f& gyr,
 	Vector3f g_estimated = get_world_attitude().rotate(earth_g_);
 	QuaternionF q = QuaternionF::fromVectors(g_estimated, acc);
 	Vector3f drift = QuaternionF::angularVelocity(QuaternionF::identity, q, 1.0f);
-	drift[2] = 0.0f;
-	drift_err_ = drift_pid_.get_pid(drift, 2.0f * dtime, 0.00001);
+	drift[2] = gyr[2] - drift_err_[2];
+	drift_err_ = drift_pid_.get_pid(drift, dtime, 0.00001);
 }
 
 void attitudetracker::track_magnetometer(const Vector3f& m, double dtime)
