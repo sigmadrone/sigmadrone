@@ -25,36 +25,7 @@
 #include "rcchannelmapper.h"
 #include "d3math.h"
 #include "rcreceiver.h"
-
-struct PwmPulse {
-	PwmPulse(const TimeSpan& min_duty, const TimeSpan& max_duty) : min_(min_duty), max_(max_duty) {
-		assert(min_ < max_);
-		assert(!min_.is_null());
-	}
-	inline float to_float(const TimeSpan& _duty_cycle) {
-		TimeSpan duty_cycle = _duty_cycle;
-		if (duty_cycle.is_null()) {
-			return 0.0;
-		}
-		if (duty_cycle <= min_) {
-			duty_cycle = min_ + TimeSpan::from_microseconds(1);
-		} else if (duty_cycle > max_) {
-			duty_cycle = max_;
-		}
-		return static_cast<float>((duty_cycle-min_).microseconds()) /
-				static_cast<float>((max_-min_).microseconds());
-	}
-	inline TimeSpan to_timespan(float value) {
-		assert(value >= 0 && value <= 1.0);
-		float nsecs = static_cast<float>((max_-min_).nanoseconds()) * value +
-				static_cast<float>(min_.nanoseconds());
-		return TimeSpan::from_nanoseconds(nsecs);
-	}
-
-private:
-	TimeSpan min_;
-	TimeSpan max_;
-};
+#include "pwmpulse.h"
 
 class RcValueConverter {
 public:
