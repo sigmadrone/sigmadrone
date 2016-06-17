@@ -81,11 +81,13 @@ static const PinName  GPS_USART3_RX_PIN = PC_11;
 static const PinName  USB_OTG_LED_PIN = PC_4;
 static const PinName  PWR_ON_PIN = PH_11;
 
-static const PinName  USER_LED0_PIN = PI_11;
-static const PinName  USER_LED1_PIN = PI_12;
-static const PinName  USER_LED2_PIN = PI_13;
-static const PinName  USER_LED3_PIN = PI_14;
-static const PinName  USER_LED4_PIN = PI_15;
+static const PinName  USER_LED1_PIN = PI_11;
+static const PinName  USER_LED2_PIN = PI_12;
+static const PinName  USER_LED3_PIN = PI_13;
+static const PinName  USER_LED4_PIN = PI_14;
+static const PinName  USER_LED5_PIN = PI_15;
+
+static const PinName  SENSOR_CTRL_PIN = PB_1;
 
 static const PinName USART2_CTS_PIN = PD_3;
 static const PinName USART2_RTS_PIN = PD_4;
