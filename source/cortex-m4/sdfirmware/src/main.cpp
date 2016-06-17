@@ -399,6 +399,9 @@ void main_task(void *pvParameters)
 		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
 #endif
 
+		att.track_gyro_drift(drone_state->accel_, DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float(),
+							 drone_state->pitch_, drone_state->roll_, drone_state->yaw_);
+
 		accel.GetMag(&mag_axes);
 		drone_state->mag_raw_ = acc_align * Vector3f(mag_axes.AXIS_X, mag_axes.AXIS_Y, mag_axes.AXIS_Z);
 		drone_state->mag_ = mag_lpf->do_filter(drone_state->mag_raw_.normalize());
@@ -422,8 +425,10 @@ void main_task(void *pvParameters)
 		datastream.commit();
 
 		if (print_to_console && console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
+			Vector3f drift_err = att.get_drift_error();
 			console_update_time.time_stamp();
 			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));
+			printf("Drift Err : %5.3f %5.3f %5.3f\n", RAD2DEG(drift_err.at(0)), RAD2DEG(drift_err.at(1)), RAD2DEG(drift_err.at(2)));
 			printf("Gyro Raw  : %5.3f %5.3f %5.3f\n", drone_state->gyro_raw_.at(0), drone_state->gyro_raw_.at(1), drone_state->gyro_raw_.at(2));
 			printf("Accel     : %5.3f %5.3f %5.3f\n", drone_state->accel_.at(0), drone_state->accel_.at(1), drone_state->accel_.at(2));
 			printf("Mag       : %5.3f %5.3f %5.3f\n", drone_state->mag_.at(0), drone_state->mag_.at(1), drone_state->mag_.at(2));
