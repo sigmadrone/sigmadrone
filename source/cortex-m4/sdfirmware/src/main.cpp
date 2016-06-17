@@ -209,16 +209,17 @@ static Vector3f ReadAccelerometer(
 		LSM303D& acc,
 		AccelLowPassPreFilter3d* lpf_filt)
 {
-	static uint64_t totalAccelSamples = 0;
 	Vector3f acc_filtered;
 	uint8_t count = acc.GetFifoSourceFSS();
-	for (uint8_t i = 0; i < count; i++) {
-		LSM303D::AxesAcc_t axes = {0,0,0};
-		acc.GetAcc(&axes);
-		acc_filtered += lpf_filt->do_filter(Vector3d(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
+	if (count > 0) {
+		for (uint8_t i = 0; i < count; i++) {
+			LSM303D::AxesAcc_t axes = {0,0,0};
+			acc.GetAcc(&axes);
+			acc_filtered += lpf_filt->do_filter(Vector3d(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
+		}
+		acc_filtered /= count;
 	}
-	totalAccelSamples += count;
-	return acc_filtered / count;
+	return acc_filtered;
 }
 
 static Vector3f ReadGyro(
@@ -233,8 +234,9 @@ static Vector3f ReadGyro(
 			gyro.GetAngRateDPS(&axes);
 			gyro_data += Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z);
 		}
+		gyro_data /= gyro_samples;
 	}
-	return gyro_data / gyro_samples;
+	return gyro_data;
 }
 
 static Vector3f CalculateGyroBias(

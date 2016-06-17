@@ -72,6 +72,9 @@ static const PinName GPS_POWER_CTRL_PIN = PG_14;
 static const PinName I2C1_SCL_PIN = PB_8;
 static const PinName I2C1_SDA_PIN = PB_9;
 
+static const PinName I2C2_SCL_PIN = PB_10;
+static const PinName I2C2_SDA_PIN = PB_11;
+
 static const PinName  GPS_USART3_TX_PIN = PC_10;
 static const PinName  GPS_USART3_RX_PIN = PC_11;
 
@@ -117,5 +120,7 @@ static const PinName BATTERY_MONITOR_PIN = PC_2;
 static const PinName BATTERY_MONITOR_ONOFF_PIN = PH_9;
 #define BATTERY_MONITOR_ADC ADC1
 #define BATTERY_MONITOR_ADC_CHANNEL ADC_CHANNEL_12
+
+static const PinName PCA9685_OUTPUT_ENABLE_PIN = PB_12;
 
 #endif /* COLIBRI_HW_MAP */
