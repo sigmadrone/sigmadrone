@@ -284,7 +284,7 @@ void main_task(void *pvParameters)
 	AccelLowPassPreFilter3d* accel_lpf = new AccelLowPassPreFilter3d();
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
 	Vector3f gyro_bias;
-	static bool print_to_console = true;
+	static bool print_to_console = false;
 
 	static const Matrix3f gyro_align(
 	        0,-1, 0,
@@ -409,7 +409,7 @@ void main_task(void *pvParameters)
 			att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
 
 		drone_state->attitude_ = att.get_attitude();
-		drone_state->gyro_drift_error_ = att.get_drift_error();
+		drone_state->gyro_drift_error_ = RAD2DEG(att.get_drift_error());
 
 		flight_ctl.update_state(*drone_state);
 		flight_ctl.send_throttle_to_motors();
