@@ -25,7 +25,7 @@ RpcClient.prototype.rpcCall = function(url, method, params, successCallback, fai
   }).fail(function(resp, error_type, error_text) {
     ++self.rpcFailureCount;
     self.rpcCallInProggress = false;
-    console.log("Failed to execute " + method + "; err: " + error_type + "; detail: " + error_text.message);
+    console.log("Failed to execute " + method + "; err: " + error_type + "; details: " + error_text.message);
     if (failCallback != null) {
       failCallback(method);
     }

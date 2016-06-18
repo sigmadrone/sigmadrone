@@ -179,6 +179,22 @@ PidZFormView.prototype.onRedrawData = function(droneState) {
   return true;
 }
 
+function PidGyroFormView(formId, submitButtonId, cancelButtonId, statusId) {
+  FormView.call(this, formId, submitButtonId, cancelButtonId, statusId);
+}
+PidGyroFormView.prototype = Object.create(FormView.prototype);
+PidGyroFormView.prototype.constructor = PidGyroFormView;
+
+PidGyroFormView.prototype.onRedrawData = function(droneState) {
+  if (!FormView.prototype.onRedrawData.call(this,droneState)) {
+    return false;
+  }
+  $(this.formId)[0].elements['kp-gyro'].value = droneState.gyro_drift_kp;
+  $(this.formId)[0].elements['ki-gyro'].value = droneState.gyro_drift_ki;
+  $(this.formId)[0].elements['kd-gyro'].value = droneState.gyro_drift_kd;
+  return true;
+}
+
 function FlightCtlFormView(formId, submitButtonId, cancelButtonId, statusId) {
   FormView.call(this, formId, submitButtonId, cancelButtonId, statusId);
 }
