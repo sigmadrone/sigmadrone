@@ -26,7 +26,7 @@ attitudetracker::attitudetracker(double accelerometer_correction_period, Vector3
 	: accelerometer_correction_speed_(accelerometer_correction_period)
 	, earth_g_(earth_g)
 	, attitude_(QuaternionF::identity)
-	, drift_pid_(0, 0.1, 0)
+	, drift_pid_(0, 0.01, 0)
 {
 }
 
@@ -100,17 +100,10 @@ void attitudetracker::track_accelerometer(const Vector3f& g, double dtime)
 	Vector3f w = QuaternionF::angularVelocity(QuaternionF::identity, q, q.angle() / DEG2RAD(accelerometer_correction_speed_));
 	if (w.length() == 0.0)
 		return;
+//	std::cout << "Drift: " << w.transpose() << ", Error drift: " << drift_err_.transpose() << std::endl;
+	drift_err_ = drift_pid_.get_pid(w, dtime, 0.00001);
 	QuaternionF deltaq = QuaternionF::fromAngularVelocity(-w, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
-}
-
-void attitudetracker::track_gyro_drift(const Vector3f& acc, const Vector3f& gyr, double dtime, float pitch, float roll, float yaw)
-{
-	Vector3f g_estimated = get_world_attitude().rotate(earth_g_);
-	QuaternionF q = QuaternionF::fromVectors(g_estimated, acc);
-	Vector3f drift = QuaternionF::angularVelocity(QuaternionF::identity, q, 1.0f);
-	drift[2] = gyr[2] - drift_err_[2];
-	drift_err_ = drift_pid_.get_pid(drift, dtime, 0.00001);
 }
 
 void attitudetracker::track_magnetometer(const Vector3f& m, double dtime)

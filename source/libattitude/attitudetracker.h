@@ -37,7 +37,6 @@ public:
 	void track_accelerometer(const Vector3f& g, double dtime);
 	void track_magnetometer(const Vector3f& m, double dtime);
 	void accelerometer_correction_speed(double accelerometer_correction_speed);
-	void track_gyro_drift(const Vector3f& a, const Vector3f& w, double dtime, float pitch = 0.0f, float roll = 0.0f, float yaw = 0.0f);
 	Vector3f get_drift_error() const;
 	/*
 	 * Return our attitude in the world coordinate system

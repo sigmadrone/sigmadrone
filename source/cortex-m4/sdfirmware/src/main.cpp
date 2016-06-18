@@ -382,9 +382,6 @@ void main_task(void *pvParameters)
 
 		att.accelerometer_correction_speed(drone_state->accelerometer_correction_speed_);
 
-		att.track_gyro_drift(drone_state->accel_, DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float(),
-							 drone_state->pitch_, drone_state->roll_, drone_state->yaw_);
-
 		drone_state->gyro_raw_ = gyro_align * ReadGyro(gyro, gyr_wtm);
 		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
 			drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_bias) * drone_state->gyro_factor_;
