@@ -64,6 +64,11 @@ void attitudetracker::accelerometer_correction_speed(double accelerometer_correc
 	accelerometer_correction_speed_ = accelerometer_correction_speed;
 }
 
+void attitudetracker::gyro_drift_pid(float kp, float ki, float kd)
+{
+	drift_pid_.set_kp_ki_kd(kp, ki, kd);
+}
+
 void attitudetracker::track_gyroscope(const Vector3f& omega, double dtime)
 {
 	QuaternionF deltaq = QuaternionF::fromAngularVelocity(omega - drift_err_, dtime);

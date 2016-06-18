@@ -381,6 +381,7 @@ void main_task(void *pvParameters)
 		sample_dt.time_stamp();
 
 		att.accelerometer_correction_speed(drone_state->accelerometer_correction_speed_);
+		att.gyro_drift_pid(drone_state->gyro_drift_kp_, drone_state->gyro_drift_ki_, drone_state->gyro_drift_kd_);
 
 		drone_state->gyro_raw_ = gyro_align * ReadGyro(gyro, gyr_wtm);
 		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
@@ -408,6 +409,7 @@ void main_task(void *pvParameters)
 			att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
 
 		drone_state->attitude_ = att.get_attitude();
+		drone_state->gyro_drift_error_ = att.get_drift_error();
 
 		flight_ctl.update_state(*drone_state);
 		flight_ctl.send_throttle_to_motors();

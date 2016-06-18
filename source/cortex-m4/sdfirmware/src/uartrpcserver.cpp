@@ -59,6 +59,9 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Da
 	add("sd_set_mag_tracking", &UartRpcServer::rpc_set_mag_tracking);
 	add("sd_set_acc_tracking", &UartRpcServer::rpc_set_acc_tracking);
 	add("sd_set_pilot_type", &UartRpcServer::rpc_set_pilot_type);
+	add("sd_gyro_drift_kp", &UartRpcServer::rpc_gyro_drift_kp);
+	add("sd_gyro_drift_ki", &UartRpcServer::rpc_gyro_drift_ki);
+	add("sd_gyro_drift_kd", &UartRpcServer::rpc_gyro_drift_kd);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -744,6 +747,77 @@ rexjson::value UartRpcServer::rpc_pid_filter_freq(UART* , rexjson::array& params
 	return dronestate_.pid_filter_freq_;
 }
 
+rexjson::value UartRpcServer::rpc_gyro_drift_kp(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_gyro_drift_kp\n"
+	            "\nGet/Set Kp for the gyro-drift error PID controller"
+				"\nIf the new coefficient is not specified, the current Kp will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kp          (real, optional) The Kp of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.gyro_drift_kp_ = params[0].get_real();
+	}
+	return dronestate_.gyro_drift_kp_;
+}
+
+rexjson::value UartRpcServer::rpc_gyro_drift_ki(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_gyro_drift_ki\n"
+	            "\nGet/Set Ki for the gyro-drift error PID controller"
+				"\nIf the new coefficient is not specified, the current Ki will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Ki          (real, optional) The Ki of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.gyro_drift_ki_ = params[0].get_real();
+	}
+	return dronestate_.gyro_drift_ki_;
+}
+
+rexjson::value UartRpcServer::rpc_gyro_drift_kd(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_gyro_drift_kd\n"
+	            "\nGet/Set Kd for the gyro-drift error PID controller"
+				"\nIf the new coefficient is not specified, the current Kd will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kd          (real, optional) The Kd of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.gyro_drift_kd_ = params[0].get_real();
+	}
+	return dronestate_.gyro_drift_kd_;
+}
 
 void UartRpcServer::jsonrpc_request_handler(UART* uart)
 {

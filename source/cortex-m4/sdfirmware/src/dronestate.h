@@ -57,25 +57,17 @@ struct DroneState {
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
-#ifdef USE_TRIPILOT
-		, kp_(0.25)
-		, ki_(0.035)
-		, kd_(0.045)
-		, yaw_kp_(0.20)
-		, yaw_ki_(0.0)
-		, yaw_kd_(0.07)
-		, accelerometer_correction_speed_(5.0)
-	    , pilot_type_(PILOT_TYPE_PID_NEW)
-#else
 		, kp_(0.24)
 		, ki_(0.6)
 		, kd_(0.06)
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-		, accelerometer_correction_speed_(5.0)
+	    , gyro_drift_kp_(0.0)
+	    , gyro_drift_ki_(0.01)
+	    , gyro_drift_kd_(0.0)
+	    , accelerometer_correction_speed_(5.0)
 	    , pilot_type_(PILOT_TYPE_PID_LEGACY)
-#endif
 		, gyro_factor_(1.25)
 		, yaw_(0.0)
 		, pitch_(0.0)
@@ -92,13 +84,19 @@ struct DroneState {
 		, track_magnetometer_(true)
 		, track_accelerometer_(true)
 	    , iteration_(0)
-	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING) { }
+	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
+	{
+#ifdef USE_TRIPILOT
+		SetPilotType(PILOT_TYPE_PID_NEW);
+#endif
+	}
 
 	rexjson::value to_json()
 	{
 		rexjson::object ret;
 		ret["gyro"] = matrix_to_json_value(gyro_);
 		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
+		ret["gyro_drift"] = matrix_to_json_value(gyro_drift_error_);
 		ret["accel"] = matrix_to_json_value(accel_);
 		ret["mag"] = matrix_to_json_value(mag_);
 		ret["altitude_meters"] = altitude_.meters();
@@ -143,6 +141,9 @@ struct DroneState {
 		ret["yaw_kp"] = yaw_kp_;
 		ret["yaw_ki"] = yaw_ki_;
 		ret["yaw_kd"] = yaw_kd_;
+		ret["gyro_drift_kp"] = gyro_drift_kp_;
+		ret["gyro_drift_ki"] = gyro_drift_ki_;
+		ret["gyro_drift_kd"] = gyro_drift_kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
 		ret["gyro_factor"] = gyro_factor_;
 		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
@@ -236,6 +237,7 @@ struct DroneState {
 	Vector3f gyro_;
 	Vector3f accel_;
 	Vector3f mag_;
+	Vector3f gyro_drift_error_;
 	Altitude altitude_;
 	float pressure_hpa_;
 	float temperature_;
@@ -262,6 +264,9 @@ struct DroneState {
 	float altitude_kp_;
 	float altitude_ki_;
 	float altitude_kd_;
+	float gyro_drift_kp_;
+	float gyro_drift_ki_;
+	float gyro_drift_kd_;
 	Vector3f accelerometer_adjustment_;
 	float accelerometer_correction_speed_;
 	PilotType pilot_type_;
