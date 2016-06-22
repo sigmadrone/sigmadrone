@@ -382,6 +382,7 @@ void main_task(void *pvParameters)
 
 		att.accelerometer_correction_speed(drone_state->accelerometer_correction_speed_);
 		att.gyro_drift_pid(drone_state->gyro_drift_kp_, drone_state->gyro_drift_ki_, drone_state->gyro_drift_kd_);
+		att.gyro_drift_leak_rate(drone_state->gyro_drift_leak_rate_);
 
 		drone_state->gyro_raw_ = gyro_align * ReadGyro(gyro, gyr_wtm);
 		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {

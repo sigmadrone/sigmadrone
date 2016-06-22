@@ -27,6 +27,7 @@ attitudetracker::attitudetracker(double accelerometer_correction_period, Vector3
 	, earth_g_(earth_g)
 	, attitude_(QuaternionF::identity)
 	, drift_pid_(0, 0.01, 0)
+    , drift_leak_rate_(0.00001)
 {
 }
 
@@ -69,6 +70,11 @@ void attitudetracker::gyro_drift_pid(float kp, float ki, float kd)
 	drift_pid_.set_kp_ki_kd(kp, ki, kd);
 }
 
+void attitudetracker::gyro_drift_leak_rate(float leak_rate)
+{
+	drift_leak_rate_ = leak_rate;
+}
+
 void attitudetracker::track_gyroscope(const Vector3f& omega, double dtime)
 {
 	QuaternionF deltaq = QuaternionF::fromAngularVelocity(omega - drift_err_, dtime);
@@ -106,7 +112,7 @@ void attitudetracker::track_accelerometer(const Vector3f& g, double dtime)
 	if (w.length() == 0.0)
 		return;
 //	std::cout << "Drift: " << w.transpose() << ", Error drift: " << drift_err_.transpose() << std::endl;
-	drift_err_ = drift_pid_.get_pid(w, dtime, 0.00001);
+	drift_err_ = drift_pid_.get_pid(w, dtime, drift_leak_rate_);
 	QuaternionF deltaq = QuaternionF::fromAngularVelocity(-w, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
 }

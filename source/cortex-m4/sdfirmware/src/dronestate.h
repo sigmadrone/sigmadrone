@@ -66,6 +66,7 @@ struct DroneState {
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
+	    , gyro_drift_leak_rate_(0.00001)
 	    , accelerometer_correction_speed_(5.0)
 	    , pilot_type_(PILOT_TYPE_PID_LEGACY)
 		, gyro_factor_(1.25)
@@ -267,6 +268,7 @@ struct DroneState {
 	float gyro_drift_kp_;
 	float gyro_drift_ki_;
 	float gyro_drift_kd_;
+	float gyro_drift_leak_rate_;
 	Vector3f accelerometer_adjustment_;
 	float accelerometer_correction_speed_;
 	PilotType pilot_type_;

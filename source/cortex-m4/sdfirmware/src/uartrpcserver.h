@@ -61,6 +61,7 @@ protected:
 	rexjson::value rpc_gyro_drift_kp(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_gyro_drift_ki(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_gyro_drift_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_gyro_drift_leak_rate(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 	rexjson::value rpc_yaw_bias(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_pitch_bias(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);

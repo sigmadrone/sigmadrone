@@ -38,6 +38,7 @@ public:
 	void track_magnetometer(const Vector3f& m, double dtime);
 	void accelerometer_correction_speed(double accelerometer_correction_speed);
 	void gyro_drift_pid(float kp, float ki, float kd);
+	void gyro_drift_leak_rate(float leak_rate);
 
 	Vector3f get_drift_error() const;
 	/*
@@ -72,6 +73,7 @@ protected:
 
 	PidController<Vector3f> drift_pid_;
 	Vector3f drift_err_;
+	float drift_leak_rate_;
 };
 
 #endif
