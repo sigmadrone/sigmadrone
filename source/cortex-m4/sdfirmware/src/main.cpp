@@ -56,6 +56,7 @@
 #include "battery.h"
 #include "gpsreader.h"
 #include "iirfilt.h"
+#include "l3gd20reader.h"
 
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
@@ -222,39 +223,6 @@ static Vector3f ReadAccelerometer(
 	return acc_filtered;
 }
 
-static Vector3f ReadGyro(
-		L3GD20& gyro,
-		uint32_t watermark)
-{
-	Vector3f gyro_data;
-	uint8_t gyro_samples = gyro.GetFifoSourceReg() & 0x1F;
-	if (gyro_samples >= watermark) {
-		L3GD20::AxesDPS_t axes;
-		for (size_t i = 0; i < gyro_samples; ++i) {
-			gyro.GetAngRateDPS(&axes);
-			gyro_data += Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z);
-		}
-		gyro_data /= gyro_samples;
-	}
-	return gyro_data;
-}
-
-static Vector3f CalculateGyroBias(
-		L3GD20& gyro,
-		uint32_t num_samples)
-{
-	Vector3f gyro_bias;
-	L3GD20::AxesDPS_t gyro_axes;
-	gyro.GetFifoAngRateDPS(&gyro_axes); // Drain the fifo
-	for (uint32_t i = 0; i < num_samples; i++) {
-		uint32_t msg;
-		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
-		}
-		gyro_bias += ReadGyro(gyro, 1);
-	}
-	return gyro_bias / (float)num_samples;
-}
-
 void main_task(void *pvParameters)
 {
 	(void) pvParameters;
@@ -283,7 +251,6 @@ void main_task(void *pvParameters)
 	UartRpcServer rpcserver(*drone_state, configdata, datastream);
 	AccelLowPassPreFilter3d* accel_lpf = new AccelLowPassPreFilter3d();
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
-	Vector3f gyro_bias;
 	static bool print_to_console = false;
 
 	static const Matrix3f gyro_align(
@@ -295,6 +262,9 @@ void main_task(void *pvParameters)
 	        0,-1, 0,
            -1, 0, 0,
 	        0, 0,-1);
+
+	L3GD20Reader gyro_reader(gyro, gyro_align);
+
 
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
@@ -347,9 +317,11 @@ void main_task(void *pvParameters)
 
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	printf("Calibrating...\n");
+	printf("Calibrating...");
 
-	gyro_bias = gyro_align * CalculateGyroBias(gyro, 800);
+	gyro_reader.calculate_static_bias(hGyroQueue, 800);
+
+	printf(" Done!\n");
 
 	flight_ctl.start_receiver();
 
@@ -369,12 +341,9 @@ void main_task(void *pvParameters)
 
 	// Infinite loop
 	while (1) {
-		uint32_t msg;
-
 		drone_state->iteration_++;
 
-		if( xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * 50 ) ) {
-		}
+		gyro_reader.wait_for_data(hGyroQueue);
 
 		ctx_switch_time = isr_ts.elapsed();
 		drone_state->dt_ = sample_dt.elapsed();
@@ -384,9 +353,9 @@ void main_task(void *pvParameters)
 		att.gyro_drift_pid(drone_state->gyro_drift_kp_, drone_state->gyro_drift_ki_, drone_state->gyro_drift_kd_);
 		att.gyro_drift_leak_rate(drone_state->gyro_drift_leak_rate_);
 
-		drone_state->gyro_raw_ = gyro_align * ReadGyro(gyro, gyr_wtm);
+		drone_state->gyro_raw_ = gyro_reader.read_data(gyr_wtm);
 		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
-			drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_bias) * drone_state->gyro_factor_;
+			drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_reader.bias()) * drone_state->gyro_factor_;
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
 
