@@ -65,6 +65,14 @@ static const PinName PWM_IN_PIN_5 = PA_2;
 static const PinName GYRO_INT2_PIN = PA_3;
 static const PinName GYRO_CS_PIN = PC_1;
 
+static const PinName EXT_GPIO_1_PIN = PH_6;
+static const PinName EXT_GPIO_2_PIN = PH_12;
+static const PinName EXT_GPIO_3_PIN = PH_13;
+static const PinName EXT_GPIO_4_PIN = PH_14;
+static const PinName EXT_GPIO_5_PIN = PH_15;
+static const PinName EXT_GPIO_6_PIN = PF_6;
+static const PinName EXT_GYRO_CS_PIN = EXT_GPIO_1_PIN;
+
 static const PinName MOTOR_POWER_CTRL_PIN = PB_0;
 
 static const PinName GPS_POWER_CTRL_PIN = PG_14;
@@ -103,6 +111,14 @@ static const PinName SPI5_MOSI_PIN = PF_9;
 #define MEMS_SPI_SCK_PIN  SPI5_SCK_PIN
 #define MEMS_SPI_MISO_PIN SPI5_MISO_PIN
 #define MEMS_SPI_MOSI_PIN SPI5_MOSI_PIN
+
+static const PinName SPI2_SCK_PIN  = PI_1;
+static const PinName SPI2_MISO_PIN = PI_2;
+static const PinName SPI2_MOSI_PIN = PI_3;
+
+#define EXT_MEMS_SPI_SCK_PIN  SPI2_SCK_PIN
+#define EXT_MEMS_SPI_MISO_PIN SPI2_MISO_PIN
+#define EXT_MEMS_SPI_MOSI_PIN SPI2_MOSI_PIN
 
 static const PinName USART1_TX_PIN = PB_6;
 static const PinName USART1_RX_PIN = PB_7;

@@ -75,6 +75,8 @@ protected:
 	rexjson::value rpc_set_mag_tracking(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_set_acc_tracking(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_set_pilot_type(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_enable_external_gyro(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_external_gyro_align(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 protected:
 	std::string cached_request_;

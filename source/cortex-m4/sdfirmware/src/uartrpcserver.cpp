@@ -63,6 +63,8 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Da
 	add("sd_gyro_drift_ki", &UartRpcServer::rpc_gyro_drift_ki);
 	add("sd_gyro_drift_kd", &UartRpcServer::rpc_gyro_drift_kd);
 	add("sd_gyro_drift_leak_rate", &UartRpcServer::rpc_gyro_drift_leak_rate);
+	add("sd_enable_external_gyro", &UartRpcServer::rpc_enable_external_gyro);
+	add("sd_external_gyro_align", &UartRpcServer::rpc_external_gyro_align);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -842,6 +844,57 @@ rexjson::value UartRpcServer::rpc_gyro_drift_leak_rate(UART* , rexjson::array& p
 		dronestate_.gyro_drift_leak_rate_ = params[0].get_real();
 	}
 	return dronestate_.gyro_drift_leak_rate_;
+}
+
+rexjson::value UartRpcServer::rpc_enable_external_gyro(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_bool_type, rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_enable_external_gyro\n"
+	            "\nEnable/disable the external gyro sensor for attitude tracking."
+				"\nIf the external gyro is enabled, then the internal one is disabled and vice versa."
+				"\nIf no parameter is passed, then the current external gyro usage value is returned."
+				"\n"
+				"Arguments:\n"
+				"1. enable_external_gyro   (bool, optional) True - enable, false - disable external gyro.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.external_gyro_enabled__ = params[0].get_bool();
+	}
+	return dronestate_.external_gyro_enabled__;
+}
+
+rexjson::value UartRpcServer::rpc_external_gyro_align(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_array_type, rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_external_gyro_align\n"
+	            "\nSet/get the axes alignment matrix for the external gyro. The alignment 3x3 matrix is"
+				"\nmultiplied by the 3x1 vector read from the sensor and the resultant 3x1 vector is"
+				"\nused for attitude tracking."
+				"\nIf no parameter is passed, then the current alignment matrix is returned."
+				"\n"
+				"Arguments:\n"
+				"1. alignment_matrix   (float[9], optional) The matrix used for gyro axes alignment.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.external_gyro_align_ = matrix_from_json_value<float, 3, 3>(params[0]);
+	}
+	return matrix_to_json_value(dronestate_.external_gyro_align_);
 }
 
 void UartRpcServer::jsonrpc_request_handler(UART* uart)
