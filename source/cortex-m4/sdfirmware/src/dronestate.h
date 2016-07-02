@@ -32,18 +32,6 @@
 
 static const Altitude DEFAULT_FLIGHT_CEILING(Altitude::from_meters(50));
 
-/*
- *
- * PID coefficients for big 9" props on DJI F450
- * Kp = 0.125
- * Ki = 0
- * Kd = 0.2 -- 0.3
- *
- * Kp_Yaw = 0.11
- * Ki_Yaw = 0
- * Kd_Yaw = 0.45
- *
- */
 struct DroneState {
 	DroneState()
 		: altitude_(INVALID_ALTITUDE)
@@ -84,6 +72,10 @@ struct DroneState {
 		, enforce_flight_ceiling_(false)
 		, track_magnetometer_(true)
 		, track_accelerometer_(true)
+	    , external_gyro_enabled__(true)
+	    , external_gyro_align_(0, 1, 0,
+	    		              -1, 0, 0,
+				               0, 0, 1)
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	{
@@ -104,6 +96,7 @@ struct DroneState {
 		ret["pressure_hpa"] = pressure_hpa_;
 		ret["temperature"] = temperature_;
 		ret["battery_voltage"] = battery_voltage_.volts();
+		ret["battery_percentage"] = battery_percentage_;
 		ret["gps_latitude"] = latitude_;
 		ret["gps_longitude"] = longitude_;
 		ret["gps_speed_kmph"] = speed_over_ground_;
@@ -128,13 +121,16 @@ struct DroneState {
 			}
 			ret["alarm_time_ms"] = static_cast<int>(alarm_.when().milliseconds());
 		}
+		if (!most_critical_alarm_.is_none()) {
+			ret["crit_alarm"] = most_critical_alarm_.to_string();
+			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
+		}
 		return ret;
 	}
 	rexjson::value to_json_ex()
 	{
 		rexjson::object ret = to_json().get_obj();
 		ret["accel_adjustment"] = matrix_to_json_value(accelerometer_adjustment_);
-		ret["battery_percentage"] = battery_percentage_;
 		ret["battery_type"] = battery_type_;
 		ret["kp"] = kp_;
 		ret["ki"] = ki_;
@@ -153,12 +149,10 @@ struct DroneState {
 		ret["roll_bias"] = roll_bias_;
 		ret["pid_filter_freq"] = pid_filter_freq_;
 		ret["track_magnetometer"] = track_magnetometer_;
-		if (!most_critical_alarm_.is_none()) {
-			ret["crit_alarm"] = most_critical_alarm_.to_string();
-			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
-		}
 		ret["flight_mode"] = flight_mode_;
 		ret["pilot_type"] = std::string(PilotTypeAsStr(pilot_type_));
+		ret["use_ext_gyro"] = external_gyro_enabled__;
+		ret["ext_gyro_align"] = external_gyro_align_;
 		return ret;
 	}
 
@@ -179,6 +173,8 @@ struct DroneState {
 		ret["pitch_bias"] = pitch_bias_;
 		ret["roll_bias"] = roll_bias_;
 		ret["pid_filter_freq"] = pid_filter_freq_;
+		ret["use_ext_gyro"] = external_gyro_enabled__;
+		ret["ext_gyro_align"] = matrix_to_json_value(external_gyro_align_);
 		return ret;
 	}
 
@@ -203,6 +199,10 @@ struct DroneState {
 				accelerometer_correction_speed_ = bootconfig["accelerometer_correction_period"].get_real();
 			} catch (std::exception& e) {}
 			try { pid_filter_freq_ = bootconfig["pid_filter_freq"].get_real(); } catch (std::exception& e) {}
+			try { external_gyro_enabled__ = bootconfig["use_ext_gyro"].get_real(); } catch (std::exception& e) {}
+			try {
+				external_gyro_align_ = matrix_from_json_value<float, 3, 3>(bootconfig["ext_gyro_align"]);
+			} catch (std::exception& e) {}
 		} catch (std::exception& e) {
 		}
 	}
@@ -287,6 +287,8 @@ struct DroneState {
 	bool enforce_flight_ceiling_;
 	bool track_magnetometer_;
 	bool track_accelerometer_;
+	bool external_gyro_enabled__;
+	Matrix3f external_gyro_align_;
 
 	/*
 	 * Time it took to read sensors

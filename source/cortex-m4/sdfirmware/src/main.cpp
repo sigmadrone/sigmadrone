@@ -237,7 +237,17 @@ void main_task(void *pvParameters)
 				{GYRO_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
 				{ACCEL_CS_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
 			});
+
+	SPIMaster spi2(SPI2, SPI_BAUDRATEPRESCALER_16, 0x2000, {
+					{EXT_MEMS_SPI_SCK_PIN,  GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI2},
+					{EXT_MEMS_SPI_MISO_PIN, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI2},
+					{EXT_MEMS_SPI_MOSI_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL,   GPIO_SPEED_MEDIUM, GPIO_AF5_SPI2},
+				}, {
+					{EXT_GYRO_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
+				});
+
 	L3GD20 gyro(spi5, 0);
+	L3GD20 ext_gyro(spi2, 0);
 	LSM303D accel(spi5, 1);
 	uint8_t gyr_wtm = 3;
 	uint8_t acc_wtm = 17;
@@ -251,6 +261,7 @@ void main_task(void *pvParameters)
 	UartRpcServer rpcserver(*drone_state, configdata, datastream);
 	AccelLowPassPreFilter3d* accel_lpf = new AccelLowPassPreFilter3d();
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
+	bool ext_gyro_present = false;
 	static bool print_to_console = false;
 
 	static const Matrix3f gyro_align(
@@ -258,12 +269,18 @@ void main_task(void *pvParameters)
            -1, 0, 0,
 		    0, 0,-1);
 
+	static const Matrix3f ext_gyro_align(
+		        0, 1, 0,
+	           -1, 0, 0,
+			    0, 0, 1);
+
 	static const Matrix3f acc_align(
 	        0,-1, 0,
            -1, 0, 0,
 	        0, 0,-1);
 
 	L3GD20Reader gyro_reader(gyro, gyro_align);
+	L3GD20Reader ext_gyro_reader(ext_gyro, ext_gyro_align);
 
 
 
@@ -302,6 +319,24 @@ void main_task(void *pvParameters)
 	gyro.SetHPFCutOFF(L3GD20::HPFCF_0);
 	gyro.SetODR(L3GD20::ODR_760Hz_BW_30);
 
+	try {
+		ext_gyro.SetMode(L3GD20::NORMAL);
+		ext_gyro.SetFullScale(L3GD20::FULLSCALE_500);
+		ext_gyro.SetBDU(L3GD20::MEMS_ENABLE);
+		ext_gyro.SetWaterMark(gyr_wtm);
+		ext_gyro.FIFOModeEnable(L3GD20::FIFO_STREAM_MODE);
+		//ext_gyro.SetInt2Pin(0);
+		//ext_gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
+		ext_gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
+		ext_gyro.HPFEnable(L3GD20::MEMS_ENABLE);
+		ext_gyro.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
+		ext_gyro.SetHPFCutOFF(L3GD20::HPFCF_0);
+		ext_gyro.SetODR(L3GD20::ODR_760Hz_BW_30);
+		ext_gyro_present = true;
+	} catch(...) {
+		ext_gyro_present = false;
+	}
+
 	accel.SetHPFMode(LSM303D::HPM_NORMAL_MODE_RES);
 	accel.SetFilterDataSel(LSM303D::MEMS_DISABLE);
 	accel.SetODR(LSM303D::ODR_800Hz);
@@ -320,6 +355,10 @@ void main_task(void *pvParameters)
 	printf("Calibrating...");
 
 	gyro_reader.calculate_static_bias(hGyroQueue, 800);
+	if (ext_gyro_present) {
+		//todo: need separate Queue
+		ext_gyro_reader.calculate_static_bias(hGyroQueue, 100);
+	}
 
 	printf(" Done!\n");
 
@@ -340,6 +379,8 @@ void main_task(void *pvParameters)
 	sample_dt.time_stamp();
 
 	// Infinite loop
+	Vector3f ext_gyro_;
+	Vector3f ext_gyro_raw_;
 	while (1) {
 		drone_state->iteration_++;
 
@@ -356,7 +397,15 @@ void main_task(void *pvParameters)
 		drone_state->gyro_raw_ = gyro_reader.read_data(gyr_wtm);
 		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
 			drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_reader.bias()) * drone_state->gyro_factor_;
-			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
+			//att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
+		}
+
+		ext_gyro_raw_ = ext_gyro_reader.read_data(gyr_wtm);
+		if (ext_gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
+			drone_state->gyro_raw_ = ext_gyro_raw_;
+			ext_gyro_ = (ext_gyro_raw_ - ext_gyro_reader.bias()) * drone_state->gyro_factor_;
+			drone_state->gyro_ = ext_gyro_;
+			att.track_gyroscope(DEG2RAD(ext_gyro_), drone_state->dt_.seconds_float());
 		}
 
 		drone_state->accel_raw_ = acc_align * ReadAccelerometer(accel, accel_lpf);
@@ -399,8 +448,10 @@ void main_task(void *pvParameters)
 			Vector3f drift_err = att.get_drift_error();
 			console_update_time.time_stamp();
 			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));
+			printf("EXTGyro   : %5.3f %5.3f %5.3f\n", ext_gyro_.at(0), ext_gyro_.at(1), ext_gyro_.at(2));
 			printf("Drift Err : %5.3f %5.3f %5.3f\n", RAD2DEG(drift_err.at(0)), RAD2DEG(drift_err.at(1)), RAD2DEG(drift_err.at(2)));
 			printf("Gyro Raw  : %5.3f %5.3f %5.3f\n", drone_state->gyro_raw_.at(0), drone_state->gyro_raw_.at(1), drone_state->gyro_raw_.at(2));
+			printf("EXTGyroRAW: %5.3f %5.3f %5.3f\n", ext_gyro_raw_.at(0), ext_gyro_raw_.at(1), ext_gyro_raw_.at(2));
 			printf("Accel     : %5.3f %5.3f %5.3f\n", drone_state->accel_.at(0), drone_state->accel_.at(1), drone_state->accel_.at(2));
 			printf("Mag       : %5.3f %5.3f %5.3f\n", drone_state->mag_.at(0), drone_state->mag_.at(1), drone_state->mag_.at(2));
 			printf("dT        : %lu uSec\n", (uint32_t)drone_state->dt_.microseconds());
