@@ -71,7 +71,6 @@ DigitalOut led5(USER_LED5_PIN);
 DigitalOut sesnsor_ctrl(SENSOR_CTRL_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0);
 DigitalOut pwr_on(PWR_ON_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
 
-DigitalIn gyro_int2(GYRO_INT2_PIN, DigitalIn::PullNone, DigitalIn::InterruptRising);
 DigitalIn user_sw1(USER_SWITCH_1_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw2(USER_SWITCH_2_PIN, DigitalIn::PullNone, DigitalIn::InterruptFalling);
 DigitalIn user_sw3(USER_SWITCH_3_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
@@ -82,8 +81,6 @@ TaskHandle_t main_task_handle = 0;
 TaskHandle_t bmp180_task_handle = 0;
 TaskHandle_t battery_task_handle = 0;
 TaskHandle_t uart_task_handle = 0;
-QueueHandle_t hGyroQueue;
-TimeStamp isr_ts;
 DroneState* drone_state = 0;
 
 FlashMemory configdata(&flashregion, sizeof(flashregion), FLASH_SECTOR_23, 1);
@@ -105,17 +102,6 @@ UART uart2({
 		460800,
 		250
 );
-
-void gyro_isr()
-{
-	if (gyro_int2) {
-		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-		uint32_t msg = 1;
-		isr_ts.time_stamp();
-		xQueueSendFromISR(hGyroQueue, &msg, &xHigherPriorityTaskWoken);
-		portEND_SWITCHING_ISR(true);
-	}
-}
 
 void dronestate_boot_config(DroneState& state)
 {
@@ -249,13 +235,12 @@ void main_task(void *pvParameters)
 	L3GD20 gyro(spi5, 0);
 	L3GD20 ext_gyro(spi2, 0);
 	LSM303D accel(spi5, 1);
-	uint8_t gyr_wtm = 3;
+	uint8_t gyro_wtm = 3;
 	uint8_t acc_wtm = 17;
 	LSM303D::AxesMag_t mag_axes;
 	attitudetracker att;
 	TimeStamp console_update_time;
 	TimeStamp sample_dt;
-	TimeSpan ctx_switch_time;
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
 	UartRpcServer rpcserver(*drone_state, configdata, datastream);
@@ -264,25 +249,25 @@ void main_task(void *pvParameters)
 	bool ext_gyro_present = false;
 	static bool print_to_console = false;
 
+
+	/*
+	 * Apply the boot configuration from flash memory.
+	 */
+	dronestate_boot_config(*drone_state);
+
 	static const Matrix3f gyro_align(
 	        0,-1, 0,
            -1, 0, 0,
 		    0, 0,-1);
-
-	static const Matrix3f ext_gyro_align(
-		        0, 1, 0,
-	           -1, 0, 0,
-			    0, 0, 1);
 
 	static const Matrix3f acc_align(
 	        0,-1, 0,
            -1, 0, 0,
 	        0, 0,-1);
 
-	L3GD20Reader gyro_reader(gyro, gyro_align);
-	L3GD20Reader ext_gyro_reader(ext_gyro, ext_gyro_align);
 
-
+	L3GD20Reader gyro_reader(gyro, GYRO_INT2_PIN, gyro_align);
+	L3GD20Reader ext_gyro_reader(ext_gyro, EXT_GYRO_INT2_PIN, drone_state->external_gyro_align_);
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
@@ -299,39 +284,16 @@ void main_task(void *pvParameters)
 	printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %d\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	gyro_int2.callback(gyro_isr);
+	vTaskDelay(500 / portTICK_RATE_MS);
 
-	hGyroQueue = xQueueCreate(10, sizeof(uint32_t));
-
+	gyro_reader.init_gyro(gyro_wtm);
+	gyro_reader.enable_disable_int2(false);
 
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	gyro.SetMode(L3GD20::NORMAL);
-	gyro.SetFullScale(L3GD20::FULLSCALE_500);
-	gyro.SetBDU(L3GD20::MEMS_ENABLE);
-	gyro.SetWaterMark(gyr_wtm);
-	gyro.FIFOModeEnable(L3GD20::FIFO_STREAM_MODE);
-	gyro.SetInt2Pin(0);
-	gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
-	gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
-	gyro.HPFEnable(L3GD20::MEMS_ENABLE);
-	gyro.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
-	gyro.SetHPFCutOFF(L3GD20::HPFCF_0);
-	gyro.SetODR(L3GD20::ODR_760Hz_BW_30);
-
 	try {
-		ext_gyro.SetMode(L3GD20::NORMAL);
-		ext_gyro.SetFullScale(L3GD20::FULLSCALE_500);
-		ext_gyro.SetBDU(L3GD20::MEMS_ENABLE);
-		ext_gyro.SetWaterMark(gyr_wtm);
-		ext_gyro.FIFOModeEnable(L3GD20::FIFO_STREAM_MODE);
-		//ext_gyro.SetInt2Pin(0);
-		//ext_gyro.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
-		ext_gyro.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
-		ext_gyro.HPFEnable(L3GD20::MEMS_ENABLE);
-		ext_gyro.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
-		ext_gyro.SetHPFCutOFF(L3GD20::HPFCF_0);
-		ext_gyro.SetODR(L3GD20::ODR_760Hz_BW_30);
+		ext_gyro_reader.init_gyro(gyro_wtm);
+		ext_gyro_reader.enable_disable_int2(false);
 		ext_gyro_present = true;
 	} catch(...) {
 		ext_gyro_present = false;
@@ -354,11 +316,17 @@ void main_task(void *pvParameters)
 
 	printf("Calibrating...");
 
-	gyro_reader.calculate_static_bias(hGyroQueue, 800);
 	if (ext_gyro_present) {
-		//todo: need separate Queue
-		ext_gyro_reader.calculate_static_bias(hGyroQueue, 100);
+		ext_gyro_reader.enable_disable_int2(true);
+		ext_gyro_reader.calculate_static_bias(400);
+		ext_gyro_reader.enable_disable_int2(false);
+		if (ext_gyro_reader.bias().length() == 0) {
+			ext_gyro_present = false;
+		}
 	}
+
+	gyro_reader.enable_disable_int2(true);
+	gyro_reader.calculate_static_bias(400);
 
 	printf(" Done!\n");
 
@@ -369,24 +337,27 @@ void main_task(void *pvParameters)
 	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);
 	HAL_NVIC_EnableIRQ (DMA1_Stream1_IRQn);
 
-	/*
-	 * Apply the boot configuration from flash memory.
-	 */
-	dronestate_boot_config(*drone_state);
 
 	printf("Entering main loop...\n");
+	L3GD20Reader* active_gyro = &gyro_reader;
+	active_gyro->enable_disable_int2(true);
 
 	sample_dt.time_stamp();
 
 	// Infinite loop
-	Vector3f ext_gyro_;
-	Vector3f ext_gyro_raw_;
 	while (1) {
 		drone_state->iteration_++;
 
-		gyro_reader.wait_for_data(hGyroQueue);
+		L3GD20Reader* desired_gyro_reader = (drone_state->external_gyro_enabled_ && ext_gyro_present)  ? &ext_gyro_reader : &gyro_reader;
+		if (active_gyro != desired_gyro_reader) {
+			active_gyro->read_data(gyro_wtm);
+			active_gyro->enable_disable_int2(false);
+			active_gyro = desired_gyro_reader;
+			active_gyro->enable_disable_int2(true);
+		}
 
-		ctx_switch_time = isr_ts.elapsed();
+		active_gyro->wait_for_data();
+
 		drone_state->dt_ = sample_dt.elapsed();
 		sample_dt.time_stamp();
 
@@ -394,18 +365,10 @@ void main_task(void *pvParameters)
 		att.gyro_drift_pid(drone_state->gyro_drift_kp_, drone_state->gyro_drift_ki_, drone_state->gyro_drift_kd_);
 		att.gyro_drift_leak_rate(drone_state->gyro_drift_leak_rate_);
 
-		drone_state->gyro_raw_ = gyro_reader.read_data(gyr_wtm);
+		drone_state->gyro_raw_ = active_gyro->read_data(gyro_wtm);
 		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
-			drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_reader.bias()) * drone_state->gyro_factor_;
-			//att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
-		}
-
-		ext_gyro_raw_ = ext_gyro_reader.read_data(gyr_wtm);
-		if (ext_gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
-			drone_state->gyro_raw_ = ext_gyro_raw_;
-			ext_gyro_ = (ext_gyro_raw_ - ext_gyro_reader.bias()) * drone_state->gyro_factor_;
-			drone_state->gyro_ = ext_gyro_;
-			att.track_gyroscope(DEG2RAD(ext_gyro_), drone_state->dt_.seconds_float());
+			drone_state->gyro_ = (drone_state->gyro_raw_ - active_gyro->bias()) * drone_state->gyro_factor_;
+			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
 
 		drone_state->accel_raw_ = acc_align * ReadAccelerometer(accel, accel_lpf);
@@ -448,10 +411,8 @@ void main_task(void *pvParameters)
 			Vector3f drift_err = att.get_drift_error();
 			console_update_time.time_stamp();
 			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));
-			printf("EXTGyro   : %5.3f %5.3f %5.3f\n", ext_gyro_.at(0), ext_gyro_.at(1), ext_gyro_.at(2));
 			printf("Drift Err : %5.3f %5.3f %5.3f\n", RAD2DEG(drift_err.at(0)), RAD2DEG(drift_err.at(1)), RAD2DEG(drift_err.at(2)));
 			printf("Gyro Raw  : %5.3f %5.3f %5.3f\n", drone_state->gyro_raw_.at(0), drone_state->gyro_raw_.at(1), drone_state->gyro_raw_.at(2));
-			printf("EXTGyroRAW: %5.3f %5.3f %5.3f\n", ext_gyro_raw_.at(0), ext_gyro_raw_.at(1), ext_gyro_raw_.at(2));
 			printf("Accel     : %5.3f %5.3f %5.3f\n", drone_state->accel_.at(0), drone_state->accel_.at(1), drone_state->accel_.at(2));
 			printf("Mag       : %5.3f %5.3f %5.3f\n", drone_state->mag_.at(0), drone_state->mag_.at(1), drone_state->mag_.at(2));
 			printf("dT        : %lu uSec\n", (uint32_t)drone_state->dt_.microseconds());

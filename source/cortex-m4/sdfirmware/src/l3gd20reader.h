@@ -28,20 +28,29 @@
 #include "task.h"
 #include "queue.h"
 #include "l3gd20.h"
+#include "digitalin.h"
 
 class L3GD20Reader
 {
 public:
-	L3GD20Reader(L3GD20& gyro, const Matrix3f& axes_align);
+	L3GD20Reader(L3GD20& gyro, PinName gyro_int2_pin, const Matrix3f& axes_align);
 	~L3GD20Reader() = default;
-	const Vector3f& calculate_static_bias(QueueHandle_t hGyroQueue, uint32_t num_samples);
+	const Vector3f& calculate_static_bias(uint32_t num_samples);
 	const Vector3f& bias() const;
-	Vector3f read_data(uint32_t watermark);
-	static bool wait_for_data(QueueHandle_t hGyroQueue, const TimeSpan time_to_wait = TimeSpan::from_milliseconds(50));
+	Vector3f read_data(uint8_t watermark);
+	void init_gyro(uint8_t watermark);
+	void enable_disable_int2(bool enable);
+	bool wait_for_data(const TimeSpan time_to_wait = TimeSpan::from_milliseconds(50));
+
 private:
+
+	void gyro_isr();
+
 	L3GD20& gyro_;
+	DigitalIn gyro_int2_pin_;
 	Matrix3f axes_align_;
 	Vector3f static_bias_;
+	QueueHandle_t queue_handle_;
 };
 
 #endif /* L3GD20READER_H_ */

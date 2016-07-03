@@ -72,7 +72,7 @@ struct DroneState {
 		, enforce_flight_ceiling_(false)
 		, track_magnetometer_(true)
 		, track_accelerometer_(true)
-	    , external_gyro_enabled__(true)
+	    , external_gyro_enabled_(true) // todo: to be changed to false when colibri v2 are repaired
 	    , external_gyro_align_(0, 1, 0,
 	    		              -1, 0, 0,
 				               0, 0, 1)
@@ -151,7 +151,7 @@ struct DroneState {
 		ret["track_magnetometer"] = track_magnetometer_;
 		ret["flight_mode"] = flight_mode_;
 		ret["pilot_type"] = std::string(PilotTypeAsStr(pilot_type_));
-		ret["use_ext_gyro"] = external_gyro_enabled__;
+		ret["use_ext_gyro"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = external_gyro_align_;
 		return ret;
 	}
@@ -173,7 +173,7 @@ struct DroneState {
 		ret["pitch_bias"] = pitch_bias_;
 		ret["roll_bias"] = roll_bias_;
 		ret["pid_filter_freq"] = pid_filter_freq_;
-		ret["use_ext_gyro"] = external_gyro_enabled__;
+		ret["use_ext_gyro"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = matrix_to_json_value(external_gyro_align_);
 		return ret;
 	}
@@ -199,7 +199,7 @@ struct DroneState {
 				accelerometer_correction_speed_ = bootconfig["accelerometer_correction_period"].get_real();
 			} catch (std::exception& e) {}
 			try { pid_filter_freq_ = bootconfig["pid_filter_freq"].get_real(); } catch (std::exception& e) {}
-			try { external_gyro_enabled__ = bootconfig["use_ext_gyro"].get_real(); } catch (std::exception& e) {}
+			try { external_gyro_enabled_ = bootconfig["use_ext_gyro"].get_real(); } catch (std::exception& e) {}
 			try {
 				external_gyro_align_ = matrix_from_json_value<float, 3, 3>(bootconfig["ext_gyro_align"]);
 			} catch (std::exception& e) {}
@@ -287,7 +287,7 @@ struct DroneState {
 	bool enforce_flight_ceiling_;
 	bool track_magnetometer_;
 	bool track_accelerometer_;
-	bool external_gyro_enabled__;
+	bool external_gyro_enabled_;
 	Matrix3f external_gyro_align_;
 
 	/*

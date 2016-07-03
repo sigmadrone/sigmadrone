@@ -848,7 +848,7 @@ rexjson::value UartRpcServer::rpc_gyro_drift_leak_rate(UART* , rexjson::array& p
 
 rexjson::value UartRpcServer::rpc_enable_external_gyro(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_bool_type, rpc_null_type};
+	static unsigned int types[] = {rpc_bool_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));
@@ -866,14 +866,14 @@ rexjson::value UartRpcServer::rpc_enable_external_gyro(UART* , rexjson::array& p
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	if (params[0].type() != rexjson::null_type) {
-		dronestate_.external_gyro_enabled__ = params[0].get_bool();
+		dronestate_.external_gyro_enabled_ = params[0].get_bool();
 	}
-	return dronestate_.external_gyro_enabled__;
+	return dronestate_.external_gyro_enabled_;
 }
 
 rexjson::value UartRpcServer::rpc_external_gyro_align(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
-	static unsigned int types[] = {rpc_array_type, rpc_null_type};
+	static unsigned int types[] = {rpc_array_type|rpc_null_type};
 	if (mode != execute) {
 		if (mode == spec)
 			return create_json_spec(types, ARRAYSIZE(types));

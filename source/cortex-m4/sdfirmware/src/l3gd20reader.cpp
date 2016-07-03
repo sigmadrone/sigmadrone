@@ -21,17 +21,25 @@
 
 #include "l3gd20reader.h"
 
-L3GD20Reader::L3GD20Reader(L3GD20& gyro, const Matrix3f& axes_align) : gyro_(gyro), axes_align_(axes_align)
+L3GD20Reader::L3GD20Reader(L3GD20& gyro, PinName gyro_int2_pin, const Matrix3f& axes_align) :
+	gyro_(gyro),
+	gyro_int2_pin_(gyro_int2_pin, DigitalIn::PullNone, DigitalIn::InterruptRising),
+	axes_align_(axes_align)
 {
+	queue_handle_ = xQueueCreate(10, sizeof(uint32_t));
+	gyro_int2_pin_.callback(this, &L3GD20Reader::gyro_isr);
 }
 
-const Vector3f& L3GD20Reader::calculate_static_bias(QueueHandle_t hGyroQueue, uint32_t num_samples)
+const Vector3f& L3GD20Reader::calculate_static_bias(uint32_t num_samples)
 {
 	static_bias_.clear();
 	L3GD20::AxesDPS_t gyro_axes;
 	gyro_.GetFifoAngRateDPS(&gyro_axes); // Drain the fifo
 	for (uint32_t i = 0; i < num_samples; i++) {
-		wait_for_data(hGyroQueue);
+		if (!wait_for_data(TimeSpan::from_milliseconds(100))) {
+			static_bias_.clear();
+			break;
+		}
 		static_bias_ += read_data(1);
 	}
 	static_bias_ /= static_cast<float>(num_samples);
@@ -44,7 +52,7 @@ const Vector3f& L3GD20Reader::bias() const
 	return static_bias_;
 }
 
-Vector3f L3GD20Reader::read_data(uint32_t watermark)
+Vector3f L3GD20Reader::read_data(uint8_t watermark)
 {
 	Vector3f gyro_data;
 	uint8_t gyro_samples = gyro_.GetFifoSourceReg() & 0x1F;
@@ -59,8 +67,39 @@ Vector3f L3GD20Reader::read_data(uint32_t watermark)
 	return axes_align_ * gyro_data;
 }
 
-bool L3GD20Reader::wait_for_data(QueueHandle_t hGyroQueue, const TimeSpan time_to_wait)
+void L3GD20Reader::init_gyro(uint8_t watermark)
+{
+	gyro_.SetMode(L3GD20::NORMAL);
+	gyro_.SetFullScale(L3GD20::FULLSCALE_500);
+	gyro_.SetBDU(L3GD20::MEMS_ENABLE);
+	gyro_.SetWaterMark(watermark);
+	gyro_.FIFOModeEnable(L3GD20::FIFO_STREAM_MODE);
+	gyro_.SetInt2Pin(0);
+	gyro_.SetInt2Pin(L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE);
+	gyro_.SetAxis(L3GD20_X_ENABLE|L3GD20_Y_ENABLE|L3GD20_Z_ENABLE);
+	gyro_.HPFEnable(L3GD20::MEMS_ENABLE);
+	gyro_.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
+	gyro_.SetHPFCutOFF(L3GD20::HPFCF_0);
+	gyro_.SetODR(L3GD20::ODR_760Hz_BW_30);
+}
+
+bool L3GD20Reader::wait_for_data(const TimeSpan time_to_wait)
 {
 	uint32_t msg;
-	return xQueueReceive(hGyroQueue, &msg, ( TickType_t ) portTICK_PERIOD_MS * time_to_wait.milliseconds());
+	return xQueueReceive(queue_handle_, &msg, ( TickType_t ) portTICK_PERIOD_MS * time_to_wait.milliseconds());
+}
+
+void L3GD20Reader::enable_disable_int2(bool enable)
+{
+	gyro_.SetInt2Pin(enable ? L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE : 0);
+}
+
+void L3GD20Reader::gyro_isr()
+{
+	if (gyro_int2_pin_) {
+		BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+		uint32_t msg = 1;
+		xQueueSendFromISR(queue_handle_, &msg, &xHigherPriorityTaskWoken);
+		portEND_SWITCHING_ISR(true);
+	}
 }
