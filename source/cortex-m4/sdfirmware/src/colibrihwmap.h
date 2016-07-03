@@ -72,6 +72,7 @@ static const PinName EXT_GPIO_4_PIN = PH_14;
 static const PinName EXT_GPIO_5_PIN = PH_15;
 static const PinName EXT_GPIO_6_PIN = PF_6;
 static const PinName EXT_GYRO_CS_PIN = EXT_GPIO_1_PIN;
+static const PinName EXT_GYRO_INT2_PIN = EXT_GPIO_2_PIN;
 
 static const PinName MOTOR_POWER_CTRL_PIN = PB_0;
 
