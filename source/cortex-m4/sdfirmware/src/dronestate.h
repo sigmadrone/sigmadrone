@@ -151,7 +151,7 @@ struct DroneState {
 		ret["track_magnetometer"] = track_magnetometer_;
 		ret["flight_mode"] = flight_mode_;
 		ret["pilot_type"] = std::string(PilotTypeAsStr(pilot_type_));
-		ret["use_ext_gyro"] = external_gyro_enabled_;
+		ret["ext_gyro_enabled"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = external_gyro_align_;
 		return ret;
 	}
