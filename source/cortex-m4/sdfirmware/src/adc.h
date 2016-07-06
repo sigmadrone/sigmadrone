@@ -41,7 +41,7 @@ class ADCHandle {
 public:
 	static const uint32_t INVALID_CONV_VALUE = 0xffffffff;
 
-	/** Constructs and initializes a timer instance
+	/** Constructs and initializes an ADC handle instance
 	 *  @param adc Pointert to the internal ADC_TypeDef struct to be used, one of ADC1, ADC2 or ADC3
 	 *  @param adc_channel ADC channel to be used, one of ADC_CHANNEL_0 .. ADC_CHANNEL_16
 	 *  @param v_ref Reference voltage
@@ -79,7 +79,7 @@ class Voltmeter {
 public:
 	static constexpr float r1_div_ = 100.0f;
 	static constexpr float r2_div_ = 21.5f;
-	Voltmeter() : adc_(BATTERY_MONITOR_ADC, BATTERY_MONITOR_ADC_CHANNEL, BATTERY_MONITOR_PIN),
+	Voltmeter() : adc_(BATTERY_MONITOR_ADC, BATTERY_MONITOR_ADC_CHANNEL, BATTERY_MONITOR_PIN, 3.25),
 			voltmeter_ctrl_(BATTERY_MONITOR_ONOFF_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0) {}
 	Voltage measure()
 	{

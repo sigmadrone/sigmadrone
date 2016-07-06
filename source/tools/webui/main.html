@@ -360,6 +360,13 @@
                   <input id="track-magnetometer" name="track-magnetometer" type="checkbox" onclick="onFlightCtlUserInput()">
                 </div>
               </div>
+              <div class="form-group" id="external-gyro-gr">
+                <div class="col-xs-8 col-md-4">
+                  <label for="external-gyro-gr">Enable External Gyro</label>
+                  <span style="width:5px;display:inline-block"></span>
+                  <input id="external-gyro" name="external-gyro" type="checkbox" onclick="onFlightCtlUserInput()">
+                </div>
+              </div>
               <div class="form-group" id="set-pilot-gr">
                 <div class="col-xs-4 col-md-2">
                   <label for="set-pilot-gr">Set Pilot Type</label>
@@ -894,6 +901,7 @@
     rpcClient.rpcCall(droneRpcUrl, "sd_set_yaw_throttle_factor",
       "[" + $myForm[0].elements['yaw-throttle-factor'].value + "]");
     rpcClient.rpcCall(droneRpcUrl, "sd_set_mag_tracking", "[" + $myForm[0].elements['track-magnetometer'].checked + "]");
+    rpcClient.rpcCall(droneRpcUrl, "sd_enable_external_gyro", "[" + $myForm[0].elements['external-gyro'].checked + "]");
     rpcClient.rpcCall(droneRpcUrl, "roll_bias", "[" + $myForm[0].elements['torq-bias-roll'].value + "]");
     rpcClient.rpcCall(droneRpcUrl, "pitch_bias", "[" + $myForm[0].elements['torq-bias-pitch'].value + "]");
     if ($myForm[0].elements['pilot-type-id'].value == "pid-pilot-new") {
