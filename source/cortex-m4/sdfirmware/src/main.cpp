@@ -248,7 +248,7 @@ void main_task(void *pvParameters)
 	AccelLowPassPreFilter3d* accel_lpf = new AccelLowPassPreFilter3d();
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
 	bool ext_gyro_present = false;
-	static bool print_to_console = true;
+	static bool print_to_console = false;
 
 
 	/*
