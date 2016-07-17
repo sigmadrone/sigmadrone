@@ -57,6 +57,7 @@
 #include "gpsreader.h"
 #include "iirfilt.h"
 #include "l3gd20reader.h"
+#include "usbstoragedevice.h"
 
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
@@ -247,7 +248,7 @@ void main_task(void *pvParameters)
 	AccelLowPassPreFilter3d* accel_lpf = new AccelLowPassPreFilter3d();
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
 	bool ext_gyro_present = false;
-	static bool print_to_console = false;
+	static bool print_to_console = true;
 
 
 	/*
@@ -284,7 +285,7 @@ void main_task(void *pvParameters)
 	printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %d\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	vTaskDelay(500 / portTICK_RATE_MS);
+	UsbStorageDevice::start();
 
 	gyro_reader.init_gyro(gyro_wtm);
 	gyro_reader.enable_disable_int2(false);
@@ -408,6 +409,7 @@ void main_task(void *pvParameters)
 		datastream.commit();
 
 		if (print_to_console && console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
+
 			Vector3f drift_err = att.get_drift_error();
 			console_update_time.time_stamp();
 			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));

@@ -23,27 +23,52 @@
 #ifndef COLIBRI_HW_MAP
 #define COLIBRI_HW_MAP
 
-#include "hwtimer.h"
+#include "pinnames.h"
 
-static const PinName SHUTDOWN_PIN = PB_0;
+#ifdef __cplusplus
+
+#include "hwtimer.h"
 
 static const HwTimer::Id PWM_OUT_TIMER_1 = HwTimer::TIMER_1;
 static const HwTimer::Id PWM_OUT_TIMER_2 = HwTimer::TIMER_8;
-
-static const PinName PWM_OUT_PIN_1 = PA_8;
-static const PinName PWM_OUT_PIN_2 = PA_9;
-static const PinName PWM_OUT_PIN_3 = PA_10;
-static const PinName PWM_OUT_PIN_4 = PA_11;
-static const PinName PWM_OUT_PIN_5 = PC_6;
-static const PinName PWM_OUT_PIN_6 = PC_7;
-static const PinName PWM_OUT_PIN_7 = PC_8;
-static const PinName PWM_OUT_PIN_8 = PC_9;
 
 static const HwTimer::Id PWM_IN_TIMER_1 = HwTimer::TIMER_2;
 static const HwTimer::Id PWM_IN_TIMER_2 = HwTimer::TIMER_3;
 static const HwTimer::Id PWM_IN_TIMER_3 = HwTimer::TIMER_4;
 static const HwTimer::Id PWM_IN_TIMER_4 = HwTimer::TIMER_5;
 static const HwTimer::Id PWM_IN_TIMER_5 = HwTimer::TIMER_9;
+
+#endif //__cplusplus
+
+static const PinName SHUTDOWN_PIN = PB_0;
+
+// Uncomment the line below to enable Cortex USB OTG
+//#define USE_CORTEX_USB_OTG
+
+#ifdef USE_CORTEX_USB_OTG
+static const PinName USBOTG_VBUS_FS1_PIN = PA_9;
+static const PinName USBOTG_FS1_ID_PIN   = PA_10;
+static const PinName USBOTG_FS1_DM_PIN   = PA_11;
+static const PinName USBOTG_FS1_DP_PIN   = PA_12;
+static const PinName USBOTG_FS1_PSO_PIN  = PC_4;
+static const PinName USBOTG_FS1_OC_PIN   = PC_5;
+#endif
+
+
+static const PinName PWM_OUT_PIN_1 = PA_8;
+#ifdef USE_CORTEX_USB_OTG
+static const PinName PWM_OUT_PIN_2 = PE_11;
+static const PinName PWM_OUT_PIN_3 = PE_13;
+static const PinName PWM_OUT_PIN_4 = PE_14;
+#else
+static const PinName PWM_OUT_PIN_2 = PA_9;
+static const PinName PWM_OUT_PIN_3 = PA_10;
+static const PinName PWM_OUT_PIN_4 = PA_11;
+#endif
+static const PinName PWM_OUT_PIN_5 = PC_6;
+static const PinName PWM_OUT_PIN_6 = PC_7;
+static const PinName PWM_OUT_PIN_7 = PC_8;
+static const PinName PWM_OUT_PIN_8 = PC_9;
 
 static const uint32_t PWM_IN_TIMER_1_PERIOD_CHANNELNO    = 1;
 static const uint32_t PWM_IN_TIMER_1_DUTYCYCLE_CHANNELNO = 2;
@@ -71,8 +96,8 @@ static const PinName EXT_GPIO_3_PIN = PH_13;
 static const PinName EXT_GPIO_4_PIN = PH_14;
 static const PinName EXT_GPIO_5_PIN = PH_15;
 static const PinName EXT_GPIO_6_PIN = PF_6;
-static const PinName EXT_GYRO_CS_PIN = EXT_GPIO_1_PIN;
-static const PinName EXT_GYRO_INT2_PIN = EXT_GPIO_2_PIN;
+static const PinName EXT_GYRO_CS_PIN = PH_6;
+static const PinName EXT_GYRO_INT2_PIN = PH_12;
 
 static const PinName MOTOR_POWER_CTRL_PIN = PB_0;
 

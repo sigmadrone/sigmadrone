@@ -137,3 +137,9 @@ extern "C" void EmergencyShutdown_Handler(void)
 	DigitalOut(SHUTDOWN_PIN).write(0);
 }
 
+extern "C" PCD_HandleTypeDef hpcd; // declared in usbd_conf.c
+
+extern "C" void OTG_FS_IRQHandler(void)
+{
+	HAL_PCD_IRQHandler(&hpcd);
+}
