@@ -52,6 +52,13 @@ static const PinName USBOTG_FS1_DM_PIN   = PA_11;
 static const PinName USBOTG_FS1_DP_PIN   = PA_12;
 static const PinName USBOTG_FS1_PSO_PIN  = PC_4;
 static const PinName USBOTG_FS1_OC_PIN   = PC_5;
+#else
+static const PinName USBOTG_VBUS_FS1_PIN = NC;
+static const PinName USBOTG_FS1_ID_PIN   = NC;
+static const PinName USBOTG_FS1_DM_PIN   = NC;
+static const PinName USBOTG_FS1_DP_PIN   = NC;
+static const PinName USBOTG_FS1_PSO_PIN  = NC;
+static const PinName USBOTG_FS1_OC_PIN   = NC;
 #endif
 
 

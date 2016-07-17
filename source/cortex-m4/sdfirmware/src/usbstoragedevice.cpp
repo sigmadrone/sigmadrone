@@ -35,8 +35,10 @@ extern USBD_DescriptorsTypeDef MSC_Desc;
 extern USBD_StorageTypeDef USBD_DISK_fops;
 }
 
+#ifdef USE_CORTEX_USB_OTG
 static USBD_HandleTypeDef USBD_Device;
 static DigitalOut usb_otg_fs1_pso(USBOTG_FS1_PSO_PIN);
+#endif
 
 void UsbStorageDevice::start()
 {
