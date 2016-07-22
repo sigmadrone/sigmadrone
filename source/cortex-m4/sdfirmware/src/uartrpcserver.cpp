@@ -58,6 +58,13 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Da
 	add("sd_pid_filter_freq", &UartRpcServer::rpc_pid_filter_freq);
 	add("sd_set_mag_tracking", &UartRpcServer::rpc_set_mag_tracking);
 	add("sd_set_acc_tracking", &UartRpcServer::rpc_set_acc_tracking);
+	add("sd_set_pilot_type", &UartRpcServer::rpc_set_pilot_type);
+	add("sd_gyro_drift_kp", &UartRpcServer::rpc_gyro_drift_kp);
+	add("sd_gyro_drift_ki", &UartRpcServer::rpc_gyro_drift_ki);
+	add("sd_gyro_drift_kd", &UartRpcServer::rpc_gyro_drift_kd);
+	add("sd_gyro_drift_leak_rate", &UartRpcServer::rpc_gyro_drift_leak_rate);
+	add("sd_enable_external_gyro", &UartRpcServer::rpc_enable_external_gyro);
+	add("sd_external_gyro_align", &UartRpcServer::rpc_external_gyro_align);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -479,8 +486,8 @@ rexjson::value UartRpcServer::rpc_set_accelerometer_correction_period(UART* , re
 	float period = params[0].get_real();
 	if (period < 0.25)
 		throw std::range_error("Invalid value");
-	dronestate_.accelerometer_correction_period_ = period;
-	return dronestate_.accelerometer_correction_period_;
+	dronestate_.accelerometer_correction_speed_ = period;
+	return dronestate_.accelerometer_correction_speed_;
 }
 
 rexjson::value UartRpcServer::rpc_set_gyro_factor(UART* , rexjson::array& params, rpc_exec_mode mode)
@@ -539,7 +546,7 @@ rexjson::value UartRpcServer::rpc_set_acc_tracking(UART* , rexjson::array& param
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
 	            "sd_set_acc_tracking\n"
-				"\nDANGAREOUS!!! Set Turn on/off Accelerometer tracking."
+				"\nDANGEROUS!!! Set Turn on/off Accelerometer tracking."
 				"\nThe accelerometer should not be turned off for "
 				"more than a few seconds."
 				"\n"
@@ -551,6 +558,27 @@ rexjson::value UartRpcServer::rpc_set_acc_tracking(UART* , rexjson::array& param
 	bool on = params[0].get_bool();
 	dronestate_.track_accelerometer_ = on;
 	return dronestate_.track_accelerometer_;
+}
+
+rexjson::value UartRpcServer::rpc_set_pilot_type(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_str_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_set_pilot_type\n"
+				"\nSet the active pilot type. Don't do it during flight!\n"
+				"Arguments:\n"
+				"1. pilot_type          (string) pid_pilot_legacy | pid_pilot_new\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	const std::string& pilot_type = params[0].get_str();
+	dronestate_.set_pilot_type(PilotTypeFromStr(pilot_type));
+	return pilot_type;
 }
 
 
@@ -708,7 +736,7 @@ rexjson::value UartRpcServer::rpc_pid_filter_freq(UART* , rexjson::array& params
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
 	            "sd_pid_filter_freq\n"
-	            "\nGet/Set the cutoff frequency (Hz) of the first order low pass filter applied"
+	            "\nGet/Set the cutoff frequency (Hz) of the first order low pass filter applied."
 	            "\nto the derivative component of the PID controller."
 				"\nIf no parameter is passed, then the currently set frequency will be returned."
 				"\n"
@@ -722,6 +750,152 @@ rexjson::value UartRpcServer::rpc_pid_filter_freq(UART* , rexjson::array& params
 	return dronestate_.pid_filter_freq_;
 }
 
+rexjson::value UartRpcServer::rpc_gyro_drift_kp(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_gyro_drift_kp\n"
+	            "\nGet/Set Kp for the gyro-drift error PID controller."
+				"\nIf the new coefficient is not specified, the current Kp will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kp          (real, optional) The Kp of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.gyro_drift_kp_ = params[0].get_real();
+	}
+	return dronestate_.gyro_drift_kp_;
+}
+
+rexjson::value UartRpcServer::rpc_gyro_drift_ki(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_gyro_drift_ki\n"
+	            "\nGet/Set Ki for the gyro-drift error PID controller."
+				"\nIf the new coefficient is not specified, the current Ki will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Ki          (real, optional) The Ki of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.gyro_drift_ki_ = params[0].get_real();
+	}
+	return dronestate_.gyro_drift_ki_;
+}
+
+rexjson::value UartRpcServer::rpc_gyro_drift_kd(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_gyro_drift_kd\n"
+	            "\nGet/Set Kd for the gyro-drift error PID controller."
+				"\nIf the new coefficient is not specified, the current Kd will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kd          (real, optional) The Kd of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.gyro_drift_kd_ = params[0].get_real();
+	}
+	return dronestate_.gyro_drift_kd_;
+}
+
+rexjson::value UartRpcServer::rpc_gyro_drift_leak_rate(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_gyro_drift_leak_rate\n"
+	            "\nGet/Set the leak rate for the integral component of the gyro drift PID controller."
+				"\nIf no parameter is passed, then the current leak rate will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. leak_rate   (real, optional) Leak rate for the gyro drift PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.gyro_drift_leak_rate_ = params[0].get_real();
+	}
+	return dronestate_.gyro_drift_leak_rate_;
+}
+
+rexjson::value UartRpcServer::rpc_enable_external_gyro(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_bool_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_enable_external_gyro\n"
+	            "\nEnable/disable the external gyro sensor for attitude tracking."
+				"\nIf the external gyro is enabled, then the internal one is disabled and vice versa."
+				"\nIf no parameter is passed, then the current external gyro usage value is returned."
+				"\n"
+				"Arguments:\n"
+				"1. enable_external_gyro   (bool, optional) True - enable, false - disable external gyro.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.external_gyro_enabled_ = params[0].get_bool();
+	}
+	return dronestate_.external_gyro_enabled_;
+}
+
+rexjson::value UartRpcServer::rpc_external_gyro_align(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_array_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_external_gyro_align\n"
+	            "\nSet/get the axes alignment matrix for the external gyro. The alignment 3x3 matrix is"
+				"\nmultiplied by the 3x1 vector read from the sensor and the resultant 3x1 vector is"
+				"\nused for attitude tracking."
+				"\nIf no parameter is passed, then the current alignment matrix is returned."
+				"\n"
+				"Arguments:\n"
+				"1. alignment_matrix   (float[9], optional) The matrix used for gyro axes alignment.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.external_gyro_align_ = matrix_from_json_value<float, 3, 3>(params[0]);
+	}
+	return matrix_to_json_value(dronestate_.external_gyro_align_);
+}
 
 void UartRpcServer::jsonrpc_request_handler(UART* uart)
 {
@@ -737,5 +911,5 @@ void UartRpcServer::jsonrpc_request_handler(UART* uart)
 	if (request.empty())
 		return;
 	response = call(uart, request);
-	uart->write(response.write(false, false, 0, 4) + "\n");
+	uart->write(response.write(false, false, 0, 5) + "\n");
 }

@@ -521,7 +521,9 @@ Wire Wire Line
 Wire Wire Line
 	6450 2500 6450 3250
 Wire Wire Line
-	10550 950  10550 2500
+	10100 1300 10550 1300
+Wire Wire Line
+	10550 1300 10550 2500
 Connection ~ 10550 2200
 Wire Wire Line
 	2150 5450 2150 5350
@@ -679,8 +681,6 @@ Wire Wire Line
 Wire Wire Line
 	2450 1400 2450 1300
 Connection ~ 2450 1300
-Wire Wire Line
-	10100 1300 10550 1300
 Connection ~ 5250 3150
 $Comp
 L R_SMT R22
@@ -975,41 +975,5 @@ F 3 "" H 6000 1300 60  0000 C CNN
 	1    6000 1300
 	1    0    0    -1  
 $EndComp
-Text HLabel 8650 950  0    60   Input ~ 0
-LED0
-$Comp
-L R_SMT R41
-U 1 1 56CD11BD
-P 9200 950
-F 0 "R41" V 9270 950 50  0000 C CNN
-F 1 "1K/5%" V 9130 950 50  0000 C CNN
-F 2 "Resistors_SMD:R_0603" V 9350 950 30  0001 C CNN
-F 3 "" V 9280 950 30  0000 C CNN
-F 4 "0603" V 9200 950 20  0000 C CNN "SMT"
-F 5 "9331697" V 9400 950 30  0001 C CNN "Part"
-F 6 "Farnell" V 9450 950 30  0001 C CNN "Provider"
-	1    9200 950 
-	0    1    1    0   
-$EndComp
-$Comp
-L LED_SMT DL14
-U 1 1 56CD11C6
-P 9900 950
-F 0 "DL14" H 9900 1050 50  0000 C CNN
-F 1 "GREEN" H 9900 850 50  0000 C CNN
-F 2 "LEDs:LED_0603" H 9900 800 30  0001 C CNN
-F 3 "" H 9900 950 60  0000 C CNN
-F 4 "0603" H 9785 930 30  0000 C CNN "SMT"
-F 5 "2322070" H 9900 750 30  0001 C CNN "Part"
-F 6 "Farnell" H 9900 700 30  0001 C CNN "Provider"
-	1    9900 950 
-	-1   0    0    -1  
-$EndComp
-Wire Wire Line
-	9350 950  9700 950 
-Wire Wire Line
-	8650 950  9050 950 
-Wire Wire Line
-	10100 950  10550 950 
 Connection ~ 10550 1300
 $EndSCHEMATC

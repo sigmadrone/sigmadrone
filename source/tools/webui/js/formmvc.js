@@ -179,6 +179,22 @@ PidZFormView.prototype.onRedrawData = function(droneState) {
   return true;
 }
 
+function PidGyroFormView(formId, submitButtonId, cancelButtonId, statusId) {
+  FormView.call(this, formId, submitButtonId, cancelButtonId, statusId);
+}
+PidGyroFormView.prototype = Object.create(FormView.prototype);
+PidGyroFormView.prototype.constructor = PidGyroFormView;
+
+PidGyroFormView.prototype.onRedrawData = function(droneState) {
+  if (!FormView.prototype.onRedrawData.call(this,droneState)) {
+    return false;
+  }
+  $(this.formId)[0].elements['kp-gyro'].value = droneState.gyro_drift_kp;
+  $(this.formId)[0].elements['ki-gyro'].value = droneState.gyro_drift_ki;
+  $(this.formId)[0].elements['kd-gyro'].value = droneState.gyro_drift_kd;
+  return true;
+}
+
 function FlightCtlFormView(formId, submitButtonId, cancelButtonId, statusId) {
   FormView.call(this, formId, submitButtonId, cancelButtonId, statusId);
 }
@@ -194,7 +210,13 @@ FlightCtlFormView.prototype.onRedrawData = function(droneState) {
   $(this.formId)[0].elements['torq-bias-yaw'].value = droneState.yaw_bias;
   $(this.formId)[0].elements['torq-bias-yaw'].value = droneState.yaw_bias;
   $(this.formId)[0].elements['track-magnetometer'].checked = droneState.track_magnetometer;
+  $(this.formId)[0].elements['external-gyro'].checked = droneState.ext_gyro_enabled;
   $(this.formId)[0].elements['yaw-throttle-factor'].value = droneState.yaw_throttle_factor;
+  if (droneState.pilot_type == "pid_pilot_new") {
+    $(this.formId)[0].elements['pilot-type-id'].value = "pid-pilot-new";
+  } else {
+    $(this.formId)[0].elements['pilot-type-id'].value = "pid-pilot-legacy";
+  }
   return true;
 }
 

@@ -68,7 +68,7 @@ _write (int fd __attribute__((unused)), const char* buf __attribute__((unused)),
 {
 	if (fd == 1 || fd == 2)
 	{
-		usart_write(USART6, buf, nbyte);
+		usart_write(USART1, buf, nbyte);
 	}
 #if defined(TRACE)
   // STDOUT and STDERR are routed to the trace device

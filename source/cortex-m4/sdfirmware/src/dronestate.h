@@ -32,18 +32,6 @@
 
 static const Altitude DEFAULT_FLIGHT_CEILING(Altitude::from_meters(50));
 
-/*
- *
- * PID coefficients for big 9" props on DJI F450
- * Kp = 0.125
- * Ki = 0
- * Kd = 0.2 -- 0.3
- *
- * Kp_Yaw = 0.11
- * Ki_Yaw = 0
- * Kd_Yaw = 0.45
- *
- */
 struct DroneState {
 	DroneState()
 		: altitude_(INVALID_ALTITUDE)
@@ -57,23 +45,18 @@ struct DroneState {
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
-#ifdef USE_TRIPILOT
-		, kp_(0.25)
-		, ki_(0.035)
-		, kd_(0.05)
-		, yaw_kp_(0.20)
-		, yaw_ki_(0.0)
-		, yaw_kd_(0.07)
-		, accelerometer_correction_period_(3.0)
-#else
 		, kp_(0.24)
 		, ki_(0.6)
 		, kd_(0.06)
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-		, accelerometer_correction_period_(5.0)
-#endif
+	    , gyro_drift_kp_(0.0)
+	    , gyro_drift_ki_(0.01)
+	    , gyro_drift_kd_(0.0)
+	    , gyro_drift_leak_rate_(0.00001)
+	    , accelerometer_correction_speed_(5.0)
+	    , pilot_type_(PILOT_TYPE_PID_LEGACY)
 		, gyro_factor_(1.25)
 		, yaw_(0.0)
 		, pitch_(0.0)
@@ -89,20 +72,31 @@ struct DroneState {
 		, enforce_flight_ceiling_(false)
 		, track_magnetometer_(true)
 		, track_accelerometer_(true)
+	    , external_gyro_enabled_(true) // todo: to be changed to false when colibri v2 are repaired
+	    , external_gyro_align_(0, 1, 0,
+	    		              -1, 0, 0,
+				               0, 0, 1)
 	    , iteration_(0)
-	    , throttle_(0.0f)
-	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING) { }
+	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
+	{
+#ifdef USE_TRIPILOT
+		SetPilotType(PILOT_TYPE_PID_NEW);
+#endif
+	}
 
 	rexjson::value to_json()
 	{
 		rexjson::object ret;
 		ret["gyro"] = matrix_to_json_value(gyro_);
+		ret["gyro_raw"] = matrix_to_json_value(gyro_raw_);
+		ret["gyro_drift"] = matrix_to_json_value(gyro_drift_error_);
 		ret["accel"] = matrix_to_json_value(accel_);
 		ret["mag"] = matrix_to_json_value(mag_);
 		ret["altitude_meters"] = altitude_.meters();
 		ret["pressure_hpa"] = pressure_hpa_;
 		ret["temperature"] = temperature_;
 		ret["battery_voltage"] = battery_voltage_.volts();
+		ret["battery_percentage"] = battery_percentage_;
 		ret["gps_latitude"] = latitude_;
 		ret["gps_longitude"] = longitude_;
 		ret["gps_speed_kmph"] = speed_over_ground_;
@@ -127,13 +121,16 @@ struct DroneState {
 			}
 			ret["alarm_time_ms"] = static_cast<int>(alarm_.when().milliseconds());
 		}
+		if (!most_critical_alarm_.is_none()) {
+			ret["crit_alarm"] = most_critical_alarm_.to_string();
+			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
+		}
 		return ret;
 	}
 	rexjson::value to_json_ex()
 	{
 		rexjson::object ret = to_json().get_obj();
 		ret["accel_adjustment"] = matrix_to_json_value(accelerometer_adjustment_);
-		ret["battery_percentage"] = battery_percentage_;
 		ret["battery_type"] = battery_type_;
 		ret["kp"] = kp_;
 		ret["ki"] = ki_;
@@ -141,7 +138,10 @@ struct DroneState {
 		ret["yaw_kp"] = yaw_kp_;
 		ret["yaw_ki"] = yaw_ki_;
 		ret["yaw_kd"] = yaw_kd_;
-		ret["accelerometer_correction_period"] = accelerometer_correction_period_;
+		ret["gyro_drift_kp"] = gyro_drift_kp_;
+		ret["gyro_drift_ki"] = gyro_drift_ki_;
+		ret["gyro_drift_kd"] = gyro_drift_kd_;
+		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
 		ret["gyro_factor"] = gyro_factor_;
 		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
 		ret["yaw_bias"] = yaw_bias_;
@@ -149,11 +149,10 @@ struct DroneState {
 		ret["roll_bias"] = roll_bias_;
 		ret["pid_filter_freq"] = pid_filter_freq_;
 		ret["track_magnetometer"] = track_magnetometer_;
-		if (!most_critical_alarm_.is_none()) {
-			ret["crit_alarm"] = most_critical_alarm_.to_string();
-			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
-		}
 		ret["flight_mode"] = flight_mode_;
+		ret["pilot_type"] = std::string(PilotTypeAsStr(pilot_type_));
+		ret["ext_gyro_enabled"] = external_gyro_enabled_;
+		ret["ext_gyro_align"] = external_gyro_align_;
 		return ret;
 	}
 
@@ -167,13 +166,15 @@ struct DroneState {
 		ret["yaw_kp"] = yaw_kp_;
 		ret["yaw_ki"] = yaw_ki_;
 		ret["yaw_kd"] = yaw_kd_;
-		ret["accelerometer_correction_period"] = accelerometer_correction_period_;
+		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
 		ret["gyro_factor"] = gyro_factor_;
 		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
 		ret["yaw_bias"] = yaw_bias_;
 		ret["pitch_bias"] = pitch_bias_;
 		ret["roll_bias"] = roll_bias_;
 		ret["pid_filter_freq"] = pid_filter_freq_;
+		ret["use_ext_gyro"] = external_gyro_enabled_;
+		ret["ext_gyro_align"] = matrix_to_json_value(external_gyro_align_);
 		return ret;
 	}
 
@@ -195,10 +196,36 @@ struct DroneState {
 			try { gyro_factor_ = bootconfig["gyro_factor"].get_real(); } catch (std::exception& e) {}
 			try { yaw_throttle_factor_ = bootconfig["yaw_throttle_factor"].get_real(); } catch (std::exception& e) {}
 			try {
-				accelerometer_correction_period_ = bootconfig["accelerometer_correction_period"].get_real();
+				accelerometer_correction_speed_ = bootconfig["accelerometer_correction_period"].get_real();
 			} catch (std::exception& e) {}
 			try { pid_filter_freq_ = bootconfig["pid_filter_freq"].get_real(); } catch (std::exception& e) {}
+			try { external_gyro_enabled_ = bootconfig["use_ext_gyro"].get_real(); } catch (std::exception& e) {}
+			try {
+				external_gyro_align_ = matrix_from_json_value<float, 3, 3>(bootconfig["ext_gyro_align"]);
+			} catch (std::exception& e) {}
 		} catch (std::exception& e) {
+		}
+	}
+
+	void set_pilot_type(PilotType pilot_type)
+	{
+		pilot_type_ = pilot_type;
+		if (PILOT_TYPE_PID_NEW == pilot_type) {
+			kp_ = 0.25;
+			ki_ = 0.035;
+			kd_= 0.045;
+			yaw_kp_ = 0.20;
+			yaw_ki_= 0.0;
+			yaw_kd_ = 0.07;
+			accelerometer_correction_speed_ = 5.0;
+		} else if (PILOT_TYPE_PID_LEGACY == pilot_type) {
+			kp_ = 0.24;
+			ki_ = 0.6;
+			kd_ = 0.06;
+			yaw_kp_ = 0.72;
+			yaw_ki_ = 0.0;
+			yaw_kd_ = 0.30;
+			accelerometer_correction_speed_ = 5.0;
 		}
 	}
 
@@ -211,6 +238,7 @@ struct DroneState {
 	Vector3f gyro_;
 	Vector3f accel_;
 	Vector3f mag_;
+	Vector3f gyro_drift_error_;
 	Altitude altitude_;
 	float pressure_hpa_;
 	float temperature_;
@@ -237,8 +265,13 @@ struct DroneState {
 	float altitude_kp_;
 	float altitude_ki_;
 	float altitude_kd_;
+	float gyro_drift_kp_;
+	float gyro_drift_ki_;
+	float gyro_drift_kd_;
+	float gyro_drift_leak_rate_;
 	Vector3f accelerometer_adjustment_;
-	float accelerometer_correction_period_;
+	float accelerometer_correction_speed_;
+	PilotType pilot_type_;
 	float gyro_factor_;
 	float yaw_;
 	float pitch_;
@@ -254,6 +287,8 @@ struct DroneState {
 	bool enforce_flight_ceiling_;
 	bool track_magnetometer_;
 	bool track_accelerometer_;
+	bool external_gyro_enabled_;
+	Matrix3f external_gyro_align_;
 
 	/*
 	 * Time it took to read sensors

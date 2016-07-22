@@ -48,6 +48,7 @@ public:
 	virtual const Vector4f& motors() const;
 	virtual float get_min_thrust() const { return min_thrust_; }
 	virtual float get_max_thrust() const { return max_thrust_; }
+	virtual PilotType get_pilot_type() const { return PILOT_TYPE_PID_NEW; }
 
 private:
 	Vector4f clip_motors(const Vector4f& motors);

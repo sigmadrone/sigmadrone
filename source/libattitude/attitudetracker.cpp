@@ -23,9 +23,11 @@
 #include <iostream>
 
 attitudetracker::attitudetracker(double accelerometer_correction_period, Vector3f earth_g)
-	: accelerometer_correction_period_(accelerometer_correction_period)
+	: accelerometer_correction_speed_(accelerometer_correction_period)
 	, earth_g_(earth_g)
 	, attitude_(QuaternionF::identity)
+	, drift_pid_(0, 0.01, 0)
+    , drift_leak_rate_(0.00001)
 {
 }
 
@@ -36,6 +38,11 @@ attitudetracker::~attitudetracker()
 Vector3f attitudetracker::get_earth_g() const
 {
 	return earth_g_;
+}
+
+Vector3f attitudetracker::get_drift_error() const
+{
+	return drift_err_;
 }
 
 void attitudetracker::set_earth_g(Vector3f earth_g)
@@ -53,14 +60,24 @@ void attitudetracker::set_earth_m(Vector3f earth_m)
 	earth_m_ = earth_m;
 }
 
-void attitudetracker::accelerometer_correction_period(double accelerometer_correction_period)
+void attitudetracker::accelerometer_correction_speed(double accelerometer_correction_speed)
 {
-	accelerometer_correction_period_ = accelerometer_correction_period;
+	accelerometer_correction_speed_ = accelerometer_correction_speed;
+}
+
+void attitudetracker::gyro_drift_pid(float kp, float ki, float kd)
+{
+	drift_pid_.set_kp_ki_kd(kp, ki, kd);
+}
+
+void attitudetracker::gyro_drift_leak_rate(float leak_rate)
+{
+	drift_leak_rate_ = leak_rate;
 }
 
 void attitudetracker::track_gyroscope(const Vector3f& omega, double dtime)
 {
-	QuaternionF deltaq = QuaternionF::fromAngularVelocity(omega, dtime);
+	QuaternionF deltaq = QuaternionF::fromAngularVelocity(omega - drift_err_, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
 }
 
@@ -91,9 +108,11 @@ void attitudetracker::track_accelerometer(const Vector3f& g, double dtime)
 	 * Generate angular velocity to adjust our attitude in the
 	 * direction of the sensor reading.
 	 */
-	Vector3f w = QuaternionF::angularVelocity(QuaternionF::identity, q, accelerometer_correction_period_);
+	Vector3f w = QuaternionF::angularVelocity(QuaternionF::identity, q, q.angle() / DEG2RAD(accelerometer_correction_speed_));
 	if (w.length() == 0.0)
 		return;
+//	std::cout << "Drift: " << w.transpose() << ", Error drift: " << drift_err_.transpose() << std::endl;
+	drift_err_ = drift_pid_.get_pid(w, dtime, drift_leak_rate_);
 	QuaternionF deltaq = QuaternionF::fromAngularVelocity(-w, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
 }

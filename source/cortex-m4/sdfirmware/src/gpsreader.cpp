@@ -20,6 +20,7 @@
  */
 
 #include "gpsreader.h"
+#include "colibrihwmap.h"
 #include "libgps/TinyGPS.h"
 
 unsigned long millis()
@@ -30,8 +31,8 @@ unsigned long millis()
 GPSReader::GPSReader() :
 	uart_(
 		{
-		{PC_10, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},		/* USART3_TX_PIN */
-		{PC_11, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},		/* USART3_RX_PIN */
+		{GPS_USART3_TX_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},
+		{GPS_USART3_RX_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},
 		},
 		USART3,
 		DMA1,
@@ -42,7 +43,7 @@ GPSReader::GPSReader() :
 		UART_HWCONTROL_NONE,
 		9600,
 		250),
-	gps_power_(PB_0, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1),
+	gps_power_(GPS_POWER_CTRL_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1),
 	gps_parser_(new TinyGPS()),
 	buffer_(8)
 {

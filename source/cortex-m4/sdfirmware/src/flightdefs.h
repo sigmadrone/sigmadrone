@@ -48,6 +48,22 @@ enum FlightMode {
 	FLIGHT_MODE_MISSION = 3
 };
 
+enum PilotType {
+	PILOT_TYPE_PID_LEGACY = 0,
+	PILOT_TYPE_PID_NEW = 1
+};
 
+inline const char* PilotTypeAsStr(PilotType pilot)
+{
+	if (PILOT_TYPE_PID_LEGACY == pilot) return "pid_pilot_legacy";
+	if (PILOT_TYPE_PID_NEW == pilot) return "pid_pilot_new";
+	return "pilot_unkown";
+}
+
+inline PilotType PilotTypeFromStr(const std::string& pilot)
+{
+	if (pilot == "pid_pilot_new" || pilot == "new") return PILOT_TYPE_PID_NEW;
+	return PILOT_TYPE_PID_LEGACY;
+}
 
 #endif /* FLIGHTDEFS_H_ */

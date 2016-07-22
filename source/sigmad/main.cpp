@@ -44,7 +44,7 @@ static cmd_arg_spec g_argspec2[] = {
 		{"Kp",				"",		"PID proportional component", CMD_ARG_STRING},
 		{"Kd",				"",		"PID differential component", CMD_ARG_STRING},
 		{"Ki",				"",		"PID integral component", CMD_ARG_MULTISTRING},
-		{"firmware-uart",	"",		"Firmware uart device. Default: /dev/ttymxc0", CMD_ARG_STRING},
+		{"firmware-uart",	"",		"Firmware uart device. Default: /dev/ttymxc1", CMD_ARG_STRING},
 };
 
 int main(int argc, const char *argv[])

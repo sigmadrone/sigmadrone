@@ -22,6 +22,7 @@
 #define ATTITUDETRACKER_H_
 
 #include "d3math.h"
+#include "pidcontroller.h"
 
 class attitudetracker
 {
@@ -35,7 +36,11 @@ public:
 	void track_gyroscope(const Vector3f& omega, double dtime);
 	void track_accelerometer(const Vector3f& g, double dtime);
 	void track_magnetometer(const Vector3f& m, double dtime);
-	void accelerometer_correction_period(double accelerometer_correction_period);
+	void accelerometer_correction_speed(double accelerometer_correction_speed);
+	void gyro_drift_pid(float kp, float ki, float kd);
+	void gyro_drift_leak_rate(float leak_rate);
+
+	Vector3f get_drift_error() const;
 	/*
 	 * Return our attitude in the world coordinate system
 	 */
@@ -52,7 +57,7 @@ public:
 	 * The earth M vector reading while in initial position.
 	 */
 	Vector3f earth_m_;
-	double accelerometer_correction_period_;
+	double accelerometer_correction_speed_;
 
 protected:
 	/*
@@ -66,11 +71,9 @@ protected:
 	 */
 	QuaternionF attitude_;
 
-	/*
-	 * Angular velocity integral
-	 */
-	Vector3f integral_w_;
-
+	PidController<Vector3f> drift_pid_;
+	Vector3f drift_err_;
+	float drift_leak_rate_;
 };
 
 #endif

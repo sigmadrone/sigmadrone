@@ -28,8 +28,11 @@
 #include "stm32f4xx_hal.h"
 #include "stm32f4xx_hal_i2c.h"
 #include "stm32f429xx.h"
-#include "gpiopin.h"
+#include "colibrihwmap.h"
 #include "units.h"
+#include "digitalout.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 /*
  * Simple ADC class that supports only one regular channel, with data transfered over DMA
@@ -38,7 +41,7 @@ class ADCHandle {
 public:
 	static const uint32_t INVALID_CONV_VALUE = 0xffffffff;
 
-	/** Constructs and initializes a timer instance
+	/** Constructs and initializes an ADC handle instance
 	 *  @param adc Pointert to the internal ADC_TypeDef struct to be used, one of ADC1, ADC2 or ADC3
 	 *  @param adc_channel ADC channel to be used, one of ADC_CHANNEL_0 .. ADC_CHANNEL_16
 	 *  @param v_ref Reference voltage
@@ -76,13 +79,22 @@ class Voltmeter {
 public:
 	static constexpr float r1_div_ = 100.0f;
 	static constexpr float r2_div_ = 21.5f;
-	Voltmeter() : adc_(ADC1, ADC_CHANNEL_9, PB_1) {}
+	Voltmeter() : adc_(BATTERY_MONITOR_ADC, BATTERY_MONITOR_ADC_CHANNEL, BATTERY_MONITOR_PIN, 3.25),
+			voltmeter_ctrl_(BATTERY_MONITOR_ONOFF_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0) {}
 	Voltage measure()
 	{
-		return Voltage::from_volts(adc_.read_value_as_voltage() * (r1_div_+r2_div_) / r2_div_);
+		voltmeter_ctrl_.write(1);
+		float voltage;
+		vTaskDelay(300 / portTICK_RATE_MS);
+		for (uint32_t i = 0; i < 8 && (voltage = adc_.read_value_as_voltage()) < 0.1; ++i) {
+			vTaskDelay(300 / portTICK_RATE_MS);
+		}
+		voltmeter_ctrl_.write(0);
+		return Voltage::from_volts(voltage * (r1_div_+r2_div_) / r2_div_);
 	}
 private:
 	ADCHandle adc_;
+	DigitalOut voltmeter_ctrl_;
 };
 
 };

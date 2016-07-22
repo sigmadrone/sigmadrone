@@ -39,6 +39,8 @@ public:
 	virtual const Vector4f& motors() const  = 0;
 	virtual float get_min_thrust() const = 0;
 	virtual float get_max_thrust() const = 0;
+
+	virtual PilotType get_pilot_type() const = 0;
 };
 
 #endif // _IPILOT_H_

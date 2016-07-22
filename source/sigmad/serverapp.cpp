@@ -119,7 +119,7 @@ int server_app::run(int argc, const char *argv[])
 		setlinebuf(stdout);
 		setlinebuf(stderr);
 
-		firmware_uart_ = args_.get_value("firmware-uart", "/dev/ttymxc0");
+		firmware_uart_ = args_.get_value("firmware-uart", "/dev/ttymxc1");
 	}
 	get_log_file()->log_level(args_.get_value("loglevel", "info"));
 	log_info_message("Server starting.");

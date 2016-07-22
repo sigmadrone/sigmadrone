@@ -23,15 +23,16 @@
 #define COLIBRITRACE_H_
 
 #include <cassert>
+#include "colibrihwmap.h"
 
 namespace colibri {
 
 struct UartTrace {
 	static void init(uint32_t baudrate=115200) {
-		GPIOPin tx_gpio(PG_14, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF8_USART6);
-		GPIOPin rx_gpio(PG_9, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF8_USART6);
-		static UART uart6({tx_gpio, rx_gpio}, USART6, 0,
-				DMA2_Stream7, DMA_CHANNEL_4, DMA2_Stream5, DMA_CHANNEL_4,
+		GPIOPin tx_gpio(TRACE_USART_TX_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF7_USART1);
+		GPIOPin rx_gpio(TRACE_USART_RX_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF7_USART1);
+		static UART uart1({tx_gpio, rx_gpio}, TRACE_USART, 0,
+				0,0,0,0,
 				UART_HWCONTROL_NONE,
 				baudrate,
 				250);

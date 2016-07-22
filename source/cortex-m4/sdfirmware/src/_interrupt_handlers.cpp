@@ -29,6 +29,7 @@
 #include "spimaster.h"
 #include "spislave.h"
 #include "uart.h"
+#include "colibrihwmap.h"
 
 extern unsigned int __relocated_vectors;
 
@@ -61,9 +62,19 @@ extern "C" void EXTI2_IRQHandler(void)
 	DigitalIn::vector_handler(2);
 }
 
+extern "C" void EXTI3_IRQHandler(void)
+{
+	DigitalIn::vector_handler(3);
+}
+
 extern "C" void EXTI4_IRQHandler(void)
 {
 	SPISlave::spi_chipselect_handler(4);
+}
+
+extern "C" void EXTI15_10_IRQHandler(void)
+{
+	DigitalIn::vector_handler(12);
 }
 
 extern "C" void DMA2_Stream0_IRQHandler(void)
@@ -123,6 +134,12 @@ extern "C" void USART2_IRQHandler(void)
 
 extern "C" void EmergencyShutdown_Handler(void)
 {
-	DigitalOut(PB_2).write(0);
+	DigitalOut(SHUTDOWN_PIN).write(0);
 }
 
+extern "C" PCD_HandleTypeDef hpcd; // declared in usbd_conf.c
+
+extern "C" void OTG_FS_IRQHandler(void)
+{
+	HAL_PCD_IRQHandler(&hpcd);
+}
