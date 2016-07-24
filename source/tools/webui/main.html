@@ -591,10 +591,10 @@
           <hr class="featurette-divider">
 
           <h4 class="graph-title">Current and Target Vector</h4>
-          <a href="#motor-chart-ydata-select-id" id="motor-chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
+          <a href="#error-chart-ydata-select-id" id="error-chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
             <span class="glyphicon glyphicon-triangle-right"></span>Filter Data
           </a>
-          <div id = "motor-chart-ydata-select-id" class="col-xs-12 collapse">
+          <div id = "error-chart-ydata-select-id" class="col-xs-12 collapse">
             <div class="row">
               <div class="col-xs-3 col-md-2 col-data">
                 <div class="checkbox">
@@ -617,9 +617,42 @@
 
           <div id="error-chart-id"></div>
 
-          <div class="row row-padded">
-            <span id="chart-status-id"></span>
+          <div class="row row-padded"></div>
+          <hr class="featurette-divider">
+
+          <h4 class="graph-title">Altitude and Speed</h4>
+          <a href="#altitude-chart-ydata-select-id" id="altitude-chart-data-select-bt" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Filter Data
+          </a>
+          <div id = "altitude-chart-ydata-select-id" class="col-xs-12 collapse">
+            <div class="row">
+              <div class="col-xs-6 col-md-3 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAltitude(this)">Relative Alt, m</label>
+                </div>
+              </div>
+              <div class="col-xs-6 col-md-3">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAltitudeGps(this)">Relative Alt(GPS), m</label>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xs-6 col-md-3 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartVerticalSpeed(this)">Vertical Speed, m/s</label>
+                </div>
+              </div>
+              <div class="col-xs-6 col-md-3">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartVerticalSpeedGps(this)">Vertical Speed Gps, m/s</label>
+                </div>
+              </div>
+            </div>
+            <div class="row row-padded"></div>
           </div>
+
+          <div id="altitude-chart-id"></div>
 
       </div> <!-- div id = "drone-data" -->
 
@@ -629,7 +662,7 @@
 
     <footer class="footer">
       <p>
-        &copy; Sigmadrone 2015
+        &copy; Sigmadrone 2016
       </p>
     </footer>
 
@@ -647,6 +680,7 @@
   <script src="./js/vis.min.js"></script>
   <script src="./js/chart2d.js"></script>
   <script src="./js/rpcclient.js"></script>
+  <script src="./js/chartmodel.js"></script>
   <link href="./js/vis.min.css" rel="stylesheet" type="text/css" />
 
   <script>
@@ -692,11 +726,14 @@
       "#sync-graph-btn",
       "#sync-graph-btn-icon",
       false);
-  var droneState;
+  var droneState = null;
   var droneRpcUrl;
   var rpcClient = new RpcClient();
   var sensorChart = null;
   var errorChart = null;
+  var altitudeChart = null;
+  var altitudeChartModel = null;
+
   sensorChart = new VisChart2d(
     document.getElementById("sensor-chart-id"),
     "#chart-status-id",
@@ -717,11 +754,22 @@
     onChartEvent
   );
 
+  altitudeChart = new VisChart2d(
+    document.getElementById("altitude-chart-id"),
+    null,
+    "Altitude",
+    ['Altitude', 'AltitudeGps'],
+    -10, 40,
+    ['VerticalSpeed', 'VerticalSpeedGps'],
+    onChartEvent
+  );
+
   function onChartEvent(event) {
     if (event.hasOwnProperty('start') && event.hasOwnProperty('end')) {
       if (syncGraphButton.isOn()) {
         sensorChart.setRange(event.start, event.end);
         errorChart.setRange(event.start, event.end);
+        altitudeChart.setRange(event.start, event.end);
       }
     }
   }
@@ -757,6 +805,11 @@
     errorChart.enableDisableGroup('V:Z', element.checked);
     errorChart.enableDisableGroup('TgtV:Z', element.checked);
   }
+
+  function onToggleChartAltitude(element) { altitudeChart.enableDisableGroup('Altitude', element.checked); }
+  function onToggleChartAltitudeGps(element) { altitudeChart.enableDisableGroup('AltitudeGps', element.checked); }
+  function onToggleChartVerticalSpeed(element) { altitudeChart.enableDisableGroup('VerticalSpeed', element.checked); }
+  function onToggleChartVerticalSpeedGps(element) { altitudeChart.enableDisableGroup('VerticalSpeedGps', element.checked); }
 
   function quaternion2str(q) {
     return 'w:' + q.w.toFixed(3) + ' x:' + q.x.toFixed(3) + '  y:' + q.y.toFixed(3) + '  z:' + q.z.toFixed(3);
@@ -1009,10 +1062,21 @@
     }
   }
 
-  function updateMotorChart(sensorDataStream) {
+  function updateVectorErrorChart(sensorDataStream) {
     for (var i = 0; i < sensorDataStream.length; ++i) {
       var samples = sensorDataStream[i].zVector.concat(sensorDataStream[i].zVectorTarget);
       errorChart.update(samples, sensorDataStream[i].serial);
+    }
+  }
+
+  function updateAltitudeChart(dataStream) {
+    for (var i = 0; i < dataStream.length; ++i) {
+      altitudeChartModel.update(dataStream[i]);
+      var samples = [
+        altitudeChartModel.relativeAltitude(), altitudeChartModel.relativeAltitudeGps(),
+        altitudeChartModel.verticalSpeed, altitudeChartModel.verticalSpeedGps
+      ];
+      altitudeChart.update(samples, dataStream[i].serial);
     }
   }
 
@@ -1021,7 +1085,7 @@
       console.log(JSON.stringify(response.result));
     } else {
       updateSensorChart(response.result);
-      updateMotorChart(response.result);
+      updateVectorErrorChart(response.result);
     }
   }
 
@@ -1062,7 +1126,8 @@
       if (collectDataButton.isOn()) {
         droneState.serial = droneState.iteration;
         updateSensorChart([droneState]);
-        updateMotorChart([droneState]);
+        updateVectorErrorChart([droneState]);
+        updateAltitudeChart([droneState]);
       }
 
       console.log("Iteration: ", droneState.iteration);
@@ -1138,7 +1203,7 @@
     toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
     toggleCollapsable("#flight-ctl-id", "#flight-ctl-btn", "Flight Control");
     toggleCollapsable("#sensor-chart-ydata-select-id", "#sensor-chart-data-select-bt", "Filter Data");
-    toggleCollapsable("#motor-chart-ydata-select-id", "#motor-chart-data-select-bt", "Filter Data");
+    toggleCollapsable("#error-chart-ydata-select-id", "#error-chart-data-select-bt", "Filter Data");
     toggleStatusMessage(true);
 
     m1 = new JustGage({
@@ -1202,12 +1267,15 @@
     if (collectDataButton.isOff()) {
       // Disable the button while drawing the chart
       $("#collect-data-btn").addClass("disabled");
-      redrawGraph = true;
       sensorChart.updateStatus("DRAWING");
       errorChart.updateStatus("DRAWING");
+      altitudeChart.updateStatus("DRAWING");
+      redrawGraph = true;
     } else {
       sensorChart.reset();
       errorChart.reset();
+      altitudeChart.reset();
+      altitudeChartModel = new AltitudeViewModel(droneState);
     }
   }
 
@@ -1229,6 +1297,7 @@
         redrawGraph = false;
         sensorChart.draw();
         errorChart.draw();
+        altitudeChart.draw();
         $("#collect-data-btn").removeClass("disabled");
       }
       if (rpcClient.failureCount() > 5) {

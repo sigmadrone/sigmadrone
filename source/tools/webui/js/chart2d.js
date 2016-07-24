@@ -129,6 +129,7 @@ VisChart2d.prototype.createOptions = function() {
     end: vis.moment() + 60 * 1000,
     showCurrentTime: true,
     dataAxis: {
+      alignZeros: true,
       left: {
         range: {
           min: this.rangeMin, max: this.rangeMax
@@ -141,6 +142,9 @@ VisChart2d.prototype.createOptions = function() {
         //}
       },
       right: {
+        //range: {
+        //  min: -3, max: 3
+        //},
         format: function(value) {
           return value.toFixed(3);
         },
