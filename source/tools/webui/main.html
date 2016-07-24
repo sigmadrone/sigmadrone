@@ -628,26 +628,33 @@
             <div class="row">
               <div class="col-xs-6 col-md-3 col-data">
                 <div class="checkbox">
-                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAltitude(this)">Relative Alt, m</label>
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAltitude(this)">Relative Altitude</label>
                 </div>
               </div>
-              <div class="col-xs-6 col-md-3">
+              <!--div class="col-xs-6 col-md-3">
                 <div class="checkbox">
                   <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAltitudeGps(this)">Relative Alt(GPS), m</label>
+                </div>
+              </div-->
+            </div>
+            <div class="row">
+              <div class="col-xs-6 col-md-3 col-data">
+                <div class="checkbox">
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartSpeedGps(this)">Speed (GPS)</label>
                 </div>
               </div>
             </div>
             <div class="row">
               <div class="col-xs-6 col-md-3 col-data">
                 <div class="checkbox">
-                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartVerticalSpeed(this)">Vertical Speed, m/s</label>
+                  <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartVerticalSpeed(this)">Vertical Speed</label>
                 </div>
               </div>
-              <div class="col-xs-6 col-md-3">
+              <!--div class="col-xs-6 col-md-3">
                 <div class="checkbox">
                   <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartVerticalSpeedGps(this)">Vertical Speed Gps, m/s</label>
                 </div>
-              </div>
+              </div-->
             </div>
             <div class="row row-padded"></div>
           </div>
@@ -758,9 +765,9 @@
     document.getElementById("altitude-chart-id"),
     null,
     "Altitude",
-    ['Altitude', 'AltitudeGps'],
+    ['Altitude, m'],
     -10, 40,
-    ['VerticalSpeed', 'VerticalSpeedGps'],
+    ['Speed, km/h', 'Vertical Speed, m/s'],
     onChartEvent
   );
 
@@ -806,10 +813,11 @@
     errorChart.enableDisableGroup('TgtV:Z', element.checked);
   }
 
-  function onToggleChartAltitude(element) { altitudeChart.enableDisableGroup('Altitude', element.checked); }
-  function onToggleChartAltitudeGps(element) { altitudeChart.enableDisableGroup('AltitudeGps', element.checked); }
-  function onToggleChartVerticalSpeed(element) { altitudeChart.enableDisableGroup('VerticalSpeed', element.checked); }
-  function onToggleChartVerticalSpeedGps(element) { altitudeChart.enableDisableGroup('VerticalSpeedGps', element.checked); }
+  function onToggleChartAltitude(element) { altitudeChart.enableDisableGroup('Altitude, m', element.checked); }
+  //function onToggleChartAltitudeGps(element) { altitudeChart.enableDisableGroup('AltitudeGps', element.checked); }
+  //function onToggleChartVerticalSpeedGps(element) { altitudeChart.enableDisableGroup('VerticalSpeedGps', element.checked); }
+  function onToggleChartVerticalSpeed(element) { altitudeChart.enableDisableGroup('Vertical Speed, m/s', element.checked); }
+  function onToggleChartSpeedGps(element) { altitudeChart.enableDisableGroup('Speed, km/h', element.checked); }
 
   function quaternion2str(q) {
     return 'w:' + q.w.toFixed(3) + ' x:' + q.x.toFixed(3) + '  y:' + q.y.toFixed(3) + '  z:' + q.z.toFixed(3);
@@ -1073,8 +1081,9 @@
     for (var i = 0; i < dataStream.length; ++i) {
       altitudeChartModel.update(dataStream[i]);
       var samples = [
-        altitudeChartModel.relativeAltitude(), altitudeChartModel.relativeAltitudeGps(),
-        altitudeChartModel.verticalSpeed, altitudeChartModel.verticalSpeedGps
+        altitudeChartModel.relativeAltitude(), //altitudeChartModel.relativeAltitudeGps(),
+        dataStream[i].gps_speed_kmph,
+        altitudeChartModel.verticalSpeed//, altitudeChartModel.verticalSpeedGps
       ];
       altitudeChart.update(samples, dataStream[i].serial);
     }
