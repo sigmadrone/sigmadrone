@@ -61,16 +61,7 @@ Vector3f PidTorque::get_torque(const DroneState& state)
 	// ==> errQ = (~attitudeQ) * targetQ;
 	Qtorq = (~in_Q) * set_Q_;
 	Vector3f error_z = Qtorq.axis().normalize();
-	float angle_rad = Qtorq.angle();
-	if (fabs(angle_rad) > M_PI) {
-		if (angle_rad > 0) {
-			angle_rad -= 2.0 * M_PI;
-		} else {
-			angle_rad += 2.0 * M_PI;
-		}
-	}
-
-	error_z = error_z * angle_rad;
+	error_z = error_z * Qtorq.angle();
 	float torq_yaw = pid_yaw_.get_pd(error_z.at(2), dt.seconds_float());
 	float yaw_factor = state.yaw_throttle_factor_ / 3.0;
 	torq_yaw = std::max(-yaw_factor, std::min(torq_yaw, yaw_factor));

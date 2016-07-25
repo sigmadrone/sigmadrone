@@ -45,7 +45,9 @@ enum FlightMode {
 	/*
 	 * The drone flies through pre-defined waypoints
 	 */
-	FLIGHT_MODE_MISSION = 3
+	FLIGHT_MODE_MISSION = 3,
+
+	FLIGHT_MODE_LAST = FLIGHT_MODE_MISSION
 };
 
 enum PilotType {

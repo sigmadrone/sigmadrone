@@ -24,8 +24,7 @@
 //static const Throttle throttle_alt_hold_range = max_throttle_altitude_hold - min_throttle_altitude_hold;
 
 AltitudeControl::AltitudeControl() :
-	pid_altitude_(0.08,0.02,0),
-	pid_speed_(0.3,0.02,0),
+	pid_altitude_(0.03,0.005,0.0),
 	state_(STATE_LANDED),
 	current_vertical_speed_(0)
 {
@@ -43,14 +42,13 @@ void AltitudeControl::update_state(DroneState& drone_state)
 		return;
 	}
 
-	if (last_update_time_.elapsed() < TimeSpan::from_milliseconds(100)) {
+	pid_altitude_.set_kp_ki_kd(drone_state.altitude_kp_, drone_state.altitude_ki_, drone_state.altitude_kd_);
+
+	if (drone_state.altitude_ == last_altitude_) {
 		return;
 	}
 
 	dt_ = last_update_time_.elapsed();
-	current_vertical_speed_ = Speed(drone_state.altitude_ - last_altitude_, dt_);
-
-	last_update_time_.time_stamp();
 
 	switch (state_) {
 	case STATE_LANDED:
@@ -70,12 +68,11 @@ void AltitudeControl::update_state(DroneState& drone_state)
 
 	last_altitude_ = drone_state.altitude_;
 	last_base_throttle_ = drone_state.base_throttle_;
+	last_update_time_.time_stamp();
+
+	drone_state.base_throttle_ = throttle_;
 
 	drone_state.flight_posture_ = state_to_string(state_);
-
-	if (drone_state.base_throttle_ < landing_throttle) {
-		throttle_ = 0.0;
-	}
 }
 
 
@@ -98,7 +95,7 @@ void AltitudeControl::on_state_ascend(DroneState& drone_state)
 		if (is_descend_throttle(drone_state.base_throttle_)) {
 			state_ = STATE_DESCEND;
 		}
-		set_throttle_from_speed_pid(drone_state);
+		set_throttle_from_ascend_descend(drone_state);
 	}
 }
 
@@ -106,7 +103,7 @@ void AltitudeControl::on_state_altitude_hold(DroneState& drone_state)
 {
 	float alt_err_pid = pid_altitude_.get_pi_dmedian(error_as_altitude(drone_state).meters(),
 			dt_.seconds_float(), 0.1);
-	float base_throttle = get_hovering_throttle(drone_state);
+	float base_throttle =drone_state.base_throttle_;
 	throttle_ = Throttle(base_throttle - alt_err_pid, landing_throttle, 1.0f);
 	if (is_altitude_hold_throttle(drone_state.base_throttle_)) {
 		return;
@@ -121,7 +118,7 @@ void AltitudeControl::on_state_descend(DroneState& drone_state)
 		return;
 	}
 
-	if (is_landing_altitude(drone_state) && is_landing_throttle(drone_state.base_throttle_)) {
+	if (is_landing_throttle(drone_state.base_throttle_)) {
 		state_ = STATE_LANDED;
 		throttle_ = 0;
 		return;
@@ -130,25 +127,17 @@ void AltitudeControl::on_state_descend(DroneState& drone_state)
 	if (is_ascend_throttle(drone_state.base_throttle_)) {
 		state_ = STATE_ASCEND;
 	}
+	set_throttle_from_ascend_descend(drone_state);
 }
 
 void AltitudeControl::go_to_state_altitude_hold(const DroneState& drone_state)
 {
-	if (drone_state.base_throttle_ == last_base_throttle_) {
-		state_ = STATE_ALTITUDE_HOLD;
-		pid_altitude_.get_d_median(error_as_altitude(drone_state).meters(), dt_.seconds_float());
-		desired_altitude_ = drone_state.altitude_;
-	}
+	state_ = STATE_ALTITUDE_HOLD;
+	pid_altitude_.set_integral_error(0.0f); // TODO: verify if it is better to clear the integral
+	pid_altitude_.get_d_median(error_as_altitude(drone_state).meters(), dt_.seconds_float());
+	desired_altitude_ = drone_state.altitude_;
 }
 
-Altitude AltitudeControl::get_desired_altitude(const DroneState& drone_state)
-{
-	if (is_altitude_hold_throttle(drone_state.throttle_))
-	{
-
-	}
-	return Altitude();
-}
 
 Speed AltitudeControl::get_desired_vertical_speed(const DroneState& drone_state)
 {
@@ -167,9 +156,19 @@ Speed AltitudeControl::current_vertical_speed()
 	return current_vertical_speed_;
 }
 
+Speed AltitudeControl::error_as_vertical_speed(const DroneState& drone_state)
+{
+	return current_vertical_speed_ - get_desired_vertical_speed(drone_state);
+}
+
 Altitude AltitudeControl::error_as_altitude(const DroneState& drone_state)
 {
 	return drone_state.altitude_ - desired_altitude_;
+}
+
+void AltitudeControl::set_throttle_from_ascend_descend(const DroneState& drone_state)
+{
+	throttle_ = drone_state.base_throttle_;
 }
 
 bool AltitudeControl::is_landing_altitude(const DroneState& drone_state)
@@ -179,17 +178,20 @@ bool AltitudeControl::is_landing_altitude(const DroneState& drone_state)
 
 bool AltitudeControl::is_altitude_hold_throttle(const Throttle& t)
 {
-	return t >= min_throttle_altitude_hold && t <= max_throttle_altitude_hold;
+	if (t >= min_throttle_altitude_hold && t <= max_throttle_altitude_hold) {
+		return true;
+	}
+	return false;
 }
 
 bool AltitudeControl::is_ascend_throttle(const Throttle& t)
 {
-	return t > max_throttle_altitude_hold;
+	return t > last_base_throttle_;
 }
 
 bool AltitudeControl::is_descend_throttle(const Throttle& t)
 {
-	return t < min_throttle_altitude_hold;
+	return t < last_base_throttle_;
 }
 
 bool AltitudeControl::is_landing_throttle(const Throttle& t)
@@ -197,16 +199,16 @@ bool AltitudeControl::is_landing_throttle(const Throttle& t)
 	return t <= landing_throttle;
 }
 
-Throttle AltitudeControl::get_hovering_throttle(const DroneState& drone_state)
+Throttle AltitudeControl::hovering_throttle(const DroneState& drone_state)
 {
 	if (drone_state.battery_percentage_ >= 40) {
-		return 0.55f; // TODO: this will have to be measured
+		return 0.5f; // TODO: this will have to be measured
 	}
-	return 0.55f; // TODO: this will have to be measured
+	return 0.5f; // TODO: this will have to be measured
 }
 
 const char* AltitudeControl::state_to_string(AltitudeControl::State state)
 {
-	static const std::array<const char*, 5> as_str = {"LANDED","TAKE_OFF","ALTITUDE_HOLD","ASCEND","DESCEND"};
-	return (state < as_str.size()) ? as_str[state] : "UNKNOWN";
+	static const std::array<const char*, 5> as_str = {"Landed","Altitude Hold","Ascend","Descend"};
+	return (state < as_str.size()) ? as_str[state] : "Unknown";
 }

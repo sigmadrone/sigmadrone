@@ -65,6 +65,10 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Da
 	add("sd_gyro_drift_leak_rate", &UartRpcServer::rpc_gyro_drift_leak_rate);
 	add("sd_enable_external_gyro", &UartRpcServer::rpc_enable_external_gyro);
 	add("sd_external_gyro_align", &UartRpcServer::rpc_external_gyro_align);
+	add("sd_altitude_kp", &UartRpcServer::rpc_altitude_kp);
+	add("sd_altitude_ki", &UartRpcServer::rpc_altitude_ki);
+	add("sd_altitude_kd", &UartRpcServer::rpc_altitude_kd);
+	add("sd_flight_mode", &UartRpcServer::rpc_flight_mode);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -438,6 +442,35 @@ rexjson::value UartRpcServer::rpc_flight_ceiling(UART*, rexjson::array& params, 
 		dronestate_.flight_ceiling_ = Altitude::from_meters(params[0].get_real());
 	}
 	return dronestate_.flight_ceiling_.meters();
+}
+
+rexjson::value UartRpcServer::rpc_flight_mode(UART*, rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+				"sd_flight_mode\n"
+				"\nGet/Set new flight mode, where:"
+				"\n    0 - auto level (default)"
+				"\n    1 - auto level and altitude hold"
+				"\n    2 - loiter"
+				"\n    3 - mission"
+				"\nIf the new flight mode is not specified, then the current one is returned."
+				"\n"
+				"Arguments:\n"
+				"1. flight_mode   (int, optional) The new flight mode.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() != rexjson::null_type)) {
+		dronestate_.flight_mode_ = params[0].get_int() <= FLIGHT_MODE_LAST ?
+				static_cast<FlightMode>(params[0].get_int()) : FLIGHT_MODE_AUTO_LEVEL;
+	}
+	return dronestate_.flight_mode_;
 }
 
 rexjson::value UartRpcServer::rpc_restore_config(UART*, rexjson::array& params, rpc_exec_mode mode)
@@ -820,6 +853,78 @@ rexjson::value UartRpcServer::rpc_gyro_drift_kd(UART* , rexjson::array& params, 
 		dronestate_.gyro_drift_kd_ = params[0].get_real();
 	}
 	return dronestate_.gyro_drift_kd_;
+}
+
+rexjson::value UartRpcServer::rpc_altitude_kp(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_altitude_kp\n"
+	            "\nGet/Set Kp for the altitude PID controller."
+				"\nIf the new coefficient is not specified, the current Kp will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kp          (real, optional) The Kp of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.altitude_kp_ = params[0].get_real();
+	}
+	return dronestate_.altitude_kp_;
+}
+
+rexjson::value UartRpcServer::rpc_altitude_ki(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_altitude_ki\n"
+	            "\nGet/Set Ki for the altitude PID controller."
+				"\nIf the new coefficient is not specified, the current Ki will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Ki          (real, optional) The Ki of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.altitude_ki_ = params[0].get_real();
+	}
+	return dronestate_.altitude_ki_;
+}
+
+rexjson::value UartRpcServer::rpc_altitude_kd(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_altitude_kd\n"
+	            "\nGet/Set Kd for the altitude PID controller."
+				"\nIf the new coefficient is not specified, the current Kd will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kd          (real, optional) The Kd of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.altitude_kd_ = params[0].get_real();
+	}
+	return dronestate_.altitude_kd_;
 }
 
 rexjson::value UartRpcServer::rpc_gyro_drift_leak_rate(UART* , rexjson::array& params, rpc_exec_mode mode)

@@ -45,12 +45,15 @@ struct DroneState {
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
-		, kp_(0.24)
-		, ki_(0.6)
-		, kd_(0.06)
+		, kp_(0.14)
+		, ki_(0.3)
+		, kd_(0.035)
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
+	    , altitude_kp_(0.03)
+		, altitude_ki_(0.005)
+		, altitude_kd_(0.0)
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
@@ -80,7 +83,7 @@ struct DroneState {
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	{
 #ifdef USE_TRIPILOT
-		SetPilotType(PILOT_TYPE_PID_NEW);
+		set_pilot_type(PILOT_TYPE_PID_NEW);
 #endif
 	}
 
@@ -153,6 +156,7 @@ struct DroneState {
 		ret["pilot_type"] = std::string(PilotTypeAsStr(pilot_type_));
 		ret["ext_gyro_enabled"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = external_gyro_align_;
+		ret["flight_posture"] = flight_posture_;
 		return ret;
 	}
 
@@ -211,21 +215,21 @@ struct DroneState {
 	{
 		pilot_type_ = pilot_type;
 		if (PILOT_TYPE_PID_NEW == pilot_type) {
-			kp_ = 0.25;
+			kp_ = 0.15;
 			ki_ = 0.035;
-			kd_= 0.045;
+			kd_= 0.04;
 			yaw_kp_ = 0.20;
 			yaw_ki_= 0.0;
 			yaw_kd_ = 0.07;
-			accelerometer_correction_speed_ = 5.0;
+			accelerometer_correction_speed_ = 2.0;
 		} else if (PILOT_TYPE_PID_LEGACY == pilot_type) {
-			kp_ = 0.24;
-			ki_ = 0.6;
-			kd_ = 0.06;
-			yaw_kp_ = 0.72;
+			kp_ = 0.14;
+			ki_ = 0.3;
+			kd_ = 0.035;
+			yaw_kp_ = 1.00;
 			yaw_ki_ = 0.0;
-			yaw_kd_ = 0.30;
-			accelerometer_correction_speed_ = 5.0;
+			yaw_kd_ = 0.10;
+			accelerometer_correction_speed_ = 2.0;
 		}
 	}
 
