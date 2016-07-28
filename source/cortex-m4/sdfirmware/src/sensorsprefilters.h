@@ -79,9 +79,44 @@ public:
 
 typedef FirLpfFs760Fc10<Vector3f> GyroPreFilter;
 
+template <typename DataType>
+class MedianFilter // simple 3rd order median filter
+{
+public:
+	MedianFilter() { reset(); }
+	~MedianFilter() = default;
 
-static const size_t PRESSURE_FILTER_ORDER = 25;
-typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> PressurePreFilter;
+	void reset() { min_ = max_ = out_ = last_in_ = 0; }
+	const DataType& do_filter(const DataType& in)
+	{
+		out_ = in;
+		if (out_ > max_) {
+			out_ = max_;
+		} else if (out_ < min_) {
+			out_ = min_;
+		}
+		if (in > last_in_) {
+			max_ = in;
+			min_ = last_in_;
+		} else {
+			min_ = in;
+			max_ = last_in_;
+		}
+		last_in_ = in;
+		return out_;
+	}
+	const DataType& output() const { return out_; }
+private:
+	DataType min_;
+	DataType max_;
+	DataType out_;
+	DataType last_in_;
+};
+
+
+static const size_t PRESSURE_FILTER_ORDER = 3;
+//typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> PressurePreFilter;
+typedef MedianFilter<float> PressurePreFilter;
 typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> TemperaturePreFilter;
 
 #endif /* SENSORS_PREFILTERS_H_ */

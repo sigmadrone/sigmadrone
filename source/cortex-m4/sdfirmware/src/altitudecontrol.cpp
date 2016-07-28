@@ -168,6 +168,7 @@ Altitude AltitudeControl::error_as_altitude(const DroneState& drone_state)
 
 void AltitudeControl::set_throttle_from_ascend_descend(const DroneState& drone_state)
 {
+	pid_altitude_.get_pi_dmedian(0, dt_.seconds_float(), 0.1);
 	throttle_ = drone_state.base_throttle_;
 }
 

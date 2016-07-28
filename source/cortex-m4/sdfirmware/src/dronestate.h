@@ -144,6 +144,9 @@ struct DroneState {
 		ret["gyro_drift_kp"] = gyro_drift_kp_;
 		ret["gyro_drift_ki"] = gyro_drift_ki_;
 		ret["gyro_drift_kd"] = gyro_drift_kd_;
+		ret["altitude_kp"] = altitude_kp_;
+		ret["altitude_ki"] = altitude_ki_;
+		ret["altitude_kd"] = altitude_kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
 		ret["gyro_factor"] = gyro_factor_;
 		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
