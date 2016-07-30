@@ -198,8 +198,8 @@ struct Speed : public ScaledUnit<float> {
 	inline float meters_per_second() const { return unit(); }
 	inline float kmph() const { return meters_per_second() * METERS_PER_SECOND_TO_KMPH; }
 
-	Speed() : ScaledUnit(0) {}
 	Speed operator*(float rhs) const { return Speed(unit() * rhs); }
+	Distance operator*(TimeSpan ts) const { return Distance::from_meters(meters_per_second() * ts.seconds_float()); }
 	Speed operator*=(float rhs) { *this = Speed(unit() * rhs); return *this; }
 	Speed operator/(float rhs) const { return Speed(unit() / rhs); }
 	Speed operator+(const Speed& rhs) const { return Speed(unit() + rhs.unit()); }
