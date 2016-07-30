@@ -51,9 +51,9 @@ struct DroneState {
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-	    , altitude_kp_(0.03)
-		, altitude_ki_(0.005)
-		, altitude_kd_(0.0)
+	    , altitude_kp_(0.02)
+		, altitude_ki_(0.002)
+		, altitude_kd_(0.002)
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
@@ -160,6 +160,7 @@ struct DroneState {
 		ret["ext_gyro_enabled"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = external_gyro_align_;
 		ret["flight_posture"] = flight_posture_;
+		ret["altitude_from_acc"] = altitude_from_acc_.meters();
 		return ret;
 	}
 
@@ -247,6 +248,7 @@ struct DroneState {
 	Vector3f mag_;
 	Vector3f gyro_drift_error_;
 	Altitude altitude_;
+	Altitude altitude_from_acc_;
 	float pressure_hpa_;
 	float temperature_;
 	Voltage battery_voltage_;
