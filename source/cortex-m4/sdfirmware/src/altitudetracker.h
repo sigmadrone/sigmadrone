@@ -39,7 +39,10 @@ public:
 	void update_state(DroneState& state);
 	bool is_flight_ceiling_hit() const;
 
+	static float calc_vertical_accel(const DroneState& state);
+
 private:
+
 	void clear_alarm();
 
 	static const uint32_t ALARM_COUNT_THRESHOLD = 16;
@@ -48,9 +51,12 @@ private:
 	Altitude starting_altitude_;
 	Altitude current_altitude_;
 	Altitude highest_altitude_;
+	Speed vert_velocity_from_acc;
+	float vert_acc_bias_;
 	uint32_t alarm_count_;
 	float safe_threshold_;
 	bool flight_ceiling_hit_;
+	uint32_t vert_accel_bias_iterations_;
 };
 
 
