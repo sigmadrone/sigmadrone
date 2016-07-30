@@ -24,7 +24,7 @@
 #include "task.h"
 
 Bmp180Reader::Bmp180Reader(BMP180& bmp)
-	: bmp_(bmp)
+	: bmp_(bmp), base_pressure_(0)
 {
 }
 
@@ -35,7 +35,7 @@ Bmp180Reader::~Bmp180Reader()
 Distance Bmp180Reader::altitude_meters(bool do_read_sensor)
 {
 	float hpa = pressure_hpa(do_read_sensor);
-	return convert_hpa_to_altitude(hpa);
+	return convert_hpa_to_altitude(hpa, base_pressure_, temperature_celsius(false));
 }
 
 float Bmp180Reader::pressure_hpa(bool do_read_sensor)
@@ -54,9 +54,9 @@ float Bmp180Reader::temperature_celsius(bool do_read_sensor)
 	return temperature_filter_.output();
 }
 
-Distance Bmp180Reader::convert_hpa_to_altitude(float hpa)
+Distance Bmp180Reader::convert_hpa_to_altitude(float hpa, float base_pressure, float temperature)
 {
-	return Distance::from_feet((1.0f - powf(hpa/1013.25f,0.19284f)) * 145366.45f);
+	return Distance::from_meters((powf(base_pressure/hpa,0.1902f) - 1.0f) * (temperature + 273.15f)/0.0065);
 }
 
 void Bmp180Reader::read_pressure()
@@ -75,9 +75,18 @@ void Bmp180Reader::read_temperature()
 
 void Bmp180Reader::calibrate()
 {
-	for (size_t i = 0; i < PRESSURE_FILTER_ORDER; ++i) {
+	base_pressure_ = 0;
+	size_t iterations = PRESSURE_FILTER_ORDER > 50 ? PRESSURE_FILTER_ORDER : 50;
+	vTaskDelay(100 / portTICK_RATE_MS);
+	for (size_t i = 0; i < iterations; ++i) {
 		read_pressure();
 		read_temperature();
-		vTaskDelay(50 / portTICK_RATE_MS);
+		vTaskDelay(10 / portTICK_RATE_MS);
 	}
+
+	for (size_t i = 0; i < iterations; ++i) {
+		base_pressure_ += pressure_hpa(true);
+		vTaskDelay(10 / portTICK_RATE_MS);
+	}
+	base_pressure_ /= iterations;
 }

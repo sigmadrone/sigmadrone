@@ -79,6 +79,15 @@ public:
 
 typedef FirLpfFs760Fc10<Vector3f> GyroPreFilter;
 
+
+template <typename DataType>
+class FirLpfFs100Fc10 : public FirFilter<DataType, float, 7> {
+public:
+	FirLpfFs100Fc10() : FirFilter<DataType, float, 7>(
+			{ 0.096350,0.11920787812041358,0.15598533208570348,0.16991505955919545,
+		0.15598533208570348,0.11920787812041358,0.09635098809039429}) {}
+};
+
 template <typename DataType>
 class MedianFilter // simple 3rd order median filter
 {
@@ -114,9 +123,10 @@ private:
 };
 
 
-static const size_t PRESSURE_FILTER_ORDER = 3;
-//typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> PressurePreFilter;
-typedef MedianFilter<float> PressurePreFilter;
+static const size_t PRESSURE_FILTER_ORDER = 10;
+typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> PressurePreFilter;
+//typedef MedianFilter<float> PressurePreFilter;
+//typedef FirLpfFs100Fc10<float> PressurePreFilter;
 typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> TemperaturePreFilter;
 
 #endif /* SENSORS_PREFILTERS_H_ */
