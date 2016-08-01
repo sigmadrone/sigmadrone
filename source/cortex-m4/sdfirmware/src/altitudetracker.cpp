@@ -22,8 +22,9 @@
 #include "altitudetracker.h"
 
 AltitudeTracker::AltitudeTracker(const Altitude& ceiling, float safe_threshold) :
-	flight_ceiling_(ceiling), starting_altitude_(INVALID_ALTITUDE), alarm_count_(0),
-	safe_threshold_(safe_threshold), flight_ceiling_hit_(false)
+	flight_ceiling_(ceiling), starting_altitude_(INVALID_ALTITUDE), vert_acc_bias_(0.023),
+	alarm_count_(0), safe_threshold_(safe_threshold), flight_ceiling_hit_(false),
+	vert_accel_bias_iterations_(0)
 {
 	assert(safe_threshold >= 0.0f && safe_threshold_ <= 1.0f);
 }
@@ -48,6 +49,12 @@ Altitude AltitudeTracker::flight_ceiling_absolute() const
 {
 	return starting_altitude_ != INVALID_ALTITUDE ? (flight_ceiling_ + starting_altitude_) :
 			Altitude::from_meters(0);
+}
+
+float AltitudeTracker::calc_vertical_accel(const DroneState& state)
+{
+	Vector3f worldAccel = state.attitude_.rotate(state.accel_raw_+state.accelerometer_adjustment_);
+	return worldAccel[2] + 1;
 }
 
 void AltitudeTracker::update_state(DroneState& drone_state)
@@ -85,6 +92,9 @@ void AltitudeTracker::update_state(DroneState& drone_state)
 			clear_alarm();
 		}
 	}
+
+	vert_velocity_ = Speed::from_meters_per_second(
+			altitude_deriv_.do_filter(drone_state.altitude_.meters()));
 }
 
 Altitude AltitudeTracker::highest_recorded_altitude() const

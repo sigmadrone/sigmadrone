@@ -24,19 +24,60 @@
 
 #include "dronestate.h"
 #include "pidcontroller.h"
+#include "firfilt.h"
+
+
+static const Throttle min_throttle_altitude_hold = Throttle(0.47);
+static const Throttle max_throttle_altitude_hold = Throttle(0.57);
+static const Throttle landing_throttle = Throttle(0.2);
+static const Speed max_vertical_speed = (ONE_METER * 6.0f) / ONE_SECOND;
+static const Speed min_vertical_speed = -((ONE_METER * 5.0f) / ONE_SECOND);
 
 class AltitudeControl {
 public:
 	AltitudeControl();
-	~AltitudeControl();
-	void Update(DroneState& drone_state);
-	Throttle GetThrottle();
+	~AltitudeControl() = default;
+	void update_state(DroneState& drone_state);
+	Throttle get_throttle();
+	Speed current_vertical_speed();
 
 private:
-	PidController<float> pid_;
+	void on_state_landed(DroneState& drone_state);
+	void on_state_ascend(DroneState& drone_state);
+	void on_state_altitude_hold(DroneState& drone_state);
+	void on_state_descend(DroneState& drone_state);
+	Speed get_desired_vertical_speed(const DroneState& drone_state);
+	Speed error_as_vertical_speed(const DroneState& drone_state);
+	Altitude error_as_altitude(const DroneState& drone_state);
+	bool is_landing_altitude(const DroneState& drone_state);
+	void set_throttle_from_ascend_descend(const DroneState& drone_state);
+	void go_to_state_altitude_hold(const DroneState& drone_state);
+	Throttle hovering_throttle(const DroneState& drone_state);
+
+	bool is_altitude_hold_throttle(const Throttle& t);
+	bool is_ascend_throttle(const Throttle& t);
+	bool is_descend_throttle(const Throttle& t);
+	bool is_landing_throttle(const Throttle& t);
+
+	enum State {
+		STATE_LANDED,
+		STATE_ALTITUDE_HOLD,
+		STATE_ASCEND,
+		STATE_DESCEND,
+		STATE_LAST
+	};
+	const char* state_to_string(State);
+
+	PidController<float> pid_altitude_;
+	State state_;
 	Throttle throttle_;
-	FlightMode flight_mode_;
-	Distance max_error_;
+	Altitude takeoff_altitude_;
+	Altitude last_altitude_;
+	Altitude desired_altitude_;
+	TimeSpan dt_;
+	TimeStamp last_update_time_;
+	Speed current_vertical_speed_;
+	Throttle last_base_throttle_;
 };
 
 #endif /* ALTITUDECONTROL_H_ */

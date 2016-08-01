@@ -129,11 +129,14 @@ void bmp180_task(void *pvParameters)
 	GPSReader gps;
 
 	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
+	PerfCounter gps_measure_time;
+	PerfCounter loop_time;
 
 	bmp_reader->calibrate();
 
 	gps.start();
 	while (1) {
+		loop_time.begin_measure();
 		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
 			led_toggle_ts.time_stamp();
 			led1.toggle();
@@ -142,8 +145,10 @@ void bmp180_task(void *pvParameters)
 		try {
 			drone_state->altitude_ = bmp_reader->altitude_meters(true);
 			drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
-			drone_state->temperature_ = bmp_reader->temperature_celsius(true);
+			drone_state->temperature_ = bmp_reader->temperature_celsius(false);
+			gps_measure_time.begin_measure();
 			gps.update_state();
+			gps_measure_time.end_measure();
 			drone_state->latitude_ = gps.lattitude();
 			drone_state->longitude_ = gps.longitude();
 			drone_state->gps_altitude_ = gps.altitude();
@@ -153,8 +158,9 @@ void bmp180_task(void *pvParameters)
 		} catch (std::exception& e) {
 //			i2c.reinit();
 		}
+		loop_time.end_measure();
 
-		vTaskDelay(10 / portTICK_RATE_MS);
+		// Do not delay the thread here, it will be delayed when the sensor is being read
 	}
 }
 
@@ -375,7 +381,7 @@ void main_task(void *pvParameters)
 		drone_state->accel_raw_ = acc_align * ReadAccelerometer(accel, accel_lpf);
 		if (drone_state->accel_raw_.length_squared() > 0) {
 			Vector3f accel_adjusted = drone_state->accel_raw_ + drone_state->accelerometer_adjustment_;
-			drone_state->accel_ = accel_adjusted.normalize();
+			drone_state->accel_ = accel_adjusted;//accel_adjusted.normalize();
 		}
 
 #ifdef ALLOW_ACCELEROMETER_OFF

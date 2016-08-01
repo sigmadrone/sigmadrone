@@ -45,12 +45,15 @@ struct DroneState {
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
-		, kp_(0.24)
-		, ki_(0.6)
-		, kd_(0.06)
+		, kp_(0.14)
+		, ki_(0.3)
+		, kd_(0.035)
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
+	    , altitude_kp_(0.02)
+		, altitude_ki_(0.002)
+		, altitude_kd_(0.002)
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
@@ -80,7 +83,7 @@ struct DroneState {
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	{
 #ifdef USE_TRIPILOT
-		SetPilotType(PILOT_TYPE_PID_NEW);
+		set_pilot_type(PILOT_TYPE_PID_NEW);
 #endif
 	}
 
@@ -141,6 +144,9 @@ struct DroneState {
 		ret["gyro_drift_kp"] = gyro_drift_kp_;
 		ret["gyro_drift_ki"] = gyro_drift_ki_;
 		ret["gyro_drift_kd"] = gyro_drift_kd_;
+		ret["altitude_kp"] = altitude_kp_;
+		ret["altitude_ki"] = altitude_ki_;
+		ret["altitude_kd"] = altitude_kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
 		ret["gyro_factor"] = gyro_factor_;
 		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
@@ -153,6 +159,8 @@ struct DroneState {
 		ret["pilot_type"] = std::string(PilotTypeAsStr(pilot_type_));
 		ret["ext_gyro_enabled"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = external_gyro_align_;
+		ret["flight_posture"] = flight_posture_;
+		ret["altitude_from_acc"] = altitude_from_acc_.meters();
 		return ret;
 	}
 
@@ -211,21 +219,21 @@ struct DroneState {
 	{
 		pilot_type_ = pilot_type;
 		if (PILOT_TYPE_PID_NEW == pilot_type) {
-			kp_ = 0.25;
+			kp_ = 0.15;
 			ki_ = 0.035;
-			kd_= 0.045;
+			kd_= 0.04;
 			yaw_kp_ = 0.20;
 			yaw_ki_= 0.0;
 			yaw_kd_ = 0.07;
-			accelerometer_correction_speed_ = 5.0;
+			accelerometer_correction_speed_ = 2.0;
 		} else if (PILOT_TYPE_PID_LEGACY == pilot_type) {
-			kp_ = 0.24;
-			ki_ = 0.6;
-			kd_ = 0.06;
-			yaw_kp_ = 0.72;
+			kp_ = 0.14;
+			ki_ = 0.3;
+			kd_ = 0.035;
+			yaw_kp_ = 1.00;
 			yaw_ki_ = 0.0;
-			yaw_kd_ = 0.30;
-			accelerometer_correction_speed_ = 5.0;
+			yaw_kd_ = 0.10;
+			accelerometer_correction_speed_ = 2.0;
 		}
 	}
 
@@ -240,6 +248,7 @@ struct DroneState {
 	Vector3f mag_;
 	Vector3f gyro_drift_error_;
 	Altitude altitude_;
+	Altitude altitude_from_acc_;
 	float pressure_hpa_;
 	float temperature_;
 	Voltage battery_voltage_;
@@ -307,6 +316,8 @@ struct DroneState {
 	QuaternionF target_;
 	Vector4f motors_;
 	Vector3f pid_torque_;
+	float throttle_;
+	std::string flight_posture_;
 
 	/*
 	 * Safety...

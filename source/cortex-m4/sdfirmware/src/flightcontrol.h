@@ -31,6 +31,7 @@
 #include "ipilot.h"
 #include "alarm.h"
 #include "altitudetracker.h"
+#include "altitudecontrol.h"
 #include "ipilot.h"
 
 static const float RC_VALUE_SCALE_FACTOR = 1.0;
@@ -86,6 +87,7 @@ private:
 	Alarm alarm_;
 	Alarm most_critical_alarm_;
 	AltitudeTracker altitude_track_;
+	AltitudeControl altitude_control_;
 };
 
 

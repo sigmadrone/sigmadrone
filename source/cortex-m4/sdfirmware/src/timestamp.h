@@ -50,4 +50,21 @@ private:
 	Stamp stamp_;
 };
 
+class PerfCounter {
+public:
+	PerfCounter() : iterations_(0) {}
+	void begin_measure()  {  timestamp_.time_stamp(); }
+	void end_measure()
+	{
+		total_elapsed_ += timestamp_.elapsed();
+		++iterations_;
+	}
+	TimeSpan total_elapsed()  { return total_elapsed_; }
+	TimeSpan average_elapsed() { return total_elapsed_ / iterations_; }
+private:
+	TimeSpan total_elapsed_;
+	TimeStamp timestamp_;
+	uint32_t iterations_;
+};
+
 #endif /* TIMESTAMP_H_ */
