@@ -21,8 +21,6 @@
 
 #include "altitudetracker.h"
 
-static float VERT_ACCEL_BIAS_ITERATIONS = 30;
-
 AltitudeTracker::AltitudeTracker(const Altitude& ceiling, float safe_threshold) :
 	flight_ceiling_(ceiling), starting_altitude_(INVALID_ALTITUDE), vert_acc_bias_(0.023),
 	alarm_count_(0), safe_threshold_(safe_threshold), flight_ceiling_hit_(false),
@@ -61,25 +59,6 @@ float AltitudeTracker::calc_vertical_accel(const DroneState& state)
 
 void AltitudeTracker::update_state(DroneState& drone_state)
 {
-	float vert_accel = calc_vertical_accel(drone_state);
-
-	if (vert_accel_bias_iterations_ > 0) {
-		if (fabs(vert_accel) < 0.05) {
-			vert_acc_bias_ += vert_accel;
-			if (--vert_accel_bias_iterations_ == 0) {
-				vert_acc_bias_ /= VERT_ACCEL_BIAS_ITERATIONS;
-			}
-		}
-	} else {
-		vert_accel -= vert_acc_bias_;
-		//drone_state.accel_ = Vector3f(0,0,vert_accel);
-		//if (fabs(vert_accel) > 0.005) {
-			vert_velocity_from_acc += Speed::from_meters_per_second(
-					vert_accel * drone_state.dt_.seconds_float());
-			drone_state.altitude_from_acc_ += vert_velocity_from_acc * drone_state.dt_;
-		//}
-	}
-
 	if (!drone_state.altitude_.is_valid()) {
 		return;
 	}
@@ -113,6 +92,9 @@ void AltitudeTracker::update_state(DroneState& drone_state)
 			clear_alarm();
 		}
 	}
+
+	vert_velocity_ = Speed::from_meters_per_second(
+			altitude_deriv_.do_filter(drone_state.altitude_.meters()));
 }
 
 Altitude AltitudeTracker::highest_recorded_altitude() const

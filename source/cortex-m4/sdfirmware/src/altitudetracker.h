@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include "dronestate.h"
+#include "derivativefilter.h"
 
 class AltitudeTracker
 {
@@ -51,7 +52,8 @@ private:
 	Altitude starting_altitude_;
 	Altitude current_altitude_;
 	Altitude highest_altitude_;
-	Speed vert_velocity_from_acc;
+	Speed vert_velocity_;
+	DerivativeFilter<float, 7> altitude_deriv_;
 	float vert_acc_bias_;
 	uint32_t alarm_count_;
 	float safe_threshold_;
