@@ -381,7 +381,7 @@ void main_task(void *pvParameters)
 		drone_state->accel_raw_ = acc_align * ReadAccelerometer(accel, accel_lpf);
 		if (drone_state->accel_raw_.length_squared() > 0) {
 			Vector3f accel_adjusted = drone_state->accel_raw_ + drone_state->accelerometer_adjustment_;
-			drone_state->accel_ = accel_adjusted;//accel_adjusted.normalize();
+			drone_state->accel_ = accel_adjusted.normalize();
 		}
 
 #ifdef ALLOW_ACCELEROMETER_OFF
