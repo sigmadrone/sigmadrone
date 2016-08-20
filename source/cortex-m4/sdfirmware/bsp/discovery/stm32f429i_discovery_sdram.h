@@ -72,7 +72,11 @@
 /**
   * @brief  FMC SDRAM Bank address
   */   
+#ifdef DISCOVERY
 #define SDRAM_DEVICE_ADDR         ((uint32_t)0xD0000000)
+#else
+#define SDRAM_DEVICE_ADDR         ((uint32_t)0xC0000000)
+#endif
 #define SDRAM_DEVICE_SIZE         ((uint32_t)0x800000)  /* SDRAM device size in MBytes */
   
 /**
