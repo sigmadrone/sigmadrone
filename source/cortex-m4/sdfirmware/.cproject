@@ -55,18 +55,18 @@
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.1986352159" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.1030772245" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths.141701094" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/freertos/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include/cmsis"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include/stm32f4-hal"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/bsp/common"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/bsp/discovery"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/middleware/stm32-usb-device/msc/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/middleware/stm32-usb-device/core/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/bsp-discovery"/>
+									<listOptionValue builtIn="false" value="../include"/>
+									<listOptionValue builtIn="false" value="../../../include"/>
+									<listOptionValue builtIn="false" value="../../../"/>
+									<listOptionValue builtIn="false" value="../freertos/include"/>
+									<listOptionValue builtIn="false" value="../system/include"/>
+									<listOptionValue builtIn="false" value="../system/include/cmsis"/>
+									<listOptionValue builtIn="false" value="../system/include/stm32f4-hal"/>
+									<listOptionValue builtIn="false" value="../bsp/common"/>
+									<listOptionValue builtIn="false" value="../bsp/discovery"/>
+									<listOptionValue builtIn="false" value="../middleware/stm32-usb-device/msc/include"/>
+									<listOptionValue builtIn="false" value="../middleware/stm32-usb-device/core/include"/>
+									<listOptionValue builtIn="false" value="../bsp-discovery"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs.417055804" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
@@ -84,18 +84,18 @@
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1820968197" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1093580820" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/freertos/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include/cmsis"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include/stm32f4-hal"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/bsp/common"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/bsp/discovery"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/middleware/stm32-usb-device/msc/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/middleware/stm32-usb-device/core/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/bsp-discovery"/>
+									<listOptionValue builtIn="false" value="../include"/>
+									<listOptionValue builtIn="false" value="../../../include"/>
+									<listOptionValue builtIn="false" value="../../../"/>
+									<listOptionValue builtIn="false" value="../freertos/include"/>
+									<listOptionValue builtIn="false" value="../system/include"/>
+									<listOptionValue builtIn="false" value="../system/include/cmsis"/>
+									<listOptionValue builtIn="false" value="../system/include/stm32f4-hal"/>
+									<listOptionValue builtIn="false" value="../bsp/common"/>
+									<listOptionValue builtIn="false" value="../bsp/discovery"/>
+									<listOptionValue builtIn="false" value="../middleware/stm32-usb-device/msc/include"/>
+									<listOptionValue builtIn="false" value="../middleware/stm32-usb-device/core/include"/>
+									<listOptionValue builtIn="false" value="../bsp-discovery"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.1975702001" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="DEBUG"/>
@@ -112,18 +112,18 @@
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.562514226" name="Cross ARM C++ Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.1403209459" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/freertos/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include/cmsis"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include/stm32f4-hal"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/bsp/common"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/bsp/discovery"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/middleware/stm32-usb-device/msc/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/middleware/stm32-usb-device/core/include"/>
-									<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/bsp-discovery"/>
+									<listOptionValue builtIn="false" value="../include"/>
+									<listOptionValue builtIn="false" value="../../../include"/>
+									<listOptionValue builtIn="false" value="../../../"/>
+									<listOptionValue builtIn="false" value="../freertos/include"/>
+									<listOptionValue builtIn="false" value="../system/include"/>
+									<listOptionValue builtIn="false" value="../system/include/cmsis"/>
+									<listOptionValue builtIn="false" value="../system/include/stm32f4-hal"/>
+									<listOptionValue builtIn="false" value="../bsp/common"/>
+									<listOptionValue builtIn="false" value="../bsp/discovery"/>
+									<listOptionValue builtIn="false" value="../middleware/stm32-usb-device/msc/include"/>
+									<listOptionValue builtIn="false" value="../middleware/stm32-usb-device/core/include"/>
+									<listOptionValue builtIn="false" value="../bsp-discovery"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions.1009399411" name="Do not use exceptions (-fno-exceptions)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.noexceptions" useByScannerDiscovery="true" value="false" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nortti.1829022090" name="Do not use RTTI (-fno-rtti)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nortti" useByScannerDiscovery="true" value="false" valueType="boolean"/>
@@ -206,17 +206,17 @@
 								<listOptionValue builtIn="false" value="HSE_VALUE=8000000"/>
 							</option>
 							<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1323122190" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" valueType="includePath">
-								<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/include"/>
-								<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/include"/>
-								<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/"/>
-								<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/freertos/include"/>
-								<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include"/>
-								<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include/cmsis"/>
-								<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/system/include/stm32f4-hal"/>
-								<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/bsp/common"/>
-								<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/bsp/discovery"/>
-								<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/middleware/stm32-usb-device/msc/include"/>
-								<listOptionValue builtIn="false" value="/home/svassilev/work/sigmadrone/source/cortex-m4/sdfirmware/middleware/stm32-usb-device/core/include"/>
+								<listOptionValue builtIn="false" value="../include"/>
+								<listOptionValue builtIn="false" value="../../../include"/>
+								<listOptionValue builtIn="false" value="../../../"/>
+								<listOptionValue builtIn="false" value="../freertos/include"/>
+								<listOptionValue builtIn="false" value="../system/include"/>
+								<listOptionValue builtIn="false" value="../system/include/cmsis"/>
+								<listOptionValue builtIn="false" value="../system/include/stm32f4-hal"/>
+								<listOptionValue builtIn="false" value="../bsp/common"/>
+								<listOptionValue builtIn="false" value="../bsp/discovery"/>
+								<listOptionValue builtIn="false" value="../middleware/stm32-usb-device/msc/include"/>
+								<listOptionValue builtIn="false" value="../middleware/stm32-usb-device/core/include"/>
 							</option>
 							<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.227554856" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 						</tool>
