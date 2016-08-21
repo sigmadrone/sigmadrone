@@ -22,7 +22,7 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
-#undef USE_TRIPILOT
+#define USE_TRIPILOT
 
 #include "units.h"
 #include "d3math.h"
@@ -80,7 +80,7 @@ struct DroneState {
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	{
 #ifdef USE_TRIPILOT
-		SetPilotType(PILOT_TYPE_PID_NEW);
+		set_pilot_type(PILOT_TYPE_PID_NEW);
 #endif
 	}
 

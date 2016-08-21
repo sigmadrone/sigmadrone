@@ -20,6 +20,8 @@
  */
 #include "FreeRTOS.h"
 
+struct _reent;
+
 void __malloc_lock(struct _reent* r)
 {
 	(void)r;
