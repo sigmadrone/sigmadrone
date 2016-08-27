@@ -42,23 +42,8 @@ static void usart_put_char(USART_TypeDef *usart, unsigned char ch)
 ssize_t usart_write(USART_TypeDef *usart, const char* buf __attribute__((unused)), size_t nbyte __attribute__((unused)))
 {
 	size_t i;
-	for (i = 0; i < nbyte; i++) {
-		char ch = buf[i];
-		if (ch == '\n' && (i + 1) < nbyte && buf[i + 1] == '\r') {
-			usart_put_char(usart, ch);
-			ch = buf[++i];
-			usart_put_char(usart, ch);
-		} else if (ch == '\r' && (i + 1) < nbyte && buf[i + 1] == '\n') {
-			usart_put_char(usart, ch);
-			ch = buf[++i];
-			usart_put_char(usart, ch);
-		} else if (ch == '\n') {
-			usart_put_char(usart, ch);
-			usart_put_char(usart, '\r');
-		} else {
-			usart_put_char(usart, ch);
-		}
-	}
+	for (i = 0; i < nbyte; i++)
+		usart_put_char(usart, buf[i]);
 	return nbyte;
 }
 
