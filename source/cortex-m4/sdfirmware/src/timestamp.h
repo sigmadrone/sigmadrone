@@ -58,11 +58,13 @@ public:
 	{
 		total_elapsed_ += timestamp_.elapsed();
 		++iterations_;
+		average_ = total_elapsed_ / iterations_;
 	}
 	TimeSpan total_elapsed()  { return total_elapsed_; }
-	TimeSpan average_elapsed() { return total_elapsed_ / iterations_; }
+	TimeSpan average_elapsed() { return average_; }
 private:
 	TimeSpan total_elapsed_;
+	TimeSpan average_;
 	TimeStamp timestamp_;
 	uint32_t iterations_;
 };
