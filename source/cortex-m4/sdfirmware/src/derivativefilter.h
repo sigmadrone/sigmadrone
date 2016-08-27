@@ -53,7 +53,6 @@ class DerivativeFilter
 {
 public:
 	using State = std::array<DataType,N>;
-	using DeltaT = std::array<TimeStamp,N>;
 	static const size_t M = (N-1)/2;
 	using Coeff = std::array<float, M>;
 
@@ -71,30 +70,26 @@ public:
 		for (auto& s : state_) {
 			s = static_cast<DataType>(0);
 		}
-		for (auto& t : ts_) {
-			t.time_stamp();
-		}
 		out_ = static_cast<DataType>(0);
 		index_ = 0;
 		ready_ = false;
 	}
-	const DataType& do_filter(const DataType& in)
+	const DataType& do_filter(const DataType& in, const TimeSpan& dt)
 	{
 		state_[index_] = in;
-		ts_[index_].time_stamp();
 		if (index_ == N -1) {
 			ready_ = true;
 		}
 		if (ready_) {
 			out_ = static_cast<DataType>(0);
 			for (size_t k = 1; k <= M; ++k) {
-				float dt = dt_k(k);
-				if (dt < 0.0001) {
+				if (dt.seconds_float() < 0.0001) {
 					out_ = static_cast<DataType>(0);
 					break;
 				}
-				out_ += ck(k) * (fk(k) - fk(-k)) / dt;
+				out_ += ck(k) * (fk(k) - fk(-k));
 			}
+			out_ /= dt.seconds_float();
 		}
 		index_ = (index_+1) % N;
 		return out_;
@@ -112,9 +107,15 @@ private:
 			coeff_[1] = 1.0f/8.0f;
 			break;
 		case 7:
+#if 0
 			coeff_[0] = 5.0f/32.0f;
 			coeff_[1] = 4.0f/32.0f;
 			coeff_[2] = 1.0f/32.0f;
+#else
+			coeff_[0] = 27.0f/96.0f;
+			coeff_[1] = 12.0f/96.0f;
+			coeff_[2] = -5.0f/96.0f;
+#endif
 			break;
 		case 9:
 			coeff_[0] = 14.0f/128.0f;
@@ -148,18 +149,10 @@ private:
 		assert(k > 0 && k <= coeff_.size());
 		return coeff_[k-1];
 	}
-	DataType dt_k(size_t k)
-	{
-		assert(ts_[rel_index(-k)].elapsed() >= ts_[rel_index(k)].elapsed());
-		float t1 = ts_[rel_index(-k)].elapsed().seconds_float();
-		float t2 = ts_[rel_index(k)].elapsed().seconds_float();
-		return t1 - t2;
-	}
 
 private:
 	State state_;
 	Coeff coeff_;
-	DeltaT ts_;
 	size_t index_;
 	DataType out_;
 	bool ready_;
