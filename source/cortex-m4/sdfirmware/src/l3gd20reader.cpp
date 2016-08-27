@@ -67,6 +67,24 @@ Vector3f L3GD20Reader::read_data(uint8_t watermark)
 	return axes_align_ * gyro_data;
 }
 
+size_t L3GD20Reader::size()
+{
+	return gyro_.GetFifoSourceReg() & 0x1F;
+}
+
+Vector3f L3GD20Reader::read_sample()
+{
+	Vector3f gyro_data;
+	uint8_t gyro_samples = gyro_.GetFifoSourceReg() & 0x1F;
+	if (gyro_samples) {
+		L3GD20::AxesDPS_t axes;
+		gyro_.GetAngRateDPS(&axes);
+		gyro_data = Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z);
+	}
+	return axes_align_ * gyro_data;
+}
+
+
 void L3GD20Reader::init_gyro(uint8_t watermark)
 {
 	gyro_.SetMode(L3GD20::NORMAL);
@@ -80,7 +98,7 @@ void L3GD20Reader::init_gyro(uint8_t watermark)
 	gyro_.HPFEnable(L3GD20::MEMS_ENABLE);
 	gyro_.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
 	gyro_.SetHPFCutOFF(L3GD20::HPFCF_0);
-	gyro_.SetODR(L3GD20::ODR_760Hz_BW_30);
+	gyro_.SetODR(L3GD20::ODR_760Hz_BW_110);
 }
 
 bool L3GD20Reader::wait_for_data(const TimeSpan time_to_wait)

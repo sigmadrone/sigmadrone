@@ -38,6 +38,8 @@ public:
 	const Vector3f& calculate_static_bias(uint32_t num_samples);
 	const Vector3f& bias() const;
 	Vector3f read_data(uint8_t watermark);
+	Vector3f read_sample();
+	size_t size();
 	void init_gyro(uint8_t watermark);
 	void enable_disable_int2(bool enable);
 	bool wait_for_data(const TimeSpan time_to_wait = TimeSpan::from_milliseconds(50));
