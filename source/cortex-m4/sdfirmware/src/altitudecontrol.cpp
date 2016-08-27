@@ -24,7 +24,7 @@
 //static const Throttle throttle_alt_hold_range = max_throttle_altitude_hold - min_throttle_altitude_hold;
 
 AltitudeControl::AltitudeControl() :
-	pid_altitude_(0.02,0.002,0.002),
+	pid_altitude_(0.07,0.002,0.05),
 	state_(STATE_LANDED),
 	current_vertical_speed_(0)
 {
