@@ -124,8 +124,8 @@ private:
 
 
 static const size_t PRESSURE_FILTER_ORDER = 10;
-typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> PressurePreFilter;
-//typedef MedianFilter<float> PressurePreFilter;
+//typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> PressurePreFilter;
+typedef MedianFilter<float> PressurePreFilter;
 //typedef FirLpfFs100Fc10<float> PressurePreFilter;
 typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> TemperaturePreFilter;
 

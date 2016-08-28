@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include "dronestate.h"
 #include "derivativefilter.h"
+#include "pidcontroller.h"
 
 class AltitudeTracker
 {
@@ -45,6 +46,7 @@ public:
 private:
 
 	void clear_alarm();
+	void estimate_altitude(DroneState& state);
 
 	static const uint32_t ALARM_COUNT_THRESHOLD = 16;
 
@@ -52,8 +54,13 @@ private:
 	Altitude starting_altitude_;
 	Altitude current_altitude_;
 	Altitude highest_altitude_;
+	Altitude estimated_altitude_;
+	Altitude alt_error_i_;
+	PidController<float> pid_;
 	Speed vert_velocity_;
-	DerivativeFilter<float, 7> altitude_deriv_;
+	Speed estimated_velocity_;
+	TimeStamp estimate_ts_;
+	DerivativeFilter<float, 9> altitude_deriv_;
 	float vert_acc_bias_;
 	uint32_t alarm_count_;
 	float safe_threshold_;
