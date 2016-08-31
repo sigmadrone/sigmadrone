@@ -20,6 +20,7 @@
  */
 
 #include "l3gd20reader.h"
+#include "sensorsprefilters.h"
 
 L3GD20Reader::L3GD20Reader(L3GD20& gyro, PinName gyro_int2_pin, const Matrix3f& axes_align) :
 	gyro_(gyro),
@@ -30,22 +31,30 @@ L3GD20Reader::L3GD20Reader(L3GD20& gyro, PinName gyro_int2_pin, const Matrix3f& 
 	gyro_int2_pin_.callback(this, &L3GD20Reader::gyro_isr);
 }
 
-const Vector3f& L3GD20Reader::calculate_static_bias(uint32_t num_samples)
+const Vector3f& L3GD20Reader::calculate_static_bias(size_t num_samples)
 {
+	size_t count = 0;
+	LowPassFilter<Vector3f, float> lpf(0.99, 0.01);
+
 	static_bias_.clear();
 	L3GD20::AxesDPS_t gyro_axes;
 	gyro_.GetFifoAngRateDPS(&gyro_axes); // Drain the fifo
-	for (uint32_t i = 0; i < num_samples; i++) {
-		if (!wait_for_data(TimeSpan::from_milliseconds(100))) {
-			static_bias_.clear();
-			break;
+	while (count < num_samples && wait_for_data(TimeSpan::from_milliseconds(100))) {
+		while (size()) {
+			lpf.do_filter(read_sample());
+			count++;
 		}
-		static_bias_ += read_data(1);
 	}
-	static_bias_ /= static_cast<float>(num_samples);
+	count = 0;
+	while (count < num_samples && wait_for_data(TimeSpan::from_milliseconds(100))) {
+		while (size()) {
+			static_bias_ += lpf.do_filter(read_sample());
+			count++;
+		}
+	}
+	static_bias_ /= static_cast<float>(count);
 	return static_bias_;
 }
-
 
 const Vector3f& L3GD20Reader::bias() const
 {

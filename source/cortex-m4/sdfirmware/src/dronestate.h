@@ -22,7 +22,7 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
-#undef USE_TRIPILOT
+#define USE_TRIPILOT
 
 #include "units.h"
 #include "d3math.h"
@@ -219,13 +219,14 @@ struct DroneState {
 	{
 		pilot_type_ = pilot_type;
 		if (PILOT_TYPE_PID_NEW == pilot_type) {
-			kp_ = 0.15;
+			kp_ = 0.27;
+			kd_= 0.055;
 			ki_ = 0.035;
-			kd_= 0.04;
 			yaw_kp_ = 0.20;
 			yaw_ki_= 0.0;
 			yaw_kd_ = 0.07;
-			accelerometer_correction_speed_ = 2.0;
+			accelerometer_correction_speed_ = 1.0;
+			accelerometer_adjustment_ = Vector3f(0.0f, -0.027f, 0.0f);
 		} else if (PILOT_TYPE_PID_LEGACY == pilot_type) {
 			kp_ = 0.14;
 			ki_ = 0.3;

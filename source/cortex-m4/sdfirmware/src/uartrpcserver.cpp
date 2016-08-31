@@ -517,7 +517,7 @@ rexjson::value UartRpcServer::rpc_set_accelerometer_correction_period(UART* , re
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	float period = params[0].get_real();
-	if (period < 0.25)
+	if (period < 0.01)
 		throw std::range_error("Invalid value");
 	dronestate_.accelerometer_correction_speed_ = period;
 	return dronestate_.accelerometer_correction_speed_;

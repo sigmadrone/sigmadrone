@@ -30,6 +30,7 @@
 #include "propeller.h"
 #include "airflowforce.h"
 #include "firfilt.h"
+#include "sensorsprefilters.h"
 
 class TriPilot : public IPilot
 {
@@ -72,6 +73,7 @@ private:
 	std::vector<Propeller> propellers_;
 	MovingAverageFilter<float, float, 30> pitch_avg_;
 	MovingAverageFilter<float, float, 30> roll_avg_;
+	LowPassFilter<Vector3f, float> torq_lpf_;
 };
 
 

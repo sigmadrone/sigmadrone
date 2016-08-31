@@ -27,16 +27,16 @@
 class attitudetracker
 {
 public:
-	explicit attitudetracker(double accelerometer_correction_period = 1.5, Vector3f earth_g = Vector3f(0, 0, -1));
+	explicit attitudetracker(float accelerometer_correction_speed = 1.5, Vector3f earth_g = Vector3f(0, 0, -1));
 	~attitudetracker();
 	Vector3f get_earth_g() const;
 	void set_earth_g(Vector3f earth_g);
 	Vector3f get_earth_m() const;
 	void set_earth_m(Vector3f earth_m);
-	void track_gyroscope(const Vector3f& omega, double dtime);
-	void track_accelerometer(const Vector3f& g, double dtime);
-	void track_magnetometer(const Vector3f& m, double dtime);
-	void accelerometer_correction_speed(double accelerometer_correction_speed);
+	void track_gyroscope(const Vector3f& omega, float dtime);
+	void track_accelerometer(const Vector3f& g, float dtime);
+	void track_magnetometer(const Vector3f& m, float dtime);
+	void accelerometer_correction_speed(float accelerometer_correction_speed);
 	void gyro_drift_pid(float kp, float ki, float kd);
 	void gyro_drift_leak_rate(float leak_rate);
 
@@ -57,7 +57,7 @@ public:
 	 * The earth M vector reading while in initial position.
 	 */
 	Vector3f earth_m_;
-	double accelerometer_correction_speed_;
+	float accelerometer_correction_speed_;
 
 protected:
 	/*
