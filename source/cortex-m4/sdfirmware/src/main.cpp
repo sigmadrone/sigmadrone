@@ -332,7 +332,7 @@ void main_task(void *pvParameters)
 	}
 
 	gyro_reader.enable_disable_int2(true);
-	gyro_reader.calculate_static_bias(500);
+	gyro_reader.calculate_static_bias_filtered(800);
 
 	printf(" Done!\n");
 

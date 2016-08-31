@@ -29,13 +29,15 @@
 #include "queue.h"
 #include "l3gd20.h"
 #include "digitalin.h"
+#include "sensorsprefilters.h"
 
 class L3GD20Reader
 {
 public:
 	L3GD20Reader(L3GD20& gyro, PinName gyro_int2_pin, const Matrix3f& axes_align);
 	~L3GD20Reader() = default;
-	const Vector3f& calculate_static_bias(size_t num_samples);
+	const Vector3f& calculate_static_bias(uint32_t num_samples);
+	const Vector3f& calculate_static_bias_filtered(size_t num_samples);
 	const Vector3f& bias() const;
 	Vector3f read_data(uint8_t watermark);
 	Vector3f read_sample();
