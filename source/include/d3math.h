@@ -765,13 +765,15 @@ template <typename T>
 Quaternion<T> Quaternion<T>::fromAngularVelocity(const MatrixMN<T,3,1>& omega /* Rad/Sec */, float deltaT)
 {
 	Quaternion<T> deltaQ;
-	MatrixMN<T,3,1> theta = omega * (0.5f * deltaT);
-	float thetaMagSq = theta.length_squared();
-	float s;
+	MatrixMN<T,3,1> theta = omega * (0.5 * deltaT);
+	double thetaMagSq = theta.length_squared();
+	double thetaMag4 = thetaMagSq * thetaMagSq;
+	double thetaMag6 = thetaMag4 * thetaMagSq;
+	double s;
 
-	if(thetaMagSq * thetaMagSq / 24.0f < EPSILON) {
-		deltaQ.w = 1.0f - thetaMagSq / 2.0f;
-		s = 1.0f - thetaMagSq / 6.0f;
+	if(thetaMagSq * thetaMagSq / 24.0 < EPSILON) {
+		deltaQ.w = 1.0 - thetaMagSq / 2.0 + thetaMag4 / 24.0 - thetaMag6 / 720.0;
+		s = 1.0 - thetaMagSq / 6.0 + thetaMag4 / 120.0 - thetaMag6 / 5040.0;
 	} else {
 		float thetaMag = std::sqrt(thetaMagSq);
 		deltaQ.w = std::cos(thetaMag);

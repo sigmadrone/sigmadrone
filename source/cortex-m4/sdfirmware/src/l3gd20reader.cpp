@@ -46,6 +46,30 @@ const Vector3f& L3GD20Reader::calculate_static_bias(uint32_t num_samples)
 	return static_bias_;
 }
 
+const Vector3f& L3GD20Reader::calculate_static_bias_filtered(size_t num_samples)
+{
+	size_t count = 0;
+	LowPassFilter<Vector3f, float> lpf(0.99, 0.01);
+
+	static_bias_.clear();
+	L3GD20::AxesDPS_t gyro_axes;
+	gyro_.GetFifoAngRateDPS(&gyro_axes); // Drain the fifo
+	while (count < num_samples && wait_for_data(TimeSpan::from_milliseconds(100))) {
+		while (size()) {
+			lpf.do_filter(read_sample());
+			count++;
+		}
+	}
+	count = 0;
+	while (count < num_samples && wait_for_data(TimeSpan::from_milliseconds(100))) {
+		while (size()) {
+			static_bias_ += lpf.do_filter(read_sample());
+			count++;
+		}
+	}
+	static_bias_ /= static_cast<float>(count);
+	return static_bias_;
+}
 
 const Vector3f& L3GD20Reader::bias() const
 {

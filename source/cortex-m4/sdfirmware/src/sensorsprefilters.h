@@ -122,6 +122,29 @@ private:
 	DataType last_in_;
 };
 
+template <typename DataType, typename CoeffType>
+class LowPassFilter
+{
+public:
+	LowPassFilter(CoeffType alpha, CoeffType beta) : alpha_(alpha), beta_(beta) { reset(); }
+	~LowPassFilter() = default;
+
+	void reset()
+	{
+		out_ = {0};
+	}
+	const DataType& do_filter(const DataType& in)
+	{
+		out_ = out_ * alpha_ + in * beta_;
+		return out_;
+	}
+	const DataType& output()     const { return out_; }
+
+private:
+	DataType out_;
+	CoeffType alpha_, beta_;
+};
+
 
 static const size_t PRESSURE_FILTER_ORDER = 10;
 //typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> PressurePreFilter;

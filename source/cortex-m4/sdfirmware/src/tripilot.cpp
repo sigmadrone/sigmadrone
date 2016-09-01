@@ -24,8 +24,9 @@ TriPilot::TriPilot()
 	: pf_(0.24, 1.0)
 	, pid_(0.0, 0.0, 0.0, 80)
 	, pidz_(0.0, 0.0, 0.0, 80)
+	, torq_lpf_(0.0, 1.0)
 {
-	min_thrust_ = 0.0;
+	min_thrust_ = 0.15;
 	max_thrust_ = 1.0;
 	target_thrust_ = 0.0;
 	max_integral_torque_ = 0.25;
@@ -44,8 +45,8 @@ TriPilot::~TriPilot()
 void TriPilot::set_pid_coefficents(const DroneState& state)
 {
 	pid_.set_kp_ki_kd(state.kp_, state.ki_, state.kd_);
-	pid_.set_derivative_filter(state.pid_filter_freq_);
 	pidz_.set_kp_ki_kd(state.yaw_kp_, state.yaw_ki_, state.yaw_kd_);
+	pid_.set_derivative_filter(state.pid_filter_freq_);
 	pidz_.set_derivative_filter(state.pid_filter_freq_);
 }
 
@@ -68,7 +69,7 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 		pid_.set_integral_error(integral_error);
 	}
 	torq_xy += pid_.get_p(error_xy);
-	torq_xy += pid_.get_d_median(error_xy, state.dt_.seconds_float());
+	torq_xy += pid_.get_d(error_xy, state.dt_.seconds_float());
 	torq_xy += pid_.get_i(error_xy, 1.0f * state.dt_.seconds_float(), state.dt_.seconds_float() / 15.0f);
 	torq_z += pidz_.get_p(error_z);
 	torq_z += pidz_.get_d_median(error_z, state.dt_.seconds_float());
@@ -79,7 +80,7 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 		torq *= std::pow(target_thrust_ / 0.1, 2.0f);
 //	std::cout << "Twist error: " << errorTwist.toString(4) << "( " << torq.transpose().to_string(4) << " )" << target_twist_.to_string(4)
 //			<< ", target_yawv_ rad/s: " << target_yawv_.transpose() << std::endl;
-	return torq;
+	return torq_lpf_.do_filter(torq);
 }
 
 void TriPilot::update_state(DroneState& state)
@@ -112,6 +113,7 @@ void TriPilot::update_state(DroneState& state)
 		pf_.nvelocity(motors[2]),
 		pf_.nvelocity(motors[3])
 	);
+	state.pid_torque_ = torque_correction_;
 	motors_ = state.motors_ = clip_motors(torq_rpm);
 	return;
 }
@@ -143,5 +145,5 @@ void TriPilot::set_max_thrust(float max)
 
 void TriPilot::set_target_thrust(float thr)
 {
-	target_thrust_ = fmax(fmin(max_thrust_, thr), min_thrust_);
+	target_thrust_ = thr;
 }

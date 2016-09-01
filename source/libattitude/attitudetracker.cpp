@@ -22,8 +22,8 @@
 
 #include <iostream>
 
-attitudetracker::attitudetracker(double accelerometer_correction_period, Vector3f earth_g)
-	: accelerometer_correction_speed_(accelerometer_correction_period)
+attitudetracker::attitudetracker(float accelerometer_correction_speed, Vector3f earth_g)
+	: accelerometer_correction_speed_(accelerometer_correction_speed)
 	, earth_g_(earth_g)
 	, attitude_(QuaternionF::identity)
 	, drift_pid_(0, 0.01, 0)
@@ -60,7 +60,7 @@ void attitudetracker::set_earth_m(Vector3f earth_m)
 	earth_m_ = earth_m;
 }
 
-void attitudetracker::accelerometer_correction_speed(double accelerometer_correction_speed)
+void attitudetracker::accelerometer_correction_speed(float accelerometer_correction_speed)
 {
 	accelerometer_correction_speed_ = accelerometer_correction_speed;
 }
@@ -75,13 +75,13 @@ void attitudetracker::gyro_drift_leak_rate(float leak_rate)
 	drift_leak_rate_ = leak_rate;
 }
 
-void attitudetracker::track_gyroscope(const Vector3f& omega, double dtime)
+void attitudetracker::track_gyroscope(const Vector3f& omega, float dtime)
 {
 	QuaternionF deltaq = QuaternionF::fromAngularVelocity(omega - drift_err_, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
 }
 
-void attitudetracker::track_accelerometer(const Vector3f& g, double dtime)
+void attitudetracker::track_accelerometer(const Vector3f& g, float dtime)
 {
 	/*
 	 * if the length of the g is not close to 1,
@@ -117,7 +117,7 @@ void attitudetracker::track_accelerometer(const Vector3f& g, double dtime)
 	attitude_ = (attitude_ * deltaq).normalize();
 }
 
-void attitudetracker::track_magnetometer(const Vector3f& m, double dtime)
+void attitudetracker::track_magnetometer(const Vector3f& m, float dtime)
 {
 	if (fabs(attitude_.x) > 0.04 || fabs(attitude_.y) > 0.04) {
 		/*
