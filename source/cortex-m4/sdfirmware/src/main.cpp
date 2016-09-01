@@ -255,7 +255,6 @@ void main_task(void *pvParameters)
 	static bool print_to_console = false;
 	LowPassFilter<Vector3f, float> gyro_lpf({0.5, 0.5});
 	LowPassFilter<Vector3f, float> acc_lpf({0.95, 0.05});
-	QuaternionF twist, swing, swing_old = QuaternionF::identity;
 
 	/*
 	 * Apply the boot configuration from flash memory.
@@ -386,17 +385,12 @@ void main_task(void *pvParameters)
 			drone_state->accel_ = accel_adjusted.normalize();
 		}
 
-		QuaternionF::decomposeTwistSwing(~drone_state->attitude_, Vector3f(0,0,1), swing, twist);
-		Vector3f att_w = -RAD2DEG(QuaternionF::angularVelocity(swing_old, swing, drone_state->dt_.seconds_float()));
-		swing_old = swing;
-
 #define ALLOW_ACCELEROMETER_OFF
 #define REALTIME_DATA 0
 #if REALTIME_DATA
 		std::cout << drone_state->gyro_.x() << "," << drone_state->gyro_.y() << "," << drone_state->gyro_.z() << ",";
 		std::cout << drone_state->accel_.x() << "," << drone_state->accel_.y() << "," << drone_state->accel_.z() << "," ;
 		std::cout << drone_state->pid_torque_.x() << "," << drone_state->pid_torque_.y() << "," << drone_state->pid_torque_.z() << ",";
-		std::cout << att_w.x() << "," << att_w.y() << ",";
 		std::cout << drone_state->dt_.seconds_float() << std::endl;
 #endif
 
