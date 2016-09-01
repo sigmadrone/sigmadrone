@@ -219,14 +219,14 @@ struct DroneState {
 	{
 		pilot_type_ = pilot_type;
 		if (PILOT_TYPE_PID_NEW == pilot_type) {
-			kp_ = 0.27;
-			kd_= 0.055;
+			kp_ = 0.40;
+			kd_= 0.090;
 			ki_ = 0.035;
 			yaw_kp_ = 0.20;
 			yaw_ki_= 0.0;
 			yaw_kd_ = 0.07;
 			accelerometer_correction_speed_ = 1.0;
-			accelerometer_adjustment_ = Vector3f(0.0f, -0.027f, 0.0f);
+			accelerometer_adjustment_ = Vector3f(0.007f, -0.023f, 0.0f);
 		} else if (PILOT_TYPE_PID_LEGACY == pilot_type) {
 			kp_ = 0.14;
 			ki_ = 0.3;
