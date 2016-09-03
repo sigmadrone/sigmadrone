@@ -73,7 +73,6 @@ private:
 	std::vector<Propeller> propellers_;
 	MovingAverageFilter<float, float, 30> pitch_avg_;
 	MovingAverageFilter<float, float, 30> roll_avg_;
-	LowPassFilter<Vector3f, float> torq_lpf_;
 };
 
 

@@ -24,7 +24,6 @@ TriPilot::TriPilot()
 	: pf_(0.24, 1.0)
 	, pid_(0.0, 0.0, 0.0, 80)
 	, pidz_(0.0, 0.0, 0.0, 80)
-	, torq_lpf_(0.0, 1.0)
 {
 	min_thrust_ = 0.15;
 	max_thrust_ = 1.0;
@@ -80,7 +79,7 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 		torq *= std::pow(target_thrust_ / 0.1, 2.0f);
 //	std::cout << "Twist error: " << errorTwist.toString(4) << "( " << torq.transpose().to_string(4) << " )" << target_twist_.to_string(4)
 //			<< ", target_yawv_ rad/s: " << target_yawv_.transpose() << std::endl;
-	return torq_lpf_.do_filter(torq);
+	return torq;
 }
 
 void TriPilot::update_state(DroneState& state)
