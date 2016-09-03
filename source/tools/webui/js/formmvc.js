@@ -179,6 +179,22 @@ PidZFormView.prototype.onRedrawData = function(droneState) {
   return true;
 }
 
+function PidAltitudeFormView(formId, submitButtonId, cancelButtonId, statusId) {
+  FormView.call(this, formId, submitButtonId, cancelButtonId, statusId);
+}
+PidAltitudeFormView.prototype = Object.create(FormView.prototype);
+PidAltitudeFormView.prototype.constructor = PidAltitudeFormView;
+
+PidAltitudeFormView.prototype.onRedrawData = function(droneState) {
+  if (!FormView.prototype.onRedrawData.call(this,droneState)) {
+    return false;
+  }
+  $(this.formId)[0].elements['kp-altitude'].value = droneState.altitude_kp;
+  $(this.formId)[0].elements['ki-altitude'].value = droneState.altitude_ki;
+  $(this.formId)[0].elements['kd-altitude'].value = droneState.altitude_kd;
+  return true;
+}
+
 function PidGyroFormView(formId, submitButtonId, cancelButtonId, statusId) {
   FormView.call(this, formId, submitButtonId, cancelButtonId, statusId);
 }
