@@ -126,20 +126,31 @@ template <typename DataType, typename CoeffType>
 class LowPassFilter
 {
 public:
+	LowPassFilter(CoeffType alpha) : alpha_(alpha), beta_(1.0 - alpha) { reset(); }
 	LowPassFilter(CoeffType alpha, CoeffType beta) : alpha_(alpha), beta_(beta) { reset(); }
 	~LowPassFilter() = default;
 
-	void reset()
+	void reset(const DataType& out = {0})
 	{
-		out_ = {0};
+		out_ = out;
 	}
+
 	const DataType& do_filter(const DataType& in)
 	{
 		out_ = out_ * alpha_ + in * beta_;
 		return out_;
 	}
-	const DataType& output()     const { return out_; }
 
+	const DataType& output() const
+	{
+		return out_;
+	}
+
+	void set_alpha(const CoeffType& alpha)
+	{
+		alpha_ = alpha;
+		beta_ = 1.0 - alpha;
+	}
 private:
 	DataType out_;
 	CoeffType alpha_, beta_;
