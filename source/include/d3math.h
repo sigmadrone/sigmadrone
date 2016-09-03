@@ -721,7 +721,7 @@ MatrixMN<T,3,1> Quaternion<T>::angularVelocity(Quaternion<T> i, Quaternion<T> f,
 	T dotprod = dot(i, f);
 	if (dotprod < 0.0)
 		f = -f;
-	if (dotprod < 1.0f && dotprod > -1.0f) {
+	if (dotprod < 1.0 && dotprod > -1.0) {
 		Quaternion<T> logQ = (f * ~i).ln();
 		MatrixMN<T,3,1> V = MatrixMN<T,3,1>(logQ.x, logQ.y, logQ.z) * 2.0f / dT;
 		return V;
@@ -917,9 +917,9 @@ Quaternion<T> Quaternion<T>::nlerp(const Quaternion<T>& i, const Quaternion<T>& 
 	Quaternion<T> result;
 
 	if(dot(i, f) < 0.0f) {
-		result = i * (1.0f - alpha) - f * alpha;
+		result = i * static_cast<T>(1.0 - alpha) - f * static_cast<T>(alpha);
 	} else {
-		result = i * (1.0f - alpha) + f * alpha;
+		result = i * static_cast<T>(1.0 - alpha) + f * static_cast<T>(alpha);
 	}
 	return result.normalize();
 }
@@ -962,7 +962,6 @@ std::ostream& operator<<(std::ostream& os, const MatrixBase<TT, RR, CC>& m)
 {
 	for (size_t i = 0; i < m.rows; i++) {
 		for (size_t j = 0; j < m.cols; j++) {
-			os.width(7);
 			os << m.at(i, j) << " ";
 		}
 		if (i + 1 < m.rows)
