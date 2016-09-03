@@ -79,8 +79,8 @@ void test_quaternion_transforms()
 	/*
 	 * The plane is defined by its normal vector represented as Quaternion 'q'
 	 */
-	cout << "Parallel component of plane       :  " << (Pin + q * Pin * q) * 1.0 / 2.0 << std::endl;
-	cout << "Perpendicular component of plane  :  " << (Pin - q * Pin * q) * 1.0 / 2.0 << std::endl;
+	cout << "Parallel component of plane       :  " << (Pin + q * Pin * q) * 1.0f / 2.0f << std::endl;
+	cout << "Perpendicular component of plane  :  " << (Pin - q * Pin * q) * 1.0f / 2.0f << std::endl;
 	cout << "Reflection in plane               :  " << (q * Pin * q) << std::endl << std::endl;
 
 	cout << "(V) Parallel component of plane       :  " << N.parallel(Vin).transpose();
@@ -197,6 +197,8 @@ int main(int argc, char *argv[])
 
 	cout << "Q:                " << Q << endl;
 	cout << "Q':               " << Quaternion<float>::fromVectors(Gc, Gn).normalize() << endl;
+	cout << "fromVectors(Gc,Gc)': " << Quaternion<float>::fromVectors(Gc, Gc).normalize() << endl;
+	cout << "fromVectors(Gc,-Gc)': " << Quaternion<float>::fromVectors(Gc, -Gc).normalize() << endl;
 
 	Quaternion<float> q = Quaternion<float>::fromVectorsPartial(Gc, Gn, 0.25).normalize();
 	cout << "q:                " << q*q*q*q << endl;
@@ -223,7 +225,7 @@ int main(int argc, char *argv[])
 
 
 
-	cout << "2*Ln(F * ~I): " << (F * ~I).ln() * 2 << endl;
+	cout << "2*Ln(F * ~I): " << (F * ~I).ln() * 2.0f << endl;
 	cout << "W(t)        : " << Quaternion<float>::angularVelocity(I, F, 1.0).transpose() << endl;
 
 
