@@ -701,7 +701,7 @@ MatrixMN<T, 4, 4> Quaternion<T>::rotMatrix4() const
 template <typename TT>
 std::ostream& operator<<(std::ostream& os, const Quaternion<TT>& q)
 {
-	os << std::showpos << q.w << std::showpos << q.x << "i" << std::showpos << q.y << "j" << std::showpos << q.z << "k";
+	os << q.w << " " << q.x << " " << " " << q.y << " " << q.z;
 	return os;
 }
 
@@ -758,7 +758,7 @@ Quaternion<T> Quaternion<T>::slerp(const Quaternion<T>& v0, const Quaternion<T>&
     float theta_0 = acosf(dot);
     float theta = theta_0 * alpha;
     Quaternion<T> v2 = (v1 - v0 * dot).normalize();
-    return v0*cos(theta) + v2*sin(theta);
+    return v0 * static_cast<float>(cos(theta)) + v2 * static_cast<float>(sin(theta));
 }
 
 template <typename T>
@@ -820,10 +820,6 @@ Quaternion<T> Quaternion<T>::fromVectors(const MatrixMN<T, 3, 1>& u, const Matri
 	MatrixMN<T, 3, 1> v1 = v.normalize();
 	T d = MatrixMN<T, 3, 1>::dot(v0, v1);
 
-	// If dot == 1, vectors are the same
-	if (d > 1.0f - EPSILON) {
-		return Quaternion<T>(1, 0, 0, 0);
-	}
 	if (d < (EPSILON - 1.0f)) {
 		MatrixMN<T, 3, 1> axis = MatrixMN<T, 3, 1>::cross(MatrixMN<T, 3, 1>(1, 0, 0), v0);
 		if (axis.length_squared() < EPSILON * EPSILON) // pick another if colinear
@@ -831,7 +827,7 @@ Quaternion<T> Quaternion<T>::fromVectors(const MatrixMN<T, 3, 1>& u, const Matri
 		q = fromAxisRot(axis, M_PI);
 	} else {
 		T s = std::sqrt((1 + d) * 2);
-		T invs = 1 / s;
+		T invs = 1.0 / s;
 		MatrixMN<T, 3, 1> c = MatrixMN<T, 3, 1>::cross(v0, v1);
 		q.x = c.at(0) * invs;
 		q.y = c.at(1) * invs;
@@ -1511,7 +1507,7 @@ MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::parallel(const MatrixMN<T, 3, 1>& v) con
 {
 	Quaternion<T> qn(0, at(0), at(1), at(2));
 	Quaternion<T> qv(0, v.at(0), v.at(1), v.at(2));
-	Quaternion<T> qr = (qv + qn * qv * qn) * 1.0 / 2.0;
+	Quaternion<T> qr = (qv + qn * qv * qn) * 1.0f / 2.0f;
 	return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
 }
 
@@ -1523,7 +1519,7 @@ MatrixMN<T, 3, 1> MatrixMN<T, ROWS, 1>::perpendicular2(const MatrixMN<T, 3, 1>& 
 {
 	Quaternion<T> qn(0, at(0), at(1), at(2));
 	Quaternion<T> qv(0, v.at(0), v.at(1), v.at(2));
-	Quaternion<T> qr = (qv - qn * qv * qn) * 1.0 / 2.0;
+	Quaternion<T> qr = (qv - qn * qv * qn) * 1.0f / 2.0f;
 	return MatrixMN<T, 3, 1>(qr.x, qr.y, qr.z);
 }
 
