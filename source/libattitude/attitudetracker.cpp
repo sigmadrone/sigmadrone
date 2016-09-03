@@ -108,7 +108,7 @@ void attitudetracker::track_accelerometer(const Vector3f& g, float dtime)
 		QuaternionF deltaq = QuaternionF::fromAngularVelocity(-w, dtime);
 		attitude_ = (attitude_ * deltaq).normalize();
 	}
-#define ACC_REALTIME_DATA 1
+#define ACC_REALTIME_DATA 0
 #if ACC_REALTIME_DATA
 		std::cout << g.transpose() << get_world_attitude().rotate(earth_g_).transpose() << std::endl;
 #endif
