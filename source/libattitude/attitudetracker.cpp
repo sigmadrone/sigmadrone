@@ -84,15 +84,6 @@ void attitudetracker::track_gyroscope(const Vector3f& omega, float dtime)
 void attitudetracker::track_accelerometer(const Vector3f& g, float dtime)
 {
 	/*
-	 * if the length of the g is not close to 1,
-	 * don't use it.
-	 *
-	 */
-#if 1
-	if (g.length() < 0.85 || g.length() > 1.15)
-		return;
-#endif
-	/*
 	 * Estimate after rotating the initial vector with the
 	 * world attitude quaternion.
 	 */
@@ -109,12 +100,19 @@ void attitudetracker::track_accelerometer(const Vector3f& g, float dtime)
 	 * direction of the sensor reading.
 	 */
 	Vector3f w = QuaternionF::angularVelocity(QuaternionF::identity, q, q.angle() / DEG2RAD(accelerometer_correction_speed_));
-	if (w.length() == 0.0)
-		return;
-//	std::cout << "Drift: " << w.transpose() << ", Error drift: " << drift_err_.transpose() << std::endl;
-	drift_err_ = drift_pid_.get_pid(w, dtime, drift_leak_rate_);
-	QuaternionF deltaq = QuaternionF::fromAngularVelocity(-w, dtime);
-	attitude_ = (attitude_ * deltaq).normalize();
+	if (w.length() == 0.0) {
+		QuaternionF deltaq = QuaternionF::nlerp(QuaternionF::identity, q, 0.75);
+		attitude_ = (attitude_ * deltaq).normalize();
+	} else {
+		drift_err_ = drift_pid_.get_pid(w, dtime, drift_leak_rate_);
+		QuaternionF deltaq = QuaternionF::fromAngularVelocity(-w, dtime);
+		attitude_ = (attitude_ * deltaq).normalize();
+	}
+#define ACC_REALTIME_DATA 1
+#if ACC_REALTIME_DATA
+		std::cout << g.transpose() << get_world_attitude().rotate(earth_g_).transpose() << std::endl;
+#endif
+
 }
 
 void attitudetracker::track_magnetometer(const Vector3f& m, float dtime)
