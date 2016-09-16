@@ -64,6 +64,7 @@ void Bmp180Reader::read_pressure()
 	bmp_.update_pressure();
 	float pressure = (float)bmp_.get_pressure() / 100.0f;
 	pressure_filter_.do_filter(pressure);
+	temperature_filter_.do_filter(bmp_.get_temperature());
 }
 
 void Bmp180Reader::read_temperature()
@@ -75,18 +76,21 @@ void Bmp180Reader::read_temperature()
 
 void Bmp180Reader::calibrate()
 {
-	base_pressure_ = 0;
-	size_t iterations = PRESSURE_FILTER_ORDER > 50 ? PRESSURE_FILTER_ORDER : 50;
-	vTaskDelay(100 / portTICK_RATE_MS);
-	for (size_t i = 0; i < iterations; ++i) {
-		read_pressure();
-		read_temperature();
-		vTaskDelay(10 / portTICK_RATE_MS);
-	}
+	const size_t iterations = 100;
+	float filter_alpha = pressure_filter_.alpha();
+	pressure_filter_.set_alpha(0.0f);
 
+	base_pressure_ = 0;
 	for (size_t i = 0; i < iterations; ++i) {
 		base_pressure_ += pressure_hpa(true);
-		vTaskDelay(10 / portTICK_RATE_MS);
 	}
 	base_pressure_ /= iterations;
+	pressure_filter_.do_filter(base_pressure_);
+
+	pressure_filter_.set_alpha(filter_alpha);
+
+	filter_alpha = temperature_filter_.alpha();
+	temperature_filter_.set_alpha(0);
+	temperature_celsius(true);
+	temperature_filter_.set_alpha(filter_alpha);
 }

@@ -107,7 +107,7 @@ private:
 			coeff_[1] = 1.0f/8.0f;
 			break;
 		case 7:
-#if 0
+#if 1
 			coeff_[0] = 5.0f/32.0f;
 			coeff_[1] = 4.0f/32.0f;
 			coeff_[2] = 1.0f/32.0f;
