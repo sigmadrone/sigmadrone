@@ -22,8 +22,9 @@
 
 #include <iostream>
 
-attitudetracker::attitudetracker(float accelerometer_correction_speed, Vector3f earth_g)
+attitudetracker::attitudetracker(float accelerometer_correction_speed, Vector3f earth_g, float alpha)
 	: accelerometer_correction_speed_(accelerometer_correction_speed)
+	, alpha_(alpha)
 	, earth_g_(earth_g)
 	, attitude_(QuaternionF::identity)
 	, drift_pid_(0, 0.01, 0)
@@ -100,14 +101,16 @@ void attitudetracker::track_accelerometer(const Vector3f& g, float dtime)
 	 * direction of the sensor reading.
 	 */
 	Vector3f w = QuaternionF::angularVelocity(QuaternionF::identity, q, q.angle() / DEG2RAD(accelerometer_correction_speed_));
-	if (w.length() == 0.0)
-		return;
+	filtered_w_ = filtered_w_ * alpha_ + w * (1.0f - alpha_);
+	w = filtered_w_;
+//	if (w.length() == 0.0)
+//		return;
 	drift_err_ = drift_pid_.get_pid(w, dtime, drift_leak_rate_);
 	QuaternionF deltaq = QuaternionF::fromAngularVelocity(-w, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
 #define ACC_REALTIME_DATA 0
 #if ACC_REALTIME_DATA
-		std::cout << g.transpose() << get_world_attitude().rotate(earth_g_).transpose() << std::endl;
+		std::cout << g.transpose() << get_world_attitude().rotate(earth_g_).transpose() << w.transpose() << std::endl;
 #endif
 
 }

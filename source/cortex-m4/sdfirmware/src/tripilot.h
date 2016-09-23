@@ -71,8 +71,8 @@ private:
 	Vector3f torque_correction_;
 	Vector3f swing_;
 	std::vector<Propeller> propellers_;
-	MovingAverageFilter<float, float, 30> pitch_avg_;
-	MovingAverageFilter<float, float, 30> roll_avg_;
+	LowPassFilter<float, float> pitch_avg_;
+	LowPassFilter<float, float> roll_avg_;
 };
 
 

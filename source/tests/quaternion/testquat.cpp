@@ -153,6 +153,10 @@ void test_delta_quaternion()
 			* QuaternionF::fromAngularVelocity(Vector3f(0,0,M_PI/6), 1.0/4.0)
 			<< std::endl;
 
+	std::cout << "q2 = q1 * dQ(W=0):  " << q1
+			* QuaternionF::fromAngularVelocity(Vector3f(0,0,0), 1.0/4.0)
+			<< std::endl;
+
 }
 
 

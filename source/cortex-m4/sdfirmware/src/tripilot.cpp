@@ -24,6 +24,8 @@ TriPilot::TriPilot()
 	: pf_(0.24, 1.0)
 	, pid_(0.0, 0.0, 0.0, 80)
 	, pidz_(0.0, 0.0, 0.0, 80)
+	, pitch_avg_(0.9)
+	, roll_avg_(0.9)
 {
 	min_thrust_ = 0.15;
 	max_thrust_ = 1.0;
@@ -87,8 +89,9 @@ void TriPilot::update_state(DroneState& state)
 	set_target_thrust(state.base_throttle_ * 0.65f);
 	set_pid_coefficents(state);
 	float max_w = 2.0f * M_PI * target_thrust_;
-	float roll = ((int)(roll_avg_.do_filter(state.roll_) * 1000)) / 1000.0f;
-	float pitch = ((int)(pitch_avg_.do_filter(state.pitch_) * 1000)) / 1000.0f;
+	float roll = roll_avg_.do_filter(state.roll_);
+	float pitch = pitch_avg_.do_filter(state.pitch_);
+
 
 	target_yawv_ = Vector3f(0.0f, 0.0f, 18.0f * state.yaw_throttle_factor_ * state.yaw_);
 	if (target_yawv_.length() > max_w)
