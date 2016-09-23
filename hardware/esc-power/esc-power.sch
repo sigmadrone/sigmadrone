@@ -1,0 +1,253 @@
+EESchema Schematic File Version 2
+LIBS:power
+LIBS:device
+LIBS:transistors
+LIBS:conn
+LIBS:linear
+LIBS:regul
+LIBS:74xx
+LIBS:cmos4000
+LIBS:adc-dac
+LIBS:memory
+LIBS:xilinx
+LIBS:microcontrollers
+LIBS:dsp
+LIBS:microchip
+LIBS:analog_switches
+LIBS:motorola
+LIBS:texas
+LIBS:intel
+LIBS:audio
+LIBS:interface
+LIBS:digital-audio
+LIBS:philips
+LIBS:display
+LIBS:cypress
+LIBS:siliconi
+LIBS:opto
+LIBS:atmel
+LIBS:contrib
+LIBS:valves
+LIBS:esc-power-cache
+EELAYER 25 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L CONN_01X02 P9
+U 1 1 57E46330
+P 2700 1900
+F 0 "P9" H 2700 2050 50  0000 C CNN
+F 1 "CONN_01X02" V 2800 1900 50  0000 C CNN
+F 2 "Sigmadrone:WURTH_691219610002" H 2700 1900 50  0001 C CNN
+F 3 "" H 2700 1900 50  0000 C CNN
+	1    2700 1900
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X02 P1
+U 1 1 57E46369
+P 3200 1900
+F 0 "P1" H 3200 2050 50  0000 C CNN
+F 1 "CONN_01X02" V 3300 1900 50  0000 C CNN
+F 2 "Terminal_Blocks:TerminalBlock_Pheonix_PT-3.5mm_2pol" H 3200 1900 50  0001 C CNN
+F 3 "" H 3200 1900 50  0000 C CNN
+	1    3200 1900
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X02 P2
+U 1 1 57E46395
+P 3700 1900
+F 0 "P2" H 3700 2050 50  0000 C CNN
+F 1 "CONN_01X02" V 3800 1900 50  0000 C CNN
+F 2 "Terminal_Blocks:TerminalBlock_Pheonix_PT-3.5mm_2pol" H 3700 1900 50  0001 C CNN
+F 3 "" H 3700 1900 50  0000 C CNN
+	1    3700 1900
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X02 P3
+U 1 1 57E463CA
+P 4250 1900
+F 0 "P3" H 4250 2050 50  0000 C CNN
+F 1 "CONN_01X02" V 4350 1900 50  0000 C CNN
+F 2 "Terminal_Blocks:TerminalBlock_Pheonix_PT-3.5mm_2pol" H 4250 1900 50  0001 C CNN
+F 3 "" H 4250 1900 50  0000 C CNN
+	1    4250 1900
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X02 P4
+U 1 1 57E463FE
+P 4750 1900
+F 0 "P4" H 4750 2050 50  0000 C CNN
+F 1 "CONN_01X02" V 4850 1900 50  0000 C CNN
+F 2 "Terminal_Blocks:TerminalBlock_Pheonix_PT-3.5mm_2pol" H 4750 1900 50  0001 C CNN
+F 3 "" H 4750 1900 50  0000 C CNN
+	1    4750 1900
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X02 P5
+U 1 1 57E46435
+P 5200 1900
+F 0 "P5" H 5200 2050 50  0000 C CNN
+F 1 "CONN_01X02" V 5300 1900 50  0000 C CNN
+F 2 "Terminal_Blocks:TerminalBlock_Pheonix_PT-3.5mm_2pol" H 5200 1900 50  0001 C CNN
+F 3 "" H 5200 1900 50  0000 C CNN
+	1    5200 1900
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X02 P6
+U 1 1 57E4646D
+P 5650 1900
+F 0 "P6" H 5650 2050 50  0000 C CNN
+F 1 "CONN_01X02" V 5750 1900 50  0000 C CNN
+F 2 "Terminal_Blocks:TerminalBlock_Pheonix_PT-3.5mm_2pol" H 5650 1900 50  0001 C CNN
+F 3 "" H 5650 1900 50  0000 C CNN
+	1    5650 1900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2500 1850 2500 1400
+Wire Wire Line
+	2500 1400 6450 1400
+Wire Wire Line
+	5450 1400 5450 1850
+Wire Wire Line
+	3000 1850 3000 1400
+Connection ~ 3000 1400
+Wire Wire Line
+	3500 1850 3500 1400
+Connection ~ 3500 1400
+Wire Wire Line
+	4050 1050 4050 1850
+Connection ~ 4050 1400
+Wire Wire Line
+	4550 1850 4550 1400
+Connection ~ 4550 1400
+Wire Wire Line
+	5000 1850 5000 1400
+Connection ~ 5000 1400
+Wire Wire Line
+	2500 1950 2500 2400
+Wire Wire Line
+	2500 2400 6450 2400
+Wire Wire Line
+	5450 2400 5450 1950
+Wire Wire Line
+	3000 1950 3000 2400
+Connection ~ 3000 2400
+Wire Wire Line
+	3500 1950 3500 2400
+Connection ~ 3500 2400
+Wire Wire Line
+	4050 1950 4050 2700
+Connection ~ 4050 2400
+Wire Wire Line
+	4550 1950 4550 2400
+Connection ~ 4550 2400
+Wire Wire Line
+	5000 1950 5000 2400
+Connection ~ 5000 2400
+$Comp
+L GND #PWR01
+U 1 1 57E4665B
+P 4050 2700
+F 0 "#PWR01" H 4050 2450 50  0001 C CNN
+F 1 "GND" H 4050 2550 50  0000 C CNN
+F 2 "" H 4050 2700 50  0000 C CNN
+F 3 "" H 4050 2700 50  0000 C CNN
+	1    4050 2700
+	1    0    0    -1  
+$EndComp
+$Comp
+L +BATT #PWR02
+U 1 1 57E46717
+P 4050 1050
+F 0 "#PWR02" H 4050 900 50  0001 C CNN
+F 1 "+BATT" H 4050 1190 50  0000 C CNN
+F 2 "" H 4050 1050 50  0000 C CNN
+F 3 "" H 4050 1050 50  0000 C CNN
+	1    4050 1050
+	1    0    0    -1  
+$EndComp
+$Comp
+L PWR_FLAG #FLG03
+U 1 1 57E467A8
+P 4550 1100
+F 0 "#FLG03" H 4550 1195 50  0001 C CNN
+F 1 "PWR_FLAG" H 4550 1280 50  0000 C CNN
+F 2 "" H 4550 1100 50  0000 C CNN
+F 3 "" H 4550 1100 50  0000 C CNN
+	1    4550 1100
+	1    0    0    -1  
+$EndComp
+$Comp
+L PWR_FLAG #FLG04
+U 1 1 57E467ED
+P 4550 2700
+F 0 "#FLG04" H 4550 2795 50  0001 C CNN
+F 1 "PWR_FLAG" H 4550 2880 50  0000 C CNN
+F 2 "" H 4550 2700 50  0000 C CNN
+F 3 "" H 4550 2700 50  0000 C CNN
+	1    4550 2700
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	4550 2700 4550 2600
+Wire Wire Line
+	4550 2600 4050 2600
+Connection ~ 4050 2600
+Wire Wire Line
+	4550 1100 4550 1200
+Wire Wire Line
+	4550 1200 4050 1200
+Connection ~ 4050 1200
+$Comp
+L CONN_01X02 P7
+U 1 1 57E4790D
+P 6150 1900
+F 0 "P7" H 6150 2050 50  0000 C CNN
+F 1 "CONN_01X02" V 6250 1900 50  0000 C CNN
+F 2 "Terminal_Blocks:TerminalBlock_Pheonix_PT-3.5mm_2pol" H 6150 1900 50  0001 C CNN
+F 3 "" H 6150 1900 50  0000 C CNN
+	1    6150 1900
+	1    0    0    -1  
+$EndComp
+$Comp
+L CONN_01X02 P8
+U 1 1 57E4794D
+P 6650 1900
+F 0 "P8" H 6650 2050 50  0000 C CNN
+F 1 "CONN_01X02" V 6750 1900 50  0000 C CNN
+F 2 "Terminal_Blocks:TerminalBlock_Pheonix_PT-3.5mm_2pol" H 6650 1900 50  0001 C CNN
+F 3 "" H 6650 1900 50  0000 C CNN
+	1    6650 1900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5950 1400 5950 1850
+Connection ~ 5450 1400
+Wire Wire Line
+	6450 1400 6450 1850
+Connection ~ 5950 1400
+Wire Wire Line
+	5950 2400 5950 1950
+Connection ~ 5450 2400
+Wire Wire Line
+	6450 2400 6450 1950
+Connection ~ 5950 2400
+$EndSCHEMATC
