@@ -151,16 +151,19 @@ public:
 		alpha_ = alpha;
 		beta_ = 1.0 - alpha;
 	}
+
+	CoeffType alpha() { return alpha_; }
 private:
 	DataType out_;
 	CoeffType alpha_, beta_;
 };
 
+class PressurePreFilter: public LowPassFilter<float, float>
+{
+public:
+	PressurePreFilter() : LowPassFilter<float, float> (0.8) {}
+};
 
-static const size_t PRESSURE_FILTER_ORDER = 10;
-//typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> PressurePreFilter;
-typedef MedianFilter<float> PressurePreFilter;
-//typedef FirLpfFs100Fc10<float> PressurePreFilter;
-typedef MovingAverageFilter<float, float, PRESSURE_FILTER_ORDER> TemperaturePreFilter;
+typedef PressurePreFilter TemperaturePreFilter;
 
 #endif /* SENSORS_PREFILTERS_H_ */

@@ -45,6 +45,7 @@ struct DroneState {
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
+		, vertical_speed_(0.0f)
 		, kp_(0.14)
 		, ki_(0.3)
 		, kd_(0.035)
@@ -106,6 +107,7 @@ struct DroneState {
 		ret["gps_course_deg"] = course_;
 		ret["gps_satellites"] = static_cast<int>(satellite_count_);
 		ret["gps_altitude"] = gps_altitude_.meters();
+		ret["vertical_speed"] = vertical_speed_;
 		ret["dt"] = static_cast<float>(dt_.microseconds());
 		ret["iteration"] = static_cast<int>(iteration_);
 		ret["attitude"] = quaternion_to_json_value(attitude_);
@@ -261,6 +263,7 @@ struct DroneState {
 	float course_; // degrees
 	uint32_t satellite_count_;
 	Altitude gps_altitude_;
+	float vertical_speed_;
 	/*more to add here*/
 
 	/*

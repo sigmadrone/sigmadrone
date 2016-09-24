@@ -55,12 +55,12 @@ private:
 	Altitude current_altitude_;
 	Altitude highest_altitude_;
 	Altitude estimated_altitude_;
-	Altitude alt_error_i_;
+	Altitude last_baro_altitude_;
 	PidController<float> pid_;
 	Speed vert_velocity_;
 	Speed estimated_velocity_;
 	TimeStamp estimate_ts_;
-	DerivativeFilter<float, 9> altitude_deriv_;
+	DerivativeFilter<float, 11> altitude_deriv_;
 	float vert_acc_bias_;
 	uint32_t alarm_count_;
 	float safe_threshold_;
