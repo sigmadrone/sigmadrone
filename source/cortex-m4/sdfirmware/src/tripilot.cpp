@@ -24,8 +24,8 @@ TriPilot::TriPilot()
 	: pf_(0.24, 1.0)
 	, pid_(0.0, 0.0, 0.0, 80)
 	, pidz_(0.0, 0.0, 0.0, 80)
-	, pitch_avg_(0.9)
-	, roll_avg_(0.9)
+	, pitch_avg_(0.97)
+	, roll_avg_(0.97)
 {
 	min_thrust_ = 0.15;
 	max_thrust_ = 1.0;
