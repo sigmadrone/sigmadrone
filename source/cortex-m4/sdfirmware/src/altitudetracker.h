@@ -52,20 +52,16 @@ private:
 
 	Altitude flight_ceiling_;
 	Altitude starting_altitude_;
-	Altitude current_altitude_;
 	Altitude highest_altitude_;
 	Altitude estimated_altitude_;
 	Altitude last_baro_altitude_;
-	PidController<float> pid_;
-	Speed vert_velocity_;
+	PidController<Altitude> pid_;
 	Speed estimated_velocity_;
 	TimeStamp estimate_ts_;
 	DerivativeFilter<float, 11> altitude_deriv_;
-	float vert_acc_bias_;
 	uint32_t alarm_count_;
 	float safe_threshold_;
 	bool flight_ceiling_hit_;
-	uint32_t vert_accel_bias_iterations_;
 };
 
 
