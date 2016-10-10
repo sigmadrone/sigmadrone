@@ -23,8 +23,7 @@
 
 AltitudeTracker::AltitudeTracker(const Altitude& ceiling, float safe_threshold) :
 	flight_ceiling_(ceiling), starting_altitude_(INVALID_ALTITUDE), estimated_altitude_(INVALID_ALTITUDE),
-	last_baro_altitude_(INVALID_ALTITUDE), alarm_count_(0), safe_threshold_(safe_threshold),
-	flight_ceiling_hit_(false)
+	alarm_count_(0), safe_threshold_(safe_threshold), flight_ceiling_hit_(false), last_baro_reading_(0)
 {
 	assert(safe_threshold >= 0.0f && safe_threshold_ <= 1.0f);
 }
@@ -65,35 +64,29 @@ inline float apply_deadband(float val, float deadband)
 
 void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 {
-	static float KP1 = 0.005; // PI observer position gain
-	static float KP2 = 1.5;   // PI measurement velocity gain
-	static float KP3 = 0.01;  // PI observer velocity gain
-
-	static float KI = 0.1; // PI observer integral gain (bias cancellation)
+	static float ACCEL_KP = 1.3;
 	static float KI_LEAK = 0.05;
-	static float KD = 0.000; // 0.005
 
 	float vert_accel = apply_deadband(calc_vertical_accel(drone_state), 0.01);
 
-	pid_.set_kp_ki_kd(KP1, KI, KD);
+	pid_.set_kp_ki_kd(drone_state.altitude_tracker_kp_,
+			drone_state.altitude_tracker_ki_, drone_state.altitude_tracker_kd_);
 
-	// update altitude and velocity estimate from accelerometer measurement
-	float alt_inc = -vert_accel * 9.8605 * drone_state.dt_.seconds_float() * KP2;
+	// update velocity estimate from accelerometer measurement
+	float alt_inc = -vert_accel * 9.8605 * drone_state.dt_.seconds_float() * ACCEL_KP;
 	estimated_velocity_ += Speed::from_meters_per_second(alt_inc);
-	estimated_altitude_ += estimated_velocity_ * drone_state.dt_;
 
-	if (drone_state.altitude_ != last_baro_altitude_) {
-		// Correct the altitude estimate from the baro measurement/observation
+	// update altitude with the velocity estimate
+	estimated_altitude_ += estimated_velocity_ * drone_state.dt_;
+	if (drone_state.pressure_hpa_ != last_baro_reading_) {
+		// Correct the altitude and velocity estimate from the baro measurement/observation
 		TimeSpan dt = estimate_ts_.elapsed();
 		Altitude alt_err = drone_state.altitude_ - estimated_altitude_;
-		estimated_altitude_ += pid_.get_pid(alt_err, dt.seconds_float(), KI_LEAK);
 
-		// Correct the velocity estimate using the baro measurement
-		Speed vert_velocity = Speed::from_meters_per_second(
-				altitude_deriv_.do_filter(drone_state.altitude_.meters(), dt));
-		estimated_velocity_ += (vert_velocity - estimated_velocity_) * KP3;
+		estimated_velocity_ += pid_.get_pid(alt_err, dt.seconds_float(), KI_LEAK) / ONE_SECOND;
+		estimated_altitude_ += alt_err * drone_state.altitude_tracker_kp2_;
 
-		last_baro_altitude_ = drone_state.altitude_;
+		last_baro_reading_ = drone_state.pressure_hpa_;
 		estimate_ts_.time_stamp();
 	}
 

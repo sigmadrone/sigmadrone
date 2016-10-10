@@ -23,6 +23,7 @@
 #define DRONESTATE_H_
 
 #define USE_TRIPILOT
+//#define SMALL_FRAME
 
 #include "units.h"
 #include "d3math.h"
@@ -52,9 +53,9 @@ struct DroneState {
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-	    , altitude_kp_(0.07)
+	    , altitude_kp_(0.22)
 		, altitude_ki_(0.002)
-		, altitude_kd_(0.05)
+		, altitude_kd_(0.22)
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
@@ -76,10 +77,14 @@ struct DroneState {
 		, enforce_flight_ceiling_(false)
 		, track_magnetometer_(true)
 		, track_accelerometer_(true)
-	    , external_gyro_enabled_(true) // todo: to be changed to false when colibri v2 are repaired
+	    , external_gyro_enabled_(false)
 	    , external_gyro_align_(0, 1, 0,
 	    		              -1, 0, 0,
 				               0, 0, 1)
+	    , altitude_tracker_kp_(0.006)
+		, altitude_tracker_ki_(0.001)
+		, altitude_tracker_kd_(0.0)
+		, altitude_tracker_kp2_(0.008)
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	{
@@ -221,9 +226,15 @@ struct DroneState {
 	{
 		pilot_type_ = pilot_type;
 		if (PILOT_TYPE_PID_NEW == pilot_type) {
-			kp_ = 0.04;//0.18;
+#ifdef SMALL_FRAME
+			kp_ = 0.2;
 			kd_= 0.035;
-			ki_ = 0.09;//0.035;
+			ki_ = 0.035;
+#else
+			kp_ = 0.4;
+			kd_= 0.035;
+			ki_ = 0.09;
+#endif
 			yaw_kp_ = 0.20;
 			yaw_ki_= 0.0;
 			yaw_kd_ = 0.07;
@@ -302,6 +313,10 @@ struct DroneState {
 	bool track_accelerometer_;
 	bool external_gyro_enabled_;
 	Matrix3f external_gyro_align_;
+	float altitude_tracker_kp_;
+	float altitude_tracker_ki_;
+	float altitude_tracker_kd_;
+	float altitude_tracker_kp2_;
 
 	/*
 	 * Time it took to read sensors

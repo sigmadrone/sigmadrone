@@ -65,6 +65,8 @@ protected:
 	rexjson::value rpc_altitude_kp(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_altitude_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_altitude_ki(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_altitude_tracker_kp_ki_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_altitude_tracker_kp2(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 	rexjson::value rpc_yaw_bias(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_pitch_bias(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
@@ -81,6 +83,7 @@ protected:
 	rexjson::value rpc_enable_external_gyro(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_external_gyro_align(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_flight_mode(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+
 
 protected:
 	std::string cached_request_;

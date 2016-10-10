@@ -54,7 +54,6 @@ private:
 	Altitude starting_altitude_;
 	Altitude highest_altitude_;
 	Altitude estimated_altitude_;
-	Altitude last_baro_altitude_;
 	PidController<Altitude> pid_;
 	Speed estimated_velocity_;
 	TimeStamp estimate_ts_;
@@ -62,6 +61,7 @@ private:
 	uint32_t alarm_count_;
 	float safe_threshold_;
 	bool flight_ceiling_hit_;
+	float last_baro_reading_;
 };
 
 
