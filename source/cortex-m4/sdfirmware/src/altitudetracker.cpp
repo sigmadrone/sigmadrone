@@ -90,7 +90,7 @@ void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 		estimate_ts_.time_stamp();
 	}
 
-	drone_state.altitude_from_acc_ = drone_state.altitude_;
+	drone_state.altitude_from_baro_ = drone_state.altitude_;
 	drone_state.altitude_ = estimated_altitude_;
 	drone_state.vertical_speed_ = estimated_velocity_.meters_per_second();
 }

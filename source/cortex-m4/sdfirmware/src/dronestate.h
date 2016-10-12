@@ -167,7 +167,7 @@ struct DroneState {
 		ret["ext_gyro_enabled"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = external_gyro_align_;
 		ret["flight_posture"] = flight_posture_;
-		ret["altitude_from_acc"] = altitude_from_acc_.meters();
+		ret["altitude_from_baro"] = altitude_from_baro_.meters();
 		return ret;
 	}
 
@@ -262,7 +262,7 @@ struct DroneState {
 	Vector3f mag_;
 	Vector3f gyro_drift_error_;
 	Altitude altitude_;
-	Altitude altitude_from_acc_;
+	Altitude altitude_from_baro_;
 	float pressure_hpa_;
 	float temperature_;
 	Voltage battery_voltage_;
