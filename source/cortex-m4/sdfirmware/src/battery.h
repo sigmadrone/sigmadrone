@@ -52,6 +52,8 @@ public:
 	Battery::Type type() const;
 	std::string type_as_string() const;
 
+	static std::string type_as_string(Type type);
+
 private:
 	void auto_detect_type();
 

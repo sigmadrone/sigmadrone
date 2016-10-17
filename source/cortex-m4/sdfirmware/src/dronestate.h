@@ -26,6 +26,7 @@
 //#define SMALL_FRAME
 
 #include "units.h"
+#include "battery.h"
 #include "d3math.h"
 #include "alarm.h"
 #include "flightdefs.h"
@@ -40,22 +41,23 @@ struct DroneState {
 		, temperature_(0.0f)
 	    , battery_voltage_()
         , battery_percentage_(0.0f)
+	    , battery_type_(Battery::TYPE_UNKNOWN)
 	    , latitude_(0.0f)
 	    , longitude_(0.0f)
 		, speed_over_ground_(0.0f)
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
-		, vertical_speed_(0.0f)
+		, vertical_speed_()
 		, kp_(0.14)
 		, ki_(0.3)
 		, kd_(0.035)
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-	    , altitude_kp_(0.22)
-		, altitude_ki_(0.002)
-		, altitude_kd_(0.22)
+	    , altitude_kp_(0.4)
+		, altitude_ki_(0.2)
+		, altitude_kd_(0.05)
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
@@ -81,8 +83,8 @@ struct DroneState {
 	    , external_gyro_align_(0, 1, 0,
 	    		              -1, 0, 0,
 				               0, 0, 1)
-	    , altitude_tracker_kp_(0.006)
-		, altitude_tracker_ki_(0.001)
+	    , altitude_tracker_kp_(0.025)
+		, altitude_tracker_ki_(0.005)
 		, altitude_tracker_kd_(0.0)
 		, altitude_tracker_kp2_(0.008)
 	    , iteration_(0)
@@ -112,7 +114,7 @@ struct DroneState {
 		ret["gps_course_deg"] = course_;
 		ret["gps_satellites"] = static_cast<int>(satellite_count_);
 		ret["gps_altitude"] = gps_altitude_.meters();
-		ret["vertical_speed"] = vertical_speed_;
+		ret["vertical_speed"] = vertical_speed_.meters_per_second();
 		ret["dt"] = static_cast<float>(dt_.microseconds());
 		ret["iteration"] = static_cast<int>(iteration_);
 		ret["attitude"] = quaternion_to_json_value(attitude_);
@@ -141,7 +143,7 @@ struct DroneState {
 	{
 		rexjson::object ret = to_json().get_obj();
 		ret["accel_adjustment"] = matrix_to_json_value(accelerometer_adjustment_);
-		ret["battery_type"] = battery_type_;
+		ret["battery_type"] = Battery::type_as_string(battery_type_);
 		ret["kp"] = kp_;
 		ret["ki"] = ki_;
 		ret["kd"] = kd_;
@@ -267,14 +269,14 @@ struct DroneState {
 	float temperature_;
 	Voltage battery_voltage_;
 	float battery_percentage_;
-	std::string battery_type_;
+	Battery::Type battery_type_;
 	float latitude_;
 	float longitude_;
 	float speed_over_ground_; //km/h
 	float course_; // degrees
 	uint32_t satellite_count_;
 	Altitude gps_altitude_;
-	float vertical_speed_;
+	Speed vertical_speed_;
 	/*more to add here*/
 
 	/*

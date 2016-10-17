@@ -23,7 +23,8 @@
 
 AltitudeTracker::AltitudeTracker(const Altitude& ceiling, float safe_threshold) :
 	flight_ceiling_(ceiling), starting_altitude_(INVALID_ALTITUDE), estimated_altitude_(INVALID_ALTITUDE),
-	alarm_count_(0), safe_threshold_(safe_threshold), flight_ceiling_hit_(false), last_baro_reading_(0)
+	velocity_lpf_(0.999), alarm_count_(0), safe_threshold_(safe_threshold),
+	flight_ceiling_hit_(false), last_baro_reading_(0)
 {
 	assert(safe_threshold >= 0.0f && safe_threshold_ <= 1.0f);
 }
@@ -66,8 +67,9 @@ void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 {
 	static float ACCEL_KP = 1.3;
 	static float KI_LEAK = 0.05;
+	static const float accelDeadBand = 0.025;
 
-	float vert_accel = apply_deadband(calc_vertical_accel(drone_state), 0.01);
+	float vert_accel = apply_deadband(calc_vertical_accel(drone_state), accelDeadBand);
 
 	pid_.set_kp_ki_kd(drone_state.altitude_tracker_kp_,
 			drone_state.altitude_tracker_ki_, drone_state.altitude_tracker_kd_);
@@ -82,17 +84,26 @@ void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 		// Correct the altitude and velocity estimate from the baro measurement/observation
 		TimeSpan dt = estimate_ts_.elapsed();
 		Altitude alt_err = drone_state.altitude_ - estimated_altitude_;
-
-		estimated_velocity_ += pid_.get_pid(alt_err, dt.seconds_float(), KI_LEAK) / ONE_SECOND;
 		estimated_altitude_ += alt_err * drone_state.altitude_tracker_kp2_;
 
+		if (fabs(vert_accel) < accelDeadBand || dt > ONE_SECOND / 5) {
+#if 1
+			Speed vert_velocity = Speed::from_meters_per_second(velocity_lpf_.do_filter(
+					altitude_deriv_.do_filter(drone_state.altitude_.meters(), dt)));
+			Speed velocity_error = vert_velocity - estimated_velocity_;
+			estimated_velocity_ += pid_.get_pid(velocity_error, dt.seconds_float(), KI_LEAK);
+#else
+			estimated_velocity_ += pid_.get_pid(alt_err/ONE_SECOND, dt.seconds_float(), KI_LEAK);
+#endif
+			estimate_ts_.time_stamp();
+		}
+
 		last_baro_reading_ = drone_state.pressure_hpa_;
-		estimate_ts_.time_stamp();
 	}
 
 	drone_state.altitude_from_baro_ = drone_state.altitude_;
 	drone_state.altitude_ = estimated_altitude_;
-	drone_state.vertical_speed_ = estimated_velocity_.meters_per_second();
+	drone_state.vertical_speed_ = estimated_velocity_;
 }
 
 void AltitudeTracker::update_state(DroneState& drone_state)

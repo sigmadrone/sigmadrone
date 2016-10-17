@@ -174,7 +174,7 @@ void battery_task(void *pvParameters)
 		battery.update(voltmeter.measure());
 		drone_state->battery_voltage_ = battery.voltage();
 		drone_state->battery_percentage_ = battery.charge_percentage();
-		drone_state->battery_type_ = battery.type_as_string();
+		drone_state->battery_type_ = battery.type();
 		vTaskDelay(3000 / portTICK_RATE_MS);
 	}
 }
