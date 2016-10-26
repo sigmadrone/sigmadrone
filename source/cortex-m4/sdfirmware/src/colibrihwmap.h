@@ -43,7 +43,7 @@ static const HwTimer::Id PWM_IN_TIMER_5 = HwTimer::TIMER_9;
 static const PinName SHUTDOWN_PIN = PB_0;
 
 // Uncomment the line below to enable Cortex USB OTG
-//#define USE_CORTEX_USB_OTG
+#define USE_CORTEX_USB_OTG
 
 #ifdef USE_CORTEX_USB_OTG
 static const PinName USBOTG_VBUS_FS1_PIN = PA_9;

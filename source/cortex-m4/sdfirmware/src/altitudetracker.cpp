@@ -23,8 +23,9 @@
 
 AltitudeTracker::AltitudeTracker(const Altitude& ceiling, float safe_threshold) :
 	flight_ceiling_(ceiling), starting_altitude_(INVALID_ALTITUDE), estimated_altitude_(INVALID_ALTITUDE),
-	velocity_lpf_(0.999), alarm_count_(0), safe_threshold_(safe_threshold),
-	flight_ceiling_hit_(false), last_baro_reading_(0)
+	velocity_lpf_(0.9), alarm_count_(0), safe_threshold_(safe_threshold),
+	flight_ceiling_hit_(false), last_baro_reading_(0), vertical_acel_bias_samples_(0),
+	vertical_acel_bias_(0.0f)
 {
 	assert(safe_threshold >= 0.0f && safe_threshold_ <= 1.0f);
 }
@@ -63,13 +64,29 @@ inline float apply_deadband(float val, float deadband)
 	return (val > 0) ? val - deadband : val+deadband;
 }
 
+bool AltitudeTracker::calc_vert_accel_bias(const DroneState& drone_state)
+{
+	static uint32_t NUM_SAMPLES_NEEDED = 50;
+	if (vertical_acel_bias_samples_ < NUM_SAMPLES_NEEDED && drone_state.iteration_ > 30) {
+		vertical_acel_bias_ += calc_vertical_accel(drone_state);
+		if (++vertical_acel_bias_samples_ == NUM_SAMPLES_NEEDED) {
+			vertical_acel_bias_ /= NUM_SAMPLES_NEEDED;
+		}
+	}
+	return vertical_acel_bias_samples_ == NUM_SAMPLES_NEEDED;
+}
+
 void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 {
-	static float ACCEL_KP = 1.3;
+	static float ACCEL_KP = 1;
 	static float KI_LEAK = 0.05;
 	static const float accelDeadBand = 0.025;
 
-	float vert_accel = apply_deadband(calc_vertical_accel(drone_state), accelDeadBand);
+	if (!calc_vert_accel_bias(drone_state)) {
+		return;
+	}
+
+	float vert_accel = apply_deadband(calc_vertical_accel(drone_state) - vertical_acel_bias_, accelDeadBand);
 
 	pid_.set_kp_ki_kd(drone_state.altitude_tracker_kp_,
 			drone_state.altitude_tracker_ki_, drone_state.altitude_tracker_kd_);
@@ -86,10 +103,10 @@ void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 		Altitude alt_err = drone_state.altitude_ - estimated_altitude_;
 		estimated_altitude_ += alt_err * drone_state.altitude_tracker_kp2_;
 
-		if (fabs(vert_accel) < accelDeadBand || dt > ONE_SECOND / 5) {
+		if (fabs(vert_accel) < accelDeadBand || dt > TimeSpan::from_milliseconds(100)) {
 #if 1
-			Speed vert_velocity = Speed::from_meters_per_second(velocity_lpf_.do_filter(
-					altitude_deriv_.do_filter(drone_state.altitude_.meters(), dt)));
+			Speed vert_velocity = velocity_lpf_.do_filter(Speed::from_meters_per_second(
+				altitude_deriv_.do_filter(drone_state.altitude_.meters())));
 			Speed velocity_error = vert_velocity - estimated_velocity_;
 			estimated_velocity_ += pid_.get_pid(velocity_error, dt.seconds_float(), KI_LEAK);
 #else

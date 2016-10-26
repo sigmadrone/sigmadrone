@@ -71,6 +71,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Da
 	add("sd_flight_mode", &UartRpcServer::rpc_flight_mode);
 	add("sd_altitude_tracker_kp_ki_kd", &UartRpcServer::rpc_altitude_tracker_kp_ki_kd);
 	add("sd_altitude_tracker_kp2", &UartRpcServer::rpc_altitude_tracker_kp2);
+	add("sd_altitude_correction_period", &UartRpcServer::rpc_altitude_correction_period);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -986,6 +987,33 @@ rexjson::value UartRpcServer::rpc_altitude_tracker_kp2(
 		dronestate_.altitude_tracker_kp2_ = params[0].get_real();
 	}
 	return dronestate_.altitude_tracker_kp2_;
+}
+
+rexjson::value UartRpcServer::rpc_altitude_correction_period(
+		UART*, rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+				"sd_altitude_correction_period\n"
+				"\nGet/Set altitude correction period when hovering, i.e. how fast to return to the desired altitude."
+				"\n"
+				"Arguments:\n"
+				"1. Period         (real, optional) Period in seconds.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.altitude_correction_period_ = TimeSpan::from_milliseconds(params[0].get_real()*1000.0f);
+		if (dronestate_.altitude_correction_period_ < TimeSpan::from_milliseconds(100)) {
+			dronestate_.altitude_correction_period_ = TimeSpan::from_seconds(10);
+		}
+	}
+	return dronestate_.altitude_correction_period_.seconds_float();
 }
 
 rexjson::value UartRpcServer::rpc_gyro_drift_leak_rate(UART* , rexjson::array& params, rpc_exec_mode mode)

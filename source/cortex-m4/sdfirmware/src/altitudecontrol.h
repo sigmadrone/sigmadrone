@@ -28,11 +28,11 @@
 #include "derivativefilter.h"
 
 
-static const Throttle min_throttle_altitude_hold = Throttle(0.50);
-static const Throttle max_throttle_altitude_hold = Throttle(0.55);
+static const Throttle min_throttle_altitude_hold = Throttle(0.49);
+static const Throttle max_throttle_altitude_hold = Throttle(0.52);
 static const Throttle landing_throttle = Throttle(0.2);
-static const Speed max_vertical_speed = (ONE_METER * 6.0f) / ONE_SECOND;
-static const Speed min_vertical_speed = -((ONE_METER * 5.0f) / ONE_SECOND);
+static const Speed max_vertical_speed = (ONE_METER * 4.0f) / ONE_SECOND;
+static const Speed min_vertical_speed = -((ONE_METER * 3.0f) / ONE_SECOND);
 
 class AltitudeControl {
 public:
@@ -50,6 +50,7 @@ private:
 	Speed error_as_vertical_speed(const DroneState& drone_state);
 	Altitude error_as_altitude(const DroneState& drone_state);
 	void set_throttle_from_ascend_descend(const DroneState& drone_state);
+	void set_throttle_from_altitude_hold(const DroneState& drone_state);
 	void go_to_state_altitude_hold(const DroneState& drone_state);
 	float hovering_throttle(const DroneState& drone_state);
 
@@ -70,10 +71,12 @@ private:
 	PidController<float> pid_vert_speed_;
 	State state_;
 	Throttle throttle_;
+	Throttle last_base_throttle_;
 	Altitude takeoff_altitude_;
 	Altitude desired_altitude_;
 	TimeSpan dt_;
 	TimeStamp last_update_time_;
+	TimeStamp throttle_hold_;
 };
 
 #endif /* ALTITUDECONTROL_H_ */

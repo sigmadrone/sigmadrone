@@ -55,9 +55,9 @@ struct DroneState {
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-	    , altitude_kp_(0.4)
-		, altitude_ki_(0.2)
-		, altitude_kd_(0.05)
+	    , altitude_kp_(0.35)
+		, altitude_ki_(0.5)
+		, altitude_kd_(0.035)
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
@@ -86,7 +86,8 @@ struct DroneState {
 	    , altitude_tracker_kp_(0.025)
 		, altitude_tracker_ki_(0.005)
 		, altitude_tracker_kd_(0.0)
-		, altitude_tracker_kp2_(0.008)
+		, altitude_tracker_kp2_(0.04)
+	    , altitude_correction_period_(TimeSpan::from_seconds(10))
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	{
@@ -231,7 +232,7 @@ struct DroneState {
 #ifdef SMALL_FRAME
 			kp_ = 0.2;
 			kd_= 0.035;
-			ki_ = 0.035;
+			ki_ = 0.09;
 #else
 			kp_ = 0.4;
 			kd_= 0.035;
@@ -319,6 +320,7 @@ struct DroneState {
 	float altitude_tracker_ki_;
 	float altitude_tracker_kd_;
 	float altitude_tracker_kp2_;
+	TimeSpan altitude_correction_period_;
 
 	/*
 	 * Time it took to read sensors
