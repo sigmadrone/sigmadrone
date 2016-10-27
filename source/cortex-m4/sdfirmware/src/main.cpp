@@ -174,7 +174,7 @@ void battery_task(void *pvParameters)
 		battery.update(voltmeter.measure());
 		drone_state->battery_voltage_ = battery.voltage();
 		drone_state->battery_percentage_ = battery.charge_percentage();
-		drone_state->battery_type_ = battery.type_as_string();
+		drone_state->battery_type_ = battery.type();
 		vTaskDelay(3000 / portTICK_RATE_MS);
 	}
 }
@@ -199,9 +199,9 @@ void uart_task(void *pvParameters)
 	}
 }
 
-static Vector3f ReadAccelerometer(
+static Vector3f read_accelerometer(
 		LSM303D& acc,
-		LowPassFilter<Vector3f, float>* lpf_filt)
+		LowPassFilter<Vector3f, float>& lpf_filt)
 {
 	Vector3f acc_filtered;
 	uint8_t count = acc.GetFifoSourceFSS();
@@ -209,10 +209,22 @@ static Vector3f ReadAccelerometer(
 		for (uint8_t i = 0; i < count; i++) {
 			LSM303D::AxesAcc_t axes = {0,0,0};
 			acc.GetAcc(&axes);
-			acc_filtered = lpf_filt->do_filter(Vector3d(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
+			acc_filtered = lpf_filt.do_filter(Vector3d(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
 		}
 	}
 	return acc_filtered;
+}
+
+static void warmup_accelerometer_filter(
+		LSM303D& acc,
+		LowPassFilter<Vector3f, float>& lpf_filt)
+{
+	static const size_t numSamples = 256;
+	for (size_t i = 0; i < numSamples;) {
+		if (read_accelerometer(acc, lpf_filt).length() > 0) {
+			++i;
+		}
+	}
 }
 
 void main_task(void *pvParameters)
@@ -334,6 +346,8 @@ void main_task(void *pvParameters)
 	gyro_reader.enable_disable_int2(true);
 	gyro_reader.calculate_static_bias_filtered(800);
 
+	warmup_accelerometer_filter(accel, acc_lpf);
+
 	printf(" Done!\n");
 
 	flight_ctl.start_receiver();
@@ -382,7 +396,7 @@ void main_task(void *pvParameters)
 			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
 
-		drone_state->accel_raw_ = acc_align * ReadAccelerometer(accel, &acc_lpf);
+		drone_state->accel_raw_ = acc_align * read_accelerometer(accel, acc_lpf);
 		if (drone_state->accel_raw_.length_squared() > 0) {
 			Vector3f accel_adjusted = drone_state->accel_raw_ - drone_state->accelerometer_adjustment_;
 			drone_state->accel_ = accel_adjusted.normalize();

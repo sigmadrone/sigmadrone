@@ -26,6 +26,7 @@
 #include "dronestate.h"
 #include "derivativefilter.h"
 #include "pidcontroller.h"
+#include "sensorsprefilters.h"
 
 class AltitudeTracker
 {
@@ -47,25 +48,25 @@ private:
 
 	void clear_alarm();
 	void estimate_altitude(DroneState& state);
+	bool calc_vert_accel_bias(const DroneState& state);
 
 	static const uint32_t ALARM_COUNT_THRESHOLD = 16;
 
 	Altitude flight_ceiling_;
 	Altitude starting_altitude_;
-	Altitude current_altitude_;
 	Altitude highest_altitude_;
 	Altitude estimated_altitude_;
-	Altitude last_baro_altitude_;
-	PidController<float> pid_;
-	Speed vert_velocity_;
+	PidController<Speed> pid_;
 	Speed estimated_velocity_;
 	TimeStamp estimate_ts_;
 	DerivativeFilter<float, 11> altitude_deriv_;
-	float vert_acc_bias_;
+	LowPassFilter<Speed, float> velocity_lpf_;
 	uint32_t alarm_count_;
 	float safe_threshold_;
 	bool flight_ceiling_hit_;
-	uint32_t vert_accel_bias_iterations_;
+	float last_baro_reading_;
+	uint32_t vertical_acel_bias_samples_;
+	float vertical_acel_bias_;
 };
 
 

@@ -82,15 +82,7 @@ Battery::Type Battery::type() const
 
 std::string Battery::type_as_string() const
 {
-	switch (type()) {
-	case TYPE_LIPO_1S: return "LiPo_1S";
-	case TYPE_LIPO_2S: return "LiPo_2S";
-	case TYPE_LIPO_3S: return "LiPo_3S";
-	case TYPE_LIPO_4S: return "LiPo_4S";
-	case TYPE_LIPO_5S: return "LiPo_5S";
-	case TYPE_LIPO_6S: return "LiPo_6S";
-	default: return "Unknown";
-	}
+	return Battery::type_as_string(type());
 }
 
 void Battery::auto_detect_type()
@@ -105,3 +97,15 @@ void Battery::auto_detect_type()
 	}
 }
 
+std::string Battery::type_as_string(Battery::Type type)
+{
+	switch (type) {
+	case TYPE_LIPO_1S: return "LiPo_1S";
+	case TYPE_LIPO_2S: return "LiPo_2S";
+	case TYPE_LIPO_3S: return "LiPo_3S";
+	case TYPE_LIPO_4S: return "LiPo_4S";
+	case TYPE_LIPO_5S: return "LiPo_5S";
+	case TYPE_LIPO_6S: return "LiPo_6S";
+	default: return "Unknown";
+	}
+}

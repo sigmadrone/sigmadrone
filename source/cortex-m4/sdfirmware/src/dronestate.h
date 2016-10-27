@@ -23,8 +23,10 @@
 #define DRONESTATE_H_
 
 #define USE_TRIPILOT
+//#define SMALL_FRAME
 
 #include "units.h"
+#include "battery.h"
 #include "d3math.h"
 #include "alarm.h"
 #include "flightdefs.h"
@@ -39,22 +41,23 @@ struct DroneState {
 		, temperature_(0.0f)
 	    , battery_voltage_()
         , battery_percentage_(0.0f)
+	    , battery_type_(Battery::TYPE_UNKNOWN)
 	    , latitude_(0.0f)
 	    , longitude_(0.0f)
 		, speed_over_ground_(0.0f)
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
 	    , gps_altitude_(Altitude::from_meters(-100))
-		, vertical_speed_(0.0f)
+		, vertical_speed_()
 		, kp_(0.14)
 		, ki_(0.3)
 		, kd_(0.035)
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-	    , altitude_kp_(0.07)
-		, altitude_ki_(0.002)
-		, altitude_kd_(0.05)
+	    , altitude_kp_(0.35)
+		, altitude_ki_(0.5)
+		, altitude_kd_(0.035)
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
@@ -76,10 +79,15 @@ struct DroneState {
 		, enforce_flight_ceiling_(false)
 		, track_magnetometer_(true)
 		, track_accelerometer_(true)
-	    , external_gyro_enabled_(true) // todo: to be changed to false when colibri v2 are repaired
+	    , external_gyro_enabled_(false)
 	    , external_gyro_align_(0, 1, 0,
 	    		              -1, 0, 0,
 				               0, 0, 1)
+	    , altitude_tracker_kp_(0.025)
+		, altitude_tracker_ki_(0.005)
+		, altitude_tracker_kd_(0.0)
+		, altitude_tracker_kp2_(0.04)
+	    , altitude_correction_period_(TimeSpan::from_seconds(10))
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	{
@@ -107,7 +115,7 @@ struct DroneState {
 		ret["gps_course_deg"] = course_;
 		ret["gps_satellites"] = static_cast<int>(satellite_count_);
 		ret["gps_altitude"] = gps_altitude_.meters();
-		ret["vertical_speed"] = vertical_speed_;
+		ret["vertical_speed"] = vertical_speed_.meters_per_second();
 		ret["dt"] = static_cast<float>(dt_.microseconds());
 		ret["iteration"] = static_cast<int>(iteration_);
 		ret["attitude"] = quaternion_to_json_value(attitude_);
@@ -136,7 +144,7 @@ struct DroneState {
 	{
 		rexjson::object ret = to_json().get_obj();
 		ret["accel_adjustment"] = matrix_to_json_value(accelerometer_adjustment_);
-		ret["battery_type"] = battery_type_;
+		ret["battery_type"] = Battery::type_as_string(battery_type_);
 		ret["kp"] = kp_;
 		ret["ki"] = ki_;
 		ret["kd"] = kd_;
@@ -162,7 +170,7 @@ struct DroneState {
 		ret["ext_gyro_enabled"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = external_gyro_align_;
 		ret["flight_posture"] = flight_posture_;
-		ret["altitude_from_acc"] = altitude_from_acc_.meters();
+		ret["altitude_from_baro"] = altitude_from_baro_.meters();
 		return ret;
 	}
 
@@ -221,9 +229,15 @@ struct DroneState {
 	{
 		pilot_type_ = pilot_type;
 		if (PILOT_TYPE_PID_NEW == pilot_type) {
-			kp_ = 0.35;
-			kd_= 0.085;
-			ki_ = 0.035;
+#ifdef SMALL_FRAME
+			kp_ = 0.2;
+			kd_= 0.035;
+			ki_ = 0.09;
+#else
+			kp_ = 0.4;
+			kd_= 0.035;
+			ki_ = 0.09;
+#endif
 			yaw_kp_ = 0.20;
 			yaw_ki_= 0.0;
 			yaw_kd_ = 0.07;
@@ -251,19 +265,19 @@ struct DroneState {
 	Vector3f mag_;
 	Vector3f gyro_drift_error_;
 	Altitude altitude_;
-	Altitude altitude_from_acc_;
+	Altitude altitude_from_baro_;
 	float pressure_hpa_;
 	float temperature_;
 	Voltage battery_voltage_;
 	float battery_percentage_;
-	std::string battery_type_;
+	Battery::Type battery_type_;
 	float latitude_;
 	float longitude_;
 	float speed_over_ground_; //km/h
 	float course_; // degrees
 	uint32_t satellite_count_;
 	Altitude gps_altitude_;
-	float vertical_speed_;
+	Speed vertical_speed_;
 	/*more to add here*/
 
 	/*
@@ -302,6 +316,11 @@ struct DroneState {
 	bool track_accelerometer_;
 	bool external_gyro_enabled_;
 	Matrix3f external_gyro_align_;
+	float altitude_tracker_kp_;
+	float altitude_tracker_ki_;
+	float altitude_tracker_kd_;
+	float altitude_tracker_kp2_;
+	TimeSpan altitude_correction_period_;
 
 	/*
 	 * Time it took to read sensors

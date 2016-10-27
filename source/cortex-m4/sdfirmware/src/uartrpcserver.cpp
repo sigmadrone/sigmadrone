@@ -69,6 +69,9 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Da
 	add("sd_altitude_ki", &UartRpcServer::rpc_altitude_ki);
 	add("sd_altitude_kd", &UartRpcServer::rpc_altitude_kd);
 	add("sd_flight_mode", &UartRpcServer::rpc_flight_mode);
+	add("sd_altitude_tracker_kp_ki_kd", &UartRpcServer::rpc_altitude_tracker_kp_ki_kd);
+	add("sd_altitude_tracker_kp2", &UartRpcServer::rpc_altitude_tracker_kp2);
+	add("sd_altitude_correction_period", &UartRpcServer::rpc_altitude_correction_period);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -925,6 +928,92 @@ rexjson::value UartRpcServer::rpc_altitude_kd(UART* , rexjson::array& params, rp
 		dronestate_.altitude_kd_ = params[0].get_real();
 	}
 	return dronestate_.altitude_kd_;
+}
+
+rexjson::value UartRpcServer::rpc_altitude_tracker_kp_ki_kd(UART*, rexjson::array& params, rpc_exec_mode mode)
+{
+	static const int real_int_null_type = rpc_real_type|rpc_int_type|rpc_null_type;
+	static unsigned int types[] = {real_int_null_type, real_int_null_type, real_int_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_altitude_tracker_kp_ki_kd\n"
+	            "\nGet/Set Kp, Ki, Kd for the altitude tracker PID controller."
+				"\nIf no arguments are passed, then an array of the current coefficients is returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kp          (real, optional) The Kp of the PID controller.\n"
+				"2. Ki          (real, optional) The Ki of the PID controller.\n"
+				"3. Kd          (real, optional) The Kd of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.altitude_tracker_kp_ = params[0].get_real();
+		if (params[1].type() != rexjson::null_type) {
+			dronestate_.altitude_tracker_ki_ = params[1].get_real();
+			if (params[2].type() != rexjson::null_type) {
+				dronestate_.altitude_tracker_kd_ = params[2].get_real();
+			}
+		}
+	}
+	return matrix_to_json_value(Vector3f(dronestate_.altitude_tracker_kp_,
+			dronestate_.altitude_tracker_ki_,dronestate_.altitude_tracker_kd_));
+}
+
+rexjson::value UartRpcServer::rpc_altitude_tracker_kp2(
+		UART*, rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+				"sd_altitude_tracker_kp2\n"
+				"\nGet/Set Kp for inner PID controller of the altitude tracker."
+				"\nIf the new coefficient is not specified, the current Kp will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Kp          (real, optional) The Kp of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.altitude_tracker_kp2_ = params[0].get_real();
+	}
+	return dronestate_.altitude_tracker_kp2_;
+}
+
+rexjson::value UartRpcServer::rpc_altitude_correction_period(
+		UART*, rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+				"sd_altitude_correction_period\n"
+				"\nGet/Set altitude correction period when hovering, i.e. how fast to return to the desired altitude."
+				"\n"
+				"Arguments:\n"
+				"1. Period         (real, optional) Period in seconds.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.altitude_correction_period_ = TimeSpan::from_milliseconds(params[0].get_real()*1000.0f);
+		if (dronestate_.altitude_correction_period_ < TimeSpan::from_milliseconds(100)) {
+			dronestate_.altitude_correction_period_ = TimeSpan::from_seconds(10);
+		}
+	}
+	return dronestate_.altitude_correction_period_.seconds_float();
 }
 
 rexjson::value UartRpcServer::rpc_gyro_drift_leak_rate(UART* , rexjson::array& params, rpc_exec_mode mode)
