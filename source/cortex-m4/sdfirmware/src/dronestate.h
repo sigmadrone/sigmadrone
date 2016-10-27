@@ -22,7 +22,6 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
-#define USE_TRIPILOT
 //#define SMALL_FRAME
 
 #include "units.h"
@@ -63,7 +62,7 @@ struct DroneState {
 	    , gyro_drift_kd_(0.0)
 	    , gyro_drift_leak_rate_(0.00001)
 	    , accelerometer_correction_speed_(5.0)
-	    , pilot_type_(PILOT_TYPE_PID_LEGACY)
+	    , pilot_type_(PILOT_TYPE_PID_NEW)
 		, gyro_factor_(1.25)
 		, yaw_(0.0)
 		, pitch_(0.0)
@@ -91,9 +90,7 @@ struct DroneState {
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	{
-#ifdef USE_TRIPILOT
 		set_pilot_type(PILOT_TYPE_PID_NEW);
-#endif
 	}
 
 	rexjson::value to_json()
@@ -120,7 +117,7 @@ struct DroneState {
 		ret["iteration"] = static_cast<int>(iteration_);
 		ret["attitude"] = quaternion_to_json_value(attitude_);
 		ret["target"] = quaternion_to_json_value(target_);
-		ret["motors"] = matrix_to_json_value(motors_);
+		ret["motors"] = vector_to_json_value(motors_);
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
@@ -243,14 +240,6 @@ struct DroneState {
 			yaw_kd_ = 0.07;
 			accelerometer_correction_speed_ = 3.0;
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
-		} else if (PILOT_TYPE_PID_LEGACY == pilot_type) {
-			kp_ = 0.14;
-			ki_ = 0.3;
-			kd_ = 0.035;
-			yaw_kp_ = 1.00;
-			yaw_ki_ = 0.0;
-			yaw_kd_ = 0.10;
-			accelerometer_correction_speed_ = 2.0;
 		}
 	}
 
@@ -337,7 +326,7 @@ struct DroneState {
 	 */
 	QuaternionF attitude_;
 	QuaternionF target_;
-	Vector4f motors_;
+	std::vector<float> motors_;
 	Vector3f pid_torque_;
 	float throttle_;
 	std::string flight_posture_;

@@ -66,5 +66,14 @@ rexjson::value matrix_to_json_value(const MatrixMN<T, M, N>& m)
 	return arr;
 }
 
+template <typename T>
+rexjson::value vector_to_json_value(const std::vector<T>& v)
+{
+	rexjson::array arr;
+	for (size_t i = 0; i < v.size(); i++)
+			arr.push_back(v.at(i));
+	return arr;
+}
+
 
 #endif

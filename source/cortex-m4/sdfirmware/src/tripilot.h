@@ -24,7 +24,6 @@
 
 #include "units.h"
 #include "dronestate.h"
-#include "pidtorque.h"
 #include "pidcontroller.h"
 #include "ipilot.h"
 #include "propeller.h"
@@ -46,18 +45,18 @@ public:
 	virtual void set_target_thrust(float thrust);
 
 	virtual const Vector3f& torque_correction() const { return torque_correction_; }
-	virtual const Vector4f& motors() const;
+	virtual const std::vector<float>& motors() const;
 	virtual float get_min_thrust() const { return min_thrust_; }
 	virtual float get_max_thrust() const { return max_thrust_; }
 	virtual PilotType get_pilot_type() const { return PILOT_TYPE_PID_NEW; }
 
 private:
-	Vector4f clip_motors(const Vector4f& motors);
+	std::vector<float> clip_motors(const std::vector<float>& motors);
 	Vector3f get_torque(const DroneState& state);
 
 private:
 	AirflowForce<float> pf_;
-	Vector4f motors_;
+	std::vector<float> motors_;
 	float min_thrust_;
 	float max_thrust_;
 	float target_thrust_;
