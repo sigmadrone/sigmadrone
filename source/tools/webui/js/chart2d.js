@@ -18,6 +18,9 @@ VisChart2d = function (
   this.rangeMin = this.originalRangeMin = rangeMin;
   this.rangeMax = this.originalRangeMax = rangeMax;
 
+  this.rangeMin2 = this.originalRangeMin2 = rangeMin;
+  this.rangeMax2 = this.originalRangeMax2 = rangeMax;
+
   // Create the groups, number of groups is controlled by the size of the ylabels
   // array
   this.groups = new vis.DataSet();
@@ -104,8 +107,12 @@ VisChart2d.prototype.zoomYAxis = function(mediumPoint, zoomFactor, restoreOrigin
     this.rangeMin = this.originalRangeMin;
     this.rangeMax = this.originalRangeMax;
   }
+  var scale = (this.originalRangeMax-this.originalRangeMin) / (this.rangeMax - this.rangeMin);
+  this.rangeMin2 = this.originalRangeMin2 * scale;
+  this.rangeMax2 = this.originalRangeMax2 * scale;
   this.graph2d.setOptions(
-    { dataAxis: { left: { range: { min: this.rangeMin, max: this.rangeMax } } } }
+    { dataAxis: { left: { range: { min: this.rangeMin, max: this.rangeMax } } } },
+    { dataAxis: { right: { range: { min: this.rangeMin2, max: this.rangeMax2 } } } }
   );
 }
 

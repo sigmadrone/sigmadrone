@@ -21,7 +21,7 @@ RpcClient.prototype.rpcCall = function(url, method, params, successCallback, fai
       successCallback(response);
     }
   }, "json").done(function(){
-    console.log("Success: " + method);
+    //console.log("Success: " + method);
   }).fail(function(resp, error_type, error_text) {
     ++self.rpcFailureCount;
     self.rpcCallInProggress = false;

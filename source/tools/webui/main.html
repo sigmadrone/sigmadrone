@@ -301,7 +301,7 @@
 
         <div class="row row-padded">
           <a href="#pid-altitude-id" id="pid-altitude-btn" class="btn btn-link" data-toggle="collapse">
-            <span class="glyphicon glyphicon-triangle-right"></span>PID Controller Altitude
+            <span class="glyphicon glyphicon-triangle-right"></span>Altitude Controller
           </a>
           <div id = "pid-altitude-id" class="col-xs-12 collapse">
             <form class="form-horizontal" role="form" id="pid-altitude-form" onsubmit="return onPidAltitudeSubmit();">
@@ -317,6 +317,12 @@
                 <div class="col-xs-4 col-md-2">
                   <label for="kd-altitude">Kd</label>
                   <input id="kd-altitude" name="kd-altitude" class="form-control input-sm" type="number" min="0.0" max="1.2" step="0.001" required="true" oninput="onPidAltitudeUserInput()">
+                </div>
+              </div>
+              <div class="form-group">
+                <div class="col-xs-4 col-md-2">
+                  <label for="alt-correction-period">Correction Period, Sec</label>
+                  <input id="alt-correction-period" name="alt-correction-period" class="form-control input-sm" type="number" min="0.100" max="3600" step="0.1" required="true" oninput="onPidAltitudeUserInput()">
                 </div>
               </div>
               <div class="form-group">
@@ -819,9 +825,8 @@
     null,
     "Altitude",
     ['Altitude, m', 'Altitude GPS, m', 'Altitude Raw, m', 'Throttle', 'Posture'],
-    //['Altitude, m', 'Altitude Acc, m'],
     -10, 40,
-    [],//['Speed, km/h', 'Vertical Speed, m/s'],
+    ['Vertical Speed, m/s'],
     onChartEvent
   );
 
@@ -990,6 +995,7 @@
       // and automatic error will be displayed
       return true;
     }
+    rpcClient.rpcCall(droneRpcUrl, "sd_altitude_correction_period", "[" + $myForm[0].elements['alt-correction-period'].value + "]");
     rpcClient.rpcCall(droneRpcUrl, "sd_altitude_kp", "[" + $myForm[0].elements['kp-altitude'].value + "]");
     rpcClient.rpcCall(droneRpcUrl, "sd_altitude_ki", "[" + $myForm[0].elements['ki-altitude'].value + "]");
     rpcClient.rpcCall(droneRpcUrl, "sd_altitude_kd", "[" + $myForm[0].elements['kd-altitude'].value + "]",
@@ -1173,7 +1179,7 @@
         dataStream[i].base_throttle,
         posture,
         //dataStream[i].gps_speed_kmph,
-        //altitudeChartModel.verticalSpeed//, altitudeChartModel.verticalSpeedGps
+        altitudeChartModel.verticalSpeed, //altitudeChartModel.verticalSpeedGps
       ];
       altitudeChart.update(samples, dataStream[i].serial);
     }
@@ -1230,7 +1236,7 @@
       }
 
       //console.log("Iteration: ", droneState.iteration);
-      console.log("Pressure, hpa: ", droneState.pressure_hpa)
+      //console.log("Pressure, hpa: ", droneState.pressure_hpa)
 
       onRedrawMotorsAndBatteryStatus(droneState);
 
@@ -1302,11 +1308,12 @@
     toggleCollapsable("#pidxy-id", "#pidxy-btn", "PID Controller XY");
     toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
     toggleCollapsable("#pid-gyro-id", "#pid-gyro-btn", "PID Controller Gyro Drift");
-    toggleCollapsable("#pid-altitude-id", "#pid-altitude-btn", "PID Controller Altitude");
+    toggleCollapsable("#pid-altitude-id", "#pid-altitude-btn", "Altitude Controller");
     toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
     toggleCollapsable("#flight-ctl-id", "#flight-ctl-btn", "Flight Control");
     toggleCollapsable("#sensor-chart-ydata-select-id", "#sensor-chart-data-select-bt", "Filter Data");
     toggleCollapsable("#error-chart-ydata-select-id", "#error-chart-data-select-bt", "Filter Data");
+    toggleCollapsable("#altitude-chart-ydata-select-id", "#altitude-chart-data-select-bt", "Filter Data");
     toggleStatusMessage(true);
 
     m1 = new JustGage({
