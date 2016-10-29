@@ -33,12 +33,19 @@ TriPilot::TriPilot()
 	max_integral_torque_ = 0.25;
 
 	Vector3f thrust_dir(0, 0, -1);
-	propellers_.push_back(Propeller(Vector3f(-1, -1,  0), thrust_dir, Propeller::CW));
-	propellers_.push_back(Propeller(Vector3f(-1,  1,  0), thrust_dir, Propeller::CCW));
-	propellers_.push_back(Propeller(Vector3f( 1,  1,  0), thrust_dir, Propeller::CW));
-	propellers_.push_back(Propeller(Vector3f( 1,  -1,  0), thrust_dir, Propeller::CCW));
-	propellers_.push_back(Propeller(Vector3f( 1,  1,  0), thrust_dir, Propeller::CW));
-	propellers_.push_back(Propeller(Vector3f( 1,  -1,  0), thrust_dir, Propeller::CCW));
+#ifdef USE_SIXPROPELLERS
+	propellers_.push_back(Propeller(Vector3f(-0.866, -0.5,   0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f(-0.866,  0.5,   0), thrust_dir, Propeller::CCW));
+	propellers_.push_back(Propeller(Vector3f( 0.0,    1.0,   0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f( 0.866,  0.5,   0), thrust_dir, Propeller::CCW));
+	propellers_.push_back(Propeller(Vector3f( 0.866, -0.5,   0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f( 0.0,   -1.0,   0), thrust_dir, Propeller::CCW));
+#else
+	propellers_.push_back(Propeller(Vector3f(-0.707, -0.707, 0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f(-0.707,  0.707, 0), thrust_dir, Propeller::CCW));
+	propellers_.push_back(Propeller(Vector3f( 0.707,  0.707, 0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f( 0.707, -0.707, 0), thrust_dir, Propeller::CCW));
+#endif
 }
 
 TriPilot::~TriPilot()

@@ -22,6 +22,7 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
+#undef USE_SIXPROPELLERS
 //#define SMALL_FRAME
 
 #include "units.h"
@@ -226,20 +227,21 @@ struct DroneState {
 	{
 		pilot_type_ = pilot_type;
 		if (PILOT_TYPE_PID_NEW == pilot_type) {
-#ifdef SMALL_FRAME
-			kp_ = 0.2;
-			kd_= 0.035;
-			ki_ = 0.09;
-#else
-			kp_ = 0.4;
-			kd_= 0.035;
-			ki_ = 0.09;
-#endif
 			yaw_kp_ = 0.20;
 			yaw_ki_= 0.0;
 			yaw_kd_ = 0.07;
 			accelerometer_correction_speed_ = 3.0;
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
+#ifdef SMALL_FRAME
+			kp_ = 0.2;
+			kd_= 0.035;
+			ki_ = 0.09;
+#else
+			kp_ = 0.35;
+			kd_= 0.085;
+			ki_ = 0.035;
+			accelerometer_adjustment_ = Vector3f(0.0f, 0.005f, 0.0f);
+#endif
 		}
 	}
 

@@ -343,7 +343,7 @@ void main_task(void *pvParameters)
 	}
 
 	gyro_reader.enable_disable_int2(true);
-	gyro_reader.calculate_static_bias_filtered(800);
+	gyro_reader.calculate_static_bias_filtered(1200);
 
 	warmup_accelerometer_filter(accel, acc_lpf);
 
