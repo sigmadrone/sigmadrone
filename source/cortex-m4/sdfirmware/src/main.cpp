@@ -143,6 +143,7 @@ void bmp180_task(void *pvParameters)
 		}
 
 		try {
+			bmp_reader->pressure_filter_.set_alpha(drone_state->altitude_lpf_);
 			drone_state->altitude_ = bmp_reader->altitude_meters(true);
 			drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
 			drone_state->temperature_ = bmp_reader->temperature_celsius(false);

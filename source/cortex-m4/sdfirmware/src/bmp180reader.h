@@ -39,9 +39,9 @@ public:
 	void calibrate();
 	static Distance convert_hpa_to_altitude(float hpa, float base_pressure, float temp);
 
-private:
 	PressurePreFilter pressure_filter_;
 	TemperaturePreFilter temperature_filter_;
+private:
 	BMP180& bmp_;
 	float base_pressure_;
 };

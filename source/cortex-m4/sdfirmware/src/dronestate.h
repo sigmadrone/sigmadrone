@@ -89,6 +89,7 @@ struct DroneState {
 	    , altitude_correction_period_(TimeSpan::from_seconds(10))
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
+	    , altitude_lpf_(0.965)
 	{
 		set_pilot_type(PILOT_TYPE_PID_NEW);
 	}
@@ -182,9 +183,9 @@ struct DroneState {
 		ret["yaw_kp"] = yaw_kp_;
 		ret["yaw_ki"] = yaw_ki_;
 		ret["yaw_kd"] = yaw_kd_;
-		ret["altitude_kp"] = kp_;
-		ret["altitude_ki"] = ki_;
-		ret["altitude_kd"] = kd_;
+		ret["altitude_kp"] = altitude_kp_;
+		ret["altitude_ki"] = altitude_ki_;
+		ret["altitude_kd"] = altitude_kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
 		ret["altitude_correction_period"] = altitude_correction_period_.seconds_float();
 		ret["gyro_factor"] = gyro_factor_;
@@ -195,6 +196,7 @@ struct DroneState {
 		ret["pid_filter_freq"] = pid_filter_freq_;
 		ret["use_ext_gyro"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = matrix_to_json_value(external_gyro_align_);
+		ret["flight_mode"] = flight_mode_;
 		return ret;
 	}
 
@@ -228,6 +230,11 @@ struct DroneState {
 		try {
 			altitude_correction_period_ = TimeSpan::from_seconds_float(bootconfig["altitude_correction_period"].get_real());
 		} catch (std::exception& e) {}
+
+		try { flight_mode_ = (FlightMode)bootconfig["flight_mode"].get_int(); } catch (std::exception& e) {}
+		if (flight_mode_ > FLIGHT_MODE_LAST) {
+			flight_mode_ = FLIGHT_MODE_AUTO_LEVEL;
+		}
 	}
 
 	void set_pilot_type(PilotType pilot_type)
@@ -352,6 +359,8 @@ struct DroneState {
 
 	Altitude flight_ceiling_;
 	Altitude take_off_altitude_;
+
+	float altitude_lpf_; // temp
 };
 
 

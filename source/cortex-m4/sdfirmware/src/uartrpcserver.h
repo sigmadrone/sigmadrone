@@ -68,6 +68,7 @@ protected:
 	rexjson::value rpc_altitude_tracker_kp_ki_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_altitude_tracker_kp2(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_altitude_correction_period(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_altitude_filter(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 	rexjson::value rpc_yaw_bias(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_pitch_bias(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);

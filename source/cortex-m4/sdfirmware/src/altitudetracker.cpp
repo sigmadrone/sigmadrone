@@ -78,7 +78,7 @@ bool AltitudeTracker::calc_vert_accel_bias(const DroneState& drone_state)
 
 void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 {
-	static float ACCEL_KP = 1;
+	static float ACCEL_KP = 1.5;
 	static float KI_LEAK = 0.05;
 	static const float accelDeadBand = 0.025;
 
