@@ -39,9 +39,7 @@ FlightControl::FlightControl() :
 		pilot_(new PidPilot()),
 		altitude_track_()
 {
-#ifdef USE_TRIPILOT
 	pilot_.reset(new TriPilot());
-#endif
 }
 
 void FlightControl::start_receiver()

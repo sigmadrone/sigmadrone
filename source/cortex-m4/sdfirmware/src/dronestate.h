@@ -22,8 +22,7 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
-#define USE_TRIPILOT
-//#define SMALL_FRAME
+#define SMALL_FRAME
 
 #include "units.h"
 #include "battery.h"
@@ -62,7 +61,7 @@ struct DroneState {
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
 	    , gyro_drift_leak_rate_(0.00001)
-	    , accelerometer_correction_speed_(5.0)
+	    , accelerometer_correction_speed_(1.0)
 	    , pilot_type_(PILOT_TYPE_PID_LEGACY)
 		, gyro_factor_(1.25)
 		, yaw_(0.0)
@@ -91,9 +90,7 @@ struct DroneState {
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	{
-#ifdef USE_TRIPILOT
 		set_pilot_type(PILOT_TYPE_PID_NEW);
-#endif
 	}
 
 	rexjson::value to_json()
@@ -119,6 +116,7 @@ struct DroneState {
 		ret["dt"] = static_cast<float>(dt_.microseconds());
 		ret["iteration"] = static_cast<int>(iteration_);
 		ret["attitude"] = quaternion_to_json_value(attitude_);
+		ret["altitude_from_baro"] = altitude_from_baro_.meters();
 		ret["target"] = quaternion_to_json_value(target_);
 		ret["motors"] = matrix_to_json_value(motors_);
 		ret["yaw"] = yaw_;
@@ -158,6 +156,7 @@ struct DroneState {
 		ret["altitude_ki"] = altitude_ki_;
 		ret["altitude_kd"] = altitude_kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
+		ret["altitude_correction_period"] = altitude_correction_period_.seconds_float();
 		ret["gyro_factor"] = gyro_factor_;
 		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
 		ret["yaw_bias"] = yaw_bias_;
@@ -170,7 +169,6 @@ struct DroneState {
 		ret["ext_gyro_enabled"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = external_gyro_align_;
 		ret["flight_posture"] = flight_posture_;
-		ret["altitude_from_baro"] = altitude_from_baro_.meters();
 		return ret;
 	}
 
@@ -184,7 +182,11 @@ struct DroneState {
 		ret["yaw_kp"] = yaw_kp_;
 		ret["yaw_ki"] = yaw_ki_;
 		ret["yaw_kd"] = yaw_kd_;
+		ret["altitude_kp"] = kp_;
+		ret["altitude_ki"] = ki_;
+		ret["altitude_kd"] = kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
+		ret["altitude_correction_period"] = altitude_correction_period_.seconds_float();
 		ret["gyro_factor"] = gyro_factor_;
 		ret["yaw_throttle_factor"] = yaw_throttle_factor_;
 		ret["yaw_bias"] = yaw_bias_;
@@ -199,30 +201,33 @@ struct DroneState {
 	void init_from_boot_config(rexjson::value bootconfig)
 	{
 		try {
-			try {
-				accelerometer_adjustment_ = matrix_from_json_value<float, 3, 1>(bootconfig["accel_adjustment"]);
-			} catch (std::exception& e) {}
-			try { kp_ = bootconfig["kp"].get_real(); } catch (std::exception& e) {}
-			try { ki_ = bootconfig["ki"].get_real(); } catch (std::exception& e) {}
-			try { kd_ = bootconfig["kd"].get_real(); } catch (std::exception& e) {}
-			try { yaw_kp_ = bootconfig["yaw_kp"].get_real(); } catch (std::exception& e) {}
-			try { yaw_bias_ = bootconfig["yaw_bias"].get_real(); } catch (std::exception& e) {}
-			try { pitch_bias_ = bootconfig["pitch_bias"].get_real(); } catch (std::exception& e) {}
-			try { roll_bias_ = bootconfig["roll_bias"].get_real(); } catch (std::exception& e) {}
-			try { yaw_ki_ = bootconfig["yaw_ki"].get_real(); } catch (std::exception& e) {}
-			try { yaw_kd_ = bootconfig["yaw_kd"].get_real(); } catch (std::exception& e) {}
-			try { gyro_factor_ = bootconfig["gyro_factor"].get_real(); } catch (std::exception& e) {}
-			try { yaw_throttle_factor_ = bootconfig["yaw_throttle_factor"].get_real(); } catch (std::exception& e) {}
-			try {
-				accelerometer_correction_speed_ = bootconfig["accelerometer_correction_period"].get_real();
-			} catch (std::exception& e) {}
-			try { pid_filter_freq_ = bootconfig["pid_filter_freq"].get_real(); } catch (std::exception& e) {}
-			try { external_gyro_enabled_ = bootconfig["use_ext_gyro"].get_real(); } catch (std::exception& e) {}
-			try {
-				external_gyro_align_ = matrix_from_json_value<float, 3, 3>(bootconfig["ext_gyro_align"]);
-			} catch (std::exception& e) {}
-		} catch (std::exception& e) {
-		}
+			accelerometer_adjustment_ = matrix_from_json_value<float, 3, 1>(bootconfig["accel_adjustment"]);
+		} catch (std::exception& e) {}
+		try { kp_ = bootconfig["kp"].get_real(); } catch (std::exception& e) {}
+		try { ki_ = bootconfig["ki"].get_real(); } catch (std::exception& e) {}
+		try { kd_ = bootconfig["kd"].get_real(); } catch (std::exception& e) {}
+		try { yaw_kp_ = bootconfig["yaw_kp"].get_real(); } catch (std::exception& e) {}
+		try { yaw_bias_ = bootconfig["yaw_bias"].get_real(); } catch (std::exception& e) {}
+		try { pitch_bias_ = bootconfig["pitch_bias"].get_real(); } catch (std::exception& e) {}
+		try { roll_bias_ = bootconfig["roll_bias"].get_real(); } catch (std::exception& e) {}
+		try { yaw_ki_ = bootconfig["yaw_ki"].get_real(); } catch (std::exception& e) {}
+		try { yaw_kd_ = bootconfig["yaw_kd"].get_real(); } catch (std::exception& e) {}
+		try { gyro_factor_ = bootconfig["gyro_factor"].get_real(); } catch (std::exception& e) {}
+		try { yaw_throttle_factor_ = bootconfig["yaw_throttle_factor"].get_real(); } catch (std::exception& e) {}
+		try {
+			accelerometer_correction_speed_ = bootconfig["accelerometer_correction_period"].get_real();
+		} catch (std::exception& e) {}
+		try { pid_filter_freq_ = bootconfig["pid_filter_freq"].get_real(); } catch (std::exception& e) {}
+		try { external_gyro_enabled_ = bootconfig["use_ext_gyro"].get_real(); } catch (std::exception& e) {}
+		try {
+			external_gyro_align_ = matrix_from_json_value<float, 3, 3>(bootconfig["ext_gyro_align"]);
+		} catch (std::exception& e) {}
+		try { altitude_kp_ = bootconfig["altitude_kp"].get_real(); } catch (std::exception& e) {}
+		try { altitude_ki_ = bootconfig["altitude_ki"].get_real(); } catch (std::exception& e) {}
+		try { altitude_kd_ = bootconfig["altitude_kd"].get_real(); } catch (std::exception& e) {}
+		try {
+			altitude_correction_period_ = TimeSpan::from_seconds_float(bootconfig["altitude_correction_period"].get_real());
+		} catch (std::exception& e) {}
 	}
 
 	void set_pilot_type(PilotType pilot_type)
@@ -250,7 +255,6 @@ struct DroneState {
 			yaw_kp_ = 1.00;
 			yaw_ki_ = 0.0;
 			yaw_kd_ = 0.10;
-			accelerometer_correction_speed_ = 2.0;
 		}
 	}
 

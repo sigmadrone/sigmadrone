@@ -192,6 +192,7 @@ PidAltitudeFormView.prototype.onRedrawData = function(droneState) {
   $(this.formId)[0].elements['kp-altitude'].value = droneState.altitude_kp;
   $(this.formId)[0].elements['ki-altitude'].value = droneState.altitude_ki;
   $(this.formId)[0].elements['kd-altitude'].value = droneState.altitude_kd;
+  $(this.formId)[0].elements['alt-correction-period'].value = droneState.altitude_correction_period;
   return true;
 }
 
@@ -232,6 +233,12 @@ FlightCtlFormView.prototype.onRedrawData = function(droneState) {
     $(this.formId)[0].elements['pilot-type-id'].value = "pid-pilot-new";
   } else {
     $(this.formId)[0].elements['pilot-type-id'].value = "pid-pilot-legacy";
+  }
+
+  if (droneState.flight_mode == 1) {
+    $(this.formId)[0].elements['flight-mode-id'].value = "flight-mode-altitude";
+  } else {
+    $(this.formId)[0].elements['flight-mode-id'].value = "flight-mode-auto-level";
   }
   return true;
 }

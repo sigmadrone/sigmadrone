@@ -12,7 +12,7 @@ AltitudeViewModel.prototype.reset = function(droneState) {
   if (null != droneState) {
     this.altitude = this.startAltitude = droneState.altitude_meters;
     this.altitudeGps = this.startAltitudeGps = droneState.gps_altitude;
-    this.altitudeAcc = this.startAltitudeAcc = droneState.altitude_from_acc;
+    this.altitudeAcc = this.startAltitudeAcc = droneState.altitude_from_baro;
     this.prevIteration = droneState.iteration;
   } else {
     this.altitude = this.startAltitude = 0;
@@ -25,9 +25,9 @@ AltitudeViewModel.prototype.reset = function(droneState) {
   this.verticalSpeedGps = 0;
 }
 
-AltitudeViewModel.prototype._update = function(altitude, altitudeGps, altitudeAcc, iteration, dt) {
-  var vs = (altitude - this.altitude) / ((iteration - this.prevIteration) * dt);
-  this.verticalSpeed = vs;
+AltitudeViewModel.prototype._update = function(altitude, altitudeGps, altitudeAcc, verticalSpeed, iteration, dt) {
+  //var vs = (altitude - this.altitude) / ((iteration - this.prevIteration) * dt);
+  this.verticalSpeed = verticalSpeed;
   this.verticalSpeedGps = (altitudeGps - this.altitudeGps) / ((iteration - this.prevIteration) * dt);
   this.altitude = altitude;
   this.altitudeGps = altitudeGps;
@@ -44,7 +44,7 @@ AltitudeViewModel.prototype.update = function(droneState) {
     return;
   }
   this._update(droneState.altitude_meters, droneState.gps_altitude,
-    droneState.altitude_from_acc,
+    droneState.altitude_from_baro, droneState.vertical_speed,
     droneState.iteration, droneState.dt/1000/1000);
 }
 
@@ -53,9 +53,9 @@ AltitudeViewModel.prototype.relativeAltitude = function() {
 }
 
 AltitudeViewModel.prototype.relativeAltitudeAcc = function() {
-  return (this.altitudeAcc - this.startAltitudeAcc);
+  return this.altitudeAcc - this.startAltitude;
 }
 
 AltitudeViewModel.prototype.relativeAltitudeGps = function() {
-  return this.altitudeGps - this.startAltitudeGps;
+  return this.altitudeGps;// - this.startAltitudeGps;
 }

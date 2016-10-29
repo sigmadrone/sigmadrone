@@ -113,6 +113,7 @@ private:
 
 struct TimeSpan : public ScaledUnit<uint64_t> {
 	static TimeSpan from_seconds(uint64_t secs) { return TimeSpan(from_gigaunit(secs).unit()); }
+	static TimeSpan from_seconds_float(float secs) { return from_milliseconds(secs * 1000.0f); }
 	static TimeSpan from_milliseconds(uint64_t millisecs) { return TimeSpan(from_megaunit(millisecs).unit()); }
 	static TimeSpan from_microseconds(uint64_t usecs) { return TimeSpan(from_kilounit(usecs).unit()); }
 	static TimeSpan from_nanoseconds(uint64_t nanosecs) { return TimeSpan(from_baseunit(nanosecs).unit()); }
