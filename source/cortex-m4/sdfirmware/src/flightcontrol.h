@@ -46,7 +46,7 @@ public:
 	void stop_receiver();
 	QuaternionF target_q() const;
 	Throttle base_throttle() const;
-	void set_throttle(const std::vector<Throttle>& thrVec);
+	void set_throttle(const std::vector<float>& thrVec);
 	void send_throttle_to_motors();
 	void set_flight_ceiling(const Altitude& altitude);
 

@@ -22,6 +22,7 @@
 #ifndef _IPILOT_H_
 #define _IPILOT_H_
 
+#include <vector>
 #include "dronestate.h"
 
 class IPilot
@@ -36,7 +37,7 @@ public:
 	virtual void set_target_thrust(float thrust) = 0;
 
 	virtual const Vector3f& torque_correction() const = 0;
-	virtual const Vector4f& motors() const  = 0;
+	virtual const std::vector<float>& motors() const  = 0;
 	virtual float get_min_thrust() const = 0;
 	virtual float get_max_thrust() const = 0;
 

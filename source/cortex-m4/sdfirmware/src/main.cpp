@@ -85,7 +85,6 @@ TaskHandle_t uart_task_handle = 0;
 DroneState* drone_state = 0;
 
 FlashMemory configdata(&flashregion, sizeof(flashregion), FLASH_SECTOR_23, 1);
-DataStream datastream(4);
 
 UART uart2({
 	{USART2_CTS_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART2},
@@ -261,7 +260,7 @@ void main_task(void *pvParameters)
 	TimeStamp sample_dt;
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
-	UartRpcServer rpcserver(*drone_state, configdata, datastream);
+	UartRpcServer rpcserver(*drone_state, configdata);
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
 	bool ext_gyro_present = false;
 	static bool print_to_console = false;
@@ -344,7 +343,7 @@ void main_task(void *pvParameters)
 	}
 
 	gyro_reader.enable_disable_int2(true);
-	gyro_reader.calculate_static_bias_filtered(800);
+	gyro_reader.calculate_static_bias_filtered(1200);
 
 	warmup_accelerometer_filter(accel, acc_lpf);
 
@@ -429,17 +428,8 @@ void main_task(void *pvParameters)
 
 		flight_ctl.update_state(*drone_state);
 		flight_ctl.send_throttle_to_motors();
-		datastream.set_correction_torque(flight_ctl.pilot().torque_correction());
-		datastream.set_gyroscope(drone_state->gyro_);
-		datastream.set_accelerometer(drone_state->accel_);
-		datastream.set_attitude(drone_state->attitude_);
-		datastream.set_target_attitude(drone_state->target_);
-
 		QuaternionF attitude_twist, attitude_swing;
 		QuaternionF::decomposeTwistSwing(drone_state->attitude_, Vector3f(0,0,1), attitude_swing, attitude_twist);
-		datastream.set_attitude_twist(attitude_twist);
-		datastream.set_attitude_swing(attitude_swing);
-		datastream.commit();
 
 		if (print_to_console && console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
 

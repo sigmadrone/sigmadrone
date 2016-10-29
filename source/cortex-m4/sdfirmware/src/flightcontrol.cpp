@@ -22,7 +22,6 @@
 #include "flightcontrol.h"
 #include <stdio.h>
 #include "colibripwm.h"
-#include "pidpilot.h"
 #include "tripilot.h"
 
 FlightControl::FlightControl() :
@@ -34,12 +33,11 @@ FlightControl::FlightControl() :
 				RC_VALUE_SCALE_FACTOR,
 				TimeSpan::from_microseconds(1100),
 				TimeSpan::from_microseconds(1910)),
-		servo_ctrl_({colibri::PWM_TX_1_4}, Frequency::from_hertz(350)),
+		servo_ctrl_({colibri::PWM_TX_1_4, colibri::PWM_TX_5_8}, Frequency::from_hertz(350)),
 		motor_power_(MOTOR_POWER_CTRL_PIN),
-		pilot_(new PidPilot()),
+		pilot_(new TriPilot()),
 		altitude_track_()
 {
-	pilot_.reset(new TriPilot());
 }
 
 void FlightControl::start_receiver()
@@ -65,19 +63,18 @@ Throttle FlightControl::base_throttle() const
 	return EMERGENCY_THROTTLE;
 }
 
-void FlightControl::set_throttle(const std::vector<Throttle>& thrVec)
+void FlightControl::set_throttle(const std::vector<float>& thrVec)
 {
 	PwmPulse pulse(TimeSpan::from_microseconds(1050), TimeSpan::from_microseconds(2000));
 	for (size_t i = 0; i < thrVec.size(); ++i) {
 		servo_ctrl_.set_pwm_pulse(i, pulse.to_timespan(
-				(base_throttle().get() >= 0.075) ? thrVec[i].get() : 0.0));
+				(base_throttle().get() >= 0.075) ? Throttle(thrVec[i]).get() : 0.0));
 	}
 }
 
 void FlightControl::send_throttle_to_motors()
 {
-	set_throttle({pilot_->motors().at(0), pilot_->motors().at(1),
-		pilot_->motors().at(2), pilot_->motors().at(3)});
+	set_throttle(pilot_->motors());
 }
 
 /*
@@ -104,8 +101,6 @@ void FlightControl::update_state(DroneState& state)
 	if (state.pilot_type_ != pilot_->get_pilot_type()) {
 		if (PILOT_TYPE_PID_NEW == state.pilot_type_) {
 			pilot_.reset(new TriPilot());
-		}  else if (PILOT_TYPE_PID_LEGACY == state.pilot_type_) {
-			pilot_.reset(new PidPilot());
 		}
 	}
 

@@ -33,10 +33,19 @@ TriPilot::TriPilot()
 	max_integral_torque_ = 0.25;
 
 	Vector3f thrust_dir(0, 0, -1);
-	propellers_.push_back(Propeller(Vector3f(-1, -1,  0), thrust_dir, Propeller::CW));
-	propellers_.push_back(Propeller(Vector3f(-1,  1,  0), thrust_dir, Propeller::CCW));
-	propellers_.push_back(Propeller(Vector3f( 1,  1,  0), thrust_dir, Propeller::CW));
-	propellers_.push_back(Propeller(Vector3f( 1,  -1,  0), thrust_dir, Propeller::CCW));
+#ifdef USE_SIXPROPELLERS
+	propellers_.push_back(Propeller(Vector3f(-0.866, -0.5,   0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f(-0.866,  0.5,   0), thrust_dir, Propeller::CCW));
+	propellers_.push_back(Propeller(Vector3f( 0.0,    1.0,   0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f( 0.866,  0.5,   0), thrust_dir, Propeller::CCW));
+	propellers_.push_back(Propeller(Vector3f( 0.866, -0.5,   0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f( 0.0,   -1.0,   0), thrust_dir, Propeller::CCW));
+#else
+	propellers_.push_back(Propeller(Vector3f(-0.707, -0.707, 0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f(-0.707,  0.707, 0), thrust_dir, Propeller::CCW));
+	propellers_.push_back(Propeller(Vector3f( 0.707,  0.707, 0), thrust_dir, Propeller::CW));
+	propellers_.push_back(Propeller(Vector3f( 0.707, -0.707, 0), thrust_dir, Propeller::CCW));
+#endif
 }
 
 TriPilot::~TriPilot()
@@ -103,34 +112,25 @@ void TriPilot::update_state(DroneState& state)
 		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
 	}
 	torque_correction_ = get_torque(state);
-	Vector4f motors = Vector4f(
-		torque_correction_.dot(propellers_.at(0).torque_dir()),
-		torque_correction_.dot(propellers_.at(1).torque_dir()),
-		torque_correction_.dot(propellers_.at(2).torque_dir()),
-		torque_correction_.dot(propellers_.at(3).torque_dir()));
-	motors += target_thrust_;
-	Vector4f torq_rpm = Vector4f(
-		pf_.nvelocity(motors[0]),
-		pf_.nvelocity(motors[1]),
-		pf_.nvelocity(motors[2]),
-		pf_.nvelocity(motors[3])
-	);
+	std::vector<float> torq_rpm;
+	for (size_t i = 0; i < propellers_.size(); i++)
+		torq_rpm.push_back(pf_.nvelocity(torque_correction_.dot(propellers_.at(i).torque_dir()) + target_thrust_));
 	state.pid_torque_ = torque_correction_;
 	motors_ = state.motors_ = clip_motors(torq_rpm);
 	return;
 }
 
 
-Vector4f TriPilot::clip_motors(const Vector4f& motors)
+std::vector<float> TriPilot::clip_motors(const std::vector<float>& motors)
 {
-	Vector4f ret;
+	std::vector<float> ret;
 
-	for (size_t i = 0; i < ret.data.size(); i++)
-		ret[i] = std::max(min_thrust_, std::min(motors[i], max_thrust_));
+	for (size_t i = 0; i < motors.size(); i++)
+		ret.push_back(std::max(min_thrust_, std::min(motors[i], max_thrust_)));
 	return ret;
 }
 
-const Vector4f& TriPilot::motors() const
+const std::vector<float>& TriPilot::motors() const
 {
 	return motors_;
 }

@@ -25,13 +25,12 @@
 #include "uart.h"
 #include "dronestate.h"
 #include "flashmemory.h"
-#include "datastream.h"
 #include "librexjsonrpc/rpcserver.h"
 
 class UartRpcServer : public rpc_server<UartRpcServer, UART*>
 {
 public:
-	UartRpcServer(DroneState& dronestate, FlashMemory& configdata, DataStream& datastream);
+	UartRpcServer(DroneState& dronestate, FlashMemory& configdata);
 	virtual ~UartRpcServer();
 
 	void jsonrpc_request_handler(UART* uart);
@@ -90,7 +89,6 @@ protected:
 	std::string cached_request_;
 	DroneState& dronestate_;
 	FlashMemory& configdata_;
-	DataStream& datastream_;
 };
 
 #endif /* UARTRPCSERVER_H_ */
