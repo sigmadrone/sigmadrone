@@ -27,7 +27,7 @@
 class attitudetracker
 {
 public:
-	explicit attitudetracker(float accelerometer_correction_speed = 1.5, Vector3f earth_g = Vector3f(0, 0, -1));
+	explicit attitudetracker(float accelerometer_correction_speed = 1.5, Vector3f earth_g = Vector3f(0, 0, -1), float alpha = 0.75f);
 	~attitudetracker();
 	Vector3f get_earth_g() const;
 	void set_earth_g(Vector3f earth_g);
@@ -58,6 +58,7 @@ public:
 	 */
 	Vector3f earth_m_;
 	float accelerometer_correction_speed_;
+	float alpha_;
 
 protected:
 	/*
@@ -70,6 +71,11 @@ protected:
 	 * the world is rotating in our coordinate system.
 	 */
 	QuaternionF attitude_;
+
+	/*
+	 * Filtered correction speed
+	 */
+	Vector3f filtered_w_;
 
 	PidController<Vector3f> drift_pid_;
 	Vector3f drift_err_;

@@ -46,13 +46,18 @@ _exit(int code __attribute__((unused)))
 }
 
 // ----------------------------------------------------------------------------
+#if defined(DEBUG)
+#define __DEBUG_BKPT()  asm volatile ("bkpt 0")
+#else
+#define __DEBUG_BKPT() do {} while(0)
+#endif
 
 void
 __attribute__((weak,noreturn))
 abort(void)
 {
   trace_puts("abort(), exiting...");
-
+  __DEBUG_BKPT();
   _exit(1);
 }
 

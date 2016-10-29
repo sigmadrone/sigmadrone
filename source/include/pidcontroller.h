@@ -38,6 +38,14 @@ public:
 
 	T get_d(const T& err, float dt)
 	{
+		T derivative_err = (err - last_err_input_) / dt;
+		last_err_input_ = err;
+
+		return derivative_err * kd_;
+	}
+
+	T get_d_derivative(const T& err, float dt)
+	{
 		return get_d_common(err, dt, &PidController<T>::filter_derivative_lpf);
 	}
 

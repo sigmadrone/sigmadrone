@@ -24,11 +24,10 @@
 #include "librexjsonrpc/jsonserialization.h"
 
 
-UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, DataStream& datastream)
+UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata)
 	: rpc_server<UartRpcServer, UART*>()
 	, dronestate_(dronestate)
 	, configdata_(configdata)
-	, datastream_(datastream)
 {
 	add("sd_get_altitude", &UartRpcServer::rpc_get_altitude);
 	add("sd_get_attitude", &UartRpcServer::rpc_get_attitude);
@@ -36,7 +35,6 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Da
 	add("sd_get_temperature", &UartRpcServer::rpc_get_temperature);
 	add("sd_get_motors", &UartRpcServer::rpc_get_motors);
 	add("sd_get_dronestate", &UartRpcServer::rpc_get_dronestate);
-	add("sd_get_datastream", &UartRpcServer::rpc_get_datastream);
 	add("sd_get_dronestate_ex", &UartRpcServer::rpc_get_dronestate_ex);
 	add("ki", &UartRpcServer::rpc_ki);
 	add("kd", &UartRpcServer::rpc_kd);
@@ -663,43 +661,6 @@ rexjson::value UartRpcServer::rpc_get_dronestate(UART* , rexjson::array& params,
 	verify_parameters(params, types, ARRAYSIZE(types));
 	return dronestate_.to_json();
 }
-
-rexjson::value UartRpcServer::rpc_get_datastream(UART* , rexjson::array& params, rpc_exec_mode mode)
-{
-	static unsigned int types[] = {rpc_null_type};
-	if (mode != execute) {
-		if (mode == spec)
-			return create_json_spec(types, ARRAYSIZE(types));
-		if (mode == helpspec)
-			return create_json_helpspec(types, ARRAYSIZE(types));
-		return
-	            "sd_get_datastream\n"
-	            "\nGet the current data stream from the queue"
-				"\n"
-				"Arguments:\n"
-				;
-	}
-	rexjson::array ret;
-	verify_parameters(params, types, ARRAYSIZE(types));
-	DataStreamEntry entry;
-	while (datastream_.retrieve(entry)) {
-		rexjson::object obj;
-		obj["serial"] = static_cast<int>(entry.serial_);
-		obj["attitude"] = quaternion_to_json_value(entry.attitude_);
-		obj["target_attitude"] = quaternion_to_json_value(entry.target_attitude_);
-		obj["gyro"] = matrix_to_json_value(entry.gyro_);
-		obj["accel"] = matrix_to_json_value(entry.accel_);
-		obj["correction_torque"] = matrix_to_json_value(entry.correction_torque_);
-		obj["target_twist"] = quaternion_to_json_value(entry.target_twist_);
-		obj["target_swing"] = quaternion_to_json_value(entry.target_swing_);
-		obj["attitude_twist"] = quaternion_to_json_value(entry.attitude_twist_);
-		obj["attitude_swing"] = quaternion_to_json_value(entry.attitude_swing_);
-
-		ret.push_back(obj);
-	}
-	return ret;
-}
-
 
 rexjson::value UartRpcServer::rpc_get_dronestate_ex(UART* , rexjson::array& params, rpc_exec_mode mode)
 {

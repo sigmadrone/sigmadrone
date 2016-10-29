@@ -22,7 +22,8 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
-#define SMALL_FRAME
+#undef USE_SIXPROPELLERS
+//#define SMALL_FRAME
 
 #include "units.h"
 #include "battery.h"
@@ -61,8 +62,8 @@ struct DroneState {
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
 	    , gyro_drift_leak_rate_(0.00001)
-	    , accelerometer_correction_speed_(1.0)
-	    , pilot_type_(PILOT_TYPE_PID_LEGACY)
+	    , accelerometer_correction_speed_(5.0)
+	    , pilot_type_(PILOT_TYPE_PID_NEW)
 		, gyro_factor_(1.25)
 		, yaw_(0.0)
 		, pitch_(0.0)
@@ -119,7 +120,7 @@ struct DroneState {
 		ret["attitude"] = quaternion_to_json_value(attitude_);
 		ret["altitude_from_baro"] = altitude_from_baro_.meters();
 		ret["target"] = quaternion_to_json_value(target_);
-		ret["motors"] = matrix_to_json_value(motors_);
+		ret["motors"] = vector_to_json_value(motors_);
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
@@ -241,25 +242,21 @@ struct DroneState {
 	{
 		pilot_type_ = pilot_type;
 		if (PILOT_TYPE_PID_NEW == pilot_type) {
+			yaw_kp_ = 0.20;
+			yaw_ki_= 0.0;
+			yaw_kd_ = 0.07;
+			accelerometer_correction_speed_ = 3.0;
+			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
 #ifdef SMALL_FRAME
 			kp_ = 0.2;
 			kd_= 0.035;
 			ki_ = 0.09;
 #else
-			kp_ = 0.4;
-			kd_= 0.035;
-			ki_ = 0.09;
+			kp_ = 0.35;
+			kd_= 0.085;
+			ki_ = 0.035;
+			accelerometer_adjustment_ = Vector3f(0.005f, 0.005f, 0.0f);
 #endif
-			yaw_kp_ = 0.20;
-			yaw_ki_= 0.0;
-			yaw_kd_ = 0.07;
-		} else if (PILOT_TYPE_PID_LEGACY == pilot_type) {
-			kp_ = 0.14;
-			ki_ = 0.3;
-			kd_ = 0.035;
-			yaw_kp_ = 1.00;
-			yaw_ki_ = 0.0;
-			yaw_kd_ = 0.10;
 		}
 	}
 
@@ -346,7 +343,7 @@ struct DroneState {
 	 */
 	QuaternionF attitude_;
 	QuaternionF target_;
-	Vector4f motors_;
+	std::vector<float> motors_;
 	Vector3f pid_torque_;
 	float throttle_;
 	std::string flight_posture_;
