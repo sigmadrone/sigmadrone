@@ -46,7 +46,7 @@ public:
 	void reset_twist_quaternion(const QuaternionF&);
 
 private:
-	float get_value_as_float(uint32_t channelno);
+	float get_value_as_float(uint32_t channelno, float default_value);
 private:
 	PwmPulse pwm_converter_;
 	QuaternionF target_twist_;		/* Yaw */

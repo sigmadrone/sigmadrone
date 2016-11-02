@@ -40,7 +40,7 @@ struct PwmPulse {
 			return 0.0;
 		}
 		if (duty_cycle <= min_) {
-			duty_cycle = min_ + TimeSpan::from_microseconds(1);
+			duty_cycle = min_;
 		} else if (duty_cycle > max_) {
 			duty_cycle = max_;
 		}

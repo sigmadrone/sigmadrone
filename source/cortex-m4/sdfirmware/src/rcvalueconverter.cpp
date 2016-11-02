@@ -36,23 +36,22 @@ RcValueConverter::RcValueConverter(
 				last_gear_(0.0),
 				motors_armed_(false),
 				prev_motors_armed_(false),
-				yaw_(0.0),
-				pitch_(0.0),
-				roll_(0.0),
+				yaw_(0.5f),
+				pitch_(0.5f),
+				roll_(0.5f),
 				pitch_bias_(0.0),
 				roll_bias_(0.0)
 {
 	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
-	update();
 }
 
 void RcValueConverter::update()
 {
-	float yaw = get_value_as_float(mapper_.channel_no(RC_CHANNEL_YAW));
-	float pitch = get_value_as_float(mapper_.channel_no(RC_CHANNEL_PITCH));
-	float roll = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ROLL));
-	float throttle = get_value_as_float(mapper_.channel_no(RC_CHANNEL_THROTTLE));
-	float gear = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR));
+	float yaw = get_value_as_float(mapper_.channel_no(RC_CHANNEL_YAW), 0.5f);
+	float pitch = get_value_as_float(mapper_.channel_no(RC_CHANNEL_PITCH), 0.5f);
+	float roll = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ROLL), 0.5f);
+	float throttle = get_value_as_float(mapper_.channel_no(RC_CHANNEL_THROTTLE), 0.0f);
+	float gear = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR), 0.0f);
 
 	throttle_ = Throttle(throttle * scale_factor_);
 	if ((fabs(yaw - 0.5f) < 0.0225)) {
@@ -72,8 +71,8 @@ void RcValueConverter::update()
 	Vector3f ang_vel(0.0f, 0.0f, yaw_);
 	target_twist_ *= QuaternionF::fromAngularVelocity(ang_vel, dt.seconds_float());
 
-	pitch_ = (pitch > 0.0) ? ((pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_)  - pitch_bias_: 0.0f;
-	roll_ = (roll > 0.0) ? ((roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_) - roll_bias_: 0.0f;
+	pitch_ = (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_  - pitch_bias_;
+	roll_ = (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_ - roll_bias_;
 	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(roll_, pitch_, 0), 1.0);
 
 	/*
@@ -94,8 +93,11 @@ void RcValueConverter::reset_twist_quaternion(const QuaternionF& current_q)
 	target_twist_ = QuaternionF(current_q.w, 0, 0, current_q.z).normalize();
 }
 
-float RcValueConverter::get_value_as_float(uint32_t channelno)
+float RcValueConverter::get_value_as_float(uint32_t channelno, float default_value)
 {
+	if (!receiver_.channel(channelno)->is_live()) {
+		return default_value;
+	}
 	TimeSpan duty_cycle = receiver_.channel(channelno)->decoder().duty_cycle();
 	return pwm_converter_.to_float(duty_cycle);
 }
