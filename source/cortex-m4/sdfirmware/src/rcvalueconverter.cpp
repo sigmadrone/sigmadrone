@@ -36,9 +36,9 @@ RcValueConverter::RcValueConverter(
 				last_gear_(0.0),
 				motors_armed_(false),
 				prev_motors_armed_(false),
-				yaw_(0.5f),
-				pitch_(0.5f),
-				roll_(0.5f),
+				yaw_(0.0f),
+				pitch_(0.0f),
+				roll_(0.0f),
 				pitch_bias_(0.0),
 				roll_bias_(0.0)
 {
