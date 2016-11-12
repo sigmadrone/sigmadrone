@@ -352,12 +352,6 @@ void main_task(void *pvParameters)
 
 	flight_ctl.start_receiver();
 
-	HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 1, 1);
-	HAL_NVIC_EnableIRQ (DMA1_Stream3_IRQn);
-	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);
-	HAL_NVIC_EnableIRQ (DMA1_Stream1_IRQn);
-
-
 	printf("Entering main loop...\n");
 	L3GD20Reader* active_gyro = &gyro_reader;
 	active_gyro->enable_disable_int2(true);

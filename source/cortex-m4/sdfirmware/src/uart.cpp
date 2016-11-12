@@ -58,7 +58,7 @@ void UART::dma_config()
 	hdma_tx_.Init.PeriphBurst         = DMA_PBURST_SINGLE;
 	HAL_DMA_Init (&hdma_tx_);
 
-	/* Associate the initialized DMA handle to the the SPI handle */
+	/* Associate the initialized DMA handle to the the UART handle */
 	__HAL_LINKDMA(huart, hdmatx, hdma_tx_);
 
 	/* Configure the DMA handler for Transmission process */
@@ -77,7 +77,7 @@ void UART::dma_config()
 	hdma_rx_.Init.PeriphBurst         = DMA_PBURST_SINGLE;
 	HAL_DMA_Init (&hdma_rx_);
 
-	/* Associate the initialized DMA handle to the the SPI handle */
+	/* Associate the initialized DMA handle to the the UART handle */
 	__HAL_LINKDMA(huart, hdmarx, hdma_rx_);
 }
 

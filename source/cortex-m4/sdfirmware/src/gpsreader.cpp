@@ -31,14 +31,14 @@ unsigned long millis()
 GPSReader::GPSReader() :
 	uart_(
 		{
-		{GPS_USART3_TX_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},
-		{GPS_USART3_RX_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF7_USART3},
+		{GPS_USART4_TX_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF8_UART4},
+		{GPS_USART4_RX_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_MEDIUM, GPIO_AF8_UART4},
 		},
-		USART3,
+		UART4,
 		DMA1,
-		DMA1_Stream3,
+		DMA1_Stream4,
 		DMA_CHANNEL_4,
-		DMA1_Stream1,
+		DMA1_Stream2,
 		DMA_CHANNEL_4,
 		UART_HWCONTROL_NONE,
 		9600,
@@ -46,6 +46,7 @@ GPSReader::GPSReader() :
 	gps_power_(GPS_POWER_CTRL_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1),
 	gps_parser_(new TinyGPS()),
 	buffer_(8)
+
 {
 }
 
