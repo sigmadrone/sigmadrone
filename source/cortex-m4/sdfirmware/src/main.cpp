@@ -349,7 +349,6 @@ void main_task(void *pvParameters)
 	warmup_accelerometer_filter(accel, acc_lpf);
 
 	printf(" Done!\n");
-
 	flight_ctl.start_receiver();
 
 	printf("Entering main loop...\n");

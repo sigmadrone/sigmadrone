@@ -116,8 +116,8 @@ static const PinName I2C1_SDA_PIN = PB_9;
 static const PinName I2C2_SCL_PIN = PB_10;
 static const PinName I2C2_SDA_PIN = PB_11;
 
-static const PinName  GPS_USART4_TX_PIN = PC_10;
-static const PinName  GPS_USART4_RX_PIN = PC_11;
+static const PinName  GPS_USART3_TX_PIN = PC_10;
+static const PinName  GPS_USART3_RX_PIN = PC_11;
 
 static const PinName  USB_OTG_LED_PIN = PC_4;
 static const PinName  PWR_ON_PIN = PH_11;

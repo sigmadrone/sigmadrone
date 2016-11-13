@@ -102,19 +102,19 @@ extern "C" void USART1_IRQHandler(void)
 	UART::uart_irq_handler(1);
 }
 
-extern "C" void DMA1_Stream2_IRQHandler(void)
+extern "C" void DMA1_Stream1_IRQHandler(void)
 {
-	UART::uart_dmarx_handler(4);
+	UART::uart_dmarx_handler(3);
 }
 
-extern "C" void DMA1_Stream4_IRQHandler(void)
+extern "C" void DMA1_Stream3_IRQHandler(void)
 {
-	UART::uart_dmatx_handler(4);
+	UART::uart_dmatx_handler(3);
 }
 
-extern "C" void UART4_IRQHandler(void)
+extern "C" void USART3_IRQHandler(void)
 {
-	UART::uart_irq_handler(4);
+	UART::uart_irq_handler(3);
 }
 
 extern "C" void DMA1_Stream5_IRQHandler(void)
