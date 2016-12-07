@@ -53,7 +53,9 @@ const Vector3f& L3GD20Reader::calculate_static_bias_filtered(size_t num_samples)
 
 	static_bias_.clear();
 	L3GD20::AxesDPS_t gyro_axes;
-	gyro_.GetFifoAngRateDPS(&gyro_axes); // Drain the fifo
+	for (int i = 0; i < 10; i++) {
+		gyro_.GetFifoAngRateDPS(&gyro_axes); // Drain the fifo
+	}
 	while (count < num_samples && wait_for_data(TimeSpan::from_milliseconds(100))) {
 		while (size()) {
 			lpf.do_filter(read_sample());

@@ -108,7 +108,7 @@ static const PinName EXT_GYRO_INT2_PIN = PH_12;
 
 static const PinName MOTOR_POWER_CTRL_PIN = PB_0;
 
-static const PinName GPS_POWER_CTRL_PIN = PG_14;
+static const PinName GPS_POWER_CTRL_PIN = PG_6;
 
 static const PinName I2C1_SCL_PIN = PB_8;
 static const PinName I2C1_SDA_PIN = PB_9;

@@ -349,14 +349,7 @@ void main_task(void *pvParameters)
 	warmup_accelerometer_filter(accel, acc_lpf);
 
 	printf(" Done!\n");
-
 	flight_ctl.start_receiver();
-
-	HAL_NVIC_SetPriority(DMA1_Stream3_IRQn, 1, 1);
-	HAL_NVIC_EnableIRQ (DMA1_Stream3_IRQn);
-	HAL_NVIC_SetPriority(DMA1_Stream1_IRQn, 1, 0);
-	HAL_NVIC_EnableIRQ (DMA1_Stream1_IRQn);
-
 
 	printf("Entering main loop...\n");
 	L3GD20Reader* active_gyro = &gyro_reader;
