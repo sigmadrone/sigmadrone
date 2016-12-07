@@ -287,15 +287,16 @@ void main_task(void *pvParameters)
 
 #else
 	static const Matrix3f gyro_align(
-	        0,-1, 0,
-           -1, 0, 0,
-		    0, 0,-1);
+	        1, 0,  0,
+            0, 1,  0,
+		    0, 0,  1);
 
 	static const Matrix3f acc_align(
 	        0,-1, 0,
            -1, 0, 0,
 	        0, 0,-1);
 #endif
+
 
 	L3GD20Reader gyro_reader(gyro, GYRO_INT2_PIN, gyro_align);
 	L3GD20Reader ext_gyro_reader(ext_gyro, EXT_GYRO_INT2_PIN, drone_state->external_gyro_align_);
