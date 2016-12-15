@@ -77,7 +77,7 @@ struct DroneState {
 	    , flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
 	    , motors_armed_(false)
 		, enforce_flight_ceiling_(false)
-		, track_magnetometer_(true)
+		, track_magnetometer_(false)
 		, track_accelerometer_(true)
 	    , external_gyro_enabled_(false)
 	    , external_gyro_align_(0, 1, 0,
@@ -253,9 +253,9 @@ struct DroneState {
 			ki_ = 0.09;
 #else
 			kp_ = 0.35;
-			kd_= 0.085;
+			kd_= 0.080;
 			ki_ = 0.035;
-			accelerometer_adjustment_ = Vector3f(0.005f, 0.005f, 0.0f);
+			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
 #endif
 		}
 	}
