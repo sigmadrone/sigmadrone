@@ -18,6 +18,8 @@
  *  Martin Stoilov <martin@sigmadrone.org>
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
+#include <stdexcept>
+#include <iostream>
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -68,6 +70,7 @@ void BMP180::read_calibration_data()
 	u16 tmp[BMP085_CALIBRATION_DATA_LENGTH];
 	struct bmp085_data *data = (struct bmp085_data *)this;
 	struct bmp085_calibration_data *cali = &(data->calibration);
+
 	i2c_.read(BMP180_I2C_ADDR, BMP085_CALIBRATION_DATA_START, (u8 *)tmp, (BMP085_CALIBRATION_DATA_LENGTH << 1));
 
 	cali->AC1 =  be16_to_cpu(tmp[0]);

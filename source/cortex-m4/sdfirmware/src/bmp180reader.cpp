@@ -23,7 +23,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
-Bmp180Reader::Bmp180Reader(BMP180& bmp)
+Bmp180Reader::Bmp180Reader(BMP280& bmp)
 	: bmp_(bmp), base_pressure_(0)
 {
 }
@@ -61,7 +61,6 @@ Distance Bmp180Reader::convert_hpa_to_altitude(float hpa, float base_pressure, f
 
 void Bmp180Reader::read_pressure()
 {
-	bmp_.update_pressure();
 	float pressure = (float)bmp_.get_pressure() / 100.0f;
 	pressure_filter_.do_filter(pressure);
 	temperature_filter_.do_filter(bmp_.get_temperature());
@@ -69,7 +68,6 @@ void Bmp180Reader::read_pressure()
 
 void Bmp180Reader::read_temperature()
 {
-	bmp_.update_temperature();
 	float temperature = (float)bmp_.get_temperature();
 	temperature_filter_.do_filter(temperature);
 }

@@ -58,6 +58,8 @@
 #include "iirfilt.h"
 #include "l3gd20reader.h"
 #include "usbstoragedevice.h"
+#include "poweroff.h"
+#include "bmp280.h"
 
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
@@ -68,15 +70,18 @@ DigitalOut led2(USER_LED2_PIN);
 DigitalOut led3(USER_LED3_PIN);
 DigitalOut led4(USER_LED4_PIN);
 DigitalOut led5(USER_LED5_PIN);
+std::vector<DigitalOut> leds{led1};
 
 DigitalOut sesnsor_ctrl(SENSOR_CTRL_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0);
-DigitalOut pwr_on(PWR_ON_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
+//DigitalOut pwr_on(PWR_ON_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
 
 DigitalIn user_sw1(USER_SWITCH_1_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw2(USER_SWITCH_2_PIN, DigitalIn::PullNone, DigitalIn::InterruptFalling);
 DigitalIn user_sw3(USER_SWITCH_3_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw4(USER_SWITCH_4_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw5(USER_SWITCH_5_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
+
+PowerOff poweroff_button(PH_10, PI_6, PI_7, PH_11, {USER_LED1_PIN, USER_LED2_PIN, USER_LED3_PIN});
 
 TaskHandle_t main_task_handle = 0;
 TaskHandle_t bmp180_task_handle = 0;
@@ -123,16 +128,15 @@ void bmp180_task(void *pvParameters)
 				{I2C1_SCL_PIN, GPIO_MODE_AF_OD, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
 				{I2C1_SDA_PIN, GPIO_MODE_AF_OD, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
 		});
-	BMP180 bmp(i2c);
-	TimeStamp led_toggle_ts;
-	GPSReader gps;
 
+	TimeStamp led_toggle_ts;
+	PerfCounter loop_time;
+	BMP280 bmp(i2c, 0xee);
+	GPSReader gps;
 	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
 	PerfCounter gps_measure_time;
-	PerfCounter loop_time;
 
 	bmp_reader->calibrate();
-
 	gps.start();
 	while (1) {
 		loop_time.begin_measure();

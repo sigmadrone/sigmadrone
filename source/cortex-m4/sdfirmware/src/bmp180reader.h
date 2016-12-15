@@ -23,12 +23,12 @@
 #define BMP180READER_H_
 
 #include "units.h"
-#include "bmp180.h"
+#include "bmp280.h"
 #include "sensorsprefilters.h"
 
 struct Bmp180Reader {
 public:
-	Bmp180Reader(BMP180& bmp);
+	Bmp180Reader(BMP280& bmp);
 	~Bmp180Reader();
 
 	Distance altitude_meters(bool read_sensor=false);
@@ -42,7 +42,7 @@ public:
 	PressurePreFilter pressure_filter_;
 	TemperaturePreFilter temperature_filter_;
 private:
-	BMP180& bmp_;
+	BMP280& bmp_;
 	float base_pressure_;
 };
 
