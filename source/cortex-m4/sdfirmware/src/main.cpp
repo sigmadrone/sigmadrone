@@ -38,6 +38,7 @@
 #include "uart.h"
 #include "l3gd20.h"
 #include "lsm303d.h"
+#include "lps25hb.h"
 #include "d3math.h"
 #include "hwtimer.h"
 #include "pwmencoder.h"
@@ -129,44 +130,45 @@ void bmp180_task(void *pvParameters)
 				{I2C1_SDA_PIN, GPIO_MODE_AF_OD, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
 		});
 
-	TimeStamp led_toggle_ts;
-	PerfCounter loop_time;
-	BMP280 bmp2(i2c, 0xee);
-	Bmp280Reader* bmp_reader = new Bmp280Reader(bmp2);
-	GPSReader gps;
-	PerfCounter gps_measure_time;
+again:
+	try {
+		TimeStamp led_toggle_ts;
+		PerfCounter loop_time;
+		BMP280 bmp2(i2c, 0xee);
+		Bmp280Reader* bmp_reader = new Bmp280Reader(bmp2);
+		GPSReader gps;
+		PerfCounter gps_measure_time;
 
-	bmp_reader->calibrate();
-	gps.start();
-	while (1) {
-		loop_time.begin_measure();
-		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
-			led_toggle_ts.time_stamp();
-			led1.toggle();
+		bmp_reader->calibrate();
+		gps.start();
+		while (1) {
+			loop_time.begin_measure();
+			if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
+				led_toggle_ts.time_stamp();
+				led1.toggle();
+			}
+
+				bmp_reader->pressure_filter_.set_alpha(drone_state->altitude_lpf_);
+				drone_state->altitude_ = bmp_reader->altitude_meters(true);
+				drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
+				drone_state->temperature_ = bmp_reader->temperature_celsius(false);
+				gps_measure_time.begin_measure();
+				gps.update_state();
+				gps_measure_time.end_measure();
+				drone_state->latitude_ = gps.lattitude();
+				drone_state->longitude_ = gps.longitude();
+				drone_state->gps_altitude_ = gps.altitude();
+				drone_state->speed_over_ground_ = gps.speed();
+				drone_state->course_ = gps.course();
+				drone_state->satellite_count_ = gps.satellite_count();
+				vTaskDelay(15 / portTICK_RATE_MS);
+				loop_time.end_measure();
 		}
-
-		try {
-			bmp_reader->pressure_filter_.set_alpha(drone_state->altitude_lpf_);
-			drone_state->altitude_ = bmp_reader->altitude_meters(true);
-			drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
-			drone_state->temperature_ = bmp_reader->temperature_celsius(false);
-			gps_measure_time.begin_measure();
-			gps.update_state();
-			gps_measure_time.end_measure();
-			drone_state->latitude_ = gps.lattitude();
-			drone_state->longitude_ = gps.longitude();
-			drone_state->gps_altitude_ = gps.altitude();
-			drone_state->speed_over_ground_ = gps.speed();
-			drone_state->course_ = gps.course();
-			drone_state->satellite_count_ = gps.satellite_count();
-			vTaskDelay(50 / portTICK_RATE_MS);
-		} catch (std::exception& e) {
-//			i2c.reinit();
-		}
-		loop_time.end_measure();
-
-		// Do not delay the thread here, it will be delayed when the sensor is being read
+	} catch (std::exception& e) {
+		std::cout << "bmp180_task exception: " << e.what() << std::endl;
+		i2c.reinit();
 	}
+	goto again;
 }
 
 void battery_task(void *pvParameters)
@@ -253,10 +255,12 @@ void main_task(void *pvParameters)
 					{EXT_MEMS_SPI_MOSI_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL,   GPIO_SPEED_MEDIUM, GPIO_AF5_SPI2},
 				}, {
 					{EXT_GYRO_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
+					{EXT_PRES_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
 				});
 
 	L3GD20 gyro(spi5, 0);
 	L3GD20 ext_gyro(spi2, 0);
+	LPS25HB pressure(spi2, 1);
 	LSM303D accel(spi5, 1);
 	uint8_t gyro_wtm = 5;
 	uint8_t acc_wtm = 8;
@@ -319,6 +323,7 @@ void main_task(void *pvParameters)
 	printf("SysTick_IRQn priority: %lu\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
 	printf("configKERNEL_INTERRUPT_PRIORITY: %d\n", configKERNEL_INTERRUPT_PRIORITY);
 	printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %d\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
+	printf("LPS25HB Device id: %d\n", pressure.Get_DeviceID());
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	UsbStorageDevice::start();
