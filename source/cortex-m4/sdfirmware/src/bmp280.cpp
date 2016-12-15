@@ -395,14 +395,10 @@ u32 BMP280::read_chip_id()
 }
 
 /*!
- * @brief This API used to read
- * actual temperature from uncompensated temperature
- * @note Returns the value in Degree centigrade
- * @note Output value of "51.23" equals 51.23 DegC.
- *
- *
- *
- *  @param v_uncomp_temperature_s32 : value of uncompensated temperature
+ *  @brief Reads actual pressure from uncompensated pressure
+ *  and returns pressure in Pa as double.
+ *  @note Output value of "96386.2"
+ *  equals 96386.2 Pa = 963.862 hPa.
  *
  */
 double BMP280::compensate_pressure_double(s32 v_uncomp_pressure_s32)
