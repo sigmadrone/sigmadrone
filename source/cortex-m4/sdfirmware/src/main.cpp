@@ -50,6 +50,7 @@
 #include "librexjson/rexjson++.h"
 #include "libattitude/attitudetracker.h"
 #include "bmp180reader.h"
+#include "bmp280reader.h"
 #include "sensorsprefilters.h"
 #include "flashmemory.h"
 #include "adc.h"
@@ -59,7 +60,6 @@
 #include "l3gd20reader.h"
 #include "usbstoragedevice.h"
 #include "poweroff.h"
-#include "bmp280.h"
 
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
@@ -131,9 +131,9 @@ void bmp180_task(void *pvParameters)
 
 	TimeStamp led_toggle_ts;
 	PerfCounter loop_time;
-	BMP280 bmp(i2c, 0xee);
+	BMP280 bmp2(i2c, 0xee);
+	Bmp280Reader* bmp_reader = new Bmp280Reader(bmp2);
 	GPSReader gps;
-	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
 	PerfCounter gps_measure_time;
 
 	bmp_reader->calibrate();
@@ -159,6 +159,7 @@ void bmp180_task(void *pvParameters)
 			drone_state->speed_over_ground_ = gps.speed();
 			drone_state->course_ = gps.course();
 			drone_state->satellite_count_ = gps.satellite_count();
+			vTaskDelay(50 / portTICK_RATE_MS);
 		} catch (std::exception& e) {
 //			i2c.reinit();
 		}

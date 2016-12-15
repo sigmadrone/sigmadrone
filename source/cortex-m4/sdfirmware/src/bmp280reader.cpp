@@ -19,26 +19,26 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#include "bmp180reader.h"
+#include "bmp280reader.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
-Bmp180Reader::Bmp180Reader(BMP180& bmp)
+Bmp280Reader::Bmp280Reader(BMP280& bmp)
 	: bmp_(bmp), base_pressure_(0)
 {
 }
 
-Bmp180Reader::~Bmp180Reader()
+Bmp280Reader::~Bmp280Reader()
 {
 }
 
-Distance Bmp180Reader::altitude_meters(bool do_read_sensor)
+Distance Bmp280Reader::altitude_meters(bool do_read_sensor)
 {
 	float hpa = pressure_hpa(do_read_sensor);
 	return convert_hpa_to_altitude(hpa, base_pressure_, temperature_celsius(false));
 }
 
-float Bmp180Reader::pressure_hpa(bool do_read_sensor)
+float Bmp280Reader::pressure_hpa(bool do_read_sensor)
 {
 	if (do_read_sensor) {
 		read_pressure();
@@ -46,7 +46,7 @@ float Bmp180Reader::pressure_hpa(bool do_read_sensor)
 	return pressure_filter_.output();
 }
 
-float Bmp180Reader::temperature_celsius(bool do_read_sensor)
+float Bmp280Reader::temperature_celsius(bool do_read_sensor)
 {
 	if (do_read_sensor) {
 		read_temperature();
@@ -54,27 +54,25 @@ float Bmp180Reader::temperature_celsius(bool do_read_sensor)
 	return temperature_filter_.output();
 }
 
-Distance Bmp180Reader::convert_hpa_to_altitude(float hpa, float base_pressure, float temperature)
+Distance Bmp280Reader::convert_hpa_to_altitude(float hpa, float base_pressure, float temperature)
 {
 	return Distance::from_meters((powf(base_pressure/hpa,0.1902f) - 1.0f) * (temperature + 273.15f)/0.0065);
 }
 
-void Bmp180Reader::read_pressure()
+void Bmp280Reader::read_pressure()
 {
-	bmp_.update_pressure();
 	float pressure = (float)bmp_.get_pressure() / 100.0f;
 	pressure_filter_.do_filter(pressure);
 	temperature_filter_.do_filter(bmp_.get_temperature());
 }
 
-void Bmp180Reader::read_temperature()
+void Bmp280Reader::read_temperature()
 {
-	bmp_.update_temperature();
 	float temperature = (float)bmp_.get_temperature();
 	temperature_filter_.do_filter(temperature);
 }
 
-void Bmp180Reader::calibrate()
+void Bmp280Reader::calibrate()
 {
 	const size_t iterations = 100;
 	float filter_alpha = pressure_filter_.alpha();

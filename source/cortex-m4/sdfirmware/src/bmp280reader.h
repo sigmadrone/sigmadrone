@@ -19,17 +19,17 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#ifndef BMP180READER_H_
-#define BMP180READER_H_
+#ifndef BMP280READER_H_
+#define BMP280READER_H_
 
 #include "units.h"
-#include "bmp180.h"
+#include "bmp280.h"
 #include "sensorsprefilters.h"
 
-struct Bmp180Reader {
+struct Bmp280Reader {
 public:
-	Bmp180Reader(BMP180& bmp);
-	~Bmp180Reader();
+	Bmp280Reader(BMP280& bmp);
+	~Bmp280Reader();
 
 	Distance altitude_meters(bool read_sensor=false);
 	float pressure_hpa(bool read_sensor=false);
@@ -42,7 +42,7 @@ public:
 	PressurePreFilter pressure_filter_;
 	TemperaturePreFilter temperature_filter_;
 private:
-	BMP180& bmp_;
+	BMP280& bmp_;
 	float base_pressure_;
 };
 
