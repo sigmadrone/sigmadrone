@@ -123,3 +123,26 @@ void I2CMaster::write32(uint16_t dev_addr, uint16_t reg_addr, uint32_t data) thr
 {
 	write(dev_addr, reg_addr, (uint8_t*)&data, sizeof(data));
 }
+
+void I2CMaster::update8(uint16_t dev_addr, uint16_t reg_addr, uint8_t mask, uint8_t data) throw (std::exception)
+{
+	uint8_t orig = read8(dev_addr, reg_addr);
+	uint8_t tmp = (orig & ~mask) | (data & mask);
+	write8(dev_addr, reg_addr, tmp);
+}
+
+
+void I2CMaster::update16(uint16_t dev_addr, uint16_t reg_addr, uint16_t mask, uint16_t data) throw (std::exception)
+{
+	uint16_t orig = read16(dev_addr, reg_addr);
+	uint16_t tmp = (orig & ~mask) | (data & mask);
+	write16(dev_addr, reg_addr, tmp);
+}
+
+
+void I2CMaster::update32(uint16_t dev_addr, uint16_t reg_addr, uint32_t mask, uint32_t data) throw (std::exception)
+{
+	uint32_t orig = read32(dev_addr, reg_addr);
+	uint32_t tmp = (orig & ~mask) | (data & mask);
+	write32(dev_addr, reg_addr, tmp);
+}

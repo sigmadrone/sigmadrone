@@ -48,7 +48,7 @@ DigitalOut::DigitalOut(PinName pin, OutputMode omode, PullMode pmode, int value)
 
 DigitalOut::~DigitalOut()
 {
-	HAL_GPIO_DeInit(GPIOx_, 1 << pin_);
+//	HAL_GPIO_DeInit(GPIOx_, 1 << pin_);
 }
 
 void DigitalOut::clock_enable(unsigned int port)
