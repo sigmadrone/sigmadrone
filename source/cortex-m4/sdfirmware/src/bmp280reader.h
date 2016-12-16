@@ -46,4 +46,4 @@ private:
 	float base_pressure_;
 };
 
-#endif /* BMP180READER_H_ */
+#endif /* BMP280READER_H_ */

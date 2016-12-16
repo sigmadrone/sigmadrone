@@ -49,7 +49,6 @@
 #include "uartrpcserver.h"
 #include "librexjson/rexjson++.h"
 #include "libattitude/attitudetracker.h"
-#include "bmp180reader.h"
 #include "bmp280reader.h"
 #include "sensorsprefilters.h"
 #include "flashmemory.h"
@@ -84,7 +83,7 @@ DigitalIn user_sw5(USER_SWITCH_5_PIN, DigitalIn::PullNone, DigitalIn::InterruptD
 PowerOff poweroff_button(PH_10, PI_6, PI_7, PH_11, {USER_LED1_PIN, USER_LED2_PIN, USER_LED3_PIN});
 
 TaskHandle_t main_task_handle = 0;
-TaskHandle_t bmp180_task_handle = 0;
+TaskHandle_t bmp280_task_handle = 0;
 TaskHandle_t battery_task_handle = 0;
 TaskHandle_t uart_task_handle = 0;
 DroneState* drone_state = 0;
@@ -118,7 +117,7 @@ void dronestate_boot_config(DroneState& state)
 	} catch (std::exception& e) {}
 }
 
-void bmp180_task(void *pvParameters)
+void bmp280_task(void *pvParameters)
 {
 	(void)pvParameters;
 
@@ -512,12 +511,12 @@ int main(int argc, char* argv[])
 	);
 
 	xTaskCreate(
-			bmp180_task, /* Function pointer */
-			"bmp180_task", /* Task name - for debugging only*/
+			bmp280_task, /* Function pointer */
+			"bmp280_task", /* Task name - for debugging only*/
 			configMINIMAL_STACK_SIZE, /* Stack depth in words */
 			(void*) NULL, /* Pointer to tasks arguments (parameter) */
 			tskIDLE_PRIORITY + 2UL, /* Task priority*/
-			&bmp180_task_handle /* Task handle */
+			&bmp280_task_handle /* Task handle */
 	);
 
 	xTaskCreate(
