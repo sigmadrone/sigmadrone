@@ -292,9 +292,9 @@ void main_task(void *pvParameters)
 		    0, 0,  1);
 
 	static const Matrix3f acc_align(
-	        0,-1, 0,
-           -1, 0, 0,
-	        0, 0,-1);
+	       -1,  0, 0,
+            0, -1, 0,
+	        0,  0, 1);
 #endif
 
 
