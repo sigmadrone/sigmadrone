@@ -161,7 +161,7 @@ private:
 class PressurePreFilter: public LowPassFilter<float, float>
 {
 public:
-	PressurePreFilter() : LowPassFilter<float, float> (0.9) {}
+	PressurePreFilter() : LowPassFilter<float, float> (0.6f) {}
 };
 
 typedef PressurePreFilter TemperaturePreFilter;
