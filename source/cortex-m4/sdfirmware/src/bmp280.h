@@ -98,4 +98,4 @@ private:
 
 };
 
-#endif /* BMP180_H_ */
+#endif /* BMP280_H_ */
