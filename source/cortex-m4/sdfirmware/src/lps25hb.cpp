@@ -45,6 +45,8 @@ LPS25HB::LPS25HB(SPIMaster& spi, uint8_t cs, const std::vector<GPIOPin>& pins)
 	for (auto& pin : pins_)
 		pin.init();
 	LPS25HB_ConfigTypeDef_st config;
+	LPS25HB_FIFOTypeDef_st fifo_config;
+	memset(&fifo_config, 0, sizeof(fifo_config));
 	memset(&config, 0, sizeof(config));
 	config.PressResolution = LPS25HB_AVGP_32;
 	config.TempResolution = LPS25HB_AVGT_32;
@@ -53,7 +55,9 @@ LPS25HB::LPS25HB(SPIMaster& spi, uint8_t cs, const std::vector<GPIOPin>& pins)
 	config.AutoZero = LPS25HB_ENABLE;
 	config.Reset_AZ = LPS25HB_ENABLE;
 	config.Sim = LPS25HB_SPI_4_WIRE;
+	fifo_config.FIFO_MODE = LPS25HB_FIFO_BYPASS_MODE;
 	Set_GenericConfig(&config);
+	Set_FifoConfig(&fifo_config);
 	Set_FifoModeUse(LPS25HB_DISABLE);
 	Activate();
 }
