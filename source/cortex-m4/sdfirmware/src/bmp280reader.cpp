@@ -77,8 +77,11 @@ void Bmp280Reader::calibrate()
 	const size_t iterations = 100;
 	float filter_alpha = pressure_filter_.alpha();
 	pressure_filter_.set_alpha(0.0f);
+	for (size_t i = 0; i < 300; ++i) {
+		pressure_hpa(true);
+	}
 
-	base_pressure_ = 0;
+	base_pressure_ = 0.0f;
 	for (size_t i = 0; i < iterations; ++i) {
 		base_pressure_ += pressure_hpa(true);
 	}
