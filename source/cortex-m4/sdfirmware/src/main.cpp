@@ -61,6 +61,8 @@
 #include "usbstoragedevice.h"
 #include "poweroff.h"
 
+#undef USE_LPS25HB
+
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
 
@@ -259,7 +261,7 @@ void main_task(void *pvParameters)
 
 	L3GD20 gyro(spi5, 0);
 	L3GD20 ext_gyro(spi2, 0);
-	LPS25HB pressure(spi2, 1);
+	LPS25HB lps25hb(spi2, 1);
 	LSM303D accel(spi5, 1);
 	uint8_t gyro_wtm = 5;
 	uint8_t acc_wtm = 8;
@@ -322,7 +324,7 @@ void main_task(void *pvParameters)
 	printf("SysTick_IRQn priority: %lu\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
 	printf("configKERNEL_INTERRUPT_PRIORITY: %d\n", configKERNEL_INTERRUPT_PRIORITY);
 	printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %d\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
-	printf("LPS25HB Device id: %d\n", pressure.Get_DeviceID());
+	printf("LPS25HB Device id: %d\n", lps25hb.Get_DeviceID());
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	UsbStorageDevice::start();
@@ -380,9 +382,17 @@ void main_task(void *pvParameters)
 
 	sample_dt.time_stamp();
 
+	lps25hb.Set_FifoMode(LPS25HB_FIFO_MEAN_MODE);
+	lps25hb.Set_FifoSampleSize(LPS25HB_FIFO_SAMPLE_8);
+	float base_pressure = lps25hb.Get_PressureHpa();
+
 	// Infinite loop
 	while (1) {
 		drone_state->iteration_++;
+
+#ifdef USE_LPS25HB
+		drone_state->altitude_ = Distance::from_meters((powf(base_pressure/lps25hb.Get_PressureHpa(), 0.1902f) - 1.0f) * ((lps25hb.Get_TemperatureCelsius()) + 273.15f)/0.0065);
+#endif
 
 		L3GD20Reader* desired_gyro_reader = (drone_state->external_gyro_enabled_ && ext_gyro_present)  ? &ext_gyro_reader : &gyro_reader;
 		if (active_gyro != desired_gyro_reader) {
@@ -515,6 +525,7 @@ int main(int argc, char* argv[])
 			&main_task_handle /* Task handle */
 	);
 
+#ifndef USE_LPS25HB
 	xTaskCreate(
 			bmp280_task, /* Function pointer */
 			"bmp280_task", /* Task name - for debugging only*/
@@ -523,6 +534,7 @@ int main(int argc, char* argv[])
 			tskIDLE_PRIORITY + 2UL, /* Task priority*/
 			&bmp280_task_handle /* Task handle */
 	);
+#endif
 
 	xTaskCreate(
 			battery_task, /* Function pointer */
