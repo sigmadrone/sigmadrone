@@ -76,7 +76,11 @@ struct DroneState {
 		, base_throttle_(0.0)
         , yaw_throttle_factor_(0.75)
 	    , pid_filter_freq_(80)
-	    , flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
+#ifdef USE_SIXPROPELLERS
+	    , flight_mode_(FLIGHT_MODE_ALTITUDE_HOLD)
+#else
+		, flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
+#endif
 	    , motors_armed_(false)
 		, enforce_flight_ceiling_(false)
 		, track_magnetometer_(false)
@@ -259,7 +263,7 @@ struct DroneState {
 			kp_ = 0.35;
 			kd_= 0.080;
 			ki_ = 0.035;
-			accelerometer_adjustment_ = Vector3f(0.0f, -0.015f, 0.0f);
+			accelerometer_adjustment_ = Vector3f(0.0f, -0.016f, 0.0f);
 #endif
 		}
 	}
