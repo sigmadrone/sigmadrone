@@ -150,9 +150,9 @@ again:
 			}
 
 				bmp_reader->pressure_filter_.set_alpha(drone_state->altitude_lpf_);
-				drone_state->altitude_ = bmp_reader->altitude_meters(true);
-				drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
-				drone_state->temperature_ = bmp_reader->temperature_celsius(false);
+				drone_state->altitude_ = bmp_reader->get_altitude(true);
+				drone_state->pressure_hpa_ = bmp_reader->get_pressure().hpa();
+				drone_state->temperature_ = bmp_reader->get_temperature().celsius();
 				gps_measure_time.begin_measure();
 				gps.update_state();
 				gps_measure_time.end_measure();
@@ -166,7 +166,7 @@ again:
 				loop_time.end_measure();
 		}
 	} catch (std::exception& e) {
-		std::cout << "bmp180_task exception: " << e.what() << std::endl;
+		std::cout << "bmp280_task exception: " << e.what() << std::endl;
 		i2c.reinit();
 	}
 	goto again;

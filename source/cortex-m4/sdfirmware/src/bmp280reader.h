@@ -31,19 +31,18 @@ public:
 	Bmp280Reader(BMP280& bmp);
 	~Bmp280Reader();
 
-	Distance altitude_meters(bool read_sensor=false);
-	float pressure_hpa(bool read_sensor=false);
-	float temperature_celsius(bool read_sensor=false);
+	Distance get_altitude(bool read_sensor=false);
+	Pressure get_pressure(bool read_sensor=false);
+	Temperature get_temperature(bool read_sensor=false);
 	void read_pressure();
 	void read_temperature();
 	void calibrate();
-	static Distance convert_hpa_to_altitude(float hpa, float base_pressure, float temp);
 
 	PressurePreFilter pressure_filter_;
 	TemperaturePreFilter temperature_filter_;
 private:
 	BMP280& bmp_;
-	float base_pressure_;
+	Pressure base_pressure_;
 };
 
 #endif /* BMP280READER_H_ */
