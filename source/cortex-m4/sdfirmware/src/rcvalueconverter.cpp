@@ -19,6 +19,8 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 #include "rcvalueconverter.h"
+#include "colibrihwmap.h"
+#include "dronestate.h"
 
 static const float MAX_EULER_FROM_RC = M_PI / 4.0;
 
@@ -41,9 +43,18 @@ RcValueConverter::RcValueConverter(
 				roll_(0.0f),
 				pitch_bias_(0.0),
 				roll_bias_(0.0),
-				gear_raw_(0.0f)
+				gear_raw_(0.0f),
+				user_sw_(USER_SWITCH_2_PIN, DigitalIn::PullNone, DigitalIn::InterruptRising),
+				user_led_(USER_LED2_PIN)
 {
 	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
+	user_sw_.callback(this, &RcValueConverter::interrupt_user_switch);
+}
+
+void RcValueConverter::interrupt_user_switch()
+{
+	user_led_.toggle();
+	motors_armed_ = user_led_.read();
 }
 
 void RcValueConverter::update()
@@ -85,7 +96,16 @@ void RcValueConverter::update()
 	 */
 	if (receiver_.channel(RC_CHANNEL_ARM_MOTOR)->is_live() && last_gear_ != gear) {
 		prev_motors_armed_ = motors_armed_;
-		motors_armed_ = (gear > 0.5) ? true : false;
+		if (gear > 0.5) {
+			motors_armed_ = true;
+			user_led_.write(1);
+		} else {
+			user_led_.write(0);
+#ifndef USE_SIXPROPELLERS
+		motors_armed_ = false;
+#endif
+		}
+
 	}
 	last_gear_ = gear;
 }

@@ -26,6 +26,8 @@
 #include "d3math.h"
 #include "rcreceiver.h"
 #include "pwmpulse.h"
+#include "digitalin.h"
+#include "digitalout.h"
 
 class RcValueConverter {
 public:
@@ -45,6 +47,7 @@ public:
 	float get_roll() const;
 	float get_gear() const;
 	void reset_twist_quaternion(const QuaternionF&);
+	void interrupt_user_switch();
 
 private:
 	float get_value_as_float(uint32_t channelno, float default_value);
@@ -65,6 +68,9 @@ private:
 	float pitch_bias_;
 	float roll_bias_;
 	float gear_raw_;
+	DigitalIn user_sw_;
+	DigitalOut user_led_;
+
 };
 
 #endif /* RCVALUECONVERTER_H_ */
