@@ -40,7 +40,8 @@ RcValueConverter::RcValueConverter(
 				pitch_(0.0f),
 				roll_(0.0f),
 				pitch_bias_(0.0),
-				roll_bias_(0.0)
+				roll_bias_(0.0),
+				gear_raw_(0.0f)
 {
 	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
 }
@@ -51,7 +52,8 @@ void RcValueConverter::update()
 	float pitch = get_value_as_float(mapper_.channel_no(RC_CHANNEL_PITCH), 0.5f);
 	float roll = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ROLL), 0.5f);
 	float throttle = get_value_as_float(mapper_.channel_no(RC_CHANNEL_THROTTLE), 0.0f);
-	float gear = (get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR), 0.0f) > 0.5f) ? 1.0f : 0.0f;
+	gear_raw_ = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR), 0.0f);
+	float gear = (gear_raw_ > 0.5f) ? 1.0f : 0.0f;
 
 	throttle_ = Throttle(throttle * scale_factor_);
 	if ((fabs(yaw - 0.5f) < 0.0225)) {
@@ -143,4 +145,9 @@ float RcValueConverter::get_pitch() const
 float RcValueConverter::get_roll() const
 {
 	return roll_;
+}
+
+float RcValueConverter::get_gear() const
+{
+	return gear_raw_;
 }

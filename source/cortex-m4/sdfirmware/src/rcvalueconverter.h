@@ -43,6 +43,7 @@ public:
 	float get_yaw() const;
 	float get_pitch() const;
 	float get_roll() const;
+	float get_gear() const;
 	void reset_twist_quaternion(const QuaternionF&);
 
 private:
@@ -63,7 +64,7 @@ private:
 	float roll_;
 	float pitch_bias_;
 	float roll_bias_;
-
+	float gear_raw_;
 };
 
 #endif /* RCVALUECONVERTER_H_ */
