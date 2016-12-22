@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include <limits>
+#include <math.h>
 
 template <typename UnitType>
 struct ScaledUnit {
@@ -252,12 +253,67 @@ struct Throttle: public ScaledUnit<float> {
 	inline operator float() const { return get(); }
 };
 
+struct Temperature: public ScaledUnit<float> {
+	static constexpr float ZERO_CELSIUS_2_KELVIN = 273.15f;
+
+	static Temperature from_celsius(float c) { return Temperature(c); }
+	static Temperature from_kelvin(float k) { return Temperature(k - ZERO_CELSIUS_2_KELVIN); }
+	float celsius() const { return unit(); }
+	float kelvin() const { return unit() + ZERO_CELSIUS_2_KELVIN; }
+	inline Temperature operator-(const Temperature& rhs) const { return Temperature(unit()-rhs.unit()); }
+	inline Temperature operator+(const Temperature& rhs) const { return Temperature(unit()+rhs.unit()); }
+	inline float operator/(const Temperature& rhs) const { return (float)unit()/(float)rhs.unit(); }
+	inline Temperature operator/(float f) const { return Temperature(unit()/f); }
+	inline Temperature operator*(float f) const { return Temperature(unit()*f); }
+	inline Temperature() : ScaledUnit<float>(0) {}
+	inline Temperature(int dummy): ScaledUnit(0) { (void)dummy; }
+private:
+	Temperature(float celsius) : ScaledUnit<float>(celsius) {}
+};
+
+struct Pressure:  public ScaledUnit<float> {
+	static constexpr float PSI_TO_PA = 6894.76f;
+	static constexpr float PA_TO_PSI = 1.0f / PSI_TO_PA;
+
+	static Pressure from_psi(float psi) { return Pressure(psi * PSI_TO_PA); }
+	static Pressure from_hpa(float hpa) { return Pressure(from_centiunit(hpa).unit()); }
+	static Pressure from_mpa(float kpa) { return Pressure(from_megaunit(kpa).unit()); }
+	static Pressure from_pa(float pa) { return Pressure(pa); }
+	inline float hpa() const { return centiunit(); }
+	inline float kpa() const { return hpa(); }
+	inline float mpa() const { return megaunit(); }
+	inline float pa() const { return unit(); }
+	inline float psi() const { return unit() * PA_TO_PSI; }
+	inline Pressure operator-(const Pressure& rhs) const { return Pressure(unit()-rhs.unit()); }
+	inline Pressure operator+(const Pressure& rhs) const { return Pressure(unit()+rhs.unit()); }
+	inline float operator/(const Pressure& rhs) const { return (float)unit()/(float)rhs.unit(); }
+	inline Pressure operator/(float f) const { return Pressure(unit()/f); }
+	inline Pressure operator*(float f) const { return Pressure(unit()*f); }
+	inline void operator-=(const Pressure& rhs) { *this = Pressure(unit()-rhs.unit()); }
+	inline void operator+=(const Pressure& rhs) { *this = Pressure(unit()+rhs.unit()); }
+	inline void operator/=(float f) { *this = Pressure(unit()/f); }
+	inline void operator*=(float f) { *this = Pressure(unit()*f); }
+
+	inline Pressure() : ScaledUnit(0) {}
+	inline Pressure(int dummy): ScaledUnit(0) { (void)dummy; }
+private:
+	Pressure(float pascal) : ScaledUnit<float> (pascal) {}
+};
 
 static const Altitude INVALID_ALTITUDE = Altitude::from_meters(Altitude::INVALID_VALUE);
 static const Distance ONE_METER = Distance::from_meters(1.0f);
 static const TimeSpan ONE_SECOND = TimeSpan::from_seconds(1.0f);
 static const Voltage ONE_VOLT = Voltage::from_volts(1.0f);
 static const Frequency ONE_HERTZ = Frequency::from_hertz(1.0f);
+static const Pressure PRESSURE_SEA_LEVEL = Pressure::from_pa(101325.0f);
+
+inline Altitude pressure_to_altitude(
+		const Pressure& pressure,
+		const Pressure& base_pressure = PRESSURE_SEA_LEVEL,
+		const Temperature& t = Temperature::from_celsius(15.0f))
+{
+	return Altitude::from_meters((powf(base_pressure/pressure,0.1902f) - 1.0f) * t.kelvin() / 0.0065f);
+}
 
 inline Speed operator/(const Distance& distance, const TimeSpan& time) { return Speed(distance, time); }
 

@@ -158,12 +158,16 @@ private:
 	CoeffType alpha_, beta_;
 };
 
-class PressurePreFilter: public LowPassFilter<float, float>
+class PressurePreFilter: public LowPassFilter<Pressure, float>
 {
 public:
-	PressurePreFilter() : LowPassFilter<float, float> (0.6f) {}
+	PressurePreFilter() : LowPassFilter<Pressure, float> (0.6f) {}
 };
 
-typedef PressurePreFilter TemperaturePreFilter;
+class TemperaturePreFilter: public LowPassFilter<Temperature, float>
+{
+public:
+	TemperaturePreFilter() : LowPassFilter<Temperature, float> (0.6f) {}
+};
 
 #endif /* SENSORS_PREFILTERS_H_ */

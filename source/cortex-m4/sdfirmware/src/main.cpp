@@ -148,15 +148,15 @@ again:
 				led1.toggle();
 			}
 
-				bmp_reader->pressure_filter_.set_alpha(drone_state->altitude_lpf_);
-				drone_state->altitude_ = bmp_reader->altitude_meters(true);
-				drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
-				drone_state->temperature_ = bmp_reader->temperature_celsius(false);
-				vTaskDelay(15 / portTICK_RATE_MS);
-				loop_time.end_measure();
+			bmp_reader->pressure_filter_.set_alpha(drone_state->altitude_lpf_);
+			drone_state->altitude_ = bmp_reader->get_altitude(true);
+			drone_state->pressure_hpa_ = bmp_reader->get_pressure().hpa();
+			drone_state->temperature_ = bmp_reader->get_temperature(false).celsius();
+			vTaskDelay(15 / portTICK_RATE_MS);
+			loop_time.end_measure();
 		}
 	} catch (std::exception& e) {
-		std::cout << "bmp180_task exception: " << e.what() << std::endl;
+		std::cout << "bmp280_task exception: " << e.what() << std::endl;
 		i2c.reinit();
 	}
 	goto again;
@@ -399,17 +399,18 @@ void main_task(void *pvParameters)
 	lps25hb.Set_FifoModeUse(LPS25HB_ENABLE);
 	lps25hb.Set_Odr(LPS25HB_ODR_25HZ);
 	lps25hb.Set_Bdu(LPS25HB_BDU_NO_UPDATE);
-	float base_pressure = lps25hb.Get_PressureHpa();
-
 	LPS25HB_FIFOTypeDef_st fifo_config;
 	memset(&fifo_config, 0, sizeof(fifo_config));
 	lps25hb.Get_FifoConfig(&fifo_config);
 
+#ifdef USE_LPS25HB
+	float base_pressure = lps25hb.Get_PressureHpa();
 	for (int i = 0; i < 100; i++) {
 		while (lps25hb.Get_FifoStatus().FIFO_EMPTY)
 			vTaskDelay(50 / portTICK_RATE_MS);
 		base_pressure = lps_filt.do_filter(lps25hb.Get_PressureHpa());
 	}
+#endif
 
 	// Infinite loop
 	while (1) {
@@ -421,7 +422,8 @@ void main_task(void *pvParameters)
 			drone_state->temperature_ = lps25hb.Get_TemperatureCelsius();
 			while (!lps25hb.Get_FifoStatus().FIFO_EMPTY) {
 				drone_state->pressure_hpa_ = lps_filt.do_filter(lps25hb.Get_PressureHpa());
-				drone_state->altitude_ = Distance::from_meters((powf(base_pressure/drone_state->pressure_hpa_, 0.1902f) - 1.0f) * ((lps25hb.Get_TemperatureCelsius()) + 273.15f)/0.0065);
+				float alt = (powf(base_pressure/drone_state->pressure_hpa_, 0.1902f) - 1.0f) * ((lps25hb.Get_TemperatureCelsius()) + 273.15f)/0.0065;
+				drone_state->altitude_ = Distance::from_meters(alt);
 			}
 		}
 #endif

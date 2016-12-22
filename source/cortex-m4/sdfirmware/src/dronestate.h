@@ -23,7 +23,7 @@
 #define DRONESTATE_H_
 
 #undef USE_SIXPROPELLERS
-#undef USE_LPS25HB
+#define USE_LPS25HB
 
 //#define SMALL_FRAME
 
@@ -131,6 +131,7 @@ struct DroneState {
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
+		ret["gear"] = gear_;
 		ret["base_throttle"] = base_throttle_;
 		ret["motors_armed"] = motors_armed_;
 		ret["pid_torque"] = matrix_to_json_value(pid_torque_);
@@ -317,6 +318,7 @@ struct DroneState {
 	float yaw_;
 	float pitch_;
 	float roll_;
+	float gear_;
 	float yaw_bias_;
 	float pitch_bias_;
 	float roll_bias_;
