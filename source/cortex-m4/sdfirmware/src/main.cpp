@@ -418,8 +418,7 @@ void main_task(void *pvParameters)
 		if (drone_state->iteration_ % 120 == 0)
 			led1.toggle();
 		if (drone_state->iteration_ % 5 == 0) {
-			if (!lps25hb.Get_FifoStatus().FIFO_EMPTY)
-				drone_state->hpa_fifo_ = lps25hb.Get_FifoStatus().FIFO_LEVEL;
+			drone_state->temperature_ = lps25hb.Get_TemperatureCelsius();
 			while (!lps25hb.Get_FifoStatus().FIFO_EMPTY) {
 				drone_state->pressure_hpa_ = lps_filt.do_filter(lps25hb.Get_PressureHpa());
 				drone_state->altitude_ = Distance::from_meters((powf(base_pressure/drone_state->pressure_hpa_, 0.1902f) - 1.0f) * ((lps25hb.Get_TemperatureCelsius()) + 273.15f)/0.0065);
