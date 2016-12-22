@@ -926,7 +926,11 @@
       yaw_throttle_factor: droneState.yaw_throttle_factor,
       yaw_bias: droneState.yaw_bias,
       pitch_bias: droneState.pitch_bias,
-      roll_bias: droneState.roll_bias
+      roll_bias: droneState.roll_bias,
+      altitude_kp: droneState.altitude_kp,
+      altitude_ki: droneState.altitude_ki,
+      altitude_kd: droneState.altitude_kd,
+      flight_mode: droneState.flight_mode
     };
     save2FlashView.onUserInput();
     save2FlashView.onSubmitButton();
