@@ -52,6 +52,9 @@ public:
 	void write8(uint16_t dev_addr, uint16_t reg_addr, uint8_t data) throw (std::exception);
 	void write16(uint16_t dev_addr, uint16_t reg_addr, uint16_t data) throw (std::exception);
 	void write32(uint16_t dev_addr, uint16_t reg_addr, uint32_t data) throw (std::exception);
+	void update8(uint16_t dev_addr, uint16_t reg_addr, uint8_t mask, uint8_t data) throw (std::exception);
+	void update16(uint16_t dev_addr, uint16_t reg_addr, uint16_t mask, uint16_t data) throw (std::exception);
+	void update32(uint16_t dev_addr, uint16_t reg_addr, uint32_t mask, uint32_t data) throw (std::exception);
 
 protected:
 	I2C_HandleTypeDef handle_;

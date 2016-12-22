@@ -47,7 +47,7 @@ public:
 	 *  @param value the initial pin value
 	 */
 	DigitalOut(PinName pin, OutputMode omode = OutputDefault, PullMode pmode = PullDefault, int value = 0);
-
+	DigitalOut(const DigitalOut& rhs) = default;
 	~DigitalOut();
 
 	/** Set the output, specified as 0 or 1 (int)
@@ -71,6 +71,7 @@ public:
 
 	/** A shorthand for write()
 	 */
+
 	DigitalOut& operator=(int value)
 	{
 		write(value);

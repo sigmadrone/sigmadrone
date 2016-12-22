@@ -23,6 +23,8 @@
 #define DRONESTATE_H_
 
 #undef USE_SIXPROPELLERS
+#define USE_LPS25HB
+
 //#define SMALL_FRAME
 
 #include "units.h"
@@ -74,10 +76,14 @@ struct DroneState {
 		, base_throttle_(0.0)
         , yaw_throttle_factor_(0.75)
 	    , pid_filter_freq_(80)
-	    , flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
+#ifdef USE_SIXPROPELLERS
+	    , flight_mode_(FLIGHT_MODE_ALTITUDE_HOLD)
+#else
+		, flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
+#endif
 	    , motors_armed_(false)
 		, enforce_flight_ceiling_(false)
-		, track_magnetometer_(true)
+		, track_magnetometer_(false)
 		, track_accelerometer_(true)
 	    , external_gyro_enabled_(false)
 	    , external_gyro_align_(0, 1, 0,
@@ -86,11 +92,12 @@ struct DroneState {
 	    , altitude_tracker_kp_(0.025)
 		, altitude_tracker_ki_(0.005)
 		, altitude_tracker_kd_(0.0)
-		, altitude_tracker_kp2_(0.04)
+		, altitude_tracker_kp2_(0.12)
 	    , altitude_correction_period_(TimeSpan::from_seconds(1000))
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
-	    , altitude_lpf_(0.965)
+	    , altitude_lpf_(0.6)
+		, hpa_fifo_(0)
 	{
 		set_pilot_type(PILOT_TYPE_PID_NEW);
 	}
@@ -124,6 +131,7 @@ struct DroneState {
 		ret["yaw"] = yaw_;
 		ret["pitch"] = pitch_;
 		ret["roll"] = roll_;
+		ret["gear"] = gear_;
 		ret["base_throttle"] = base_throttle_;
 		ret["motors_armed"] = motors_armed_;
 		ret["pid_torque"] = matrix_to_json_value(pid_torque_);
@@ -138,6 +146,7 @@ struct DroneState {
 			ret["crit_alarm"] = most_critical_alarm_.to_string();
 			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
 		}
+		ret["hpa_fifo"] = static_cast<int>(hpa_fifo_);
 		return ret;
 	}
 	rexjson::value to_json_ex()
@@ -253,9 +262,9 @@ struct DroneState {
 			ki_ = 0.09;
 #else
 			kp_ = 0.35;
-			kd_= 0.085;
+			kd_= 0.080;
 			ki_ = 0.035;
-			accelerometer_adjustment_ = Vector3f(0.005f, 0.005f, 0.0f);
+			accelerometer_adjustment_ = Vector3f(0.0f, -0.016f, 0.0f);
 #endif
 		}
 	}
@@ -309,6 +318,7 @@ struct DroneState {
 	float yaw_;
 	float pitch_;
 	float roll_;
+	float gear_;
 	float yaw_bias_;
 	float pitch_bias_;
 	float roll_bias_;
@@ -358,6 +368,7 @@ struct DroneState {
 	Altitude take_off_altitude_;
 
 	float altitude_lpf_; // temp
+	uint32_t hpa_fifo_;
 };
 
 

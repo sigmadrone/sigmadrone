@@ -120,6 +120,7 @@ void FlightControl::update_state(DroneState& state)
 	state.yaw_ = rc_values_.get_yaw();
 	state.pitch_ = rc_values_.get_pitch();
 	state.roll_ = rc_values_.get_roll();
+	state.gear_ = rc_values_.get_gear();
 	state.base_throttle_ = base_throttle().get();
 	state.motors_armed_ = rc_values_.motors_armed();
 

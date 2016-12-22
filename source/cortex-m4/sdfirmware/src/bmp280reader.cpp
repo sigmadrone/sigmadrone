@@ -19,26 +19,25 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#include "bmp180reader.h"
+#include "bmp280reader.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
-Bmp180Reader::Bmp180Reader(BMP180& bmp)
+Bmp280Reader::Bmp280Reader(BMP280& bmp)
 	: bmp_(bmp), base_pressure_(0)
 {
 }
 
-Bmp180Reader::~Bmp180Reader()
+Bmp280Reader::~Bmp280Reader()
 {
 }
 
-Distance Bmp180Reader::altitude_meters(bool do_read_sensor)
+Distance Bmp280Reader::get_altitude(bool do_read_sensor)
 {
-	float hpa = pressure_hpa(do_read_sensor);
-	return convert_hpa_to_altitude(hpa, base_pressure_, temperature_celsius(false));
+	return pressure_to_altitude(get_pressure(do_read_sensor), base_pressure_, get_temperature(false));
 }
 
-float Bmp180Reader::pressure_hpa(bool do_read_sensor)
+Pressure Bmp280Reader::get_pressure(bool do_read_sensor)
 {
 	if (do_read_sensor) {
 		read_pressure();
@@ -46,7 +45,7 @@ float Bmp180Reader::pressure_hpa(bool do_read_sensor)
 	return pressure_filter_.output();
 }
 
-float Bmp180Reader::temperature_celsius(bool do_read_sensor)
+Temperature Bmp280Reader::get_temperature(bool do_read_sensor)
 {
 	if (do_read_sensor) {
 		read_temperature();
@@ -54,43 +53,39 @@ float Bmp180Reader::temperature_celsius(bool do_read_sensor)
 	return temperature_filter_.output();
 }
 
-Distance Bmp180Reader::convert_hpa_to_altitude(float hpa, float base_pressure, float temperature)
+void Bmp280Reader::read_pressure()
 {
-	return Distance::from_meters((powf(base_pressure/hpa,0.1902f) - 1.0f) * (temperature + 273.15f)/0.0065);
+	pressure_filter_.do_filter(Pressure::from_pa(bmp_.get_pressure()));
+	read_temperature();
 }
 
-void Bmp180Reader::read_pressure()
+void Bmp280Reader::read_temperature()
 {
-	bmp_.update_pressure();
-	float pressure = (float)bmp_.get_pressure() / 100.0f;
-	pressure_filter_.do_filter(pressure);
-	temperature_filter_.do_filter(bmp_.get_temperature());
+	temperature_filter_.do_filter(Temperature::from_celsius(bmp_.get_temperature()));
 }
 
-void Bmp180Reader::read_temperature()
-{
-	bmp_.update_temperature();
-	float temperature = (float)bmp_.get_temperature();
-	temperature_filter_.do_filter(temperature);
-}
-
-void Bmp180Reader::calibrate()
+void Bmp280Reader::calibrate()
 {
 	const size_t iterations = 100;
 	float filter_alpha = pressure_filter_.alpha();
+
 	pressure_filter_.set_alpha(0.0f);
 
-	base_pressure_ = 0;
+	for (size_t i = 0; i < 300; ++i) {
+		get_pressure(true);
+		get_temperature(true);
+	}
+
+	base_pressure_ = {0};
 	for (size_t i = 0; i < iterations; ++i) {
-		base_pressure_ += pressure_hpa(true);
+		base_pressure_ += get_pressure(true);
 	}
 	base_pressure_ /= iterations;
 	pressure_filter_.do_filter(base_pressure_);
-
 	pressure_filter_.set_alpha(filter_alpha);
 
 	filter_alpha = temperature_filter_.alpha();
-	temperature_filter_.set_alpha(0);
-	temperature_celsius(true);
+	temperature_filter_.set_alpha(0.0f);
+	get_temperature(true);
 	temperature_filter_.set_alpha(filter_alpha);
 }

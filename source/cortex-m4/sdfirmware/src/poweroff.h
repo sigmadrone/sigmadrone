@@ -19,31 +19,35 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#ifndef BMP180READER_H_
-#define BMP180READER_H_
+#ifndef _POWEROFF_H_
+#define _POWEROFF_H_
 
-#include "units.h"
-#include "bmp180.h"
-#include "sensorsprefilters.h"
+#include <vector>
+#include "digitalin.h"
+#include "digitalout.h"
 
-struct Bmp180Reader {
+
+class PowerOff {
 public:
-	Bmp180Reader(BMP180& bmp);
-	~Bmp180Reader();
+	PowerOff(PinName pwrint_name, PinName request_name, PinName ready_name, PinName pwrkill_name, const std::vector<PinName>& led_names = {});
+	~PowerOff();
 
-	Distance altitude_meters(bool read_sensor=false);
-	float pressure_hpa(bool read_sensor=false);
-	float temperature_celsius(bool read_sensor=false);
-	void read_pressure();
-	void read_temperature();
-	void calibrate();
-	static Distance convert_hpa_to_altitude(float hpa, float base_pressure, float temp);
+protected:
+	static constexpr unsigned int wait_iterations = 2000000;
+	static constexpr unsigned int poweroff_iterations = 150;
+	void initiate();
+	void shutdown();
+	void leds_turn_on();
+	void leds_turn_off();
+	void leds_toggle();
+	void delay();
 
-	PressurePreFilter pressure_filter_;
-	TemperaturePreFilter temperature_filter_;
-private:
-	BMP180& bmp_;
-	float base_pressure_;
+protected:
+	DigitalIn pwrint_;
+	DigitalOut request_;
+	DigitalIn ready_;
+	DigitalOut pwrkill_;
+	std::vector<DigitalOut> leds_;
 };
 
-#endif /* BMP180READER_H_ */
+#endif

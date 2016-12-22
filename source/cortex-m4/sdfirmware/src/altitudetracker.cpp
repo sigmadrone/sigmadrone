@@ -80,13 +80,14 @@ void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 {
 	static float ACCEL_KP = 1.5;
 	static float KI_LEAK = 0.05;
-	static const float accelDeadBand = 0.025;
+	static const float accel_dead_band = 0.025;
+	static const TimeSpan min_update_dt = TimeSpan::from_milliseconds(100);
 
 	if (!calc_vert_accel_bias(drone_state)) {
 		return;
 	}
 
-	float vert_accel = apply_deadband(calc_vertical_accel(drone_state) - vertical_acel_bias_, accelDeadBand);
+	float vert_accel = apply_deadband(calc_vertical_accel(drone_state) - vertical_acel_bias_, accel_dead_band);
 
 	pid_.set_kp_ki_kd(drone_state.altitude_tracker_kp_,
 			drone_state.altitude_tracker_ki_, drone_state.altitude_tracker_kd_);
@@ -97,13 +98,13 @@ void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 
 	// update altitude with the velocity estimate
 	estimated_altitude_ += estimated_velocity_ * drone_state.dt_;
-	if (drone_state.pressure_hpa_ != last_baro_reading_) {
+	TimeSpan dt = estimate_ts_.elapsed();
+	if (drone_state.pressure_hpa_ != last_baro_reading_ || dt > min_update_dt) {
 		// Correct the altitude and velocity estimate from the baro measurement/observation
-		TimeSpan dt = estimate_ts_.elapsed();
 		Altitude alt_err = drone_state.altitude_ - estimated_altitude_;
 		estimated_altitude_ += alt_err * drone_state.altitude_tracker_kp2_;
 
-		if (fabs(vert_accel) < accelDeadBand || dt > TimeSpan::from_milliseconds(100)) {
+		if (fabs(vert_accel) < accel_dead_band || dt > min_update_dt) {
 #if 1
 			Speed vert_velocity = velocity_lpf_.do_filter(Speed::from_meters_per_second(
 				altitude_deriv_.do_filter(drone_state.altitude_.meters())));
@@ -115,10 +116,12 @@ void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 			estimate_ts_.time_stamp();
 		}
 
+		if (drone_state.pressure_hpa_ != last_baro_reading_) {
+			drone_state.altitude_from_baro_ = drone_state.altitude_;
+		}
 		last_baro_reading_ = drone_state.pressure_hpa_;
 	}
 
-	drone_state.altitude_from_baro_ = drone_state.altitude_;
 	drone_state.altitude_ = estimated_altitude_;
 	drone_state.vertical_speed_ = estimated_velocity_;
 }

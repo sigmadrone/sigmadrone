@@ -40,7 +40,8 @@ RcValueConverter::RcValueConverter(
 				pitch_(0.0f),
 				roll_(0.0f),
 				pitch_bias_(0.0),
-				roll_bias_(0.0)
+				roll_bias_(0.0),
+				gear_raw_(0.0f)
 {
 	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
 }
@@ -51,7 +52,8 @@ void RcValueConverter::update()
 	float pitch = get_value_as_float(mapper_.channel_no(RC_CHANNEL_PITCH), 0.5f);
 	float roll = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ROLL), 0.5f);
 	float throttle = get_value_as_float(mapper_.channel_no(RC_CHANNEL_THROTTLE), 0.0f);
-	float gear = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR), 0.0f);
+	gear_raw_ = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR), 0.0f);
+	float gear = (gear_raw_ > 0.5f) ? 1.0f : 0.0f;
 
 	throttle_ = Throttle(throttle * scale_factor_);
 	if ((fabs(yaw - 0.5f) < 0.0225)) {
@@ -81,7 +83,7 @@ void RcValueConverter::update()
 	 * we'd rather work with the defaults. Here we will assume that gear set to 1 means
 	 * "landed" and gear set to 0 "prepare for take off", i.e. motors armed.
 	 */
-	if (last_gear_ != 0.0 && last_gear_ != gear) {
+	if (receiver_.channel(RC_CHANNEL_ARM_MOTOR)->is_live() && last_gear_ != gear) {
 		prev_motors_armed_ = motors_armed_;
 		motors_armed_ = (gear > 0.5) ? true : false;
 	}
@@ -143,4 +145,9 @@ float RcValueConverter::get_pitch() const
 float RcValueConverter::get_roll() const
 {
 	return roll_;
+}
+
+float RcValueConverter::get_gear() const
+{
+	return gear_raw_;
 }

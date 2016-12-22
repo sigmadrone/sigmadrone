@@ -38,6 +38,7 @@
 #include "uart.h"
 #include "l3gd20.h"
 #include "lsm303d.h"
+#include "lps25hb.h"
 #include "d3math.h"
 #include "hwtimer.h"
 #include "pwmencoder.h"
@@ -49,7 +50,7 @@
 #include "uartrpcserver.h"
 #include "librexjson/rexjson++.h"
 #include "libattitude/attitudetracker.h"
-#include "bmp180reader.h"
+#include "bmp280reader.h"
 #include "sensorsprefilters.h"
 #include "flashmemory.h"
 #include "adc.h"
@@ -58,6 +59,7 @@
 #include "iirfilt.h"
 #include "l3gd20reader.h"
 #include "usbstoragedevice.h"
+#include "poweroff.h"
 
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
@@ -68,9 +70,10 @@ DigitalOut led2(USER_LED2_PIN);
 DigitalOut led3(USER_LED3_PIN);
 DigitalOut led4(USER_LED4_PIN);
 DigitalOut led5(USER_LED5_PIN);
+std::vector<DigitalOut> leds{led1};
 
 DigitalOut sesnsor_ctrl(SENSOR_CTRL_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0);
-DigitalOut pwr_on(PWR_ON_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
+//DigitalOut pwr_on(PWR_ON_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 1);
 
 DigitalIn user_sw1(USER_SWITCH_1_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw2(USER_SWITCH_2_PIN, DigitalIn::PullNone, DigitalIn::InterruptFalling);
@@ -78,9 +81,12 @@ DigitalIn user_sw3(USER_SWITCH_3_PIN, DigitalIn::PullNone, DigitalIn::InterruptD
 DigitalIn user_sw4(USER_SWITCH_4_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw5(USER_SWITCH_5_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 
+PowerOff poweroff_button(PH_10, PI_6, PI_7, PH_11, {USER_LED1_PIN, USER_LED2_PIN, USER_LED3_PIN});
+
 TaskHandle_t main_task_handle = 0;
-TaskHandle_t bmp180_task_handle = 0;
+TaskHandle_t bmp280_task_handle = 0;
 TaskHandle_t battery_task_handle = 0;
+TaskHandle_t gps_task_handle = 0;
 TaskHandle_t uart_task_handle = 0;
 DroneState* drone_state = 0;
 
@@ -113,7 +119,7 @@ void dronestate_boot_config(DroneState& state)
 	} catch (std::exception& e) {}
 }
 
-void bmp180_task(void *pvParameters)
+void bmp280_task(void *pvParameters)
 {
 	(void)pvParameters;
 
@@ -123,46 +129,60 @@ void bmp180_task(void *pvParameters)
 				{I2C1_SCL_PIN, GPIO_MODE_AF_OD, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
 				{I2C1_SDA_PIN, GPIO_MODE_AF_OD, GPIO_NOPULL, GPIO_SPEED_FAST, GPIO_AF4_I2C1},
 		});
-	BMP180 bmp(i2c);
-	TimeStamp led_toggle_ts;
+
+again:
+	try {
+		TimeStamp led_toggle_ts;
+		PerfCounter loop_time;
+		BMP280 bmp2(i2c, 0xee);
+		bmp2.set_oversamp_pressure(BMP280_OVERSAMP_16X);
+		bmp2.set_work_mode(BMP280_ULTRA_HIGH_RESOLUTION_MODE);
+		bmp2.set_filter(BMP280_FILTER_COEFF_16);
+
+		Bmp280Reader* bmp_reader = new Bmp280Reader(bmp2);
+		bmp_reader->calibrate();
+		while (1) {
+			loop_time.begin_measure();
+			if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
+				led_toggle_ts.time_stamp();
+				led1.toggle();
+			}
+
+			bmp_reader->pressure_filter_.set_alpha(drone_state->altitude_lpf_);
+			drone_state->altitude_ = bmp_reader->get_altitude(true);
+			drone_state->pressure_hpa_ = bmp_reader->get_pressure().hpa();
+			drone_state->temperature_ = bmp_reader->get_temperature(false).celsius();
+			vTaskDelay(15 / portTICK_RATE_MS);
+			loop_time.end_measure();
+		}
+	} catch (std::exception& e) {
+		std::cout << "bmp280_task exception: " << e.what() << std::endl;
+		i2c.reinit();
+	}
+	goto again;
+}
+
+void gps_task(void *pvParameters)
+{
+	(void)pvParameters;
 	GPSReader gps;
-
-	Bmp180Reader* bmp_reader = new Bmp180Reader(bmp);
 	PerfCounter gps_measure_time;
-	PerfCounter loop_time;
-
-	bmp_reader->calibrate();
 
 	gps.start();
 	while (1) {
-		loop_time.begin_measure();
-		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
-			led_toggle_ts.time_stamp();
-			led1.toggle();
-		}
-
-		try {
-			bmp_reader->pressure_filter_.set_alpha(drone_state->altitude_lpf_);
-			drone_state->altitude_ = bmp_reader->altitude_meters(true);
-			drone_state->pressure_hpa_ = bmp_reader->pressure_hpa();
-			drone_state->temperature_ = bmp_reader->temperature_celsius(false);
-			gps_measure_time.begin_measure();
-			gps.update_state();
-			gps_measure_time.end_measure();
-			drone_state->latitude_ = gps.lattitude();
-			drone_state->longitude_ = gps.longitude();
-			drone_state->gps_altitude_ = gps.altitude();
-			drone_state->speed_over_ground_ = gps.speed();
-			drone_state->course_ = gps.course();
-			drone_state->satellite_count_ = gps.satellite_count();
-		} catch (std::exception& e) {
-//			i2c.reinit();
-		}
-		loop_time.end_measure();
-
-		// Do not delay the thread here, it will be delayed when the sensor is being read
+		gps_measure_time.begin_measure();
+		gps.update_state();
+		gps_measure_time.end_measure();
+		drone_state->latitude_ = gps.lattitude();
+		drone_state->longitude_ = gps.longitude();
+		drone_state->gps_altitude_ = gps.altitude();
+		drone_state->speed_over_ground_ = gps.speed();
+		drone_state->course_ = gps.course();
+		drone_state->satellite_count_ = gps.satellite_count();
+		vTaskDelay(100 / portTICK_RATE_MS);
 	}
 }
+
 
 void battery_task(void *pvParameters)
 {
@@ -248,10 +268,12 @@ void main_task(void *pvParameters)
 					{EXT_MEMS_SPI_MOSI_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL,   GPIO_SPEED_MEDIUM, GPIO_AF5_SPI2},
 				}, {
 					{EXT_GYRO_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
+					{EXT_PRES_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
 				});
 
 	L3GD20 gyro(spi5, 0);
 	L3GD20 ext_gyro(spi2, 0);
+	LPS25HB lps25hb(spi2, 1);
 	LSM303D accel(spi5, 1);
 	uint8_t gyro_wtm = 5;
 	uint8_t acc_wtm = 8;
@@ -267,21 +289,36 @@ void main_task(void *pvParameters)
 	static bool print_to_console = false;
 	LowPassFilter<Vector3f, float> gyro_lpf({0.5, 0.5});
 	LowPassFilter<Vector3f, float> acc_lpf({0.90, 0.1});
+	LowPassFilter<float, float> lps_filt({0.6, 0.4});
 
 	/*
 	 * Apply the boot configuration from flash memory.
 	 */
 	dronestate_boot_config(*drone_state);
 
+#ifdef USE_SIXPROPELLERS
+
 	static const Matrix3f gyro_align(
 	        0,-1, 0,
-           -1, 0, 0,
-		    0, 0,-1);
+            1, 0, 0,
+		    0, 0, 1);
 
 	static const Matrix3f acc_align(
-	        0,-1, 0,
+	        0, 1, 0,
            -1, 0, 0,
-	        0, 0,-1);
+	        0, 0, 1);
+
+#else
+	static const Matrix3f gyro_align(
+	        1, 0,  0,
+            0, 1,  0,
+		    0, 0,  1);
+
+	static const Matrix3f acc_align(
+	       -1,  0, 0,
+            0, -1, 0,
+	        0,  0, 1);
+#endif
 
 
 	L3GD20Reader gyro_reader(gyro, GYRO_INT2_PIN, gyro_align);
@@ -300,6 +337,7 @@ void main_task(void *pvParameters)
 	printf("SysTick_IRQn priority: %lu\n", NVIC_GetPriority(SysTick_IRQn) << __NVIC_PRIO_BITS);
 	printf("configKERNEL_INTERRUPT_PRIORITY: %d\n", configKERNEL_INTERRUPT_PRIORITY);
 	printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %d\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
+	printf("LPS25HB Device id: %d\n", lps25hb.Get_DeviceID());
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	UsbStorageDevice::start();
@@ -357,9 +395,39 @@ void main_task(void *pvParameters)
 
 	sample_dt.time_stamp();
 
+	lps25hb.Set_FifoMode(LPS25HB_FIFO_STREAM_MODE);
+	lps25hb.Set_FifoModeUse(LPS25HB_ENABLE);
+	lps25hb.Set_Odr(LPS25HB_ODR_25HZ);
+	lps25hb.Set_Bdu(LPS25HB_BDU_NO_UPDATE);
+	LPS25HB_FIFOTypeDef_st fifo_config;
+	memset(&fifo_config, 0, sizeof(fifo_config));
+	lps25hb.Get_FifoConfig(&fifo_config);
+
+#ifdef USE_LPS25HB
+	float base_pressure = lps25hb.Get_PressureHpa();
+	for (int i = 0; i < 100; i++) {
+		while (lps25hb.Get_FifoStatus().FIFO_EMPTY)
+			vTaskDelay(50 / portTICK_RATE_MS);
+		base_pressure = lps_filt.do_filter(lps25hb.Get_PressureHpa());
+	}
+#endif
+
 	// Infinite loop
 	while (1) {
 		drone_state->iteration_++;
+#ifdef USE_LPS25HB
+		if (drone_state->iteration_ % 120 == 0)
+			led1.toggle();
+		if (drone_state->iteration_ % 5 == 0) {
+			if (!lps25hb.Get_FifoStatus().FIFO_EMPTY)
+				drone_state->hpa_fifo_ = lps25hb.Get_FifoStatus().FIFO_LEVEL;
+			while (!lps25hb.Get_FifoStatus().FIFO_EMPTY) {
+				drone_state->pressure_hpa_ = lps_filt.do_filter(lps25hb.Get_PressureHpa());
+				float alt = (powf(base_pressure/drone_state->pressure_hpa_, 0.1902f) - 1.0f) * ((lps25hb.Get_TemperatureCelsius()) + 273.15f)/0.0065;
+				drone_state->altitude_ = Distance::from_meters(alt);
+			}
+		}
+#endif
 
 		L3GD20Reader* desired_gyro_reader = (drone_state->external_gyro_enabled_ && ext_gyro_present)  ? &ext_gyro_reader : &gyro_reader;
 		if (active_gyro != desired_gyro_reader) {
@@ -492,14 +560,16 @@ int main(int argc, char* argv[])
 			&main_task_handle /* Task handle */
 	);
 
+#ifndef USE_LPS25HB
 	xTaskCreate(
-			bmp180_task, /* Function pointer */
-			"bmp180_task", /* Task name - for debugging only*/
+			bmp280_task, /* Function pointer */
+			"bmp280_task", /* Task name - for debugging only*/
 			configMINIMAL_STACK_SIZE, /* Stack depth in words */
 			(void*) NULL, /* Pointer to tasks arguments (parameter) */
 			tskIDLE_PRIORITY + 2UL, /* Task priority*/
-			&bmp180_task_handle /* Task handle */
+			&bmp280_task_handle /* Task handle */
 	);
+#endif
 
 	xTaskCreate(
 			battery_task, /* Function pointer */
@@ -509,6 +579,16 @@ int main(int argc, char* argv[])
 			tskIDLE_PRIORITY + 1UL, /* Task priority*/
 			&battery_task_handle /* Task handle */
 	);
+
+	xTaskCreate(
+			gps_task, /* Function pointer */
+			"gps_task", /* Task name - for debugging only*/
+			configMINIMAL_STACK_SIZE, /* Stack depth in words */
+			(void*) NULL, /* Pointer to tasks arguments (parameter) */
+			tskIDLE_PRIORITY + 1UL, /* Task priority*/
+			&gps_task_handle /* Task handle */
+	);
+
 
 #if ENABLE_UART_TASK
 	xTaskCreate(
