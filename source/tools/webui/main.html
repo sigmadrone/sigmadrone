@@ -719,6 +719,14 @@
 
           <div id="altitude-chart-id"></div>
 
+          <div class="row row-padded"></div>
+          <hr class="featurette-divider">
+
+          <h4 class="graph-title">RC Values</h4>
+          <div id="rcvalues-chart-id"></div>
+          <div class="row row-padded"></div>
+          <hr class="featurette-divider">
+
       </div> <!-- div id = "drone-data" -->
 
       <hr class="featurette-divider">
@@ -803,6 +811,7 @@
   var errorChart = null;
   var altitudeChart = null;
   var altitudeChartModel = null;
+  var rcValuesChart = null;
 
   sensorChart = new VisChart2d(
     document.getElementById("sensor-chart-id"),
@@ -834,12 +843,23 @@
     onChartEvent
   );
 
+  rcValuesChart = new VisChart2d(
+    document.getElementById("rcvalues-chart-id"),
+    null,
+    "RCValues",
+    ['Yaw', 'Pitch', 'Roll', 'Throttle', 'Gear'],
+    -1.25, 1.25,
+    [],
+    onChartEvent
+  );
+
   function onChartEvent(event) {
     if (event.hasOwnProperty('start') && event.hasOwnProperty('end')) {
       if (syncGraphButton.isOn()) {
         sensorChart.setRange(event.start, event.end);
         errorChart.setRange(event.start, event.end);
         altitudeChart.setRange(event.start, event.end);
+        rcValuesChart.setRange(event.start, event.end);
       }
     }
   }
@@ -1193,6 +1213,19 @@
     }
   }
 
+  function updateRcValuesChart(dataStream) {
+    for (var i = 0; i < dataStream.length; ++i) {
+      var samples = [
+        dataStream[i].yaw,
+        dataStream[i].pitch,
+        dataStream[i].roll,
+        dataStream[i].base_throttle,
+        dataStream[i].gear
+        ];
+      rcValuesChart.update(samples, dataStream[i].serial);
+    }
+  }
+
   function getDataStreamCallback(response) {
     if (response.error != null) {
       console.log(JSON.stringify(response.result));
@@ -1241,6 +1274,7 @@
         updateSensorChart([droneState]);
         updateVectorErrorChart([droneState]);
         updateAltitudeChart([droneState]);
+        updateRcValuesChart([droneState]);
       }
 
       //console.log("Iteration: ", droneState.iteration);
@@ -1389,11 +1423,13 @@
       sensorChart.updateStatus("DRAWING");
       errorChart.updateStatus("DRAWING");
       altitudeChart.updateStatus("DRAWING");
+      rcValuesChart.updateStatus("DRAWING");
       redrawGraph = true;
     } else {
       sensorChart.reset();
       errorChart.reset();
       altitudeChart.reset();
+      rcValuesChart.reset();
       altitudeChartModel = new AltitudeViewModel(droneState);
     }
   }
@@ -1417,6 +1453,7 @@
         sensorChart.draw();
         errorChart.draw();
         altitudeChart.draw();
+        rcValuesChart.draw();
         $("#collect-data-btn").removeClass("disabled");
       }
       if (rpcClient.failureCount() > 5) {
