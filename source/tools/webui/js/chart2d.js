@@ -185,7 +185,7 @@ VisChart2d.prototype.update = function(samples, iteration) {
     this.beginTimeLine = vis.moment();
   }
 
-  var xData = this.beginTimeLine + (iteration - this.firstIteration) * 5.8;
+  var xData = vis.moment();
   for (var i = 0; i < this.numLeftYAxis; ++i) {
     this.newData.push(
       {id: this.dataId++, x: xData, y:samples[i], group: i}
