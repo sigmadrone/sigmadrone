@@ -133,7 +133,11 @@
             </div>
             <div class="row row-padded"> <div class="col-xs-11">Pressure</div> </div>
             <div class="row">
-              <div class="col-xs-11 col-data"><span id="hpa">0</span> hPA</div>
+              <div class="col-xs-11 col-data"><span id="hpa">0</span> hPA </div>
+            </div>
+            <div class="row row-padded"> <div class="col-xs-11">Temperature</div> </div>
+            <div class="row">
+              <div class="col-xs-11 col-data"><span id="temperature">0</span> C </div>
             </div>
             <div class="row row-padded"> <div class="col-xs-11">dT</div> </div>
             <div class="row">
@@ -1255,6 +1259,7 @@
       $("#altitude").text(response.result.altitude_meters.toFixed(2));
       $("#flight-posture-id").text(response.result.flight_posture);
       $("#hpa").text(response.result.pressure_hpa);
+      $("#temperature").text(response.result.temperature);
 
       if (response.result.motors_armed) {
         m1.refresh(response.result.motors[0] * 100);
