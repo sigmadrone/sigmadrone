@@ -289,7 +289,7 @@ void main_task(void *pvParameters)
 	static bool print_to_console = false;
 	LowPassFilter<Vector3f, float> gyro_lpf({0.5, 0.5});
 	LowPassFilter<Vector3f, float> acc_lpf({0.90, 0.1});
-	LowPassFilter<float, float> lps_filt({0.5, 0.5});
+	LowPassFilter<float, float> lps_filt({0.6, 0.4});
 
 	/*
 	 * Apply the boot configuration from flash memory.
