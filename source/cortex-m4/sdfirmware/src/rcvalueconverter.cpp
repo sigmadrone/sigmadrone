@@ -100,9 +100,9 @@ void RcValueConverter::update()
 			motors_armed_ = true;
 			user_led_.write(1);
 		} else {
-			user_led_.write(0);
 #ifndef USE_SIXPROPELLERS
-		motors_armed_ = false;
+			user_led_.write(0);
+			motors_armed_ = false;
 #endif
 		}
 

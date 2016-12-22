@@ -166,7 +166,6 @@ static const PinName USER_SWITCH_1_PIN = PB_2;
 static const PinName USER_SWITCH_2_PIN = PG_2;
 static const PinName USER_SWITCH_3_PIN = PG_3;
 static const PinName USER_SWITCH_4_PIN = PG_6;
-static const PinName USER_SWITCH_5_PIN = PG_7;
 
 static const PinName BATTERY_MONITOR_PIN = PC_2;
 static const PinName BATTERY_MONITOR_ONOFF_PIN = PH_9;
