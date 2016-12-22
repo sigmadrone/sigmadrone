@@ -21,6 +21,7 @@
 
 
 //#include "stm32f4xx_hal_cortex.h"
+#include <assert.h>
 #include "digitalin.h"
 
 static DigitalIn* g_interrupt[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, };
@@ -62,6 +63,7 @@ DigitalIn::DigitalIn(PinName pin, PullMode pmode, InterruptMode imode)
 
 	/* Enable and set EXTI Line0 Interrupt to the lowest priority */
 	if (imode != InterruptNone && pin_ < 16) {
+		assert(g_interrupt[pin_] == NULL);
 		g_interrupt[pin_] = this;
 		switch (pin_) {
 		case 0:
