@@ -97,7 +97,7 @@ struct DroneState {
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	    , altitude_lpf_(0.6)
-		, hpa_fifo_(0)
+		, gear_alive_(false)
 	{
 		set_pilot_type(PILOT_TYPE_PID_NEW);
 	}
@@ -146,7 +146,7 @@ struct DroneState {
 			ret["crit_alarm"] = most_critical_alarm_.to_string();
 			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
 		}
-		ret["hpa_fifo"] = static_cast<int>(hpa_fifo_);
+		ret["gear_alive"] = gear_alive_;
 		return ret;
 	}
 	rexjson::value to_json_ex()
@@ -368,7 +368,7 @@ struct DroneState {
 	Altitude take_off_altitude_;
 
 	float altitude_lpf_; // temp
-	uint32_t hpa_fifo_;
+	bool gear_alive_;
 };
 
 

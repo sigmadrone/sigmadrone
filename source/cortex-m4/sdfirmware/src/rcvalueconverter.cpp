@@ -45,7 +45,8 @@ RcValueConverter::RcValueConverter(
 				roll_bias_(0.0),
 				gear_raw_(0.0f),
 				user_sw_(USER_SWITCH_2_PIN, DigitalIn::PullNone, DigitalIn::InterruptRising),
-				user_led_(USER_LED2_PIN)
+				user_led_(USER_LED2_PIN),
+				gear_alive_(false)
 {
 	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
 	user_sw_.callback(this, &RcValueConverter::interrupt_user_switch);
@@ -63,6 +64,7 @@ void RcValueConverter::update()
 	float pitch = get_value_as_float(mapper_.channel_no(RC_CHANNEL_PITCH), 0.5f);
 	float roll = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ROLL), 0.5f);
 	float throttle = get_value_as_float(mapper_.channel_no(RC_CHANNEL_THROTTLE), 0.0f);
+	gear_alive_ = receiver_.channel(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR))->is_live();
 	gear_raw_ = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR), 0.0f);
 	float gear = (gear_raw_ > 0.5f) ? 1.0f : 0.0f;
 
@@ -100,10 +102,10 @@ void RcValueConverter::update()
 			motors_armed_ = true;
 			user_led_.write(1);
 		} else {
-#ifndef USE_SIXPROPELLERS
+//#ifndef USE_SIXPROPELLERS
 			user_led_.write(0);
 			motors_armed_ = false;
-#endif
+//#endif
 		}
 
 	}

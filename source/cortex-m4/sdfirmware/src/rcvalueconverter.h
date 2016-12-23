@@ -71,6 +71,9 @@ private:
 	DigitalIn user_sw_;
 	DigitalOut user_led_;
 
+public:
+	bool gear_alive_;
+
 };
 
 #endif /* RCVALUECONVERTER_H_ */

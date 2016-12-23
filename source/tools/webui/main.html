@@ -851,7 +851,7 @@
     document.getElementById("rcvalues-chart-id"),
     null,
     "RCValues",
-    ['Yaw', 'Pitch', 'Roll', 'Throttle', 'Gear'],
+    ['Yaw', 'Pitch', 'Roll', 'Throttle', 'Gear', 'GearAlive'],
     -1.25, 1.25,
     [],
     onChartEvent
@@ -1224,7 +1224,8 @@
         dataStream[i].pitch,
         dataStream[i].roll,
         dataStream[i].base_throttle,
-        dataStream[i].gear
+        dataStream[i].gear,
+        dataStream[i].gear_alive
         ];
       rcValuesChart.update(samples, dataStream[i].serial);
     }
