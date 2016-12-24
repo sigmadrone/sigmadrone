@@ -34,8 +34,6 @@
 #include "altitudecontrol.h"
 #include "ipilot.h"
 
-static const float RC_VALUE_SCALE_FACTOR = 1.0;
-
 static const Throttle EMERGENCY_THROTTLE(0.45f);
 
 class FlightControl

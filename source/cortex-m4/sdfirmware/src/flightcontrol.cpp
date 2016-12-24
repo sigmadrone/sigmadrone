@@ -30,7 +30,6 @@ FlightControl::FlightControl() :
 		ch_mapper_({RC_CHANNEL_THROTTLE, RC_CHANNEL_RUDDER, RC_CHANNEL_ELEVATOR, RC_CHANNEL_AILERON, RC_CHANNEL_ARM_MOTOR}),
 		rc_values_(ch_mapper_,
 				rc_receiver_,
-				RC_VALUE_SCALE_FACTOR,
 				TimeSpan::from_microseconds(1100),
 				TimeSpan::from_microseconds(1910)),
 		servo_ctrl_({colibri::PWM_TX_1_4, colibri::PWM_TX_5_8}, Frequency::from_hertz(350)),

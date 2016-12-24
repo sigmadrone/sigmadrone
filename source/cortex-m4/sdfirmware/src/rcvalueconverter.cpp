@@ -27,14 +27,12 @@ static const float MAX_EULER_FROM_RC = M_PI / 4.0;
 RcValueConverter::RcValueConverter(
 		const RcChannelMapper& mapper,
 		RcReceiver& receiver,
-		float scale_factor,
 		const TimeSpan& min_duty_cycle,
 		const TimeSpan& max_duty_cycle) :
 			    pwm_converter_(min_duty_cycle, max_duty_cycle),
 				target_twist_(1,0,0,0),
 				mapper_(mapper),
 				receiver_(receiver),
-				scale_factor_(scale_factor),
 				last_gear_(0.0),
 				motors_armed_(false),
 				yaw_(0.0f),
@@ -68,7 +66,7 @@ void RcValueConverter::update()
 	gear_raw_ = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR), 0.0f);
 	float gear = (gear_raw_ > 0.5f) ? 1.0f : 0.0f;
 
-	throttle_ = Throttle(throttle * scale_factor_);
+	throttle_ = Throttle(throttle);
 	if ((fabs(yaw - 0.5f) < 0.0225)) {
 		yaw = 0.5;
 	}
@@ -81,13 +79,13 @@ void RcValueConverter::update()
 		roll = 0.5;
 	}
 
-	yaw_ = -1 * ((yaw - 0.5) * MAX_EULER_FROM_RC * scale_factor_ * 2);
+	yaw_ = -1 * ((yaw - 0.5) * MAX_EULER_FROM_RC * 2);
 	TimeSpan dt = receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().decoded_period();
 	Vector3f ang_vel(0.0f, 0.0f, yaw_);
 	target_twist_ *= QuaternionF::fromAngularVelocity(ang_vel, dt.seconds_float());
 
-	pitch_ = (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_  - pitch_bias_;
-	roll_ = (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_ - roll_bias_;
+	pitch_ = (pitch - 0.5) * MAX_EULER_FROM_RC - pitch_bias_;
+	roll_ = (roll - 0.5) * MAX_EULER_FROM_RC - roll_bias_;
 	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(roll_, pitch_, 0), 1.0);
 	last_gear_ = gear;
 

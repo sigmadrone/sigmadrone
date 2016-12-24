@@ -32,7 +32,6 @@
 class RcValueConverter {
 public:
 	RcValueConverter(const RcChannelMapper& mapper, RcReceiver& receiver,
-			float scale_factor = 1.0,
 			const TimeSpan& min_duty_cycle = TimeSpan::from_milliseconds(1),
 			const TimeSpan& max_duty_cycle = TimeSpan::from_milliseconds(2));
 	QuaternionF target_quaternion() const;
@@ -58,7 +57,6 @@ private:
 	Throttle throttle_;
 	const RcChannelMapper& mapper_;
 	RcReceiver& receiver_;
-	float scale_factor_;
 	float last_gear_;
 	bool motors_armed_;
 	float yaw_;
