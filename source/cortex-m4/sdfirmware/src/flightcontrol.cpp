@@ -133,14 +133,6 @@ void FlightControl::update_state(DroneState& state)
 
 void FlightControl::safety_check(DroneState& drone_state)
 {
-	if (!rc_values_.motors_armed() && rc_values_.previous_motors_armed()) {
-		/*
-		 * motors are not armed, we will still perform the rest of the checks
-		 * so the alarm will persist if the underlying problem was not fixed
-		 */
-		clear_alarm();
-	}
-
 	if (altitude_track_.is_flight_ceiling_hit()) {
 		std::string alarmMessage("Alt: ");
 		char tmpBuf[6] = {0};

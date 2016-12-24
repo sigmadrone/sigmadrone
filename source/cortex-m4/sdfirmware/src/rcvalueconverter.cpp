@@ -37,7 +37,6 @@ RcValueConverter::RcValueConverter(
 				scale_factor_(scale_factor),
 				last_gear_(0.0),
 				motors_armed_(false),
-				prev_motors_armed_(false),
 				yaw_(0.0f),
 				pitch_(0.0f),
 				roll_(0.0f),
@@ -46,13 +45,14 @@ RcValueConverter::RcValueConverter(
 				gear_raw_(0.0f),
 				user_sw_(USER_SWITCH_2_PIN, DigitalIn::PullNone, DigitalIn::InterruptRising),
 				user_led_(USER_LED2_PIN),
+				arm_sequence_idle_counter(0),
 				gear_alive_(false)
 {
 	receiver_.channel(mapper_.channel_no(RC_CHANNEL_YAW))->decoder().callback_on_change_only(false);
-	user_sw_.callback(this, &RcValueConverter::interrupt_user_switch);
+	user_sw_.callback(this, &RcValueConverter::toggle_motors_armed);
 }
 
-void RcValueConverter::interrupt_user_switch()
+void RcValueConverter::toggle_motors_armed()
 {
 	user_led_.toggle();
 	motors_armed_ = user_led_.read();
@@ -89,27 +89,19 @@ void RcValueConverter::update()
 	pitch_ = (pitch - 0.5) * MAX_EULER_FROM_RC * scale_factor_  - pitch_bias_;
 	roll_ = (roll - 0.5) * MAX_EULER_FROM_RC * scale_factor_ - roll_bias_;
 	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(roll_, pitch_, 0), 1.0);
-
-	/*
-	 * Note: on Spektrum DX8 by _default_ GEAR switch set to 0 results in max pulse and
-	 * GEAR set to 1 results in min pulse. This settings of course can be reversed, but
-	 * we'd rather work with the defaults. Here we will assume that gear set to 1 means
-	 * "landed" and gear set to 0 "prepare for take off", i.e. motors armed.
-	 */
-	if (receiver_.channel(RC_CHANNEL_ARM_MOTOR)->is_live() && last_gear_ != gear) {
-		prev_motors_armed_ = motors_armed_;
-		if (gear > 0.5) {
-			motors_armed_ = true;
-			user_led_.write(1);
-		} else {
-//#ifndef USE_SIXPROPELLERS
-			user_led_.write(0);
-			motors_armed_ = false;
-//#endif
-		}
-
-	}
 	last_gear_ = gear;
+
+	if ((yaw_ > 0.7 && ((float)throttle_) < 0.1f && pitch_ < -0.3 && roll_ > 0.3) ||
+		(yaw_ <  -0.7 && ((float)throttle_) < 0.1f && pitch_ < -0.3 && roll_ < -0.3))
+	{
+		if (arm_sequence_idle_counter >= max_arm_sequence_idle_counter) {
+			arm_sequence_idle_counter = 0;
+			toggle_motors_armed();
+		}
+	} else {
+		if (arm_sequence_idle_counter < max_arm_sequence_idle_counter)
+			++arm_sequence_idle_counter;
+	}
 }
 
 void RcValueConverter::reset_twist_quaternion(const QuaternionF& current_q)
@@ -147,11 +139,6 @@ Throttle RcValueConverter::base_throttle() const {
 bool RcValueConverter::motors_armed() const
 {
 	return motors_armed_;
-}
-
-bool RcValueConverter::previous_motors_armed() const
-{
-	return prev_motors_armed_;
 }
 
 float RcValueConverter::get_yaw() const
