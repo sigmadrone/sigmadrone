@@ -292,7 +292,7 @@ void main_task(void *pvParameters)
 	 */
 	dronestate_boot_config(*drone_state);
 
-#ifdef USE_SIXPROPELLERS
+#ifdef USE_ALIGNMENT_MIPIFRONT
 
 	static const Matrix3f gyro_align(
 	        0,-1, 0,
