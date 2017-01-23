@@ -24,6 +24,7 @@
 
 #include "firfilt.h"
 #include "iirfilt.h"
+#include "lowpassfilter.h"
 
 class MagLowPassPreFilter3d : public FirFilter<Vector3f, float, 18> {
 	using Base = FirFilter<Vector3f, float, 18>;
@@ -120,42 +121,6 @@ private:
 	DataType max_;
 	DataType out_;
 	DataType last_in_;
-};
-
-template <typename DataType, typename CoeffType>
-class LowPassFilter
-{
-public:
-	LowPassFilter(CoeffType alpha) : alpha_(alpha), beta_(1.0 - alpha) { reset(); }
-	LowPassFilter(CoeffType alpha, CoeffType beta) : alpha_(alpha), beta_(beta) { reset(); }
-	~LowPassFilter() = default;
-
-	void reset(const DataType& out = {0})
-	{
-		out_ = out;
-	}
-
-	const DataType& do_filter(const DataType& in)
-	{
-		out_ = out_ * alpha_ + in * beta_;
-		return out_;
-	}
-
-	const DataType& output() const
-	{
-		return out_;
-	}
-
-	void set_alpha(const CoeffType& alpha)
-	{
-		alpha_ = alpha;
-		beta_ = 1.0 - alpha;
-	}
-
-	CoeffType alpha() { return alpha_; }
-private:
-	DataType out_;
-	CoeffType alpha_, beta_;
 };
 
 class PressurePreFilter: public LowPassFilter<Pressure, float>
