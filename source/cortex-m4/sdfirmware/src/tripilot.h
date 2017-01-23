@@ -72,6 +72,8 @@ private:
 	std::vector<Propeller> propellers_;
 	LowPassFilter<float, float> pitch_avg_;
 	LowPassFilter<float, float> roll_avg_;
+	LowPassFilter<Vector3f, float> lpf_pid_d_;
+
 };
 
 
