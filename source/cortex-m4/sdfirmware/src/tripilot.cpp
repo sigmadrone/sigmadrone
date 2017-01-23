@@ -26,7 +26,6 @@ TriPilot::TriPilot()
 	, pidz_(0.0, 0.0, 0.0, 80)
 	, pitch_avg_(0.94)
 	, roll_avg_(0.94)
-	, lpf_pid_d_(0.25)
 {
 	min_thrust_ = 0.15;
 	max_thrust_ = 1.0;
@@ -80,7 +79,7 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 		pid_.set_integral_error(integral_error);
 	}
 	torq_xy += pid_.get_p(error_xy);
-	torq_xy += lpf_pid_d_.do_filter(pid_.get_d(error_xy, state.dt_.seconds_float()));
+	torq_xy += pid_.get_d(error_xy, state.dt_.seconds_float());
 	torq_xy += pid_.get_i(error_xy, 1.0f * state.dt_.seconds_float(), state.dt_.seconds_float() / 15.0f);
 	torq_z += pidz_.get_p(error_z);
 	torq_z += pidz_.get_d_median(error_z, state.dt_.seconds_float());
