@@ -381,10 +381,8 @@ void main_task(void *pvParameters)
 		}
 
 		fifosize = acc_reader.size();
-		Vector3f acc_unaligned;
 		for (size_t i = 0; i < fifosize; i++)
-			acc_unaligned = acc_lpf.do_filter(acc_reader.read_sample_acc() * 100.0);
-		drone_state->accel_raw_ = (acc_unaligned / 100.0);
+			drone_state->accel_raw_ = acc_lpf.do_filter(acc_reader.read_sample_acc());
 		drone_state->accel_ = (drone_state->accel_raw_ - drone_state->accelerometer_adjustment_).normalize();
 
 #define ALLOW_ACCELEROMETER_OFF
