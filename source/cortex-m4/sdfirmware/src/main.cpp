@@ -253,7 +253,7 @@ void main_task(void *pvParameters)
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
 	static bool print_to_console = false;
 	LowPassFilter<Vector3f, float> gyro_lpf({0.5});
-	LowPassFilter<Vector3f, double> acc_lpf({0.75});
+	LowPassFilter<Vector3f, double> acc_lpf({0.9});
 	LowPassFilter<float, float> pressure_lpf({0.6});
 	attitudetracker att;
 
