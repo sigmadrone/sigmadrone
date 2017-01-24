@@ -30,22 +30,6 @@ L3GD20Reader::L3GD20Reader(L3GD20& gyro, PinName gyro_int2_pin, const Matrix3f& 
 	gyro_int2_pin_.callback(this, &L3GD20Reader::gyro_isr);
 }
 
-const Vector3f& L3GD20Reader::calculate_static_bias(uint32_t num_samples)
-{
-	static_bias_.clear();
-	L3GD20::AxesDPS_t gyro_axes;
-	gyro_.GetFifoAngRateDPS(&gyro_axes); // Drain the fifo
-	for (uint32_t i = 0; i < num_samples; i++) {
-		if (!wait_for_data(TimeSpan::from_milliseconds(100))) {
-			static_bias_.clear();
-			break;
-		}
-		static_bias_ += read_data(1);
-	}
-	static_bias_ /= static_cast<float>(num_samples);
-	return static_bias_;
-}
-
 const Vector3f& L3GD20Reader::calculate_static_bias_filtered(size_t num_samples)
 {
 	size_t count = 0;
@@ -78,21 +62,6 @@ const Vector3f& L3GD20Reader::bias() const
 	return static_bias_;
 }
 
-Vector3f L3GD20Reader::read_data(uint8_t watermark)
-{
-	Vector3f gyro_data;
-	uint8_t gyro_samples = gyro_.GetFifoSourceReg() & 0x1F;
-	if (gyro_samples >= watermark) {
-		L3GD20::AxesDPS_t axes;
-		for (size_t i = 0; i < gyro_samples; ++i) {
-			gyro_.GetAngRateDPS(&axes);
-			gyro_data += Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z);
-		}
-		gyro_data /= gyro_samples;
-	}
-	return axes_align_ * gyro_data;
-}
-
 size_t L3GD20Reader::size()
 {
 	return gyro_.GetFifoSourceReg() & 0x1F;
@@ -111,7 +80,7 @@ Vector3f L3GD20Reader::read_sample()
 }
 
 
-void L3GD20Reader::init_gyro(uint8_t watermark)
+void L3GD20Reader::init(uint8_t watermark)
 {
 	gyro_.SetMode(L3GD20::NORMAL);
 	gyro_.SetFullScale(L3GD20::FULLSCALE_500);
@@ -133,7 +102,7 @@ bool L3GD20Reader::wait_for_data(const TimeSpan time_to_wait)
 	return xQueueReceive(queue_handle_, &msg, ( TickType_t ) portTICK_PERIOD_MS * time_to_wait.milliseconds());
 }
 
-void L3GD20Reader::enable_disable_int2(bool enable)
+void L3GD20Reader::enable_int2(bool enable)
 {
 	gyro_.SetInt2Pin(enable ? L3GD20_WTM_ON_INT2_ENABLE| L3GD20_OVERRUN_ON_INT2_ENABLE : 0);
 }

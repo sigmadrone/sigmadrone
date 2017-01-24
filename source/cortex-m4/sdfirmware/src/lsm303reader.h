@@ -19,39 +19,36 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#ifndef L3GD20READER_H_
-#define L3GD20READER_H_
+#ifndef LSM303READER_H_
+#define LSM303READER_H_
 
 #include "d3math.h"
 #include "units.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-#include "l3gd20.h"
+#include "lsm303d.h"
 #include "digitalin.h"
 #include "sensorsprefilters.h"
 
-class L3GD20Reader
+class LSM303Reader
 {
 public:
-	L3GD20Reader(L3GD20& gyro, PinName gyro_int2_pin, const Matrix3f& axes_align);
-	~L3GD20Reader() = default;
-	const Vector3f& calculate_static_bias_filtered(size_t num_samples);
-	const Vector3f& bias() const;
-	Vector3f read_sample();
+	LSM303Reader(LSM303D& acc, PinName int2_pin, const Matrix3f& axes_align);
+	~LSM303Reader() = default;
+	Vector3f read_sample_acc();
+	Vector3f read_sample_mag();
 	size_t size();
 	void init(uint8_t watermark);
 	void enable_int2(bool enable);
-	bool wait_for_data(const TimeSpan time_to_wait = TimeSpan::from_milliseconds(50));
 
 private:
-	void gyro_isr();
+	void isr();
 
-	L3GD20& gyro_;
-	DigitalIn gyro_int2_pin_;
+private:
+	LSM303D& acc_;
+	DigitalIn int2_pin_;
 	Matrix3f axes_align_;
-	Vector3f static_bias_;
-	QueueHandle_t queue_handle_;
 };
 
-#endif /* L3GD20READER_H_ */
+#endif

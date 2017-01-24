@@ -58,6 +58,7 @@
 #include "gpsreader.h"
 #include "iirfilt.h"
 #include "l3gd20reader.h"
+#include "lsm303reader.h"
 #include "usbstoragedevice.h"
 #include "poweroff.h"
 
@@ -215,34 +216,6 @@ void uart_task(void *pvParameters)
 	}
 }
 
-static Vector3f read_accelerometer(
-		LSM303D& acc,
-		LowPassFilter<Vector3f, float>& lpf_filt)
-{
-	Vector3f acc_filtered;
-	uint8_t count = acc.GetFifoSourceFSS();
-	if (count > 0) {
-		for (uint8_t i = 0; i < count; i++) {
-			LSM303D::AxesAcc_t axes = {0,0,0};
-			acc.GetAcc(&axes);
-			acc_filtered = lpf_filt.do_filter(Vector3d(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
-		}
-	}
-	return acc_filtered;
-}
-
-static void warmup_accelerometer_filter(
-		LSM303D& acc,
-		LowPassFilter<Vector3f, float>& lpf_filt)
-{
-	static const size_t numSamples = 256;
-	for (size_t i = 0; i < numSamples;) {
-		if (read_accelerometer(acc, lpf_filt).length() > 0) {
-			++i;
-		}
-	}
-}
-
 void main_task(void *pvParameters)
 {
 	(void) pvParameters;
@@ -268,24 +241,21 @@ void main_task(void *pvParameters)
 				});
 
 	L3GD20 gyro(spi5, 0);
-	L3GD20 ext_gyro(spi2, 0);
 	LPS25HB lps25hb(spi2, 1);
 	LSM303D accel(spi5, 1);
 	uint8_t gyro_wtm = 5;
 	uint8_t acc_wtm = 8;
-	LSM303D::AxesMag_t mag_axes;
-	attitudetracker att;
 	TimeStamp console_update_time;
 	TimeStamp sample_dt;
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
 	UartRpcServer rpcserver(*drone_state, configdata);
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
-	bool ext_gyro_present = false;
 	static bool print_to_console = false;
-	LowPassFilter<Vector3f, float> gyro_lpf({0.5, 0.5});
-	LowPassFilter<Vector3f, float> acc_lpf({0.90, 0.1});
-	LowPassFilter<float, float> lps_filt({0.6, 0.4});
+	LowPassFilter<Vector3f, float> gyro_lpf({0.5});
+	LowPassFilter<Vector3f, double> acc_lpf({0.75});
+	LowPassFilter<float, float> pressure_lpf({0.6});
+	attitudetracker att;
 
 	/*
 	 * Apply the boot configuration from flash memory.
@@ -318,7 +288,7 @@ void main_task(void *pvParameters)
 
 
 	L3GD20Reader gyro_reader(gyro, GYRO_INT2_PIN, gyro_align);
-	L3GD20Reader ext_gyro_reader(ext_gyro, EXT_GYRO_INT2_PIN, drone_state->external_gyro_align_);
+	LSM303Reader acc_reader(accel, ACC_INT2_PIN, acc_align);
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
@@ -338,59 +308,26 @@ void main_task(void *pvParameters)
 
 	UsbStorageDevice::start();
 
-	gyro_reader.init_gyro(gyro_wtm);
-	gyro_reader.enable_disable_int2(false);
+	gyro_reader.init(gyro_wtm);
+	gyro_reader.enable_int2(false);
 
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	try {
-		ext_gyro_reader.init_gyro(gyro_wtm);
-		ext_gyro_reader.enable_disable_int2(false);
-		ext_gyro_present = true;
-	} catch(...) {
-		ext_gyro_present = false;
-	}
-
-	accel.SetHPFMode(LSM303D::HPM_NORMAL_MODE_RES);
-	accel.SetFilterDataSel(LSM303D::MEMS_DISABLE);
-	accel.SetODR(LSM303D::ODR_1600Hz);
-	accel.SetFullScale(LSM303D::FULLSCALE_8);
-	accel.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
-	accel.FIFOModeSet(LSM303D::FIFO_STREAM_MODE);
-	accel.SetThreshold(acc_wtm);
-	accel.SetInt2Pin(LSM303D_INT2_OVERRUN_ENABLE|LSM303D_INT2_FTH_ENABLE);
-	accel.SetInt2Pin(0);
-	accel.SetODR_M(LSM303D::ODR_100Hz_M);
-	accel.SetFullScaleMag(LSM303D::FULLSCALE_2_GA);
-	accel.SetModeMag(LSM303D::CONTINUOUS_MODE);
-
+	acc_reader.init(acc_wtm);
+	acc_reader.enable_int2(false);
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	printf("Calibrating...");
 
-	if (ext_gyro_present) {
-		ext_gyro_reader.enable_disable_int2(true);
-		ext_gyro_reader.calculate_static_bias(400);
-		ext_gyro_reader.enable_disable_int2(false);
-		if (ext_gyro_reader.bias().length() == 0) {
-			ext_gyro_present = false;
-		}
-	}
-
-	gyro_reader.enable_disable_int2(true);
+	gyro_reader.enable_int2(true);
 	gyro_reader.calculate_static_bias_filtered(1200);
-
-	warmup_accelerometer_filter(accel, acc_lpf);
-
 	printf(" Done!\n");
 	flight_ctl.start_receiver();
 
 	printf("Entering main loop...\n");
-	L3GD20Reader* active_gyro = &gyro_reader;
-	active_gyro->enable_disable_int2(true);
+	gyro_reader.enable_int2(true);
 
 	sample_dt.time_stamp();
-
 	lps25hb.Set_FifoMode(LPS25HB_FIFO_STREAM_MODE);
 	lps25hb.Set_FifoModeUse(LPS25HB_ENABLE);
 	lps25hb.Set_Odr(LPS25HB_ODR_25HZ);
@@ -404,7 +341,7 @@ void main_task(void *pvParameters)
 	for (int i = 0; i < 100; i++) {
 		while (lps25hb.Get_FifoStatus().FIFO_EMPTY)
 			vTaskDelay(50 / portTICK_RATE_MS);
-		base_pressure = lps_filt.do_filter(lps25hb.Get_PressureHpa());
+		base_pressure = pressure_lpf.do_filter(lps25hb.Get_PressureHpa());
 	}
 #endif
 
@@ -417,23 +354,14 @@ void main_task(void *pvParameters)
 		if (drone_state->iteration_ % 5 == 0) {
 			drone_state->temperature_ = lps25hb.Get_TemperatureCelsius();
 			while (!lps25hb.Get_FifoStatus().FIFO_EMPTY) {
-				drone_state->pressure_hpa_ = lps_filt.do_filter(lps25hb.Get_PressureHpa());
+				drone_state->pressure_hpa_ = pressure_lpf.do_filter(lps25hb.Get_PressureHpa());
 				float alt = (powf(base_pressure/drone_state->pressure_hpa_, 0.1902f) - 1.0f) * ((lps25hb.Get_TemperatureCelsius()) + 273.15f)/0.0065;
 				drone_state->altitude_ = Distance::from_meters(alt);
 			}
 		}
 #endif
 
-		L3GD20Reader* desired_gyro_reader = (drone_state->external_gyro_enabled_ && ext_gyro_present)  ? &ext_gyro_reader : &gyro_reader;
-		if (active_gyro != desired_gyro_reader) {
-			active_gyro->read_data(gyro_wtm);
-			active_gyro->enable_disable_int2(false);
-			active_gyro = desired_gyro_reader;
-			active_gyro->enable_disable_int2(true);
-		}
-
-		active_gyro->wait_for_data();
-
+		gyro_reader.wait_for_data();
 		drone_state->dt_ = sample_dt.elapsed();
 		sample_dt.time_stamp();
 
@@ -444,27 +372,22 @@ void main_task(void *pvParameters)
 		att.gyro_drift_pid(drone_state->gyro_drift_kp_, drone_state->gyro_drift_ki_, drone_state->gyro_drift_kd_);
 		att.gyro_drift_leak_rate(drone_state->gyro_drift_leak_rate_);
 
-		size_t fifosize = active_gyro->size();
+		size_t fifosize = gyro_reader.size();
 		for (size_t i = 0; i < fifosize; i++)
-			drone_state->gyro_raw_ = gyro_lpf.do_filter(active_gyro->read_sample());
+			   drone_state->gyro_raw_ = gyro_lpf.do_filter(gyro_reader.read_sample());
 		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
-			drone_state->gyro_ = (drone_state->gyro_raw_ - active_gyro->bias()) * drone_state->gyro_factor_;
-			att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
+			   drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_reader.bias()) * drone_state->gyro_factor_;
+			   att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_float());
 		}
 
-		drone_state->accel_raw_ = acc_align * read_accelerometer(accel, acc_lpf);
-		if (drone_state->accel_raw_.length_squared() > 0) {
-			Vector3f accel_adjusted = drone_state->accel_raw_ - drone_state->accelerometer_adjustment_;
-			drone_state->accel_ = accel_adjusted.normalize();
-		}
+		fifosize = acc_reader.size();
+		Vector3f acc_unaligned;
+		for (size_t i = 0; i < fifosize; i++)
+			acc_unaligned = acc_lpf.do_filter(acc_reader.read_sample_acc() * 100.0);
+		drone_state->accel_raw_ = (acc_unaligned / 100.0);
+		drone_state->accel_ = (drone_state->accel_raw_ - drone_state->accelerometer_adjustment_).normalize();
 
 #define ALLOW_ACCELEROMETER_OFF
-#define REALTIME_DATA 0
-#if REALTIME_DATA
-		std::cout << drone_state->gyro_.transpose() << drone_state->accel_.transpose() << drone_state->pid_torque_.transpose();
-		std::cout << drone_state->dt_.seconds_float() << std::endl;
-#endif
-
 #ifdef ALLOW_ACCELEROMETER_OFF
 		if (drone_state->track_accelerometer_)
 			att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
@@ -472,8 +395,13 @@ void main_task(void *pvParameters)
 		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
 #endif
 
-		accel.GetMag(&mag_axes);
-		drone_state->mag_raw_ = acc_align * Vector3f(mag_axes.AXIS_X, mag_axes.AXIS_Y, mag_axes.AXIS_Z);
+#define REALTIME_DATA 0
+#if REALTIME_DATA
+		std::cout << drone_state->gyro_.transpose() << drone_state->accel_.transpose() << drone_state->pid_torque_.transpose();
+		std::cout << drone_state->dt_.seconds_float() << std::endl;
+#endif
+
+		drone_state->mag_raw_ = acc_reader.read_sample_mag();
 		drone_state->mag_ = mag_lpf->do_filter(drone_state->mag_raw_.normalize());
 		if (drone_state->track_magnetometer_)
 			att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());

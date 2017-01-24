@@ -85,8 +85,7 @@ public:
 
 	void callback(void (*fptr)(void))
 	{
-		if (fptr)
-			callback_.attach(fptr);
+		callback_.attach(fptr);
 	}
 
 	static void vector_handler(uint8_t line);

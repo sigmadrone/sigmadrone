@@ -459,7 +459,7 @@ public:
 	void FIFOModeEnable(State_t enable);
 	void FIFOModeSet(FifoMode_t fm);
 	void SetThreshold(u8_t ths);
-	void GetFifoSourceReg(u8_t* val);
+	u8_t GetFifoSourceReg();
 	bool GetFifoSourceBit(u8_t statusBIT);
 	u8_t GetFifoSourceFSS();
 

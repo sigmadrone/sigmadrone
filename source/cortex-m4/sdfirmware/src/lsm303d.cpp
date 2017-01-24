@@ -711,10 +711,13 @@ void LSM303D::GetMagAxesRaw(AxesRaw_t* buff)
  * Output         : None
  * Return         : Status [MEMS_ERROR, MEMS_SUCCESS]
  *******************************************************************************/
-void LSM303D::GetFifoSourceReg(u8_t* val)
+u8_t LSM303D::GetFifoSourceReg()
 {
-	ReadReg8(LSM303D_FIFO_SRC_REG_A, val);
+	u8_t value = 0;
+	ReadReg8(LSM303D_FIFO_SRC_REG_A, &value);
+	return value;
 }
+
 
 /*******************************************************************************
  * Function Name  : GetFifoSourceBit
