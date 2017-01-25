@@ -262,8 +262,8 @@ struct DroneState {
 			kd_= 0.035;
 			ki_ = 0.09;
 #else
-			kp_ = 0.45;
-			kd_= 0.085;
+			kp_ = 0.35;
+			kd_ = 0.08;
 			ki_ = 0.06;
 			accelerometer_adjustment_ = Vector3f(0.0f, -0.016f, 0.0f);
 #endif
