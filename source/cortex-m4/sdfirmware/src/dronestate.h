@@ -23,6 +23,7 @@
 #define DRONESTATE_H_
 
 #undef USE_SIXPROPELLERS
+#undef USE_ALIGNMENT_MIPIFRONT
 #define USE_LPS25HB
 
 //#define SMALL_FRAME
@@ -254,7 +255,7 @@ struct DroneState {
 			yaw_kp_ = 0.20;
 			yaw_ki_= 0.0;
 			yaw_kd_ = 0.07;
-			accelerometer_correction_speed_ = 3.0;
+			accelerometer_correction_speed_ = 0.4;
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
 #ifdef SMALL_FRAME
 			kp_ = 0.2;
@@ -274,6 +275,7 @@ struct DroneState {
 	 */
 	Vector3f gyro_raw_;
 	Vector3f accel_raw_;
+	Vector3f accel_alt_;
 	Vector3f mag_raw_;
 	Vector3f gyro_;
 	Vector3f accel_;

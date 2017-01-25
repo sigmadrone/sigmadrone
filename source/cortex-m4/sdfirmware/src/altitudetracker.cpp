@@ -54,7 +54,7 @@ Altitude AltitudeTracker::flight_ceiling_absolute() const
 
 float AltitudeTracker::calc_vertical_accel(const DroneState& state)
 {
-	Vector3f worldAccel = state.attitude_.rotate(state.accel_raw_+state.accelerometer_adjustment_);
+	Vector3f worldAccel = state.attitude_.rotate(state.accel_alt_ + state.accelerometer_adjustment_);
 	return worldAccel[2] + 1.0f;
 }
 

@@ -252,8 +252,9 @@ void main_task(void *pvParameters)
 	UartRpcServer rpcserver(*drone_state, configdata);
 	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
 	static bool print_to_console = false;
-	LowPassFilter<Vector3f, float> gyro_lpf({0.5});
-	LowPassFilter<Vector3f, double> acc_lpf({0.9});
+	LowPassFilter<Vector3f, float> gyro_lpf({0.6});
+	LowPassFilter<Vector3f, float> acc_lpf_alt({0.9});
+	LowPassFilter<Vector3f, float> acc_lpf_att({0.993});
 	LowPassFilter<float, float> pressure_lpf({0.6});
 	attitudetracker att;
 
@@ -381,8 +382,11 @@ void main_task(void *pvParameters)
 		}
 
 		fifosize = acc_reader.size();
-		for (size_t i = 0; i < fifosize; i++)
-			drone_state->accel_raw_ = acc_lpf.do_filter(acc_reader.read_sample_acc());
+		for (size_t i = 0; i < fifosize; i++) {
+			Vector3f acc_sample = acc_reader.read_sample_acc();
+			drone_state->accel_raw_ = acc_lpf_att.do_filter(acc_sample);
+			drone_state->accel_alt_ = acc_lpf_alt.do_filter(acc_sample);
+		}
 		drone_state->accel_ = (drone_state->accel_raw_ - drone_state->accelerometer_adjustment_).normalize();
 
 #define ALLOW_ACCELEROMETER_OFF
