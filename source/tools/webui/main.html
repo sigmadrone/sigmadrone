@@ -393,6 +393,24 @@
           </a>
           <div id = "flight-ctl-id" class="col-xs-12 collapse">
             <form class="form-horizontal" role="form" id="flight-ctl-form" onsubmit="return onFlightCtlSubmit();">
+              <div class="form-group" id="set-flight-mode-gr">
+                <div class="col-xs-4 col-md-2">
+                  <label for="set-flight-mode-gr">Set Flight Mode</label>
+                </div>
+                <div class="col-xs-4 col-md-3">
+                  <select name="flight-mode" id="flight-mode-id" onclick="onFlightCtlUserInput()">
+                    <option value="flight-mode-auto-level">Auto Level</option>
+                    <option value="flight-mode-altitude">Altitude Hold</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" id="track-magnotemeter-gr">
+                <div class="col-xs-8 col-md-4">
+                  <label for="track-magnetometer-gr">Track Magnetometer</label>
+                  <span style="width:5px;display:inline-block"></span>
+                  <input id="track-magnetometer" name="track-magnetometer" type="checkbox" onclick="onFlightCtlUserInput()">
+                </div>
+              </div>
               <label for="torq-corr-gr">Torque Correction</label>
               <div class="form-group" id="torq-corr-gr">
                 <div class="col-xs-4 col-md-2">
@@ -408,41 +426,11 @@
                   <input id="torq-bias-yaw" name="torq-bias-yaw" class="form-control input-sm" type="number" min="-0.1" max="0.1" step="0.001" required="true" oninput="onFlightCtlUserInput()">
                 </div>
               </div>
-              <!--label for="track-magnetometer-gr">Track Magnetometer</label-->
-              <div class="form-group" id="track-magnotemeter-gr">
-                <div class="col-xs-8 col-md-4">
-                  <label for="track-magnetometer-gr">Track Magnetometer</label>
-                  <span style="width:5px;display:inline-block"></span>
-                  <input id="track-magnetometer" name="track-magnetometer" type="checkbox" onclick="onFlightCtlUserInput()">
-                </div>
-              </div>
               <div class="form-group" id="external-gyro-gr">
                 <div class="col-xs-8 col-md-4">
                   <label for="external-gyro-gr">Enable External Gyro</label>
                   <span style="width:5px;display:inline-block"></span>
                   <input id="external-gyro" name="external-gyro" type="checkbox" onclick="onFlightCtlUserInput()">
-                </div>
-              </div>
-              <div class="form-group" id="set-pilot-gr">
-                <div class="col-xs-4 col-md-2">
-                  <label for="set-pilot-gr">Set Pilot Type</label>
-                </div>
-                <div class="col-xs-4 col-md-3">
-                  <select name="pilot-type" id="pilot-type-id" onclick="onFlightCtlUserInput()">
-                    <option value="pid-pilot-legacy">Legacy</option>
-                    <option value="pid-pilot-new">New</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group" id="set-flight-mode-gr">
-                <div class="col-xs-4 col-md-2">
-                  <label for="set-flight-mode-gr">Set Flight Mode</label>
-                </div>
-                <div class="col-xs-4 col-md-3">
-                  <select name="flight-mode" id="flight-mode-id" onclick="onFlightCtlUserInput()">
-                    <option value="flight-mode-auto-level">Auto Level</option>
-                    <option value="flight-mode-altitude">Altitude Hold</option>
-                  </select>
                 </div>
               </div>
               <label for="yaw-throttle-factor-gr">Yaw Throttle Factor</label>
@@ -739,7 +727,7 @@
 
     <footer class="footer">
       <p>
-        &copy; Sigmadrone 2016
+        &copy; Sigmadrone 2017
       </p>
     </footer>
 
@@ -1076,11 +1064,6 @@
     rpcClient.rpcCall(droneRpcUrl, "sd_enable_external_gyro", "[" + $myForm[0].elements['external-gyro'].checked + "]");
     rpcClient.rpcCall(droneRpcUrl, "roll_bias", "[" + $myForm[0].elements['torq-bias-roll'].value + "]");
     rpcClient.rpcCall(droneRpcUrl, "pitch_bias", "[" + $myForm[0].elements['torq-bias-pitch'].value + "]");
-    if ($myForm[0].elements['pilot-type-id'].value == "pid-pilot-new") {
-      rpcClient.rpcCall(droneRpcUrl, "sd_set_pilot_type", "[" + "\"pid_pilot_new\"" + "]");
-    } else {
-      rpcClient.rpcCall(droneRpcUrl, "sd_set_pilot_type", "[" + "\"pid_pilot_legacy\"" + "]");
-    }
     if ($myForm[0].elements['flight-mode-id'].value == "flight-mode-altitude") {
       rpcClient.rpcCall(droneRpcUrl, "sd_flight_mode", "[" + "1" + "]");
     } else {
