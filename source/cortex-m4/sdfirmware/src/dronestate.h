@@ -26,7 +26,7 @@
 #undef USE_ALIGNMENT_MIPIFRONT
 #define USE_LPS25HB
 
-//#define SMALL_FRAME
+//#define LITE_FRAME
 
 #include "units.h"
 #include "battery.h"
@@ -257,9 +257,9 @@ struct DroneState {
 			yaw_kd_ = 0.07;
 			accelerometer_correction_speed_ = 0.4;
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
-#ifdef SMALL_FRAME
-			kp_ = 0.2;
-			kd_= 0.035;
+#ifdef LITE_FRAME
+			kp_ = 0.22;
+			kd_= 0.06;
 			ki_ = 0.09;
 #else
 			kp_ = 0.35;
