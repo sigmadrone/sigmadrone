@@ -154,22 +154,12 @@
           </a>
           <div id = "motors-id" class="collapse">
             <div class="row motor-group">
-              <div class="motor" id="motor4"></div> <div class="motor" id="motor3"></div>
+              <div class="motor" id="motor2"></div> <div class="motor" id="motor1"></div>
             </div>
             <div class="row motor-group">
-              <div class="motor" id="motor1"></div> <div class="motor" id="motor2"></div>
+              <div class="motor" id="motor3"></div> <div class="motor" id="motor4"></div>
             </div>
           </div>
-          <!--div id = "motors-id" class="col-xs-12 collapse">
-            <div class="row">
-              <div class="col-md-2 col-xs-5 col-data">M4: <span id="motor4">50</span> %</div>
-              <div class="col-md-2 col-xs-5">M3: <span id="motor3">50</span> %</div>
-            </div>
-            <div class="row">
-              <div class="col-md-2 col-xs-5 col-data">M1: <span id="motor1">50</span> %</div>
-              <div class="col-md-2 col-xs-5">M2: <span id="motor2">50</span> %</div>
-            </div>
-          </div-->
         </div>
 
         <hr class="featurette-divider">
@@ -1284,10 +1274,10 @@
       $("#temperature").text(response.result.temperature);
 
       if (response.result.motors_armed) {
-        m1.refresh(response.result.motors[0] * 100);
-        m2.refresh(response.result.motors[1] * 100);
-        m3.refresh(response.result.motors[2] * 100);
-        m4.refresh(response.result.motors[3] * 100);
+        m1.refresh(response.result.motors[2] * 100);
+        m2.refresh(response.result.motors[3] * 100);
+        m3.refresh(response.result.motors[0] * 100);
+        m4.refresh(response.result.motors[1] * 100);
       } else {
         m1.refresh(0); m2.refresh(0);
         m3.refresh(0); m4.refresh(0);
