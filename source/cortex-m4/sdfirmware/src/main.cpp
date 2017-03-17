@@ -170,8 +170,8 @@ void gps_task(void *pvParameters)
 		gps_measure_time.begin_measure();
 		gps.update_state();
 		gps_measure_time.end_measure();
-		drone_state->latitude_ = gps.lattitude();
-		drone_state->longitude_ = gps.longitude();
+		drone_state->latitude_ = Angle::from_degrees(gps.lattitude());
+		drone_state->longitude_ = Angle::from_degrees(gps.longitude());
 		drone_state->gps_altitude_ = gps.altitude();
 		drone_state->speed_over_ground_ = gps.speed();
 		drone_state->course_ = gps.course();
@@ -437,7 +437,7 @@ void main_task(void *pvParameters)
 		    printf("Armed     : %d\n", drone_state->motors_armed_);
 			printf("Altitude  : %4.2f m\n", drone_state->altitude_.meters());
 			printf("GPS       : Lon: %3.4f Lat: %3.4f Sat %lu Alt: %4.2f m\n",
-					drone_state->longitude_, drone_state->latitude_,
+					drone_state->longitude_.degrees(), drone_state->latitude_.degrees(),
 					drone_state->satellite_count_, drone_state->gps_altitude_.meters());
 			printf("Battery   : %2.1f V, %2.0f%%\n", drone_state->battery_voltage_.volts(), drone_state->battery_percentage_);
 #endif

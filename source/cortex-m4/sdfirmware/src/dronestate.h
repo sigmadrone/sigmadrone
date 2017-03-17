@@ -26,7 +26,7 @@
 #undef USE_ALIGNMENT_MIPIFRONT
 #define USE_LPS25HB
 
-//#define LITE_FRAME
+#define LITE_FRAME
 
 #include "units.h"
 #include "battery.h"
@@ -45,8 +45,8 @@ struct DroneState {
 	    , battery_voltage_()
         , battery_percentage_(0.0f)
 	    , battery_type_(Battery::TYPE_UNKNOWN)
-	    , latitude_(0.0f)
-	    , longitude_(0.0f)
+	    , latitude_()
+	    , longitude_()
 		, speed_over_ground_(0.0f)
 		, course_(-360.0f)
 	    , satellite_count_(0.0f)
@@ -94,7 +94,10 @@ struct DroneState {
 		, altitude_tracker_ki_(0.005)
 		, altitude_tracker_kd_(0.0)
 		, altitude_tracker_kp2_(0.12)
-	    , altitude_correction_period_(TimeSpan::from_seconds(1000))
+		, altitude_correction_period_(TimeSpan::from_seconds(1000))
+	    , position_kp_(0.3)
+	    , position_ki_(0.06)
+	    , position_kd_ (0.03)
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	    , altitude_lpf_(0.6)
@@ -116,13 +119,14 @@ struct DroneState {
 		ret["temperature"] = temperature_;
 		ret["battery_voltage"] = battery_voltage_.volts();
 		ret["battery_percentage"] = battery_percentage_;
-		ret["gps_latitude"] = latitude_;
-		ret["gps_longitude"] = longitude_;
+		ret["gps_latitude"] = latitude_.degrees();
+		ret["gps_longitude"] = longitude_.degrees();
 		ret["gps_speed_kmph"] = speed_over_ground_;
 		ret["gps_course_deg"] = course_;
 		ret["gps_satellites"] = static_cast<int>(satellite_count_);
 		ret["gps_altitude"] = gps_altitude_.meters();
 		ret["vertical_speed"] = vertical_speed_.meters_per_second();
+		ret["position_error"] = position_error_.meters();
 		ret["dt"] = static_cast<float>(dt_.microseconds());
 		ret["iteration"] = static_cast<int>(iteration_);
 		ret["attitude"] = quaternion_to_json_value(attitude_);
@@ -167,6 +171,9 @@ struct DroneState {
 		ret["altitude_kp"] = altitude_kp_;
 		ret["altitude_ki"] = altitude_ki_;
 		ret["altitude_kd"] = altitude_kd_;
+		ret["position_kp"] = position_kp_;
+		ret["position_ki"] = position_ki_;
+		ret["position_kd"] = position_kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
 		ret["altitude_correction_period"] = altitude_correction_period_.seconds_float();
 		ret["gyro_factor"] = gyro_factor_;
@@ -197,6 +204,9 @@ struct DroneState {
 		ret["altitude_kp"] = altitude_kp_;
 		ret["altitude_ki"] = altitude_ki_;
 		ret["altitude_kd"] = altitude_kd_;
+		ret["position_kp"] = position_kp_;
+		ret["position_ki"] = position_ki_;
+		ret["position_kd"] = position_kd_;
 		ret["accelerometer_correction_period"] = accelerometer_correction_speed_;
 		ret["altitude_correction_period"] = altitude_correction_period_.seconds_float();
 		ret["gyro_factor"] = gyro_factor_;
@@ -238,6 +248,9 @@ struct DroneState {
 		try { altitude_kp_ = bootconfig["altitude_kp"].get_real(); } catch (std::exception& e) {}
 		try { altitude_ki_ = bootconfig["altitude_ki"].get_real(); } catch (std::exception& e) {}
 		try { altitude_kd_ = bootconfig["altitude_kd"].get_real(); } catch (std::exception& e) {}
+		try { position_kp_ = bootconfig["position_kp"].get_real(); } catch (std::exception& e) {}
+		try { position_ki_ = bootconfig["position_ki"].get_real(); } catch (std::exception& e) {}
+		try { position_kd_ = bootconfig["position_kd"].get_real(); } catch (std::exception& e) {}
 		try {
 			altitude_correction_period_ = TimeSpan::from_seconds_float(bootconfig["altitude_correction_period"].get_real());
 		} catch (std::exception& e) {}
@@ -288,13 +301,14 @@ struct DroneState {
 	Voltage battery_voltage_;
 	float battery_percentage_;
 	Battery::Type battery_type_;
-	float latitude_;
-	float longitude_;
+	Latitude latitude_;
+	Longitude longitude_;
 	float speed_over_ground_; //km/h
 	float course_; // degrees
 	uint32_t satellite_count_;
 	Altitude gps_altitude_;
 	Speed vertical_speed_;
+	Distance position_error_;
 	/*more to add here*/
 
 	/*
@@ -339,6 +353,9 @@ struct DroneState {
 	float altitude_tracker_kd_;
 	float altitude_tracker_kp2_;
 	TimeSpan altitude_correction_period_;
+	float position_kp_;
+	float position_ki_;
+	float position_kd_;
 
 	/*
 	 * Time it took to read sensors

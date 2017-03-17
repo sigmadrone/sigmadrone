@@ -189,6 +189,10 @@
               <div class="col-md-2 col-xs-4 col-data">Altitude:</div>
               <div class="col-md-4 col-xs-6 col"><span id="gps-altitude">0</span> m</div>
             </div>
+            <div class="row">
+              <div class="col-md-2 col-xs-4 col-data">Position Error:</div>
+              <div class="col-md-4 col-xs-6 col"><span id="gps-position-error">0</span> m</div>
+            </div>
           </div>
         </div>
 
@@ -1301,6 +1305,7 @@
         $("#gps-course").text( 'N/A');
         $("#gps-altitude").text('N/A');
       }
+      $("gps-position-error").text(response.result.position_error.toFixed(2));
       $("#dt").text(response.result.dt/1000);
 
       $("#roll-id").text(droneState.roll.toFixed(4));
