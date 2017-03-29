@@ -166,17 +166,23 @@ void gps_task(void *pvParameters)
 	PerfCounter gps_measure_time;
 
 	gps.start();
+	while (!gps.update_state()) {
+		vTaskDelay(200 / portTICK_RATE_MS);
+	}
+	gps_measure_time.begin_measure();
 	while (1) {
-		gps_measure_time.begin_measure();
-		gps.update_state();
-		gps_measure_time.end_measure();
-		drone_state->latitude_ = Angle::from_degrees(gps.lattitude());
-		drone_state->longitude_ = Angle::from_degrees(gps.longitude());
-		drone_state->gps_altitude_ = gps.altitude();
-		drone_state->speed_over_ground_ = gps.speed();
-		drone_state->course_ = gps.course();
-		drone_state->satellite_count_ = gps.satellite_count();
-		vTaskDelay(100 / portTICK_RATE_MS);
+		if (gps.update_state()) {
+			gps_measure_time.end_measure();
+			gps_measure_time.begin_measure();
+			drone_state->latitude_ = gps.lattitude();
+			drone_state->longitude_ = gps.longitude();
+			drone_state->gps_altitude_ = gps.altitude();
+			drone_state->speed_over_ground_ = gps.speed();
+			drone_state->course_ = gps.course();
+			drone_state->satellite_count_ = gps.satellite_count();
+		} else {
+			vTaskDelay(20 / portTICK_RATE_MS);
+		}
 	}
 }
 
