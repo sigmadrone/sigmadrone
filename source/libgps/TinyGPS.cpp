@@ -296,26 +296,36 @@ int TinyGPS::gpsstrcmp(const char *str1, const char *str2)
 }
 
 /* static */
-float TinyGPS::distance_between(float lat1, float long1, float lat2, float long2)
+float TinyGPS::distance_between(double lat1, double long1, double lat2, double long2)
 {
-	float dist = distance_between_polar_coord(lat1,long1,lat2,long2);
-	if (dist > 20000) {
-		dist = distance_between_haversine(lat1,long1,lat2,long2);
+	float distance = distance_between_polar_coord(lat1,long1,lat2,long2);
+	if (distance > 20000) {
+		distance = distance_between_haversine(lat1,long1,lat2,long2);
 	}
-	return dist;
+	return distance;
 }
 
-float TinyGPS::distance_between_polar_coord (float lat1, float long1, float lat2, float long2)
+float TinyGPS::distance_between_pythagor(double lat1, double long1, double lat2, double long2)
+{
+	static const double R = 6372795.0;
+	double x = (double)to_radians(long2-long1) * cos(to_radians(((double)lat1+(double)lat2)/2));
+	double y = to_radians(lat2-lat1);
+	double d = R * sqrt(x*x + y*y);
+	return (float)d;
+}
+
+float TinyGPS::distance_between_polar_coord(double lat1, double long1, double lat2, double long2)
 {
 	// courtesy of http://www.cs.nyu.edu/visual/home/proj/tiger/gisfaq.html
-	static const float R = 6372.795f;
-	float a = M_PI / 2 - to_radians(lat1);
-	float b = M_PI / 2 - to_radians(lat2);
-	float c = sqrt(a * a + b * b - 2 * a * b * cos(to_radians(long2-long1)));
-	return c * R * 1000.0;
+	static const double R = 6372795.0f;
+	double a = M_PI / 2 - to_radians(lat1);
+	double b = M_PI / 2 - to_radians(lat2);
+	double c2 = a * a + b * b - 2 * a * b * cos(to_radians(long2-long1));
+	double c = c2 > 0 ? sqrt(c2) : 0;
+	return (float)(c * R);
 }
 
-float TinyGPS::distance_between_haversine (float lat1, float long1, float lat2, float long2)
+float TinyGPS::distance_between_haversine(double lat1, double long1, double lat2, double long2)
 {
   // returns distance in meters between two positions, both specified 
   // as signed decimal-degrees latitude and longitude. Uses great-circle

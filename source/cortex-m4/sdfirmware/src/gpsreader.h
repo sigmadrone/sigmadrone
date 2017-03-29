@@ -35,8 +35,10 @@ public:
 	~GPSReader();
 	void start();
 	bool update_state();
-	float longitude();
-	float lattitude();
+	float longitude_f();
+	Longitude longitude();
+	Latitude lattitude();
+	float lattitude_f();
 	Altitude altitude();
 	float /*km/h*/ speed(); // TODO: define speed unit
 	// course in last full GPRMC sentence in 100th of a degree

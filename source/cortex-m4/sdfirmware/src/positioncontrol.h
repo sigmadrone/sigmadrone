@@ -25,6 +25,7 @@
 #include "dronestate.h"
 #include "pidcontroller.h"
 #include "geolocation.h"
+#include "lowpassfilter.h"
 
 class PositionControl
 {
@@ -39,10 +40,15 @@ private:
 	void start_tracking(const DroneState& state);
 	void stop_tracking();
 	void record_base_rc_values_if_landed(const DroneState& state);
-	void calculate_target_swing(const DroneState& state);
+	void calculate_target_swing(DroneState& state);
 	bool is_landed(const DroneState& state);
-	Distance get_error_as_distance(const DroneState& state);
-	Vector3f get_error_vector(const DroneState& state);
+	Distance get_error_as_distance(
+			const Latitude& latitude,
+			const Longitude& longitude);
+	Vector3f get_error_vector(
+			const QuaternionF& attitude,
+			const Latitude& latitude,
+			const Longitude& longitude);
 	Angle map_distance_err_to_swing_angle(const Distance& err_dist);
 
 	static bool has_rc_value_changed(float oldVal, float newVal);
@@ -58,7 +64,7 @@ private:
 	PidControllerType pid_;
 	GeoLocation target_location_;
 	TimeStamp rc_record_ts_;
-	TimeStamp dt_;
+	LowPassFilter<float,float> distance_filter_;
 	float rc_value_pitch_;
 	float rc_value_roll_;
 };

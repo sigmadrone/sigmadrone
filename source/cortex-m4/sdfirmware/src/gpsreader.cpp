@@ -84,18 +84,34 @@ bool GPSReader::process_read_data()
 	return data_ready;
 }
 
-float GPSReader::longitude()
+float GPSReader::longitude_f()
 {
 	float lat, longit;
 	gps_parser_->f_get_position(&lat, &longit);
 	return longit != TinyGPS::GPS_INVALID_F_ANGLE ? longit : 0;
 }
 
-float GPSReader::lattitude()
+float GPSReader::lattitude_f()
 {
 	float lat, longit;
 	gps_parser_->f_get_position(&lat, &longit);
 	return lat != TinyGPS::GPS_INVALID_F_ANGLE ? lat : 0;
+}
+
+Longitude GPSReader::longitude()
+{
+	long lat, longit;
+	gps_parser_->get_position(&lat, &longit);
+	return longit != TinyGPS::GPS_INVALID_ANGLE ? Longitude(Angle::from_mill_of_deg(longit)) :
+			Longitude(INVALID_ANGLE);
+}
+
+Latitude GPSReader::lattitude()
+{
+	long lat, longit;
+	gps_parser_->get_position(&lat, &longit);
+	return lat != TinyGPS::GPS_INVALID_ANGLE ? Latitude(Angle::from_mill_of_deg(lat)) :
+			Latitude(INVALID_ANGLE);
 }
 
 Altitude GPSReader::altitude()

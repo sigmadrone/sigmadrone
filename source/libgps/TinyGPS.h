@@ -100,9 +100,10 @@ public:
   static int library_version() { return _GPS_VERSION; }
 
   // Calculates the distance between 2 points. The result is given in meters
-  static float distance_between (float lat1Deg, float long1Deg, float lat2Deg, float long2Deg);
-  static float distance_between_polar_coord (float lat1Deg, float long1Deg, float lat2Deg, float long2Deg);
-  static float distance_between_haversine (float lat1Deg, float long1Deg, float lat2Deg, float long2Deg);
+  static float distance_between (double lat1, double long1, double lat2, double long2);
+  static float distance_between_polar_coord (double lat1, double long1, double lat2, double long2);
+  static float distance_between_pythagor(double lat1, double long1, double lat2, double long2);
+  static float distance_between_haversine (double lat1, double long1, double lat2, double long2);
 
   static float course_to (float lat1, float long1, float lat2, float long2);
   static const char *cardinal(float course);
