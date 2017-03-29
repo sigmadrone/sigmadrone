@@ -32,7 +32,7 @@ Throttle AltitudeControl::get_throttle()
 
 void AltitudeControl::update_state(DroneState& drone_state)
 {
-	if (drone_state.flight_mode_ != FLIGHT_MODE_ALTITUDE_HOLD) {
+	if (drone_state.flight_mode_ < FLIGHT_MODE_ALTITUDE_HOLD) {
 		throttle_ = drone_state.base_throttle_;
 		return;
 	}
