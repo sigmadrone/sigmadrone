@@ -219,6 +219,9 @@
               <div class="col-xs-3 col-md-1 col-data"><span>Throttle:</span></div>
               <div class="col-xs-8 col-data"><span id="throttle-id">Yawn</span></div>
             </div>
+            <div class="row">
+              <div id="dygraph-id"> </div>
+            </div>
           </div>
         </div>
 
@@ -395,6 +398,7 @@
                   <select name="flight-mode" id="flight-mode-id" onclick="onFlightCtlUserInput()">
                     <option value="flight-mode-auto-level">Auto Level</option>
                     <option value="flight-mode-altitude">Altitude Hold</option>
+                    <option value="flight-mode-position">Position Hold</option>
                   </select>
                 </div>
               </div>
@@ -740,6 +744,7 @@
   <script src="./js/chart2d.js"></script>
   <script src="./js/rpcclient.js"></script>
   <script src="./js/chartmodel.js"></script>
+  <script src="./js/dygraph.min.js"></script>
   <link href="./js/vis.min.css" rel="stylesheet" type="text/css" />
 
   <script>
@@ -798,6 +803,28 @@
   var altitudeChart = null;
   var altitudeChartModel = null;
   var rcValuesChart = null;
+
+/*
+  g = new Dygraph(
+    document.getElementById("dygraph-id"),
+    // For possible data formats, see http://dygraphs.com/data.html
+    // The x-values could also be dates, e.g. "2012/03/15"
+    "X,Y,Z\n" +
+    "1,0,3\n" +
+    "2,2,6\n" +
+    "3,4,8\n" +
+    "4,6,9\n" +
+    "5,8,9\n" +
+    "6,10,8\n" +
+    "7,12,6\n" +
+    "8,14,3\n",
+    {
+      // options go here. See http://dygraphs.com/options.html
+      legend: 'always',
+      animatedZooms: true,
+      title: 'dygraphs chart template'
+    });
+*/
 
   sensorChart = new VisChart2d(
     document.getElementById("sensor-chart-id"),
@@ -1058,7 +1085,9 @@
     rpcClient.rpcCall(droneRpcUrl, "sd_enable_external_gyro", "[" + $myForm[0].elements['external-gyro'].checked + "]");
     rpcClient.rpcCall(droneRpcUrl, "roll_bias", "[" + $myForm[0].elements['torq-bias-roll'].value + "]");
     rpcClient.rpcCall(droneRpcUrl, "pitch_bias", "[" + $myForm[0].elements['torq-bias-pitch'].value + "]");
-    if ($myForm[0].elements['flight-mode-id'].value == "flight-mode-altitude") {
+    if ($myForm[0].elements['flight-mode-id'].value == "flight-mode-position") {
+      rpcClient.rpcCall(droneRpcUrl, "sd_flight_mode", "[" + "2" + "]");
+    } else if ($myForm[0].elements['flight-mode-id'].value == "flight-mode-altitude") {
       rpcClient.rpcCall(droneRpcUrl, "sd_flight_mode", "[" + "1" + "]");
     } else {
       rpcClient.rpcCall(droneRpcUrl, "sd_flight_mode", "[" + "0" + "]");
@@ -1289,8 +1318,8 @@
 
       $("#temperature_val").text(response.result.temperature.toFixed(1) + ' ');
       if (response.result.gps_satellites >= 3) {
-        $("#gps-lat").text(response.result.gps_latitude);
-        $("#gps-long").text(response.result.gps_longitude);
+        $("#gps-lat").text((response.result.gps_latitude/1000000).toFixed(6));
+        $("#gps-long").text((response.result.gps_longitude/1000000).toFixed(6));
         $("#gps-speed").text(response.result.gps_speed_kmph.toFixed(1));
         $("#gps-course").text(response.result.gps_course_deg.toFixed(2));
       } else {
@@ -1305,7 +1334,7 @@
         $("#gps-course").text( 'N/A');
         $("#gps-altitude").text('N/A');
       }
-      $("gps-position-error").text(response.result.position_error.toFixed(2));
+      $("#gps-position-error").text(response.result.position_error.toFixed(2));
       $("#dt").text(response.result.dt/1000);
 
       $("#roll-id").text(droneState.roll.toFixed(4));
