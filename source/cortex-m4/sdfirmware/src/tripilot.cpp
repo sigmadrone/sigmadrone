@@ -67,8 +67,8 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 	QuaternionF::decomposeTwistSwing(~state.attitude_, Vector3f(0,0,1), swing, twist);
 
 	// targetSwing = attitudeSwing * errorSwing; ==> ~attitudeSwing * targetSwing = ~attitudeSwing * attitudeSwing * errorSwing;
-	QuaternionF errorSwing = (~swing) * (~target_swing_);
-	QuaternionF errorTwist = (~twist) * (~target_twist_);
+	QuaternionF errorSwing = (~swing) * (~state.target_swing_);
+	QuaternionF errorTwist = (~twist) * (~state.target_twist_);
 	Vector3f error_xy = errorSwing.axis().normalize() * errorSwing.angle() * -1.0f;
 	Vector3f error_z = errorTwist.axis().normalize() * errorTwist.angle() * -1.0f;
 
@@ -90,31 +90,22 @@ Vector3f TriPilot::get_torque(const DroneState& state)
 		torq *= std::pow(target_thrust_ / 0.1, 2.0f);
 //	std::cout << "Twist error: " << errorTwist.toString(4) << "( " << torq.transpose().to_string(4) << " )" << target_twist_.to_string(4)
 //			<< ", target_yawv_ rad/s: " << target_yawv_.transpose() << std::endl;
+
 	return torq;
 }
 
 void TriPilot::update_state(DroneState& state)
 {
-	set_target_thrust(state.base_throttle_ * 0.65f);
+	set_target_thrust(state.base_throttle_ * 0.5f);
 	set_pid_coefficents(state);
-	float max_w = 2.0f * M_PI * target_thrust_;
-	float roll = roll_avg_.do_filter(state.roll_);
-	float pitch = pitch_avg_.do_filter(state.pitch_);
-
-
-	target_yawv_ = Vector3f(0.0f, 0.0f, 18.0f * state.yaw_throttle_factor_ * state.yaw_);
-	if (target_yawv_.length() > max_w)
-		target_yawv_ = target_yawv_.normalize() * max_w;
-	target_twist_ *= QuaternionF::fromAngularVelocity(target_yawv_, state.dt_.seconds_float());
-	target_swing_ = QuaternionF::fromAngularVelocity(Vector3f(-roll, -pitch, 0), 1.0);
 	if (target_thrust_ < 0.1) {
 		pid_.set_integral_error(Vector3f(0));
-		target_twist_ = QuaternionF(state.attitude_.w, 0, 0, state.attitude_.z).normalize();
 	}
 	torque_correction_ = get_torque(state);
 	std::vector<float> torq_rpm;
-	for (size_t i = 0; i < propellers_.size(); i++)
+	for (size_t i = 0; i < propellers_.size(); i++) {
 		torq_rpm.push_back(pf_.nvelocity(torque_correction_.dot(propellers_.at(i).torque_dir()) + target_thrust_));
+	}
 	state.pid_torque_ = torque_correction_;
 	motors_ = state.motors_ = clip_motors(torq_rpm);
 	return;

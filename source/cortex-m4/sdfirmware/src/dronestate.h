@@ -77,11 +77,7 @@ struct DroneState {
 		, base_throttle_(0.0)
         , yaw_throttle_factor_(0.75)
 	    , pid_filter_freq_(80)
-#ifdef USE_SIXPROPELLERS
 	    , flight_mode_(FLIGHT_MODE_ALTITUDE_HOLD)
-#else
-		, flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
-#endif
 	    , motors_armed_(false)
 		, enforce_flight_ceiling_(false)
 		, track_magnetometer_(false)
@@ -97,7 +93,7 @@ struct DroneState {
 		, altitude_correction_period_(TimeSpan::from_seconds(1000))
 	    , position_kp_(0.3)
 	    , position_ki_(0.06)
-	    , position_kd_ (0.03)
+	    , position_kd_ (0.01)
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	    , altitude_lpf_(0.6)
@@ -119,8 +115,8 @@ struct DroneState {
 		ret["temperature"] = temperature_;
 		ret["battery_voltage"] = battery_voltage_.volts();
 		ret["battery_percentage"] = battery_percentage_;
-		ret["gps_latitude"] = latitude_.degrees();
-		ret["gps_longitude"] = longitude_.degrees();
+		ret["gps_latitude"] = static_cast<int>(latitude_.get().millionth_degrees());
+		ret["gps_longitude"] = static_cast<int>(longitude_.get().millionth_degrees());
 		ret["gps_speed_kmph"] = speed_over_ground_;
 		ret["gps_course_deg"] = course_;
 		ret["gps_satellites"] = static_cast<int>(satellite_count_);
@@ -271,8 +267,8 @@ struct DroneState {
 			accelerometer_correction_speed_ = 0.4;
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
 #ifdef LITE_FRAME
-			kp_ = 0.22;
-			kd_= 0.06;
+			kp_ = 0.2;
+			kd_= 0.045;
 			ki_ = 0.09;
 #else
 			kp_ = 0.35;
@@ -372,9 +368,10 @@ struct DroneState {
 	 */
 	QuaternionF attitude_;
 	QuaternionF target_;
+	QuaternionF target_twist_;
+	QuaternionF target_swing_;
 	std::vector<float> motors_;
 	Vector3f pid_torque_;
-	float throttle_;
 	std::string flight_posture_;
 
 	/*
