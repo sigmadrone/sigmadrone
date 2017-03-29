@@ -44,7 +44,6 @@ public:
 	float get_pitch() const;
 	float get_roll() const;
 	float get_gear() const;
-	void reset_twist_quaternion(const QuaternionF&);
 	void toggle_motors_armed();
 
 private:
@@ -52,18 +51,13 @@ private:
 private:
 	static constexpr uint32_t max_arm_sequence_idle_counter = 50;
 	PwmPulse pwm_converter_;
-	QuaternionF target_twist_;		/* Yaw */
-	QuaternionF target_swing_;		/* Combined rotation of Pitch and Roll */
 	Throttle throttle_;
 	const RcChannelMapper& mapper_;
 	RcReceiver& receiver_;
-	float last_gear_;
 	bool motors_armed_;
 	float yaw_;
 	float pitch_;
 	float roll_;
-	float pitch_bias_;
-	float roll_bias_;
 	float gear_raw_;
 	DigitalIn user_sw_;
 	DigitalOut user_led_;
