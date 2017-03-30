@@ -296,18 +296,47 @@ int TinyGPS::gpsstrcmp(const char *str1, const char *str2)
 }
 
 /* static */
-float TinyGPS::distance_between (float lat1, float long1, float lat2, float long2) 
+float TinyGPS::distance_between(double lat1, double long1, double lat2, double long2)
+{
+	float distance = distance_between_polar_coord(lat1,long1,lat2,long2);
+	if (distance > 20000) {
+		distance = distance_between_haversine(lat1,long1,lat2,long2);
+	}
+	return distance;
+}
+
+float TinyGPS::distance_between_pythagor(double lat1, double long1, double lat2, double long2)
+{
+	static const double R = 6372795.0;
+	double x = (double)to_radians(long2-long1) * cos(to_radians(((double)lat1+(double)lat2)/2));
+	double y = to_radians(lat2-lat1);
+	double d = R * sqrt(x*x + y*y);
+	return (float)d;
+}
+
+float TinyGPS::distance_between_polar_coord(double lat1, double long1, double lat2, double long2)
+{
+	// courtesy of http://www.cs.nyu.edu/visual/home/proj/tiger/gisfaq.html
+	static const double R = 6372795.0f;
+	double a = M_PI / 2 - to_radians(lat1);
+	double b = M_PI / 2 - to_radians(lat2);
+	double c2 = a * a + b * b - 2 * a * b * cos(to_radians(long2-long1));
+	double c = c2 > 0 ? sqrt(c2) : 0;
+	return (float)(c * R);
+}
+
+float TinyGPS::distance_between_haversine(double lat1, double long1, double lat2, double long2)
 {
   // returns distance in meters between two positions, both specified 
-  // as signed decimal-degrees latitude and longitude. Uses great-circle 
+  // as signed decimal-degrees latitude and longitude. Uses great-circle
   // distance computation for hypothetical sphere of radius 6372795 meters.
   // Because Earth is no exact sphere, rounding errors may be up to 0.5%.
   // Courtesy of Maarten Lamers
-  float delta = radians(long1-long2);
+  float delta = to_radians(long1-long2);
   float sdlong = sin(delta);
   float cdlong = cos(delta);
-  lat1 = radians(lat1);
-  lat2 = radians(lat2);
+  lat1 = to_radians(lat1);
+  lat2 = to_radians(lat2);
   float slat1 = sin(lat1);
   float clat1 = cos(lat1);
   float slat2 = sin(lat2);
@@ -327,9 +356,9 @@ float TinyGPS::course_to (float lat1, float long1, float lat2, float long2)
   // both specified as signed decimal-degrees latitude and longitude.
   // Because Earth is no exact sphere, calculated course may be off by a tiny fraction.
   // Courtesy of Maarten Lamers
-  float dlon = radians(long2-long1);
-  lat1 = radians(lat1);
-  lat2 = radians(lat2);
+  float dlon = to_radians(long2-long1);
+  lat1 = to_radians(lat1);
+  lat2 = to_radians(lat2);
   float a1 = sin(dlon) * cos(lat2);
   float a2 = sin(lat1) * cos(lat2) * cos(dlon);
   a2 = cos(lat1) * sin(lat2) - a2;
@@ -338,7 +367,7 @@ float TinyGPS::course_to (float lat1, float long1, float lat2, float long2)
   {
     a2 += TWO_PI;
   }
-  return degrees(a2);
+  return to_degrees(a2);
 }
 
 const char *TinyGPS::cardinal (float course)

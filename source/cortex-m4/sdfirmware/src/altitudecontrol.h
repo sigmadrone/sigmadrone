@@ -28,8 +28,8 @@
 #include "derivativefilter.h"
 
 
-static const Throttle min_throttle_altitude_hold = Throttle(0.49);
-static const Throttle max_throttle_altitude_hold = Throttle(0.52);
+static const Throttle min_throttle_altitude_hold = Throttle(0.47);
+static const Throttle max_throttle_altitude_hold = Throttle(0.53);
 static const Throttle landing_throttle = Throttle(0.2);
 static const Speed max_vertical_speed = (ONE_METER * 4.0f) / ONE_SECOND;
 static const Speed min_vertical_speed = -((ONE_METER * 3.0f) / ONE_SECOND);

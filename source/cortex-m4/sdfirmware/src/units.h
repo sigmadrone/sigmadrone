@@ -24,8 +24,8 @@
 
 #include <stdint.h>
 #include <limits>
-#include <math.h>
 
+#include <math.h>
 template <typename UnitType>
 struct ScaledUnit {
 
@@ -300,12 +300,87 @@ private:
 	Pressure(float pascal) : ScaledUnit<float> (pascal) {}
 };
 
+struct Angle
+{
+	static constexpr float PI = 3.1415926f;
+	static const int32_t INVALID_VALUE = INT32_MAX;
+
+	static const int32_t CONVERSION_UNIT = 1000000;
+	static constexpr double CONVERSION_UNIT_D = 1000000.0;
+	static constexpr float CONVERSION_UNIT_F = 1000000.0f;
+
+	static Angle from_mill_of_deg(int32_t deg) { return Angle(deg); }
+	static Angle from_radians(float rad) { return Angle((int32_t)(rad * 180.0f / PI * CONVERSION_UNIT_F)); }
+	static Angle from_degrees(float deg) { return Angle((int32_t)(deg * CONVERSION_UNIT_F)); }
+	static Angle from_radians_d(double rad) { return Angle((int32_t)(rad * 180.0 / PI * CONVERSION_UNIT_D)); }
+	static Angle from_degrees_d(double deg) { return Angle((int32_t)(deg * CONVERSION_UNIT_D)); }
+
+	inline float degrees() const { return (float)angle_ / CONVERSION_UNIT_F; }
+	inline float radians() const { return degrees() * PI / 180.0f; }
+	inline double degrees_d() const { return (double)angle_ / CONVERSION_UNIT_D; }
+	inline double radians_d() const { return degrees_d() * PI / 180.0f; }
+	inline int32_t millionth_degrees() const { return angle_; }
+	inline Angle operator-(const Angle& rhs) const { return Angle(angle_-rhs.angle_); }
+	inline Angle operator+(const Angle& rhs) const { return Angle(angle_+rhs.angle_); }
+	inline float operator/(const Angle& rhs) const { return (float)angle_/(float)rhs.angle_; }
+	inline Angle operator/(float f) const { return Angle(angle_/f); }
+	inline Angle operator*(float f) const { return Angle(angle_*f); }
+	inline void operator-=(const Angle& rhs) { *this = Angle(angle_-rhs.angle_); }
+	inline void operator+=(const Angle& rhs) { *this = Angle(angle_+rhs.angle_); }
+	inline void operator/=(float f) { *this = Angle(angle_/f); }
+	inline void operator*=(float f) { *this = Angle(angle_*f); }
+	inline bool operator<(const Angle& rhs) const { return angle_ < rhs.angle_; }
+	inline bool operator<=(const Angle& rhs) const { return angle_ <= rhs.angle_; }
+	inline bool operator>(const Angle& rhs) const { return angle_ > rhs.angle_; }
+	inline bool operator>=(const Angle& rhs) const { return angle_ >= rhs.angle_; }
+	inline bool operator==(const Angle& rhs) const { return angle_ == rhs.angle_; }
+	inline bool operator!=(const Angle& rhs) const { return angle_ != rhs.angle_; }
+	inline Angle() : angle_(INVALID_VALUE) {}
+	inline Angle(int32_t angleInMillionthOfADegrees): angle_(angleInMillionthOfADegrees) {}
+private:
+	int32_t angle_;
+};
+
+static const Angle INVALID_ANGLE = Angle::from_mill_of_deg(Angle::INVALID_VALUE);
 static const Altitude INVALID_ALTITUDE = Altitude::from_meters(Altitude::INVALID_VALUE);
 static const Distance ONE_METER = Distance::from_meters(1.0f);
 static const TimeSpan ONE_SECOND = TimeSpan::from_seconds(1.0f);
 static const Voltage ONE_VOLT = Voltage::from_volts(1.0f);
 static const Frequency ONE_HERTZ = Frequency::from_hertz(1.0f);
 static const Pressure PRESSURE_SEA_LEVEL = Pressure::from_pa(101325.0f);
+
+struct Latitude
+{
+	static bool is_valid_coordinate(const Angle& a)
+	{
+		return fabs(a.radians()) <= Angle::PI/2;
+	}
+	Latitude(const Angle& lat = INVALID_ANGLE) : latitude_(is_valid_coordinate(lat) ? lat : INVALID_ANGLE) {}
+	const Angle& get() const { return latitude_; }
+	float radians() const { return latitude_.radians(); }
+	float degrees() const { return latitude_.degrees(); }
+	double degrees_d() const { return latitude_.degrees_d(); }
+	bool is_valid() const { return is_valid_coordinate(latitude_); }
+private:
+	Angle latitude_;
+};
+
+struct Longitude
+{
+	static bool is_valid_coordinate(const Angle& a)
+	{
+		return fabs(a.radians()) <= Angle::PI;
+	}
+	Longitude(const Angle& lon = INVALID_ANGLE) : longitude_(is_valid_coordinate(lon) ? lon : INVALID_ANGLE) {}
+	const Angle& get() const { return longitude_; }
+	float radians() const { return longitude_.radians(); }
+	float degrees() const { return longitude_.degrees(); }
+	double degrees_d() const { return longitude_.degrees_d(); }
+	bool is_valid() const { return is_valid_coordinate(longitude_); }
+private:
+	Angle longitude_;
+};
+
 
 inline Altitude pressure_to_altitude(
 		const Pressure& pressure,
@@ -317,5 +392,16 @@ inline Altitude pressure_to_altitude(
 
 inline Speed operator/(const Distance& distance, const TimeSpan& time) { return Speed(distance, time); }
 
+template<typename T>
+T unit_min(T a, T b)
+{
+	return a <= b ? a : b;
+}
+
+template<typename T>
+T unit_max(T a, T b)
+{
+	return a >= b ? a : b;
+}
 
 #endif /* UNITS_H_ */

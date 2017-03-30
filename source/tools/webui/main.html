@@ -154,22 +154,12 @@
           </a>
           <div id = "motors-id" class="collapse">
             <div class="row motor-group">
-              <div class="motor" id="motor4"></div> <div class="motor" id="motor3"></div>
+              <div class="motor" id="motor2"></div> <div class="motor" id="motor1"></div>
             </div>
             <div class="row motor-group">
-              <div class="motor" id="motor1"></div> <div class="motor" id="motor2"></div>
+              <div class="motor" id="motor3"></div> <div class="motor" id="motor4"></div>
             </div>
           </div>
-          <!--div id = "motors-id" class="col-xs-12 collapse">
-            <div class="row">
-              <div class="col-md-2 col-xs-5 col-data">M4: <span id="motor4">50</span> %</div>
-              <div class="col-md-2 col-xs-5">M3: <span id="motor3">50</span> %</div>
-            </div>
-            <div class="row">
-              <div class="col-md-2 col-xs-5 col-data">M1: <span id="motor1">50</span> %</div>
-              <div class="col-md-2 col-xs-5">M2: <span id="motor2">50</span> %</div>
-            </div>
-          </div-->
         </div>
 
         <hr class="featurette-divider">
@@ -199,6 +189,10 @@
               <div class="col-md-2 col-xs-4 col-data">Altitude:</div>
               <div class="col-md-4 col-xs-6 col"><span id="gps-altitude">0</span> m</div>
             </div>
+            <div class="row">
+              <div class="col-md-2 col-xs-4 col-data">Position Error:</div>
+              <div class="col-md-4 col-xs-6 col"><span id="gps-position-error">0</span> m</div>
+            </div>
           </div>
         </div>
 
@@ -224,6 +218,9 @@
             <div class="row">
               <div class="col-xs-3 col-md-1 col-data"><span>Throttle:</span></div>
               <div class="col-xs-8 col-data"><span id="throttle-id">Yawn</span></div>
+            </div>
+            <div class="row">
+              <div id="dygraph-id"> </div>
             </div>
           </div>
         </div>
@@ -393,6 +390,25 @@
           </a>
           <div id = "flight-ctl-id" class="col-xs-12 collapse">
             <form class="form-horizontal" role="form" id="flight-ctl-form" onsubmit="return onFlightCtlSubmit();">
+              <div class="form-group" id="set-flight-mode-gr">
+                <div class="col-xs-4 col-md-2">
+                  <label for="set-flight-mode-gr">Set Flight Mode</label>
+                </div>
+                <div class="col-xs-4 col-md-3">
+                  <select name="flight-mode" id="flight-mode-id" onclick="onFlightCtlUserInput()">
+                    <option value="flight-mode-auto-level">Auto Level</option>
+                    <option value="flight-mode-altitude">Altitude Hold</option>
+                    <option value="flight-mode-position">Position Hold</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group" id="track-magnotemeter-gr">
+                <div class="col-xs-8 col-md-4">
+                  <label for="track-magnetometer-gr">Track Magnetometer</label>
+                  <span style="width:5px;display:inline-block"></span>
+                  <input id="track-magnetometer" name="track-magnetometer" type="checkbox" onclick="onFlightCtlUserInput()">
+                </div>
+              </div>
               <label for="torq-corr-gr">Torque Correction</label>
               <div class="form-group" id="torq-corr-gr">
                 <div class="col-xs-4 col-md-2">
@@ -408,41 +424,11 @@
                   <input id="torq-bias-yaw" name="torq-bias-yaw" class="form-control input-sm" type="number" min="-0.1" max="0.1" step="0.001" required="true" oninput="onFlightCtlUserInput()">
                 </div>
               </div>
-              <!--label for="track-magnetometer-gr">Track Magnetometer</label-->
-              <div class="form-group" id="track-magnotemeter-gr">
-                <div class="col-xs-8 col-md-4">
-                  <label for="track-magnetometer-gr">Track Magnetometer</label>
-                  <span style="width:5px;display:inline-block"></span>
-                  <input id="track-magnetometer" name="track-magnetometer" type="checkbox" onclick="onFlightCtlUserInput()">
-                </div>
-              </div>
               <div class="form-group" id="external-gyro-gr">
                 <div class="col-xs-8 col-md-4">
                   <label for="external-gyro-gr">Enable External Gyro</label>
                   <span style="width:5px;display:inline-block"></span>
                   <input id="external-gyro" name="external-gyro" type="checkbox" onclick="onFlightCtlUserInput()">
-                </div>
-              </div>
-              <div class="form-group" id="set-pilot-gr">
-                <div class="col-xs-4 col-md-2">
-                  <label for="set-pilot-gr">Set Pilot Type</label>
-                </div>
-                <div class="col-xs-4 col-md-3">
-                  <select name="pilot-type" id="pilot-type-id" onclick="onFlightCtlUserInput()">
-                    <option value="pid-pilot-legacy">Legacy</option>
-                    <option value="pid-pilot-new">New</option>
-                  </select>
-                </div>
-              </div>
-              <div class="form-group" id="set-flight-mode-gr">
-                <div class="col-xs-4 col-md-2">
-                  <label for="set-flight-mode-gr">Set Flight Mode</label>
-                </div>
-                <div class="col-xs-4 col-md-3">
-                  <select name="flight-mode" id="flight-mode-id" onclick="onFlightCtlUserInput()">
-                    <option value="flight-mode-auto-level">Auto Level</option>
-                    <option value="flight-mode-altitude">Altitude Hold</option>
-                  </select>
                 </div>
               </div>
               <label for="yaw-throttle-factor-gr">Yaw Throttle Factor</label>
@@ -739,7 +725,7 @@
 
     <footer class="footer">
       <p>
-        &copy; Sigmadrone 2016
+        &copy; Sigmadrone 2017
       </p>
     </footer>
 
@@ -758,6 +744,7 @@
   <script src="./js/chart2d.js"></script>
   <script src="./js/rpcclient.js"></script>
   <script src="./js/chartmodel.js"></script>
+  <script src="./js/dygraph.min.js"></script>
   <link href="./js/vis.min.css" rel="stylesheet" type="text/css" />
 
   <script>
@@ -816,6 +803,28 @@
   var altitudeChart = null;
   var altitudeChartModel = null;
   var rcValuesChart = null;
+
+/*
+  g = new Dygraph(
+    document.getElementById("dygraph-id"),
+    // For possible data formats, see http://dygraphs.com/data.html
+    // The x-values could also be dates, e.g. "2012/03/15"
+    "X,Y,Z\n" +
+    "1,0,3\n" +
+    "2,2,6\n" +
+    "3,4,8\n" +
+    "4,6,9\n" +
+    "5,8,9\n" +
+    "6,10,8\n" +
+    "7,12,6\n" +
+    "8,14,3\n",
+    {
+      // options go here. See http://dygraphs.com/options.html
+      legend: 'always',
+      animatedZooms: true,
+      title: 'dygraphs chart template'
+    });
+*/
 
   sensorChart = new VisChart2d(
     document.getElementById("sensor-chart-id"),
@@ -1076,12 +1085,9 @@
     rpcClient.rpcCall(droneRpcUrl, "sd_enable_external_gyro", "[" + $myForm[0].elements['external-gyro'].checked + "]");
     rpcClient.rpcCall(droneRpcUrl, "roll_bias", "[" + $myForm[0].elements['torq-bias-roll'].value + "]");
     rpcClient.rpcCall(droneRpcUrl, "pitch_bias", "[" + $myForm[0].elements['torq-bias-pitch'].value + "]");
-    if ($myForm[0].elements['pilot-type-id'].value == "pid-pilot-new") {
-      rpcClient.rpcCall(droneRpcUrl, "sd_set_pilot_type", "[" + "\"pid_pilot_new\"" + "]");
-    } else {
-      rpcClient.rpcCall(droneRpcUrl, "sd_set_pilot_type", "[" + "\"pid_pilot_legacy\"" + "]");
-    }
-    if ($myForm[0].elements['flight-mode-id'].value == "flight-mode-altitude") {
+    if ($myForm[0].elements['flight-mode-id'].value == "flight-mode-position") {
+      rpcClient.rpcCall(droneRpcUrl, "sd_flight_mode", "[" + "2" + "]");
+    } else if ($myForm[0].elements['flight-mode-id'].value == "flight-mode-altitude") {
       rpcClient.rpcCall(droneRpcUrl, "sd_flight_mode", "[" + "1" + "]");
     } else {
       rpcClient.rpcCall(droneRpcUrl, "sd_flight_mode", "[" + "0" + "]");
@@ -1301,10 +1307,10 @@
       $("#temperature").text(response.result.temperature);
 
       if (response.result.motors_armed) {
-        m1.refresh(response.result.motors[0] * 100);
-        m2.refresh(response.result.motors[1] * 100);
-        m3.refresh(response.result.motors[2] * 100);
-        m4.refresh(response.result.motors[3] * 100);
+        m1.refresh(response.result.motors[2] * 100);
+        m2.refresh(response.result.motors[3] * 100);
+        m3.refresh(response.result.motors[0] * 100);
+        m4.refresh(response.result.motors[1] * 100);
       } else {
         m1.refresh(0); m2.refresh(0);
         m3.refresh(0); m4.refresh(0);
@@ -1312,8 +1318,8 @@
 
       $("#temperature_val").text(response.result.temperature.toFixed(1) + ' ');
       if (response.result.gps_satellites >= 3) {
-        $("#gps-lat").text(response.result.gps_latitude);
-        $("#gps-long").text(response.result.gps_longitude);
+        $("#gps-lat").text((response.result.gps_latitude/1000000).toFixed(6));
+        $("#gps-long").text((response.result.gps_longitude/1000000).toFixed(6));
         $("#gps-speed").text(response.result.gps_speed_kmph.toFixed(1));
         $("#gps-course").text(response.result.gps_course_deg.toFixed(2));
       } else {
@@ -1328,6 +1334,7 @@
         $("#gps-course").text( 'N/A');
         $("#gps-altitude").text('N/A');
       }
+      $("#gps-position-error").text(response.result.position_error.toFixed(2));
       $("#dt").text(response.result.dt/1000);
 
       $("#roll-id").text(droneState.roll.toFixed(4));

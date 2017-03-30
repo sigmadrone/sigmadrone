@@ -32,8 +32,8 @@ typedef unsigned char byte;
 unsigned long millis();
 #define DEG_TO_RAD 0.017453292519943295769236907684886
 #define RAD_TO_DEG 57.295779513082320876798154814105
-#define radians(deg) ((deg)*DEG_TO_RAD)
-#define degrees(rad) ((rad)*RAD_TO_DEG)
+#define to_radians(deg) ((deg)*DEG_TO_RAD)
+#define to_degrees(rad) ((rad)*RAD_TO_DEG)
 #define sq(x) ((x) * (x))
 #define TWO_PI (2 * M_PI)
 #endif
@@ -99,7 +99,12 @@ public:
 
   static int library_version() { return _GPS_VERSION; }
 
-  static float distance_between (float lat1, float long1, float lat2, float long2);
+  // Calculates the distance between 2 points. The result is given in meters
+  static float distance_between (double lat1, double long1, double lat2, double long2);
+  static float distance_between_polar_coord (double lat1, double long1, double lat2, double long2);
+  static float distance_between_pythagor(double lat1, double long1, double lat2, double long2);
+  static float distance_between_haversine (double lat1, double long1, double lat2, double long2);
+
   static float course_to (float lat1, float long1, float lat2, float long2);
   static const char *cardinal(float course);
 

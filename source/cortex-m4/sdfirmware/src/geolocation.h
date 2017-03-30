@@ -19,41 +19,27 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#ifndef GPSREADER_H_
-#define GPSREADER_H_
+#ifndef GEOLOCATION_H_
+#define GEOLOCATION_H_
 
-#include "timestamp.h"
-#include "uart.h"
-#include "digitalout.h"
-#include "ringbuffer.h"
-
-class TinyGPS;
-
-class GPSReader {
-public:
-	GPSReader();
-	~GPSReader();
-	void start();
-	bool update_state();
-	float longitude_f();
-	Longitude longitude();
-	Latitude lattitude();
-	float lattitude_f();
-	Altitude altitude();
-	float /*km/h*/ speed(); // TODO: define speed unit
-	// course in last full GPRMC sentence in 100th of a degree
-	float course();
-	uint32_t satellite_count();
-
+#include "units.h"
+#
+struct GeoLocation
+{
+	GeoLocation(Latitude lat, Longitude lon, Altitude alt = INVALID_ALTITUDE ) : lat_(lat), lon_(lon), altitude_(alt) {}
+	GeoLocation() : lat_(INVALID_ANGLE), lon_(INVALID_ANGLE), altitude_(INVALID_ALTITUDE) {}
+	Latitude latitude() const { return lat_; }
+	Longitude longitude() const { return lon_; }
+	Altitude altitude() const { return altitude_; }
+	bool is_valid() const {
+		return lon_.is_valid() && lat_.is_valid() && altitude() != INVALID_ALTITUDE;
+	}
+	static Distance distance_between(const GeoLocation& loc1, const GeoLocation& loc2);
 private:
-	bool process_read_data();
-
-	static const uint32_t buffer_size_ = 256;
-
-	UART uart_;
-	DigitalOut gps_power_;
-	TinyGPS* gps_parser_;
-	RingBuffer buffer_;
+	Latitude lat_;
+	Longitude lon_;
+	Altitude altitude_;
 };
 
-#endif /* gpsreader_H_ */
+
+#endif /* GEOLOCATION_H_ */

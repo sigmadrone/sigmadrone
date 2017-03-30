@@ -51,7 +51,7 @@ void FlightControl::stop_receiver()
 
 QuaternionF FlightControl::target_q() const
 {
-	return alarm_.is_none() ? rc_values_.target_quaternion() : QuaternionF(1,0,0,0);
+	return alarm_.is_none() ? target_attitude_.get() : QuaternionF(1,0,0,0);
 }
 
 Throttle FlightControl::base_throttle() const
@@ -103,15 +103,12 @@ void FlightControl::update_state(DroneState& state)
 		}
 	}
 
-	if (rc_values_.base_throttle().get() < 0.1) {
-		rc_values_.reset_twist_quaternion(state.attitude_);
-	}
+	target_attitude_.update_state(state);
 
 	if (!rc_values_.motors_armed()) {
 		altitude_tracker().reset();
 	}
 
-	state.target_ = target_q();
 	process_servo_start_stop_command();
 	altitude_tracker().update_state(state);
 	safety_check(state);
@@ -123,6 +120,9 @@ void FlightControl::update_state(DroneState& state)
 	state.gear_alive_ = rc_values_.gear_alive_;
 	state.base_throttle_ = base_throttle().get();
 	state.motors_armed_ = rc_values_.motors_armed();
+	state.target_ = target_q();
+
+	position_control_.update_state(state);
 
 	altitude_control_.update_state(state);
 	state.base_throttle_ = altitude_control_.get_throttle().get();

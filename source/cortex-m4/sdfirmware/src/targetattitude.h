@@ -19,41 +19,29 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#ifndef GPSREADER_H_
-#define GPSREADER_H_
+#ifndef TARGETATTITUDE_H_
+#define TARGETATTITUDE_H_
 
-#include "timestamp.h"
-#include "uart.h"
-#include "digitalout.h"
-#include "ringbuffer.h"
+#include "dronestate.h"
+#include "lowpassfilter.h"
 
-class TinyGPS;
-
-class GPSReader {
+class TargetAttitude
+{
 public:
-	GPSReader();
-	~GPSReader();
-	void start();
-	bool update_state();
-	float longitude_f();
-	Longitude longitude();
-	Latitude lattitude();
-	float lattitude_f();
-	Altitude altitude();
-	float /*km/h*/ speed(); // TODO: define speed unit
-	// course in last full GPRMC sentence in 100th of a degree
-	float course();
-	uint32_t satellite_count();
+	TargetAttitude();
+	void update_state(DroneState& state);
+	QuaternionF get() const;
+	const QuaternionF& target_twist() const;
+	const QuaternionF& target_swing() const;
 
 private:
-	bool process_read_data();
-
-	static const uint32_t buffer_size_ = 256;
-
-	UART uart_;
-	DigitalOut gps_power_;
-	TinyGPS* gps_parser_;
-	RingBuffer buffer_;
+	QuaternionF twist_;
+	QuaternionF swing_;
+	LowPassFilter<float, float> pitch_avg_;
+	LowPassFilter<float, float> roll_avg_;
 };
 
-#endif /* gpsreader_H_ */
+
+
+
+#endif /* TARGETATTITUDE_H_ */

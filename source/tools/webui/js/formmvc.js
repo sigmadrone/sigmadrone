@@ -229,13 +229,10 @@ FlightCtlFormView.prototype.onRedrawData = function(droneState) {
   $(this.formId)[0].elements['track-magnetometer'].checked = droneState.track_magnetometer;
   $(this.formId)[0].elements['external-gyro'].checked = droneState.ext_gyro_enabled;
   $(this.formId)[0].elements['yaw-throttle-factor'].value = droneState.yaw_throttle_factor;
-  if (droneState.pilot_type == "pid_pilot_new") {
-    $(this.formId)[0].elements['pilot-type-id'].value = "pid-pilot-new";
-  } else {
-    $(this.formId)[0].elements['pilot-type-id'].value = "pid-pilot-legacy";
-  }
 
-  if (droneState.flight_mode == 1) {
+  if (droneState.flight_mode == 2) {
+    $(this.formId)[0].elements['flight-mode-id'].value = "flight-mode-position";
+  } else if (droneState.flight_mode == 1) {
     $(this.formId)[0].elements['flight-mode-id'].value = "flight-mode-altitude";
   } else {
     $(this.formId)[0].elements['flight-mode-id'].value = "flight-mode-auto-level";

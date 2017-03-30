@@ -33,6 +33,8 @@
 #include "altitudetracker.h"
 #include "altitudecontrol.h"
 #include "ipilot.h"
+#include "positioncontrol.h"
+#include "targetattitude.h"
 
 static const Throttle EMERGENCY_THROTTLE(0.45f);
 
@@ -86,6 +88,8 @@ private:
 	Alarm most_critical_alarm_;
 	AltitudeTracker altitude_track_;
 	AltitudeControl altitude_control_;
+	PositionControl position_control_;
+	TargetAttitude target_attitude_;
 };
 
 
