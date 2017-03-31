@@ -22,12 +22,14 @@
 #include "trimstr.h"
 #include "uartrpcserver.h"
 #include "librexjsonrpc/jsonserialization.h"
+#include "magcalibrator.h"
 
 
-UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata)
+UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, MagCalibrator& mag_calibrator)
 	: rpc_server<UartRpcServer, UART*>()
 	, dronestate_(dronestate)
 	, configdata_(configdata)
+	, mag_calibrator_(mag_calibrator)
 {
 	add("sd_get_altitude", &UartRpcServer::rpc_get_altitude);
 	add("sd_get_attitude", &UartRpcServer::rpc_get_attitude);
@@ -71,6 +73,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata)
 	add("sd_altitude_tracker_kp2", &UartRpcServer::rpc_altitude_tracker_kp2);
 	add("sd_altitude_correction_period", &UartRpcServer::rpc_altitude_correction_period);
 	add("sd_altitude_filter", &UartRpcServer::rpc_altitude_filter);
+	add("sd_calibrate_mag", &UartRpcServer::rpc_calibrate_mag);
 }
 
 UartRpcServer::~UartRpcServer()
@@ -1075,6 +1078,32 @@ rexjson::value UartRpcServer::rpc_external_gyro_align(UART* , rexjson::array& pa
 		dronestate_.external_gyro_align_ = matrix_from_json_value<float, 3, 3>(params[0]);
 	}
 	return matrix_to_json_value(dronestate_.external_gyro_align_);
+}
+
+rexjson::value UartRpcServer::rpc_calibrate_mag(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_bool_type | rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_calibrate_mag\n"
+	            "\nStart/stop magnetometer calibration."
+				"\nAfter starting the calibration process, rotate the platform along all 3 axes."
+				"\nIf no parameter is passed the current calibration state is returned"
+				"\n"
+				"Arguments:\n"
+				"1. start_calibration   (bool, optional) True - start, false - stop calibration.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		mag_calibrator_.start_stop_calibration(params[0].get_bool());
+	}
+
+	return mag_calibrator_.is_calibrating();
 }
 
 void UartRpcServer::jsonrpc_request_handler(UART* uart)

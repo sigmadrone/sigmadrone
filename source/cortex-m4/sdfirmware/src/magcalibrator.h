@@ -19,38 +19,32 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#ifndef LSM303READER_H_
-#define LSM303READER_H_
+
+#ifndef MAGCALIBRATOR_H_
+#define MAGCALIBRATOR_H_
 
 #include "d3math.h"
-#include "units.h"
-#include "FreeRTOS.h"
-#include "task.h"
-#include "queue.h"
-#include "lsm303d.h"
-#include "digitalin.h"
-#include "sensorsprefilters.h"
-#include "magcalibrator.h"
 
-class LSM303Reader
+class MagCalibrator
 {
 public:
-	LSM303Reader(LSM303D& acc, PinName int2_pin, const Matrix3f& axes_align);
-	~LSM303Reader() = default;
-	Vector3f read_sample_acc();
-	Vector3f read_sample_mag();
-	size_t size();
-	void init(uint8_t watermark);
-	void enable_int2(bool enable);
-
-	MagCalibrator mag_calibrator_;
-private:
-	void isr();
+	MagCalibrator();
+	void start_stop_calibration(bool start);
+	void add_reading(const Vector3f& mag_values);
+	const Vector3f& bias() const;
+	const Vector3f& scale_factor() const;
+	bool is_calibrating() const;
+	Vector3f calibrate_reading(const Vector3f& mag_values);
 
 private:
-	LSM303D& acc_;
-	DigitalIn int2_pin_;
-	Matrix3f axes_align_;
+	Vector3f mag_bias_;
+	Vector3f scale_factor_;
+	Vector3f min_values_;
+	Vector3f max_values_;
+	bool calibration_in_progress_;
 };
 
-#endif
+
+
+
+#endif /* MAGCALIBRATOR_H_ */

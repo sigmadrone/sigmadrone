@@ -27,10 +27,12 @@
 #include "flashmemory.h"
 #include "librexjsonrpc/rpcserver.h"
 
+class MagCalibrator;
+
 class UartRpcServer : public rpc_server<UartRpcServer, UART*>
 {
 public:
-	UartRpcServer(DroneState& dronestate, FlashMemory& configdata);
+	UartRpcServer(DroneState& dronestate, FlashMemory& configdata, MagCalibrator& mag_calibrator);
 	virtual ~UartRpcServer();
 
 	void jsonrpc_request_handler(UART* uart);
@@ -84,12 +86,14 @@ protected:
 	rexjson::value rpc_enable_external_gyro(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_external_gyro_align(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_flight_mode(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_calibrate_mag(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 
 protected:
 	std::string cached_request_;
 	DroneState& dronestate_;
 	FlashMemory& configdata_;
+	MagCalibrator& mag_calibrator_;
 };
 
 #endif /* UARTRPCSERVER_H_ */
