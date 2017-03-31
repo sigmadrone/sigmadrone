@@ -327,7 +327,7 @@ void main_task(void *pvParameters)
 	printf("Calibrating...");
 
 	gyro_reader.enable_int2(true);
-	gyro_reader.calculate_static_bias_filtered(1200);
+	gyro_reader.calculate_static_bias_filtered(2400);
 	printf(" Done!\n");
 	flight_ctl.start_receiver();
 
