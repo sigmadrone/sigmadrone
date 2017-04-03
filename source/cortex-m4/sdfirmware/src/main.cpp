@@ -255,8 +255,6 @@ void main_task(void *pvParameters)
 	TimeStamp sample_dt;
 	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
-	UartRpcServer rpcserver(*drone_state, configdata);
-	MagLowPassPreFilter3d* mag_lpf = new MagLowPassPreFilter3d();
 	static bool print_to_console = false;
 	LowPassFilter<Vector3f, float> gyro_lpf({0.5});
 	LowPassFilter<Vector3f, float> acc_lpf_alt({0.9});
@@ -308,6 +306,8 @@ void main_task(void *pvParameters)
 
 	L3GD20Reader gyro_reader(gyro, GYRO_INT2_PIN, gyro_align);
 	LSM303Reader acc_reader(accel, ACC_INT2_PIN, acc_align);
+
+	UartRpcServer rpcserver(*drone_state, configdata, acc_reader.mag_calibrator_);
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
@@ -411,8 +411,9 @@ void main_task(void *pvParameters)
 
 #define ALLOW_ACCELEROMETER_OFF
 #ifdef ALLOW_ACCELEROMETER_OFF
-		if (drone_state->track_accelerometer_)
+		if (drone_state->track_accelerometer_) {
 			att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
+		}
 #else
 		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
 #endif
@@ -424,17 +425,16 @@ void main_task(void *pvParameters)
 #endif
 
 		drone_state->mag_raw_ = acc_reader.read_sample_mag();
-		drone_state->mag_ = mag_lpf->do_filter(drone_state->mag_raw_.normalize());
-		if (drone_state->track_magnetometer_)
+		drone_state->mag_ = drone_state->mag_raw_.normalize();
+		if (drone_state->track_magnetometer_) {
 			att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
+		}
 
 		drone_state->attitude_ = att.get_attitude();
 		drone_state->gyro_drift_error_ = RAD2DEG(att.get_drift_error());
 
 		flight_ctl.update_state(*drone_state);
 		flight_ctl.send_throttle_to_motors();
-		QuaternionF attitude_twist, attitude_swing;
-		QuaternionF::decomposeTwistSwing(drone_state->attitude_, Vector3f(0,0,1), attitude_swing, attitude_twist);
 
 		if (print_to_console && console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
 
