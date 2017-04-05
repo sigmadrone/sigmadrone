@@ -97,7 +97,7 @@ void LPS25HB::UpdateReg(uint8_t reg, uint8_t mask, uint8_t data)
 {
 	uint8_t tmp;
 
-	ReadReg(LPS25HB_CTRL_REG1, 1, &tmp);
+	ReadReg(reg, 1, &tmp);
 	tmp &= ~mask;
 	tmp |= (data & mask);
 	WriteReg(reg, 1, &tmp);
