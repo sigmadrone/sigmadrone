@@ -176,4 +176,8 @@ static const PinName BATTERY_MONITOR_ONOFF_PIN = PH_9;
 
 static const PinName PCA9685_OUTPUT_ENABLE_PIN = PB_12;
 
+static const PinName LSM330_GYRO_CS_PIN = PK_0;
+static const PinName LSM330_ACCEL_CS_PIN = PK_2;
+static const PinName LSM330_GYRO_INT2_PIN = PI_14;
+
 #endif /* COLIBRI_HW_MAP */
