@@ -23,7 +23,7 @@
 #define BMP280_H_
 
 #include <stdint.h>
-#include "i2cmaster.h"
+#include "spimaster.h"
 
 
 /*!
@@ -363,10 +363,13 @@ typedef	int64_t s64;/**< used for signed 64bit */
 
 class BMP280 {
 public:
-	BMP280(I2CMaster& i2c, u8 dev_addr);
+	BMP280(SPIMaster& spi, uint8_t cs);
 	~BMP280();
 
 public:
+	void read_reg(uint8_t reg, uint8_t* data, uint16_t nbytes);
+	void write_reg(uint8_t reg, uint8_t* data, uint16_t nbytes);
+
 	double compensate_pressure_double(s32 v_uncomp_pressure_s32);
 	u32 compensate_pressure_int32(s32 v_uncomp_pressure_s32);
 	double compensate_temperature_double(s32 v_uncomp_temperature_s32);
@@ -378,7 +381,6 @@ public:
 	u8 get_power_mode();
 	u8 get_standby_durn();
 	void init();
-	u8 read_register(u8 v_addr_u8, u8 *v_data_u8, u8 v_len_u8);
 
 	void set_filter(u8 v_value_u8);
 	void set_oversamp_pressure(u8 v_value_u8);
@@ -386,7 +388,6 @@ public:
 	void set_power_mode(u8 v_power_mode_u8);
 	void set_standby_durn(u8 v_standby_durn_u8);
 	void set_work_mode(u8 v_work_mode_u8);
-	u8 write_register(u8 v_addr_u8, u8 *v_data_u8, u8 v_len_u8);
 	s32 read_uncomp_temperature();
 	s32 read_uncomp_pressure();
 	u32 read_chip_id();
@@ -412,9 +413,9 @@ public:
 	};
 
 private:
-	I2CMaster& i2c_;
-	u8 dev_addr_;				/**< device address of the sensor*/
-	u8 chip_id_;				/**< chip id of the sensor*/
+	SPIMaster& spi_;
+	u8 cs_;				        /**< chip select*/
+	u8 chip_id_;
 	u8 oversamp_temperature_;	/**< temperature over sampling*/
 	u8 oversamp_pressure_;		/**< pressure over sampling*/
 	struct calib_param_t calib_;

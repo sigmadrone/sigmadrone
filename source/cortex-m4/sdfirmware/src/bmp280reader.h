@@ -39,10 +39,10 @@ public:
 	void calibrate();
 
 	PressurePreFilter pressure_filter_;
-	TemperaturePreFilter temperature_filter_;
 private:
 	BMP280& bmp_;
 	Pressure base_pressure_;
+	Temperature temperature_;
 };
 
 #endif /* BMP280READER_H_ */

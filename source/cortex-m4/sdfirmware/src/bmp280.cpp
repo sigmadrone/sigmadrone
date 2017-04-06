@@ -45,10 +45,10 @@ static void delay_msec(unsigned int msec)
 	vTaskDelay(msec / portTICK_RATE_MS);
 }
 
-BMP280::BMP280(I2CMaster& i2c, u8 dev_addr)
-	: i2c_(i2c)
-	, dev_addr_(dev_addr)
-	, chip_id_(0)
+BMP280::BMP280(SPIMaster& spi, uint8_t cs)
+	: spi_(spi)
+	, cs_(cs)
+    , chip_id_(0)
 	, oversamp_temperature_(0)
 	, oversamp_pressure_(0)
 {
@@ -62,12 +62,50 @@ BMP280::BMP280(I2CMaster& i2c, u8 dev_addr)
 }
 
 BMP280::~BMP280() {
-	// TODO Auto-generated destructor stub
 }
+
+#define SPI_BUFFER_LEN 5
+#define BUFFER_LENGTH	0xFF
+#define	SPI_READ	0x80
+#define SPI_WRITE	0x7F
+#define BMP280_DATA_INDEX	1
+#define BMP280_ADDRESS_INDEX	2
+
+void BMP280::read_reg(uint8_t reg_addr, uint8_t* data, uint16_t nbytes)
+{
+	/* Reading is done by lowering CSB and first sending one control byte. The control bytes consist
+	 * of the SPI register address (= full register address without bit 7) and the read command (bit 7 =
+	 * RW = ‘1’). After writing the control byte, data is sent out of the SDO pin (SDI in 3-wire mode);
+	 * the register address is automatically incremented
+	 */
+	spi_.read_reg(cs_, reg_addr | SPI_READ, data, nbytes);
+}
+
+void BMP280::write_reg(uint8_t reg_addr, uint8_t* data, uint16_t nbytes)
+{
+	/* Writing is done by lowering CSB and sending pairs control bytes and register data. The control
+	 * bytes consist of the SPI register address (= full register address without bit 7) and the write
+	 * command (bit7 = RW = ‘0’). Several pairs can be written without raising CSB. The transaction is
+	 * ended by a raising CSB
+	 */
+	u8 array[SPI_BUFFER_LEN * BMP280_ADDRESS_INDEX];
+
+	for (u8 stringpos = BMP280_INIT_VALUE; stringpos < nbytes; stringpos++) {
+		/* the operation of (reg_addr++)&0x7F done as per the
+		SPI communication protocol specified in the data sheet*/
+		u8 index = stringpos * BMP280_ADDRESS_INDEX;
+		array[index] = (reg_addr++) & SPI_WRITE;
+		array[index + BMP280_DATA_INDEX] = *(data + stringpos);
+	}
+	spi_.write(cs_, array, nbytes * 2);
+}
+
 
 u32 BMP280::read_chip_id()
 {
-	return i2c_.read8(dev_addr_, BMP280_CHIP_ID_REG);
+	u8 chip_id;
+	read_reg(BMP280_CHIP_ID_REG, &chip_id, 1);
+	return chip_id;
 }
 
 /*!
@@ -327,8 +365,7 @@ void BMP280::get_calib_param(void)
 			BMP280_INIT_VALUE, BMP280_INIT_VALUE, BMP280_INIT_VALUE,
 			BMP280_INIT_VALUE, BMP280_INIT_VALUE};
 	/* check the p_bmp280 structure pointer as NULL*/
-	i2c_.read(dev_addr_,
-			BMP280_TEMPERATURE_CALIB_DIG_T1_LSB_REG,
+	read_reg(BMP280_TEMPERATURE_CALIB_DIG_T1_LSB_REG,
 			a_data_u8,
 			BMP280_PRESSURE_TEMPERATURE_CALIB_DATA_LENGTH);
 	/* read calibration values*/
@@ -415,8 +452,8 @@ u8 BMP280::get_filter()
 	/* variable used to return communication result*/
 	u8 v_data_u8 = BMP280_INIT_VALUE;
 	/* check the p_bmp280 structure pointer as NULL*/
-	i2c_.read(dev_addr_,
-			BMP280_CONFIG_REG_FILTER__REG, &v_data_u8,
+	read_reg(BMP280_CONFIG_REG_FILTER__REG,
+			&v_data_u8,
 			BMP280_GEN_READ_WRITE_DATA_LENGTH);
 	v_value_u8 = BMP280_GET_BITSLICE(v_data_u8,
 			BMP280_CONFIG_REG_FILTER);
@@ -448,9 +485,8 @@ u8 BMP280::get_oversamp_pressure()
 	u8 v_data_u8 = BMP280_INIT_VALUE;
 
 	/* read pressure over sampling */
-	i2c_.read(dev_addr_,
-				BMP280_CTRL_MEAS_REG_OVERSAMP_PRESSURE__REG,
-				&v_data_u8, BMP280_GEN_READ_WRITE_DATA_LENGTH);
+	read_reg(BMP280_CTRL_MEAS_REG_OVERSAMP_PRESSURE__REG,
+			&v_data_u8, BMP280_GEN_READ_WRITE_DATA_LENGTH);
 	v_value_u8 = BMP280_GET_BITSLICE(v_data_u8,	BMP280_CTRL_MEAS_REG_OVERSAMP_PRESSURE);
 	oversamp_pressure_ = v_value_u8;
 	return v_value_u8;
@@ -477,15 +513,13 @@ void BMP280::set_oversamp_pressure(u8 v_value_u8)
 	u8 v_data_u8 = BMP280_INIT_VALUE;
 	/* check the p_bmp280 structure pointer as NULL*/
 
-	i2c_.read(dev_addr_,
-			BMP280_CTRL_MEAS_REG_OVERSAMP_PRESSURE__REG,
+	read_reg(BMP280_CTRL_MEAS_REG_OVERSAMP_PRESSURE__REG,
 			&v_data_u8, BMP280_GEN_READ_WRITE_DATA_LENGTH);
 
 	v_data_u8 = BMP280_SET_BITSLICE(v_data_u8,
 				BMP280_CTRL_MEAS_REG_OVERSAMP_PRESSURE,
 				v_value_u8);
-	i2c_.write(
-		dev_addr_,
+	write_reg(
 		BMP280_CTRL_MEAS_REG_OVERSAMP_PRESSURE__REG,
 		&v_data_u8,
 		BMP280_GEN_READ_WRITE_DATA_LENGTH);
@@ -514,11 +548,10 @@ void BMP280::set_oversamp_pressure(u8 v_value_u8)
 void BMP280::set_oversamp_temperature(u8 v_value_u8)
 {
 	u8 v_data_u8 = BMP280_INIT_VALUE;
-	i2c_.read(dev_addr_,
-			BMP280_CTRL_MEAS_REG_OVERSAMP_TEMPERATURE__REG,
+	read_reg(BMP280_CTRL_MEAS_REG_OVERSAMP_TEMPERATURE__REG,
 			&v_data_u8, BMP280_GEN_READ_WRITE_DATA_LENGTH);
 	v_data_u8 = BMP280_SET_BITSLICE(v_data_u8, BMP280_CTRL_MEAS_REG_OVERSAMP_TEMPERATURE, v_value_u8);
-	i2c_.write(dev_addr_,
+	write_reg(
 		BMP280_CTRL_MEAS_REG_OVERSAMP_TEMPERATURE__REG,
 		&v_data_u8,
 		BMP280_GEN_READ_WRITE_DATA_LENGTH);
@@ -545,9 +578,8 @@ u8 BMP280::get_power_mode()
 	u8 v_power_mode_u8;
 	u8 v_mode_u8 = BMP280_INIT_VALUE;
 
-	i2c_.read(dev_addr_,
-				BMP280_CTRL_MEAS_REG_POWER_MODE__REG,
-				&v_mode_u8, BMP280_GEN_READ_WRITE_DATA_LENGTH);
+	read_reg(BMP280_CTRL_MEAS_REG_POWER_MODE__REG,
+			&v_mode_u8, BMP280_GEN_READ_WRITE_DATA_LENGTH);
 	v_power_mode_u8 = BMP280_GET_BITSLICE(v_mode_u8,
 				BMP280_CTRL_MEAS_REG_POWER_MODE);
 	return v_power_mode_u8;
@@ -578,7 +610,7 @@ void BMP280::set_power_mode(u8 v_power_mode_u8)
 				+ (oversamp_pressure_
 				<< BMP280_SHIFT_BIT_POSITION_BY_02_BITS)
 				+ v_power_mode_u8;
-		i2c_.write(dev_addr_,
+		write_reg(
 				BMP280_CTRL_MEAS_REG_POWER_MODE__REG,
 				&v_mode_u8,
 				BMP280_GEN_READ_WRITE_DATA_LENGTH);
@@ -617,8 +649,7 @@ u8 BMP280::get_standby_durn()
 	u8 v_data_u8 = BMP280_INIT_VALUE;
 
 	/* read the standby duration*/
-	i2c_.read(dev_addr_,
-			BMP280_CONFIG_REG_STANDBY_DURN__REG, &v_data_u8,
+	read_reg(BMP280_CONFIG_REG_STANDBY_DURN__REG, &v_data_u8,
 			BMP280_GEN_READ_WRITE_DATA_LENGTH);
 	v_standby_durn_u8 = BMP280_GET_BITSLICE(v_data_u8,
 			BMP280_CONFIG_REG_STANDBY_DURN);
@@ -658,13 +689,12 @@ void BMP280::set_standby_durn(u8 v_standby_durn_u8)
 	u8 v_data_u8 = BMP280_INIT_VALUE;
 
 	/* write the standby duration*/
-	i2c_.read(dev_addr_,
-			BMP280_CONFIG_REG_STANDBY_DURN__REG, &v_data_u8,
+	read_reg(BMP280_CONFIG_REG_STANDBY_DURN__REG, &v_data_u8,
 			BMP280_GEN_READ_WRITE_DATA_LENGTH);
 	v_data_u8 = BMP280_SET_BITSLICE(v_data_u8,
 				BMP280_CONFIG_REG_STANDBY_DURN,
 				v_standby_durn_u8);
-	i2c_.write(dev_addr_,
+	write_reg(
 				BMP280_CONFIG_REG_STANDBY_DURN__REG,
 				&v_data_u8,
 				BMP280_GEN_READ_WRITE_DATA_LENGTH);
@@ -692,7 +722,7 @@ void BMP280::set_work_mode(u8 v_work_mode_u8)
 	if (v_work_mode_u8 > BMP280_ULTRA_HIGH_RESOLUTION_MODE)
 		throw(std::runtime_error("Out of range"));
 
-	i2c_.read(dev_addr_,
+	read_reg(
 			BMP280_CTRL_MEAS_REG, &v_data_u8,
 			BMP280_GEN_READ_WRITE_DATA_LENGTH);
 	switch (v_work_mode_u8) {
@@ -724,7 +754,7 @@ void BMP280::set_work_mode(u8 v_work_mode_u8)
 	v_data_u8 = BMP280_SET_BITSLICE(v_data_u8,
 		BMP280_CTRL_MEAS_REG_OVERSAMP_PRESSURE,
 		oversamp_pressure_);
-	i2c_.write(dev_addr_,
+	write_reg(
 			BMP280_CTRL_MEAS_REG,
 			&v_data_u8,
 			BMP280_GEN_READ_WRITE_DATA_LENGTH);
@@ -745,7 +775,7 @@ void BMP280::init()
 
 	while (v_chip_id_read_count > 0) {
 		/* read chip id */
-		i2c_.read(dev_addr_,
+		read_reg(
 				BMP280_CHIP_ID_REG, &v_data_u8,
 				BMP280_GEN_READ_WRITE_DATA_LENGTH);
 		/* Check for the correct chip id */
@@ -762,42 +792,6 @@ void BMP280::init()
 	/*assign chip ID to the global structure*/
 	chip_id_ = v_data_u8;
 	get_calib_param();
-}
-
-/*!
- * @brief
- *	This API reads the data from
- *	the given register
- *
- *
- *	@param v_addr_u8 -> Address of the register
- *	@param v_data_u8 -> The data from the register
- *	@param v_len_u8 -> no of bytes to read
- *
- *
- */
-u8 BMP280::read_register(u8 v_addr_u8, u8 *v_data_u8, u8 v_len_u8)
-{
-	i2c_.read(dev_addr_, v_addr_u8, v_data_u8, v_len_u8);
-	return v_len_u8;
-}
-
-/*!
- * @brief
- *	This API write the data to
- *	the given register
- *
- *
- *	@param v_addr_u8 -> Address of the register
- *	@param v_data_u8 -> The data for the register
- *	@param v_len_u8 -> no of bytes to write
- *
- *
- */
-u8 BMP280::write_register(u8 v_addr_u8, u8 *v_data_u8, u8 v_len_u8)
-{
-	i2c_.write(dev_addr_, v_addr_u8, v_data_u8, v_len_u8);
-	return v_len_u8;
 }
 
 
@@ -822,11 +816,12 @@ void BMP280::set_filter(u8 v_value_u8)
 	u8 v_data_u8 = BMP280_INIT_VALUE;
 	/* check the p_bmp280 structure pointer as NULL*/
 		/* write filter*/
-	i2c_.read(dev_addr_,
+	read_reg(
 				BMP280_CONFIG_REG_FILTER__REG, &v_data_u8,
 				BMP280_GEN_READ_WRITE_DATA_LENGTH);
 	v_data_u8 = BMP280_SET_BITSLICE(v_data_u8, BMP280_CONFIG_REG_FILTER, v_value_u8);
-	i2c_.write(dev_addr_,
+
+	write_reg(
 				BMP280_CONFIG_REG_FILTER__REG,
 				&v_data_u8,
 				BMP280_GEN_READ_WRITE_DATA_LENGTH);
@@ -856,7 +851,7 @@ s32 BMP280::read_uncomp_temperature()
 		{	BMP280_INIT_VALUE, BMP280_INIT_VALUE, BMP280_INIT_VALUE};
 	/* check the p_bmp280 structure pointer as NULL*/
 		/* read temperature data */
-	i2c_.read(dev_addr_,
+	read_reg(
 				BMP280_TEMPERATURE_MSB_REG, a_data_u8r,
 				BMP280_TEMPERATURE_DATA_LENGTH);
 	v_uncomp_temperature_s32 = (s32)((((u32)(
@@ -881,7 +876,7 @@ s32 BMP280::read_uncomp_pressure()
 	 */
 	u8 a_data_u8[BMP280_PRESSURE_DATA_SIZE] = {0, 0, 0};
 	/* check the p_bmp280 structure pointer as NULL*/
-	i2c_.read(dev_addr_, BMP280_PRESSURE_MSB_REG, a_data_u8, BMP280_PRESSURE_DATA_LENGTH);
+	read_reg( BMP280_PRESSURE_MSB_REG, a_data_u8, BMP280_PRESSURE_DATA_LENGTH);
 	v_uncomp_pressure_s32 = (s32)((((u32)(
 				a_data_u8[BMP280_PRESSURE_MSB_DATA]))
 				<< BMP280_SHIFT_BIT_POSITION_BY_12_BITS)

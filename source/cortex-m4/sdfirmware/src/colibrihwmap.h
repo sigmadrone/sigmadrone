@@ -108,8 +108,10 @@ static const PinName EXT_GPIO_6_PIN = PF_6;
 static const PinName EXT_GYRO_CS_PIN = PH_6;
 static const PinName EXT_GYRO_INT2_PIN = PH_12;
 
-static const PinName EXT_PRES_CS_PIN = PC_4;
-static const PinName EXT_PRES_INT_PIN = PC_5;
+static const PinName LPS25HB_PRESSURE_CS_PIN = PC_4;
+static const PinName LPS25HB_PRESSURE_INT_PIN = PC_5;
+
+static const PinName BMP280_PRESSURE_CS_PIN = PB_4;
 
 static const PinName MOTOR_POWER_CTRL_PIN = PB_0;
 

@@ -50,7 +50,7 @@ Temperature Bmp280Reader::get_temperature(bool do_read_sensor)
 	if (do_read_sensor) {
 		read_temperature();
 	}
-	return temperature_filter_.output();
+	return temperature_;
 }
 
 void Bmp280Reader::read_pressure()
@@ -61,7 +61,7 @@ void Bmp280Reader::read_pressure()
 
 void Bmp280Reader::read_temperature()
 {
-	temperature_filter_.do_filter(Temperature::from_celsius(bmp_.get_temperature()));
+	temperature_ = Temperature::from_celsius(bmp_.get_temperature());
 }
 
 void Bmp280Reader::calibrate()
@@ -83,9 +83,4 @@ void Bmp280Reader::calibrate()
 	base_pressure_ /= iterations;
 	pressure_filter_.do_filter(base_pressure_);
 	pressure_filter_.set_alpha(filter_alpha);
-
-	filter_alpha = temperature_filter_.alpha();
-	temperature_filter_.set_alpha(0.0f);
-	get_temperature(true);
-	temperature_filter_.set_alpha(filter_alpha);
 }
