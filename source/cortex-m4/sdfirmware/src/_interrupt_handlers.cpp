@@ -82,6 +82,7 @@ extern "C" void EXTI15_10_IRQHandler(void)
 {
 	DigitalIn::vector_handler(10);
 	DigitalIn::vector_handler(12);
+	DigitalIn::vector_handler(14);
 }
 
 extern "C" void DMA2_Stream0_IRQHandler(void)

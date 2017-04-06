@@ -96,11 +96,14 @@ void GPIOPin::init()
 #ifdef __GPIOH_CLK_ENABLE
 		case 7:	__GPIOH_CLK_ENABLE(); break;
 #endif
+#ifdef __GPIOI_CLK_ENABLE
+		case 8:	__GPIOK_CLK_ENABLE(); break;
+#endif
 #ifdef __GPIOJ_CLK_ENABLE
-		case 8:	__GPIOJ_CLK_ENABLE(); break;
+		case 9:	__GPIOJ_CLK_ENABLE(); break;
 #endif
 #ifdef __GPIOK_CLK_ENABLE
-		case 9:	__GPIOK_CLK_ENABLE(); break;
+		case 10:	__GPIOK_CLK_ENABLE(); break;
 #endif
 	}
 	HAL_GPIO_Init(gpio_port_, (GPIO_InitTypeDef*)this);
