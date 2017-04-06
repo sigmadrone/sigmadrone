@@ -143,10 +143,6 @@ struct DroneState {
 			}
 			ret["alarm_time_ms"] = static_cast<int>(alarm_.when().milliseconds());
 		}
-		if (!most_critical_alarm_.is_none()) {
-			ret["crit_alarm"] = most_critical_alarm_.to_string();
-			ret["crit_alarm_time_ms"] = static_cast<int>(most_critical_alarm_.when().milliseconds());
-		}
 		ret["gear_alive"] = gear_alive_;
 		return ret;
 	}

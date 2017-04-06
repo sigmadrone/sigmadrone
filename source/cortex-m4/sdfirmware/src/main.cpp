@@ -291,16 +291,26 @@ void main_task(void *pvParameters)
             0, 0, 1);
 
 
-#else
+#elif USE_ALIGNMENT_2F
 	static const Matrix3f gyro_align(
-	        1, 0,  0,
-            0, 1,  0,
-		    0, 0,  1);
+	        1, 0, 0,
+            0, 1, 0,
+		    0, 0, 1);
 
 	static const Matrix3f acc_align(
-	       -1,  0, 0,
+	        -1, 0, 0,
             0, -1, 0,
 	        0,  0, 1);
+#else
+	static const Matrix3f gyro_align(
+	        1, 0, 0,
+            0, 1, 0,
+		    0, 0, 1);
+
+	static const Matrix3f acc_align(
+	        1, 0, 0,
+            0, 1, 0,
+	        0, 0, 1);
 #endif
 
 
