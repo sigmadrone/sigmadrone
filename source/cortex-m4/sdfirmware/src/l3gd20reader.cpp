@@ -93,7 +93,7 @@ void L3GD20Reader::init(uint8_t watermark)
 	gyro_.HPFEnable(L3GD20::MEMS_ENABLE);
 	gyro_.SetHPFMode(L3GD20::HPM_NORMAL_MODE_RES);
 	gyro_.SetHPFCutOFF(L3GD20::HPFCF_0);
-	gyro_.SetODR(L3GD20::ODR_760Hz_BW_110);
+	gyro_.SetODR(L3GD20::ODR_760Hz_BW_50);
 }
 
 bool L3GD20Reader::wait_for_data(const TimeSpan time_to_wait)

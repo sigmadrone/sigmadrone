@@ -35,6 +35,7 @@ void LSM303Reader::init(uint8_t watermark)
 	acc_.SetFilterDataSel(LSM303D::MEMS_DISABLE);
 	acc_.SetODR(LSM303D::ODR_1600Hz);
 	acc_.SetFullScale(LSM303D::FULLSCALE_8);
+	acc_.SetAntiAliasingBandwidth(LSM303D::ABW_194_HZ);
 	acc_.SetAxis(LSM303D::X_ENABLE | LSM303D::Y_ENABLE | LSM303D::Z_ENABLE);
 	acc_.FIFOModeSet(LSM303D::FIFO_STREAM_MODE);
 	acc_.SetThreshold(watermark);
