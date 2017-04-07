@@ -18,7 +18,7 @@ Vector3f LSM303Reader::read_sample_mag()
 {
 	LSM303D::AxesAcc_t axes = {0,0,0};
 	acc_.GetMag(&axes);
-	Vector3f mag_vector = axes_align_ * Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z);
+	Vector3f mag_vector = mag_filter_.do_filter(axes_align_ * Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
 	mag_calibrator_.add_reading(mag_vector);
 	return mag_calibrator_.calibrate_reading(mag_vector);
 }
