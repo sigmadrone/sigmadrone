@@ -259,6 +259,8 @@ void main_task(void *pvParameters)
 
 	acc_reader.init(acc_wtm);
 	acc_reader.enable_int2(false);
+	acc_reader.mag_calibrator_.set_bias(drone_state->mag_bias_);
+	acc_reader.mag_calibrator_.set_scale_factor(drone_state->mag_scale_factor_);
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	printf("Calibrating...");

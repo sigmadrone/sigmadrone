@@ -51,6 +51,7 @@ private:
 	LSM303D& acc_;
 	DigitalIn int2_pin_;
 	Matrix3f axes_align_;
+	MagPreFilter mag_filter_;
 };
 
 #endif

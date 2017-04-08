@@ -950,28 +950,9 @@
   }
 
   function onSaveConfig2Flash() {
-    var bootConfig = {
-      accel_adjustment: droneState.accel_adjustment,
-      kp: droneState.kp,
-      ki: droneState.ki,
-      kd: droneState.kd,
-      yaw_kp: droneState.yaw_kp,
-      yaw_ki: droneState.yaw_ki,
-      yaw_kd: droneState.yaw_kd,
-      accelerometer_correction_period: droneState.accelerometer_correction_period,
-      gyro_factor: droneState.gyro_factor,
-      yaw_throttle_factor: droneState.yaw_throttle_factor,
-      yaw_bias: droneState.yaw_bias,
-      pitch_bias: droneState.pitch_bias,
-      roll_bias: droneState.roll_bias,
-      altitude_kp: droneState.altitude_kp,
-      altitude_ki: droneState.altitude_ki,
-      altitude_kd: droneState.altitude_kd,
-      flight_mode: droneState.flight_mode
-    };
     save2FlashView.onUserInput();
     save2FlashView.onSubmitButton();
-    rpcClient.rpcCall(droneRpcUrl, "sd_set_configdata", "["+JSON.stringify(bootConfig)+"]",
+    rpcClient.rpcCall(droneRpcUrl, "sd_save_bootconfigdata_to_flash", "[]",
       function() { save2FlashView.onDataSubmitOK(); },
       function() { save2FlashView.onDataSubmitFail(); });
     return false;

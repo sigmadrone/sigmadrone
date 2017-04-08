@@ -94,6 +94,8 @@ struct DroneState {
 	    , position_kp_(0.3)
 	    , position_ki_(0.06)
 	    , position_kd_ (0.01)
+	    , mag_bias_(0.0f, 0.0f, 0.0f)
+	    , mag_scale_factor_(1.0f, 1.0f, 1.0f)
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	    , altitude_lpf_(0.6)
@@ -180,6 +182,8 @@ struct DroneState {
 		ret["ext_gyro_enabled"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = external_gyro_align_;
 		ret["flight_posture"] = flight_posture_;
+		ret["mag_bias"] = matrix_to_json_value(mag_bias_);
+		ret["mag_scale_factor"] = matrix_to_json_value(mag_scale_factor_);
 		return ret;
 	}
 
@@ -210,6 +214,8 @@ struct DroneState {
 		ret["use_ext_gyro"] = external_gyro_enabled_;
 		ret["ext_gyro_align"] = matrix_to_json_value(external_gyro_align_);
 		ret["flight_mode"] = flight_mode_;
+		ret["mag_bias"] = matrix_to_json_value(mag_bias_);
+		ret["mag_scale_factor"] = matrix_to_json_value(mag_scale_factor_);
 		return ret;
 	}
 
@@ -250,6 +256,13 @@ struct DroneState {
 		try { flight_mode_ = (FlightMode)bootconfig["flight_mode"].get_int(); } catch (std::exception& e) {}
 		if (flight_mode_ > FLIGHT_MODE_LAST) {
 			flight_mode_ = FLIGHT_MODE_AUTO_LEVEL;
+		}
+		try {
+			mag_bias_ = matrix_from_json_value<float,3,1>(bootconfig["mag_bias"]);
+			mag_scale_factor_ = matrix_from_json_value<float,3,1>(bootconfig["mag_scale_factor"]);
+		} catch (std::exception& e) {
+			mag_bias_ = Vector3f(0.0f,0.0f,0.0f);
+			mag_scale_factor_ = Vector3f(1.0f,1.0f,1.0f);
 		}
 	}
 
@@ -348,6 +361,8 @@ struct DroneState {
 	float position_kp_;
 	float position_ki_;
 	float position_kd_;
+	Vector3f mag_bias_;
+	Vector3f mag_scale_factor_;
 
 	/*
 	 * Time it took to read sensors

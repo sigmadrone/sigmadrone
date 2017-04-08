@@ -35,6 +35,8 @@ public:
 	const Vector3f& scale_factor() const;
 	bool is_calibrating() const;
 	Vector3f calibrate_reading(const Vector3f& mag_values);
+	void set_bias(const Vector3f&);
+	void set_scale_factor(const Vector3f&);
 
 private:
 	Vector3f mag_bias_;

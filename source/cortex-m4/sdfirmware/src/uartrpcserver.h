@@ -49,6 +49,7 @@ protected:
 	rexjson::value rpc_get_dronestate_ex(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_get_configdata(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_set_configdata(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_save_bootconfigdata_to_flash(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_get_datastream(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
 	rexjson::value rpc_accelerometer_adjustment(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);

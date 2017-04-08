@@ -80,4 +80,14 @@ Vector3f MagCalibrator::calibrate_reading(const Vector3f& mag_values)
 	return calibrated;
 }
 
+void MagCalibrator::set_bias(const Vector3f& bias)
+{
+	mag_bias_ = bias;
+}
+
+void MagCalibrator::set_scale_factor(const Vector3f& scale_factor)
+{
+	scale_factor_ = scale_factor;
+}
+
 

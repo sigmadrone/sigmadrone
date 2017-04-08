@@ -52,6 +52,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Ma
 	add("sd_set_yaw_throttle_factor", &UartRpcServer::rpc_set_yaw_throttle_factor);
 	add("sd_get_configdata", &UartRpcServer::rpc_get_configdata);
 	add("sd_set_configdata", &UartRpcServer::rpc_set_configdata);
+	add("sd_save_bootconfigdata_to_flash", &UartRpcServer::rpc_save_bootconfigdata_to_flash);
 	add("sd_accelerometer_adjustment", &UartRpcServer::rpc_accelerometer_adjustment);
 	add("sd_flight_ceiling", &UartRpcServer::rpc_flight_ceiling);
 	add("sd_restore_config", &UartRpcServer::rpc_restore_config);
@@ -716,9 +717,15 @@ rexjson::value UartRpcServer::rpc_set_configdata(UART* , rexjson::array& params,
 			return create_json_helpspec(types, ARRAYSIZE(types));
 		return
 	            "sd_set_configdata\n"
-	            "\nSaves the boot time firmware configuration data in flash memory."
+	            "\nSaves the passed configuration data to flash memory. Upon reboot the firmware will "
+	            "\nread the flash memory and initialize its configurable parameters with the content of"
+	            "\nthe data received by this call."
+				"\nWARNING: this RPC call overwrites any previously saved configuration in the flash, "
+				"\nso tread lightly and make sure the passed data is properly formatted JSON and"
+				"\ncontains values parse-able by sdfirmware (see sd_get_configdata)!"
 				"\n"
 				"Arguments:\n"
+				"1. Boot time firmware configuration data"
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
@@ -726,6 +733,30 @@ rexjson::value UartRpcServer::rpc_set_configdata(UART* , rexjson::array& params,
 	configdata_.program((void*)configstr.c_str(), configstr.size());
 	return configstr;
 }
+
+rexjson::value UartRpcServer::rpc_save_bootconfigdata_to_flash(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_save_bootconfigdata_to_flash\n"
+	            "\nSaves the currently configured data to flash memory."
+				"\nReturns the currently saved data."
+				"\n"
+				"Arguments:\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	rexjson::value v = dronestate_.boot_config_to_json();
+	std::string configstr = v.write(false, true, 0, 8);
+	configdata_.program((void*)configstr.c_str(), configstr.size());
+	return v;
+}
+
 
 rexjson::value UartRpcServer::rpc_pid_filter_freq(UART* , rexjson::array& params, rpc_exec_mode mode)
 {
@@ -1100,7 +1131,12 @@ rexjson::value UartRpcServer::rpc_calibrate_mag(UART* , rexjson::array& params, 
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
 	if (params[0].type() != rexjson::null_type) {
+		bool was_calibrating = mag_calibrator_.is_calibrating();
 		mag_calibrator_.start_stop_calibration(params[0].get_bool());
+		if (was_calibrating && !params[0].get_bool()) {
+			dronestate_.mag_bias_ = mag_calibrator_.bias();
+			dronestate_.mag_scale_factor_ = mag_calibrator_.scale_factor();
+		}
 	}
 
 	return mag_calibrator_.is_calibrating();

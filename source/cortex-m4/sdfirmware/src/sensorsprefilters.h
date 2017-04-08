@@ -135,4 +135,10 @@ public:
 	TemperaturePreFilter() : LowPassFilter<Temperature, float> (0.6f) {}
 };
 
+class MagPreFilter: public LowPassFilter<Vector3f, float>
+{
+public:
+	MagPreFilter() : LowPassFilter<Vector3f, float> (0.95f) {}
+};
+
 #endif /* SENSORS_PREFILTERS_H_ */
