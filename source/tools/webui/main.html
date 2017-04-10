@@ -456,7 +456,7 @@
 
         <div class="row row-padded">
           <a href="#sensors-config-id" id="sensors-config-btn" class="btn btn-link" data-toggle="collapse">
-            <span class="glyphicon glyphicon-triangle-right"></span>Sensors
+            <span class="glyphicon glyphicon-triangle-right"></span>Configure Sensors
           </a>
           <div id = "sensors-config-id" class="col-xs-12 collapse">
             <form class="form-horizontal" role="form" id="sensors-config-form" onsubmit="return onSensorsConfigSubmit();">
@@ -504,6 +504,25 @@
             </form>
           </div>
         </div>
+
+        <hr class="featurette-divider">
+
+        <div class="row row-padded">
+          <a href="#sensors-calibrate-id" id="sensors-calibrate-btn" class="btn btn-link" data-toggle="collapse">
+            <span class="glyphicon glyphicon-triangle-right"></span>Calibrate Sensors
+          </a>
+          <div id="sensors-calibrate-id" class="col-xs-12 col-data collapse">
+            <div class="col-xs-4 col-md-2">
+              <a id="mag-calibrate-btn" class="btn btn-link" onClick="onToggleMagCalibrateButton();">
+                <span id="mag-calibrate-btn-message">Calibrate Magnetometer</span> <i class="fa fa-toggle-off fa-lg" id="mag-calibrate-btn-icon"></i>
+              </a>
+            </div>
+            <div class="col-xs-12 col-md-12 col-data">
+              <span id="mag-calibrate-message-id"><!--Rotate the platform along all 3 axes, toggle the calibration button when done--></span>
+            </div>
+          </div>
+        </div>
+
 
         <hr class="featurette-divider">
 
@@ -795,7 +814,11 @@
       "#sync-graph-btn",
       "#sync-graph-btn-icon",
       false);
-  var droneState = null;
+  var magCalibrateButton = new ToggleButton(
+        "#mag-calibrate-btn",
+        "#mag-calibrate-btn-icon",
+        false);
+        var droneState = null;
   var droneRpcUrl;
   var rpcClient = new RpcClient();
   var sensorChart = null;
@@ -1346,8 +1369,9 @@
     toggleCollapsable("#pidz-id", "#pidz-btn", "PID Controller Z");
     toggleCollapsable("#pid-gyro-id", "#pid-gyro-btn", "PID Controller Gyro Drift");
     toggleCollapsable("#pid-altitude-id", "#pid-altitude-btn", "Altitude Controller");
-    toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Sensors");
+    toggleCollapsable("#sensors-config-id", "#sensors-config-btn", "Configure Sensors");
     toggleCollapsable("#flight-ctl-id", "#flight-ctl-btn", "Flight Control");
+    toggleCollapsable("#sensors-calibrate-id", "#sensors-calibrate-btn", "Calibrate Sensors");
     toggleCollapsable("#sensor-chart-ydata-select-id", "#sensor-chart-data-select-bt", "Filter Data");
     toggleCollapsable("#error-chart-ydata-select-id", "#error-chart-data-select-bt", "Filter Data");
     toggleCollapsable("#altitude-chart-ydata-select-id", "#altitude-chart-data-select-bt", "Filter Data");
@@ -1432,6 +1456,19 @@
     syncGraphButton.onToggle();
     if (syncGraphButton.isOn()) {
       onChartEvent(sensorChart.getRange());
+    }
+  }
+
+  function onToggleMagCalibrateButton() {
+    magCalibrateButton.onToggle();
+
+    if (magCalibrateButton.isOn()) {
+      rpcClient.rpcCall(droneRpcUrl,"sd_calibrate_mag","[true]",
+        function() { $("#mag-calibrate-message-id").text("Rotate the platform for a full 360 degrees along all 3 axis, when done toggle the button.") }
+      );
+    } else {
+      rpcClient.rpcCall(droneRpcUrl,"sd_calibrate_mag","[false]");
+        $("#mag-calibrate-message-id").text("");
     }
   }
 
