@@ -67,6 +67,10 @@ select {
 	padding-left: 25px;
 }
 
+.col-data-sensors {
+	padding-left: 30px;
+}
+
 .footer {
   color: #777;
 }

@@ -512,13 +512,33 @@
             <span class="glyphicon glyphicon-triangle-right"></span>Calibrate Sensors
           </a>
           <div id="sensors-calibrate-id" class="col-xs-12 col-data collapse">
-            <div class="col-xs-4 col-md-2">
-              <a id="mag-calibrate-btn" class="btn btn-link" onClick="onToggleMagCalibrateButton();">
-                <span id="mag-calibrate-btn-message">Calibrate Magnetometer</span> <i class="fa fa-toggle-off fa-lg" id="mag-calibrate-btn-icon"></i>
-              </a>
+            <div class="row">
+              <div class="col-xs-12 col-md-12">
+                <a id="mag-calibrate-btn" class="btn btn-link" onClick="onToggleMagCalibrateButton();">
+                  <span id="mag-calibrate-btn-message">Calibrate Magnetometer</span> <i class="fa fa-toggle-off fa-lg" id="mag-calibrate-btn-icon"></i>
+                </a>
+              </div>
+              <div class="col-xs-12 col-md-12 col-data-sensors">
+                <span id="mag-calibrate-message-id"></span>
+              </div>
             </div>
-            <div class="col-xs-12 col-md-12 col-data">
-              <span id="mag-calibrate-message-id"><!--Rotate the platform along all 3 axes, toggle the calibration button when done--></span>
+            <div id="mag-calib-data-id">
+              <div class="row row-padded">
+                <div class="col-xs-5 col-md-2 col-data-sensors">
+                  <span>Mag Bias</span>
+                </div>
+                <div class="col-xs-7 col-md-10">
+                  <span id="mag-bias-id">X:0.0 Y:0.0 Z:0.0</span>
+                </div>
+              </div>
+              <div class="row row-padded">
+                <div class="col-xs-5 col-md-2 col-data-sensors">
+                  <span>Mag Scale</span>
+                </div>
+                <div class="col-xs-7 col-md-10">
+                  <span id="mag-scale-id">X:1.0 Y:1.0 Z:1.0</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1357,6 +1377,7 @@
        sensorCfgView.onRedrawData(response.result);
        restoreDefaultsView.onRedrawData(response.result);
        save2FlashView.onRedrawData(response.result);
+       onRedrawSensorCalibrationData(response.result);
     }
   }
 
@@ -1459,16 +1480,26 @@
     }
   }
 
+  function onRedrawSensorCalibrationData(droneState) {
+    $("#mag-bias-id").text(vector2str(droneState.mag_bias));
+    $("#mag-scale-id").text(vector2str(droneState.mag_scale_factor));
+  }
+
   function onToggleMagCalibrateButton() {
     magCalibrateButton.onToggle();
 
     if (magCalibrateButton.isOn()) {
       rpcClient.rpcCall(droneRpcUrl,"sd_calibrate_mag","[true]",
-        function() { $("#mag-calibrate-message-id").text("Rotate the platform for a full 360 degrees along all 3 axis, when done toggle the button.") }
+        function() {
+          $("#mag-calib-data-id").css("display","none");
+          $("#mag-calibrate-message-id").text(
+          "Perform 360 degree rotation of the platform along all 3 axes; when done toggle the button.");
+        }
       );
     } else {
       rpcClient.rpcCall(droneRpcUrl,"sd_calibrate_mag","[false]");
         $("#mag-calibrate-message-id").text("");
+        $("#mag-calib-data-id").css("display","block");
     }
   }
 
