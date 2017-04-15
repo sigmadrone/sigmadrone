@@ -90,6 +90,10 @@ protected:
 	rexjson::value rpc_flight_mode(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_calibrate_mag(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 
+	rexjson::value rpc_position_kp(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_position_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_position_ki(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+
 
 protected:
 	std::string cached_request_;
