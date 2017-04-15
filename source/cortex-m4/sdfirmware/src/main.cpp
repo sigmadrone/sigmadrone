@@ -63,6 +63,8 @@
 #include "poweroff.h"
 #include "axesalignment.h"
 
+#undef USE_LPS25HB
+
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
 

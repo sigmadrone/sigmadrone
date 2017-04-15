@@ -191,6 +191,7 @@ PidAltitudeFormView.prototype.onRedrawData = function(droneState) {
   }
   $(this.formId)[0].elements['kp-altitude'].value = droneState.altitude_kp;
   $(this.formId)[0].elements['ki-altitude'].value = droneState.altitude_ki;
+  $(this.formId)[0].elements['ki-altitude-leak'].value = droneState.altitude_ki_leak;
   $(this.formId)[0].elements['kd-altitude'].value = droneState.altitude_kd;
   $(this.formId)[0].elements['alt-correction-period'].value = droneState.altitude_correction_period;
   return true;

@@ -61,6 +61,7 @@ struct DroneState {
 	    , altitude_kp_(0.35)
 		, altitude_ki_(0.5)
 		, altitude_kd_(0.035)
+	    , altitude_ki_leak_(0.02)
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
@@ -165,6 +166,7 @@ struct DroneState {
 		ret["altitude_kp"] = altitude_kp_;
 		ret["altitude_ki"] = altitude_ki_;
 		ret["altitude_kd"] = altitude_kd_;
+		ret["altitude_ki_leak"] = altitude_ki_leak_;
 		ret["position_kp"] = position_kp_;
 		ret["position_ki"] = position_ki_;
 		ret["position_kd"] = position_kd_;
@@ -200,6 +202,7 @@ struct DroneState {
 		ret["altitude_kp"] = altitude_kp_;
 		ret["altitude_ki"] = altitude_ki_;
 		ret["altitude_kd"] = altitude_kd_;
+		ret["altitude_ki_leak"] = altitude_ki_leak_;
 		ret["position_kp"] = position_kp_;
 		ret["position_ki"] = position_ki_;
 		ret["position_kd"] = position_kd_;
@@ -246,6 +249,7 @@ struct DroneState {
 		try { altitude_kp_ = bootconfig["altitude_kp"].get_real(); } catch (std::exception& e) {}
 		try { altitude_ki_ = bootconfig["altitude_ki"].get_real(); } catch (std::exception& e) {}
 		try { altitude_kd_ = bootconfig["altitude_kd"].get_real(); } catch (std::exception& e) {}
+		try { altitude_ki_leak_ = bootconfig["altitude_ki_leak"].get_real(); } catch (std::exception& e) {}
 		try { position_kp_ = bootconfig["position_kp"].get_real(); } catch (std::exception& e) {}
 		try { position_ki_ = bootconfig["position_ki"].get_real(); } catch (std::exception& e) {}
 		try { position_kd_ = bootconfig["position_kd"].get_real(); } catch (std::exception& e) {}
@@ -328,6 +332,7 @@ struct DroneState {
 	float altitude_kp_;
 	float altitude_ki_;
 	float altitude_kd_;
+	float altitude_ki_leak_;
 	float gyro_drift_kp_;
 	float gyro_drift_ki_;
 	float gyro_drift_kd_;

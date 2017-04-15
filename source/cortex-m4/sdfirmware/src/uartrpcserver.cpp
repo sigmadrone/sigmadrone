@@ -69,6 +69,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Ma
 	add("sd_altitude_kp", &UartRpcServer::rpc_altitude_kp);
 	add("sd_altitude_ki", &UartRpcServer::rpc_altitude_ki);
 	add("sd_altitude_kd", &UartRpcServer::rpc_altitude_kd);
+	add("sd_altitude_ki_leak", &UartRpcServer::rpc_altitude_ki_leak);
 	add("sd_flight_mode", &UartRpcServer::rpc_flight_mode);
 	add("sd_altitude_tracker_kp_ki_kd", &UartRpcServer::rpc_altitude_tracker_kp_ki_kd);
 	add("sd_altitude_tracker_kp2", &UartRpcServer::rpc_altitude_tracker_kp2);
@@ -924,6 +925,30 @@ rexjson::value UartRpcServer::rpc_altitude_kd(UART* , rexjson::array& params, rp
 		dronestate_.altitude_kd_ = params[0].get_real();
 	}
 	return dronestate_.altitude_kd_;
+}
+
+rexjson::value UartRpcServer::rpc_altitude_ki_leak(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "sd_altitude_ki_leak\n"
+	            "\nGet/Set Ki leak rate for the altitude PID controller."
+				"\nIf no parameter is passed, then the current Ki leak rate will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. Ki_leak_rate    (real, optional) The Ki leak rate [0..1] of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if (params[0].type() != rexjson::null_type) {
+		dronestate_.altitude_ki_leak_ = params[0].get_real();
+	}
+	return dronestate_.altitude_ki_leak_;
 }
 
 rexjson::value UartRpcServer::rpc_altitude_tracker_kp_ki_kd(UART*, rexjson::array& params, rpc_exec_mode mode)

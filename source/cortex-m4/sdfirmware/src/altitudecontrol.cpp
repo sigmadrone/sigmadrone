@@ -145,7 +145,8 @@ Altitude AltitudeControl::error_as_altitude(const DroneState& drone_state)
 void AltitudeControl::set_throttle_from_ascend_descend(const DroneState& drone_state)
 {
 	Speed err = error_as_vertical_speed(drone_state);
-	float err_pid = pid_vert_speed_.get_pi_dmedian(err.meters_per_second(), dt_.seconds_float(), 0.005);
+	float err_pid = pid_vert_speed_.get_pi_dmedian(err.meters_per_second(), dt_.seconds_float(),
+			drone_state.altitude_ki_leak_);
 	throttle_ = Throttle(drone_state.base_throttle_ + err_pid, landing_throttle, 1.0f);
 }
 
@@ -153,7 +154,8 @@ void AltitudeControl::set_throttle_from_altitude_hold(const DroneState& drone_st
 {
 	Speed err = error_as_vertical_speed(drone_state);
 	err += error_as_altitude(drone_state) / drone_state.altitude_correction_period_;
-	float err_pid = pid_vert_speed_.get_pi_dmedian(err.meters_per_second(), dt_.seconds_float(), 0.005);
+	float err_pid = pid_vert_speed_.get_pi_dmedian(err.meters_per_second(), dt_.seconds_float(),
+			drone_state.altitude_ki_leak_);
 	throttle_ = Throttle(drone_state.base_throttle_ + err_pid, landing_throttle, 1.0f);
 }
 
