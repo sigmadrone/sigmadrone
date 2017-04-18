@@ -25,7 +25,7 @@ const QuaternionF PositionControl::qt_ortho_xy_ = QuaternionF::fromAxisRot({0,0,
 const Angle PositionControl::max_swing_angle_ = Angle::from_radians(Angle::PI/4);
 const Angle PositionControl::min_swing_angle_ = Angle::from_radians(-Angle::PI/4);
 
-PositionControl::PositionControl() : distance_filter_(0.85), rc_value_pitch_(0.0f), rc_value_roll_(0.0f)
+PositionControl::PositionControl() : distance_lpf_(0.99), axis_lpf_(0.9), rc_value_pitch_(0.0f), rc_value_roll_(0.0f)
 {
 }
 
@@ -49,11 +49,7 @@ void PositionControl::update_state(DroneState& state)
 
 bool PositionControl::is_tracking()
 {
-#if 1
 	return target_location_.is_valid();
-#else
-	return true;
-#endif
 }
 
 bool PositionControl::should_stop_tracking(const DroneState& state)
@@ -79,11 +75,7 @@ bool PositionControl::should_start_tracking(const DroneState& state)
 	if (rc_record_ts_.elapsed() < TimeSpan::from_milliseconds(500)) {
 		return false;
 	}
-#if 1
 	return state.latitude_.is_valid() && state.longitude_.is_valid();
-#else
-	return true; // temp, life is too short to wait for gps signal
-#endif
 }
 
 void PositionControl::stop_tracking()
@@ -97,7 +89,8 @@ void PositionControl::start_tracking(const DroneState& state)
 	if (should_start_tracking(state)) {
 		target_location_ = GeoLocation(state.latitude_, state.longitude_, state.altitude_);
 		pid_ = PidControllerType(state.position_kp_, state.position_ki_, state.position_kd_);
-		distance_filter_.reset();
+		distance_lpf_.reset();
+		axis_lpf_.reset(state.target_swing_.axis());
 	}
 }
 
@@ -136,22 +129,17 @@ void PositionControl::calculate_target_swing(DroneState& state)
 
 	pid_.set_kp_ki_kd(state.position_kp_, state.position_ki_, state.position_kd_);
 
-	Distance errDist = get_error_as_distance(latitude, longitude);
-	Vector3f errVec = get_error_vector(state.attitude_, latitude, longitude);
+	Distance err_dist = get_error_as_distance(latitude, longitude);
+	Angle error_angle = map_distance_err_to_swing_angle(distance_lpf_.do_filter(err_dist));
+	Angle swing_angle = pid_.get_pi_dmedian(error_angle, state.dt_.seconds_float(), 0.01);
+	swing_angle = clip_swing_angle(swing_angle);
 
-#if 0
-	static float dist = 100;
-	errDist = Distance::from_meters(dist);
-#endif
+	Vector3f err_vec = get_error_vector(state.attitude_, latitude, longitude);
+	Vector3f swing_axis = axis_lpf_.do_filter(qt_ortho_xy_.rotate(err_vec));
 
-	Vector3f swingAxis = qt_ortho_xy_.rotate(errVec);
-	Angle errorAngle = map_distance_err_to_swing_angle(errDist);
-	Angle swingAngle = pid_.get_pi_dmedian(errorAngle, state.dt_.seconds_float(), 0.01);
-	swingAngle = clip_swing_angle(swingAngle);
-	target_swing_ = QuaternionF::fromAxisRot(swingAxis, -swingAngle.radians());
-	state.target_swing_ = target_swing_;
+	state.target_swing_ = target_swing_ = QuaternionF::fromAxisRot(swing_axis, swing_angle.radians());
 
-	state.position_error_ = errDist;
+	state.position_error_ = err_dist;
 }
 
 Distance PositionControl::get_error_as_distance(const Latitude& latitude, const Longitude& longitude)
@@ -168,16 +156,9 @@ Vector3f PositionControl::get_error_vector(
 		const Latitude& latitude,
 		const Longitude& longitude)
 {
-	int32_t long_err = (target_location_.longitude().get() - longitude.get()).millionth_degrees();
-	int32_t lat_err = (target_location_.latitude().get() - latitude.get()).millionth_degrees();
+	int32_t long_err = (longitude.get() - target_location_.longitude().get()).millionth_degrees();
+	int32_t lat_err = (latitude.get() - target_location_.latitude().get()).millionth_degrees();
 	Vector3d err_d = Vector3d(long_err, lat_err, 0).normalize();
-
-#if 0
-	static float errx = 0;
-	static float erry = 0;
-	err_d[0] = errx;
-	err_d[1] = erry;
-#endif
 
 	Vector3f err((float)err_d[1], (float)err_d[0], 0);
 	// Rotate the error vector with drone's current twist, so we can calculate the proper
@@ -195,11 +176,11 @@ Angle PositionControl::clip_swing_angle(const Angle& angle)
 
 Angle PositionControl::map_distance_err_to_swing_angle(const Distance& err_dist)
 {
-	static const Distance gps_err = Distance::from_meters(2);
-	static const Distance bubble_dist = Distance::from_meters(5);
+	static const Distance gps_err = Distance::from_meters(0.5); //1
+	static const Distance bubble_dist = Distance::from_meters(10);
 	static const Distance max_err_dist = Distance::from_meters(50);
-	static const float bubble_dist_factor = 5;
-	static const float max_dist_factor = 30;
+	static const float bubble_dist_factor = 30;
+	static const float max_dist_factor = 45;
 
 	if (err_dist < gps_err) {
 		return Angle::from_degrees(0);
@@ -214,6 +195,6 @@ Angle PositionControl::map_distance_err_to_swing_angle(const Distance& err_dist)
 	{
 		swing_angle = Angle::from_degrees((adj_err_dist-bubble_dist) / max_err_dist * max_dist_factor + bubble_dist_factor);
 	}
-	return clip_swing_angle(swing_angle);
+	return swing_angle;
 }
 

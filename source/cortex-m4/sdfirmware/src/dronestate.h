@@ -92,9 +92,9 @@ struct DroneState {
 		, altitude_tracker_kd_(0.0)
 		, altitude_tracker_kp2_(0.12)
 		, altitude_correction_period_(TimeSpan::from_seconds(1000))
-	    , position_kp_(0.3)
+	    , position_kp_(0.7)
 	    , position_ki_(0.06)
-	    , position_kd_ (0.01)
+	    , position_kd_ (0.08)
 	    , mag_bias_(0.0f, 0.0f, 0.0f)
 	    , mag_scale_factor_(1.0f, 1.0f, 1.0f)
 	    , iteration_(0)
@@ -280,8 +280,8 @@ struct DroneState {
 			accelerometer_correction_speed_ = 0.4;
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
 #ifdef LITE_FRAME
-			kp_ = 0.2;
-			kd_= 0.045;
+			kp_ = 0.25;
+			kd_= 0.055;
 			ki_ = 0.09;
 #else
 			kp_ = 0.35;

@@ -64,7 +64,8 @@ private:
 	PidControllerType pid_;
 	GeoLocation target_location_;
 	TimeStamp rc_record_ts_;
-	LowPassFilter<float,float> distance_filter_;
+	LowPassFilter<Distance,float> distance_lpf_;
+	LowPassFilter<Vector3f,float> axis_lpf_;
 	float rc_value_pitch_;
 	float rc_value_roll_;
 };
