@@ -465,9 +465,9 @@ rexjson::value UartRpcServer::rpc_flight_mode(UART*, rexjson::array& params, rpc
 		return
 				"sd_flight_mode\n"
 				"\nGet/Set new flight mode, where:"
-				"\n    0 - auto level (default)"
-				"\n    1 - auto level and altitude hold"
-				"\n    2 - loiter"
+				"\n    0 - auto level"
+				"\n    1 - auto level and altitude hold (default)"
+				"\n    2 - auto level, altitude and position hold"
 				"\n    3 - mission"
 				"\nIf the new flight mode is not specified, then the current one is returned."
 				"\n"
@@ -479,6 +479,9 @@ rexjson::value UartRpcServer::rpc_flight_mode(UART*, rexjson::array& params, rpc
 	if ((params[0].type() != rexjson::null_type)) {
 		dronestate_.flight_mode_ = params[0].get_int() <= FLIGHT_MODE_LAST ?
 				static_cast<FlightMode>(params[0].get_int()) : FLIGHT_MODE_AUTO_LEVEL;
+		if (dronestate_.flight_mode_ >= FLIGHT_MODE_POSITION_HOLD) {
+			dronestate_.track_magnetometer_ = true;
+		}
 	}
 	return dronestate_.flight_mode_;
 }
