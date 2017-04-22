@@ -40,7 +40,7 @@ enum FlightMode {
 	 * The firmware controls the altitude and keeps the drone inside a circle
 	 * whose center lays at pre-defined latitude and longitude
 	 */
-	FLIGHT_MODE_LOITER = 2,
+	FLIGHT_MODE_POSITION_HOLD = 2,
 
 	/*
 	 * The drone flies through pre-defined waypoints
