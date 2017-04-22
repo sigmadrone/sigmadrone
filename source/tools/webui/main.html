@@ -77,6 +77,9 @@
         <div class="row">
           <div class="col-xs-12 col-data attitude"><span id="attQ">w:1.000 x:0.000 y:0.000 z:0.000</span></div>
         </div>
+        <div class="row">
+          <div class="col-xs-12 col-data col-md-12"><span id="euler-angles-id">x:0.000 y:0.000 z:0.000</span></div>
+        </div>
         <div class="row row-padded">
           <div class="col-xs-12">
             <div class="row"> <div class="col-xs-11">Relative Altitude</div> </div>
@@ -787,7 +790,7 @@
   <script src="./js/chart2d.js"></script>
   <script src="./js/rpcclient.js"></script>
   <script src="./js/chartmodel.js"></script>
-  <script src="./js/dygraph.min.js"></script>
+  <script src="./js/qtmath.js"></script>
   <link href="./js/vis.min.css" rel="stylesheet" type="text/css" />
 
   <script>
@@ -1275,24 +1278,6 @@
     }
   }
 
-  function qtConjugate(q) {
-    return { w: q.w, x: -q.x, y: -q.y, z: -q.z };
-  }
-
-  function qtMultiply(q1, q2) {
-    return {
-      w: q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z,
-			x: q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
-			y: q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
-			z: q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w
-    };
-  }
-
-  function qtRotateVector(qt, vector) {
-    var qvector = qtMultiply(qtMultiply(qt, {w: 0, x: vector[0], y: vector[1], z: vector[2]}), qtConjugate(qt));
-    return [qvector.x, qvector.y, qvector.z];
-  }
-
   function updateDroneState(response) {
     if (response.error != null) {
       console.log(JSON.stringify(response.result));
@@ -1325,6 +1310,10 @@
       onDisplayAlarm(droneState);
 
       $("#attQ").text(quaternion2str(response.result.attitude));
+      //$("#euler-angles-id").text(vector2str(qt2EulerDeg(response.result.attitude)) + " [deg]");
+      var deg = qt2EulerDeg(response.result.attitude);
+      $("#euler-angles-id").text("Roll: " + deg[0].toFixed(3) + " Pitch: " + deg[1].toFixed(3) + " Yaw: " + deg[2].toFixed(3) + " deg");
+
       $("#accel").text(vector2str(response.result.accel));
       $("#gyro").text(vector2str(response.result.gyro));
       $("#gyro-raw-id").text(vector2str(response.result.gyro_raw));
