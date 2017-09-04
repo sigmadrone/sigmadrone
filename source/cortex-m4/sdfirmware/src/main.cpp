@@ -68,6 +68,8 @@
 __attribute__((__section__(".user_data"))) uint8_t flashregion[1024];
 void* __dso_handle = 0;
 
+extern "C" void _fini() {}
+
 DigitalOut ledusb(USB_OTG_LED_PIN);
 DigitalOut led1(USER_LED1_PIN);
 DigitalOut led2(USER_LED2_PIN);
