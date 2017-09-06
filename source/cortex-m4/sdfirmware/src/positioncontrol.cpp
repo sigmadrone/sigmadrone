@@ -56,7 +56,7 @@ bool PositionControl::should_stop_tracking(const DroneState& state)
 {
 	return has_rc_value_changed(state.pitch_, rc_value_pitch_) ||
 			has_rc_value_changed(state.roll_, rc_value_roll_) ||
-			(state.flight_mode_ != FLIGHT_MODE_LOITER && state.flight_mode_ != FLIGHT_MODE_MISSION);
+			(state.flight_mode_ != FLIGHT_MODE_POSITION_HOLD && state.flight_mode_ != FLIGHT_MODE_MISSION);
 }
 
 bool PositionControl::should_start_tracking(const DroneState& state)
@@ -64,7 +64,7 @@ bool PositionControl::should_start_tracking(const DroneState& state)
 	if (!state.motors_armed_) {
 		return false;
 	}
-	if (state.flight_mode_ != FLIGHT_MODE_LOITER && state.flight_mode_ != FLIGHT_MODE_MISSION) {
+	if (state.flight_mode_ != FLIGHT_MODE_POSITION_HOLD && state.flight_mode_ != FLIGHT_MODE_MISSION) {
 		return false;
 	}
 

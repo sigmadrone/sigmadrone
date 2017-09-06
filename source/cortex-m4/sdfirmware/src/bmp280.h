@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include "spimaster.h"
+#include "ipressuresensor.h"
 
 
 /*!
@@ -361,7 +362,7 @@ typedef	int32_t s32;/**< used for signed 32bit */
 typedef	int64_t s64;/**< used for signed 64bit */
 
 
-class BMP280 {
+class BMP280: public IPressureSensor {
 public:
 	BMP280(SPIMaster& spi, uint8_t cs);
 	~BMP280();
@@ -394,6 +395,10 @@ public:
 	double get_pressure();
 	double get_temperature();
 
+	virtual float read_pressure_hpa() { return (float)get_pressure()/100.0f; }
+	virtual float read_temperature_celsius() { return (float)get_temperature(); }
+	virtual PressureSensorType get_pressure_sensor_type() { return PressureSensorBmp280; }
+	virtual bool is_fifo_empty() { return false; }
 
 	struct calib_param_t {
 		u16 dig_T1;/**<calibration T1 data*/

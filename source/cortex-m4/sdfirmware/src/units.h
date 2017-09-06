@@ -38,16 +38,16 @@ struct ScaledUnit {
 	static inline UnitType tera(UnitType u) { return giga(u) * 1000; }
 	static inline UnitType penta(UnitType u) { return tera(u) * 1000; }
 
-	static ScaledUnit from_picounit(UnitType pico)   { return ScaledUnit( pico/1000/1000/1000/1000); }
-	static ScaledUnit from_nanounit(UnitType nano)   { return ScaledUnit( nano/1000/1000/1000); }
+	static ScaledUnit from_picounit(UnitType pico)   { return ScaledUnit(pico/1000/1000/1000/1000); }
+	static ScaledUnit from_nanounit(UnitType nano)   { return ScaledUnit(nano/1000/1000/1000); }
 	static ScaledUnit from_microunit(UnitType micro) { return ScaledUnit(micro/1000/1000); }
 	static ScaledUnit from_milliunit(UnitType milli) { return ScaledUnit(milli/1000); }
-	static ScaledUnit from_centiunit(UnitType cent) { return ScaledUnit(cent/100); }
-	static ScaledUnit from_baseunit(UnitType unit)   { return ScaledUnit( unit); }
-	static ScaledUnit from_kilounit(UnitType kilo)   { return ScaledUnit( kilo*1000); }
-	static ScaledUnit from_megaunit(UnitType mega)   { return ScaledUnit( mega*1000*1000); }
-	static ScaledUnit from_gigaunit(UnitType giga)   { return ScaledUnit( giga*1000*1000*1000); }
-	static ScaledUnit from_teraunit(UnitType tera)   { return ScaledUnit( tera*1000*1000*1000*1000); }
+	static ScaledUnit from_centiunit(UnitType cent)  { return ScaledUnit(cent/100); }
+	static ScaledUnit from_baseunit(UnitType unit)   { return ScaledUnit(unit); }
+	static ScaledUnit from_kilounit(UnitType kilo)   { return ScaledUnit(kilo*1000); }
+	static ScaledUnit from_megaunit(UnitType mega)   { return ScaledUnit(mega*1000*1000); }
+	static ScaledUnit from_gigaunit(UnitType giga)   { return ScaledUnit(giga*1000*1000*1000); }
+	static ScaledUnit from_teraunit(UnitType tera)   { return ScaledUnit(tera*1000*1000*1000*1000); }
 	static ScaledUnit from_pentaunit(UnitType penta) { return ScaledUnit(penta*1000*1000*1000*1000*1000); }
 
 	~ScaledUnit() {}
@@ -69,7 +69,7 @@ protected:
 	inline UnitType nanounit() const { return microunit() / 1000; }
 	inline UnitType microunit() const { return milliunit() / 1000; }
 	inline UnitType milliunit() const { return unit() / 1000; }
-	inline UnitType centiunit() const { return unit() / 100; }
+	inline UnitType centiunit() const { return unit() * 100; }
 	inline UnitType kilounit() const { return unit() * 1000; }
 	inline UnitType megaunit() const { return kilounit() * 1000; }
 	inline UnitType gigaunit() const { return megaunit() * 1000; }
@@ -276,12 +276,12 @@ struct Pressure:  public ScaledUnit<float> {
 	static constexpr float PA_TO_PSI = 1.0f / PSI_TO_PA;
 
 	static Pressure from_psi(float psi) { return Pressure(psi * PSI_TO_PA); }
-	static Pressure from_hpa(float hpa) { return Pressure(from_centiunit(hpa).unit()); }
-	static Pressure from_mpa(float kpa) { return Pressure(from_megaunit(kpa).unit()); }
+	static Pressure from_hpa(float hpa) { return Pressure(hpa * 100.0f); }
+	static Pressure from_mpa(float mpa) { return Pressure(from_megaunit(mpa).unit()); }
 	static Pressure from_pa(float pa) { return Pressure(pa); }
-	inline float hpa() const { return centiunit(); }
-	inline float kpa() const { return hpa(); }
-	inline float mpa() const { return megaunit(); }
+	inline float hpa() const { return unit()/100.0f; }
+	inline float kpa() const { return milliunit(); }
+	inline float mpa() const { return microunit(); }
 	inline float pa() const { return unit(); }
 	inline float psi() const { return unit() * PA_TO_PSI; }
 	inline Pressure operator-(const Pressure& rhs) const { return Pressure(unit()-rhs.unit()); }

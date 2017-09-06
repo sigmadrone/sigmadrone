@@ -50,7 +50,7 @@
 #include "uartrpcserver.h"
 #include "librexjson/rexjson++.h"
 #include "libattitude/attitudetracker.h"
-#include "bmp280reader.h"
+#include "pressuresensorarray.h"
 #include "sensorsprefilters.h"
 #include "flashmemory.h"
 #include "adc.h"
@@ -215,12 +215,12 @@ void main_task(void *pvParameters)
 	uint8_t acc_wtm = 8;
 	TimeStamp console_update_time;
 	TimeStamp sample_dt;
-	TimeStamp led_toggle_ts;
 	FlightControl flight_ctl;
 	static bool print_to_console = false;
 	LowPassFilter<Vector3f, float> gyro_lpf({0.5});
 	LowPassFilter<Vector3f, float> acc_lpf_alt({0.9});
 	LowPassFilter<Vector3f, float> acc_lpf_att({0.990});
+	LowPassFilter<Vector3f, float> mag_lpf({0.90});
 	LowPassFilter<float, float> pressure_lpf({0.6});
 	attitudetracker att;
 
@@ -238,7 +238,7 @@ void main_task(void *pvParameters)
 	bmp2.set_work_mode(BMP280_ULTRA_HIGH_RESOLUTION_MODE);
 	bmp2.set_filter(BMP280_FILTER_COEFF_OFF);
 
-	Bmp280Reader bmp_reader(bmp2);
+	PressureSensorArray pressure_sensors({&bmp2, &lps25hb});
 
 	HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 1, 1);
 	HAL_NVIC_EnableIRQ (DMA1_Stream6_IRQn);
@@ -267,33 +267,27 @@ void main_task(void *pvParameters)
 	acc_reader.mag_calibrator_.set_scale_factor(drone_state->mag_scale_factor_);
 	vTaskDelay(500 / portTICK_RATE_MS);
 
+	lps25hb.Set_FifoMode(LPS25HB_FIFO_STREAM_MODE);
+	lps25hb.Set_FifoModeUse(LPS25HB_ENABLE);
+	lps25hb.Set_Odr(LPS25HB_ODR_25HZ);
+	lps25hb.Set_Bdu(LPS25HB_BDU_NO_UPDATE);
+
+
 	printf("Calibrating...");
 
 	gyro_reader.enable_int2(true);
 	gyro_reader.calculate_static_bias_filtered(2400);
+
+	pressure_sensors.calibrate();
+
 	printf(" Done!\n");
+
 	flight_ctl.start_receiver();
 
 	printf("Entering main loop...\n");
 	gyro_reader.enable_int2(true);
 
 	sample_dt.time_stamp();
-	lps25hb.Set_FifoMode(LPS25HB_FIFO_STREAM_MODE);
-	lps25hb.Set_FifoModeUse(LPS25HB_ENABLE);
-	lps25hb.Set_Odr(LPS25HB_ODR_25HZ);
-	lps25hb.Set_Bdu(LPS25HB_BDU_NO_UPDATE);
-	LPS25HB_FIFOTypeDef_st fifo_config;
-	memset(&fifo_config, 0, sizeof(fifo_config));
-	lps25hb.Get_FifoConfig(&fifo_config);
-
-	float base_pressure = lps25hb.Get_PressureHpa();
-	for (int i = 0; i < 100; i++) {
-		while (lps25hb.Get_FifoStatus().FIFO_EMPTY)
-			vTaskDelay(50 / portTICK_RATE_MS);
-		base_pressure = pressure_lpf.do_filter(lps25hb.Get_PressureHpa());
-	}
-
-	bmp_reader.calibrate();
 
 	// Infinite loop
 	PerfCounter idle_time;
@@ -303,21 +297,11 @@ void main_task(void *pvParameters)
 			led1.toggle();
 		}
 
-
 		if (drone_state->iteration_ % 4 == 0) {
-#ifdef USE_LPS25HB
-			drone_state->temperature_ = lps25hb.Get_TemperatureCelsius();
-			while (!lps25hb.Get_FifoStatus().FIFO_EMPTY) {
-				drone_state->pressure_hpa_ = pressure_lpf.do_filter(lps25hb.Get_PressureHpa());
-				float alt = (powf(base_pressure/drone_state->pressure_hpa_, 0.1902f) - 1.0f) * ((lps25hb.Get_TemperatureCelsius()) + 273.15f)/0.0065;
-				drone_state->altitude_ = Distance::from_meters(alt);
-			}
-#else
-			bmp_reader.pressure_filter_.set_alpha(drone_state->altitude_lpf_);
-			drone_state->altitude_ = bmp_reader.get_altitude(true);
-			drone_state->pressure_hpa_ = bmp_reader.get_pressure().hpa();
-			drone_state->temperature_ = bmp_reader.get_temperature(false).celsius();
-#endif
+			pressure_sensors.pressure_filter_.set_alpha(drone_state->altitude_lpf_);
+			drone_state->altitude_ = pressure_sensors.get_altitude(true);
+			drone_state->pressure_hpa_ = pressure_sensors.get_pressure().hpa();
+			drone_state->temperature_ = pressure_sensors.get_temperature(false).celsius();
 		}
 
 		idle_time.begin_measure();
@@ -366,7 +350,7 @@ void main_task(void *pvParameters)
 		std::cout << drone_state->dt_.seconds_float() << std::endl;
 #endif
 
-		drone_state->mag_raw_ = acc_reader.read_sample_mag();
+		drone_state->mag_raw_ = mag_lpf.do_filter(acc_reader.read_sample_mag());
 		drone_state->mag_ = drone_state->mag_raw_.normalize();
 		if (drone_state->track_magnetometer_) {
 			att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
@@ -390,7 +374,6 @@ void main_task(void *pvParameters)
 			printf("dT        : %lu uSec\n", (uint32_t)drone_state->dt_.microseconds());
 			printf("Q         : %5.3f %5.3f %5.3f %5.3f\n\n", drone_state->attitude_.w, drone_state->attitude_.x, drone_state->attitude_.y,
 					drone_state->attitude_.z);
-#if 1
 			printf("Motors    : %1.2f %1.2f %1.2f %1.2f\n", drone_state->motors_[0], drone_state->motors_[1],
 								drone_state->motors_[2], drone_state->motors_[3]);
 			printf("Throttle  : %1.2f\n", drone_state->base_throttle_);
@@ -400,15 +383,8 @@ void main_task(void *pvParameters)
 					drone_state->longitude_.degrees(), drone_state->latitude_.degrees(),
 					drone_state->satellite_count_, drone_state->gps_altitude_.meters());
 			printf("Battery   : %2.1f V, %2.0f%%\n", drone_state->battery_voltage_.volts(), drone_state->battery_percentage_);
-#endif
-		}
 
-#if 0
-		if (led_toggle_ts.elapsed() > TimeSpan::from_seconds(1)) {
-			led_toggle_ts.time_stamp();
-			led0.toggle();
 		}
-#endif
 
 #ifndef ENABLE_UART_TASK
 		rpcserver.jsonrpc_request_handler(&uart2);

@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include "spimaster.h"
+#include "ipressuresensor.h"
 
 /** @addtogroup Environmental_Sensor
   * @{
@@ -778,7 +779,7 @@ typedef struct {
 #define LPS25HB_RPDS_H_REG        (uint8_t)0x3A
 
 
-class LPS25HB {
+class LPS25HB: public IPressureSensor {
 protected:
 	SPIMaster& spi_;
 	uint8_t cs_;
@@ -857,6 +858,13 @@ public:
 	void WriteReg(uint8_t reg, uint16_t nbytes, uint8_t *data);
 	void UpdateReg(uint8_t reg, uint8_t mask, uint8_t data);
 	void assert_failed(uint8_t* file, uint32_t line);
+
+
+	/********************IPressureSensor*************/
+	float read_pressure_hpa();
+	float read_temperature_celsius();
+	PressureSensorType get_pressure_sensor_type();
+	bool is_fifo_empty();
 };
 
 #endif

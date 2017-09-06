@@ -1028,3 +1028,26 @@ void LPS25HB::DeInit(void)
   Get_Measurement(& Measurement_Value);
 }
 
+float LPS25HB::read_pressure_hpa()
+{
+	float hpa = Get_PressureHpa();
+	while (!is_fifo_empty()) {
+		hpa = Get_PressureHpa();
+	}
+	return hpa;
+}
+
+float LPS25HB::read_temperature_celsius()
+{
+	return Get_TemperatureCelsius();
+}
+
+PressureSensorType LPS25HB::get_pressure_sensor_type()
+{
+	return PressureSensorLps25hb;
+}
+
+bool LPS25HB::is_fifo_empty()
+{
+	return Get_FifoStatus().FIFO_EMPTY;
+}

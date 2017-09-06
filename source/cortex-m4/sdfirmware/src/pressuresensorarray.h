@@ -19,17 +19,19 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 
-#ifndef BMP280READER_H_
-#define BMP280READER_H_
+#pragma once
 
 #include "units.h"
 #include "bmp280.h"
 #include "sensorsprefilters.h"
+#include "ipressuresensor.h"
+#include <vector>
 
-struct Bmp280Reader {
+struct PressureSensorArray {
 public:
-	Bmp280Reader(BMP280& bmp);
-	~Bmp280Reader();
+	PressureSensorArray(const std::vector<IPressureSensor*>& sensors);
+	PressureSensorArray(BMP280& bmp280);
+	~PressureSensorArray();
 
 	Distance get_altitude(bool read_sensor=false);
 	Pressure get_pressure(bool read_sensor=false);
@@ -40,9 +42,21 @@ public:
 
 	PressurePreFilter pressure_filter_;
 private:
-	BMP280& bmp_;
+
+	static float calc_variance(const std::vector<float>&);
+	void calculate_sensor_weights();
+
+	struct PressureSensorInstance
+	{
+		PressureSensorInstance(IPressureSensor* sensor) : pressure_sensor_(sensor), last_measurement_(0), weight_(0), variance_(0), std_deviation_(0) {}
+		IPressureSensor* pressure_sensor_;
+		float last_measurement_;
+		float weight_;
+		float variance_;
+		float std_deviation_;
+	};
+
+	std::vector<PressureSensorInstance> sensors_;
 	Pressure base_pressure_;
 	Temperature temperature_;
 };
-
-#endif /* BMP280READER_H_ */
