@@ -68,10 +68,8 @@ public:
 
 	void reset()
 	{
-		for (auto& s : state_) {
-			s = static_cast<DataType>(0);
-		}
-		for (auto& t : ts_) {
+		state_.fill(static_cast<DataType>(0));
+		for (auto&& t : ts_) {
 			t.time_stamp();
 		}
 		out_ = static_cast<DataType>(0);
@@ -105,7 +103,6 @@ private:
 
 	void populate_coeff()
 	{
-		// ugly, but the formulas cited in the paper do not pan out
 		switch (N) {
 		case 5:
 			coeff_[0] = 2.0f/8.0f;

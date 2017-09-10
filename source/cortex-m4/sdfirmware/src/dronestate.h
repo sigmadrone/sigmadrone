@@ -87,7 +87,7 @@ struct DroneState {
 	    , external_gyro_align_(0, 1, 0,
 	    		              -1, 0, 0,
 				               0, 0, 1)
-	    , altitude_tracker_kp_(0.025)
+	    , altitude_tracker_kp_(0.05)
 		, altitude_tracker_ki_(0.005)
 		, altitude_tracker_kd_(0.0)
 		, altitude_tracker_kp2_(0.12)

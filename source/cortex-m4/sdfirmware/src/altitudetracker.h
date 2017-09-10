@@ -59,7 +59,8 @@ private:
 	PidController<Speed> pid_;
 	Speed estimated_velocity_;
 	TimeStamp estimate_ts_;
-	DerivativeFilter<float, 11> altitude_deriv_;
+	TimeStamp accel_dt_;
+	DerivativeFilter<float, 7> altitude_deriv_;
 	LowPassFilter<Speed, float> velocity_lpf_;
 	uint32_t alarm_count_;
 	float safe_threshold_;

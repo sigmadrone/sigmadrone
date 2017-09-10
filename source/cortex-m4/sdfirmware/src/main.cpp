@@ -221,7 +221,6 @@ void main_task(void *pvParameters)
 	LowPassFilter<Vector3f, float> acc_lpf_alt({0.9});
 	LowPassFilter<Vector3f, float> acc_lpf_att({0.990});
 	LowPassFilter<Vector3f, float> mag_lpf({0.90});
-	LowPassFilter<float, float> pressure_lpf({0.6});
 	attitudetracker att;
 
 	/*
