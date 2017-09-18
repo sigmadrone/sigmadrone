@@ -725,11 +725,11 @@
                   <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAltitude(this)">Relative Altitude</label>
                 </div>
               </div>
-              <div class="col-xs-6 col-md-3">
+              <!--div class="col-xs-6 col-md-3">
                 <div class="checkbox">
                   <label> <input type="checkbox" value="" checked="true" onchange="onToggleChartAltitudeGps(this)">Relative Alt(GPS), m</label>
                 </div>
-              </div>
+              </div-->
             </div>
             <!--div class="row">
               <div class="col-xs-6 col-md-3 col-data">
@@ -895,7 +895,7 @@
     document.getElementById("altitude-chart-id"),
     null,
     "Altitude",
-    ['Altitude, m', 'Altitude GPS, m', 'Altitude Raw, m', 'Throttle', 'Posture'],
+    ['Altitude, m', 'Altitude Raw, m', 'Posture'],
     -10, 40,
     ['Vertical Speed, m/s'],
     onChartEvent
@@ -1234,9 +1234,8 @@
       }
       var samples = [
         altitudeChartModel.relativeAltitude(),
-        altitudeChartModel.relativeAltitudeGps(),
+        //altitudeChartModel.relativeAltitudeGps(),
         altitudeChartModel.relativeAltitudeAcc(),
-        dataStream[i].base_throttle,
         posture,
         //dataStream[i].gps_speed_kmph,
         altitudeChartModel.verticalSpeed, //altitudeChartModel.verticalSpeedGps
