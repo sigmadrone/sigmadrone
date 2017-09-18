@@ -37,7 +37,7 @@ function qt2Euler(qt) {
   var t4 = 1.0 - 2.0 * (ysqr + z * z);
   var yaw = Math.atan2(t3, t4);
 
-  return [roll, pitch, yaw];
+  return [-roll, -pitch, -yaw];
 }
 
 function qt2EulerDeg(qt) {
