@@ -58,9 +58,9 @@ struct DroneState {
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-	    , altitude_kp_(0.35)
-		, altitude_ki_(0.5)
-		, altitude_kd_(0.035)
+	    , altitude_kp_(0.55)
+		, altitude_ki_(0.1)
+		, altitude_kd_(0.025)
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)
 	    , gyro_drift_kd_(0.0)
@@ -267,7 +267,7 @@ struct DroneState {
 			accelerometer_correction_speed_ = 0.4;
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
 #ifdef LITE_FRAME
-			kp_ = 0.2;
+			kp_ = 0.25;
 			kd_= 0.045;
 			ki_ = 0.09;
 #else
