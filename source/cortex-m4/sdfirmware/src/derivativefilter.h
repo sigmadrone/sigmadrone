@@ -108,26 +108,26 @@ private:
 		// ugly, but the formulas cited in the paper do not pan out
 		switch (N) {
 		case 5:
-			coeff_[0] = 2.0f/8.0f;
-			coeff_[1] = 1.0f/8.0f;
+			coeff_[0] = 2.0f/8.0f * 2.0f;
+			coeff_[1] = 1.0f/8.0f * 4.0f;
 			break;
 		case 7:
-			coeff_[0] = 5.0f/32.0f;
-			coeff_[1] = 4.0f/32.0f;
-			coeff_[2] = 1.0f/32.0f;
+			coeff_[0] = 5.0f/32.0f * 2.0f;
+			coeff_[1] = 4.0f/32.0f * 4.0f;
+			coeff_[2] = 1.0f/32.0f * 6.0f;
 			break;
 		case 9:
-			coeff_[0] = 14.0f/128.0f;
-			coeff_[1] = 14.0f/128.0f;
-			coeff_[2] = 6.0f/128.0f;
-			coeff_[3] = 1.0f/128.0f;
+			coeff_[0] = 14.0f/128.0f * 2.0f;
+			coeff_[1] = 14.0f/128.0f * 4.0f;
+			coeff_[2] = 6.0f/128.0f * 6.0f;
+			coeff_[3] = 1.0f/128.0f * 8.0f;
 			break;
 		case 11:
-			coeff_[0] = 42.0f/512.0f;
-			coeff_[1] = 48.0f/512.0f;
-			coeff_[2] = 27.0f/512.0f;
-			coeff_[3] = 8.0f /512.0f;
-			coeff_[4] = 1.0f /512.0f;
+			coeff_[0] = 42.0f/512.0f * 2;
+			coeff_[1] = 48.0f/512.0f * 4;
+			coeff_[2] = 27.0f/512.0f * 6;
+			coeff_[3] = 8.0f /512.0f * 8;
+			coeff_[4] = 1.0f /512.0f * 16;
 			break;
 		default:
 			assert(false);
