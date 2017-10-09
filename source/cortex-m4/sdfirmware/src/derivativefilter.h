@@ -127,7 +127,7 @@ private:
 			coeff_[1] = 48.0f/512.0f * 4;
 			coeff_[2] = 27.0f/512.0f * 6;
 			coeff_[3] = 8.0f /512.0f * 8;
-			coeff_[4] = 1.0f /512.0f * 16;
+			coeff_[4] = 1.0f /512.0f * 10;
 			break;
 		default:
 			assert(false);
