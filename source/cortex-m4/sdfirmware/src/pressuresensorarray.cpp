@@ -44,7 +44,7 @@ Pressure PressureSensorArray::get_pressure(bool do_read_sensor)
 	if (do_read_sensor) {
 		read_pressure();
 	}
-	return pressure_filter_.output();
+	return pressure_;
 }
 
 Temperature PressureSensorArray::get_temperature(bool do_read_sensor)
@@ -59,13 +59,16 @@ void PressureSensorArray::read_pressure()
 {
 	Pressure pressure;
 	for (auto&& it: sensors_) {
-		float hpa = it.pressure_sensor_->read_pressure_hpa();
-		if (fabs(hpa - it.last_measurement_) >= it.std_deviation_) {
-			it.last_measurement_ = hpa;
+		if (it.pressure_sensor_->is_fifo_supported()) {
+			while (!it.pressure_sensor_->is_fifo_empty()) {
+				it.pressure_filter_.do_filter(Pressure::from_hpa(it.pressure_sensor_->read_pressure_hpa()));
+			}
+		} else {
+			it.pressure_filter_.do_filter(Pressure::from_hpa(it.pressure_sensor_->read_pressure_hpa()));
 		}
-		pressure += Pressure::from_hpa(it.last_measurement_ * it.weight_);
+		pressure +=  it.pressure_filter_.output() * it.weight_;
 	}
-	pressure_filter_.do_filter(pressure);
+	pressure_ = pressure;
 	read_temperature();
 }
 
@@ -110,19 +113,26 @@ void PressureSensorArray::calibrate()
 
 	std::vector<std::vector<float>> samples(sensors_.size());
 
-	pressure_filter_.reset();
-
-	vTaskDelay(10);
+	for (auto&& it: sensors_) {
+		it.pressure_filter_.reset();
+	}
 
 	for (size_t i = 0; i < iterations; ++i) {
 		for (size_t j = 0; j < sensors_.size(); ++j) {
-			while (sensors_[j].pressure_sensor_->is_fifo_empty()) {
-				vTaskDelay(1);
+			if (sensors_[j].pressure_sensor_->is_fifo_supported()) {
+				while (sensors_[j].pressure_sensor_->is_fifo_empty()) {
+					vTaskDelay(5);
+				}
+			} else {
+				if (i > 0) {
+					while (samples[j][i-1] == sensors_[j].pressure_sensor_->read_pressure_hpa()) {
+						vTaskDelay(5);
+					}
+				}
 			}
 			float hpa = sensors_[j].pressure_sensor_->read_pressure_hpa();
 			samples[j].push_back(hpa);
 		}
-		vTaskDelay(3);
 	}
 
 	for (size_t i = 0; i < sensors_.size(); ++i) {
@@ -133,8 +143,19 @@ void PressureSensorArray::calibrate()
 	calculate_sensor_weights();
 
 	for (size_t i = 0; i < iterations; ++i) {
+		for (auto&& it: sensors_) {
+			while (it.pressure_sensor_->is_fifo_supported() && it.pressure_sensor_->is_fifo_empty()) {
+				vTaskDelay(1);
+			}
+		}
 		get_pressure(true);
-		vTaskDelay(2);
 	}
-	base_pressure_ = pressure_filter_.output();
+	base_pressure_ = get_pressure(false);
+}
+
+void PressureSensorArray::set_lpf_coefficient(float alpha)
+{
+	for (auto&& it: sensors_) {
+		it.pressure_filter_.set_alpha(alpha);
+	}
 }

@@ -39,8 +39,8 @@ public:
 	void read_pressure();
 	void read_temperature();
 	void calibrate();
+	void set_lpf_coefficient(float c);
 
-	PressurePreFilter pressure_filter_;
 private:
 
 	static float calc_variance(const std::vector<float>&);
@@ -48,9 +48,9 @@ private:
 
 	struct PressureSensorInstance
 	{
-		PressureSensorInstance(IPressureSensor* sensor) : pressure_sensor_(sensor), last_measurement_(0), weight_(0), variance_(0), std_deviation_(0) {}
+		PressureSensorInstance(IPressureSensor* sensor) : pressure_sensor_(sensor), weight_(0), variance_(0), std_deviation_(0) {}
 		IPressureSensor* pressure_sensor_;
-		float last_measurement_;
+		PressurePreFilter pressure_filter_;
 		float weight_;
 		float variance_;
 		float std_deviation_;
@@ -59,4 +59,5 @@ private:
 	std::vector<PressureSensorInstance> sensors_;
 	Pressure base_pressure_;
 	Temperature temperature_;
+	Pressure pressure_;
 };

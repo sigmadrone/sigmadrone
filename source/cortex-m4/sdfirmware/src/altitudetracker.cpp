@@ -23,7 +23,7 @@
 
 AltitudeTracker::AltitudeTracker(const Altitude& ceiling, float safe_threshold) :
 	flight_ceiling_(ceiling), starting_altitude_(INVALID_ALTITUDE), estimated_altitude_(INVALID_ALTITUDE),
-	velocity_lpf_(0.6), alarm_count_(0), safe_threshold_(safe_threshold),
+	velocity_lpf_(0.0), alarm_count_(0), safe_threshold_(safe_threshold),
 	flight_ceiling_hit_(false), last_baro_reading_(0), vertical_acel_bias_samples_(0),
 	vertical_acel_bias_(0.0f)
 {
@@ -111,14 +111,10 @@ void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 		estimated_altitude_ += alt_err * drone_state.altitude_tracker_kp2_;
 
 		if (fabs(vert_accel) < accel_dead_band || dt > min_update_dt) {
-#if 1
 			Speed vert_velocity = velocity_lpf_.do_filter(Speed::from_meters_per_second(
 				altitude_deriv_.do_filter(drone_state.altitude_.meters())));
 			Speed velocity_error = vert_velocity - estimated_velocity_;
 			estimated_velocity_ += pid_.get_pid(velocity_error, dt.seconds_float(), KI_LEAK);
-#else
-			estimated_velocity_ += pid_.get_pid(alt_err/ONE_SECOND, dt.seconds_float(), KI_LEAK);
-#endif
 			estimate_ts_.time_stamp();
 		}
 

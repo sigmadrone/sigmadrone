@@ -297,7 +297,7 @@ void main_task(void *pvParameters)
 		}
 
 		if (drone_state->iteration_ % 4 == 0) {
-			pressure_sensors.pressure_filter_.set_alpha(drone_state->altitude_lpf_);
+			pressure_sensors.set_lpf_coefficient(drone_state->altitude_lpf_);
 			drone_state->altitude_ = pressure_sensors.get_altitude(true);
 			drone_state->pressure_hpa_ = pressure_sensors.get_pressure().hpa();
 			drone_state->temperature_ = pressure_sensors.get_temperature(false).celsius();

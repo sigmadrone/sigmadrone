@@ -399,6 +399,7 @@ public:
 	virtual float read_temperature_celsius() { return (float)get_temperature(); }
 	virtual PressureSensorType get_pressure_sensor_type() { return PressureSensorBmp280; }
 	virtual bool is_fifo_empty() { return false; }
+	bool is_fifo_supported() { return false; }
 
 	struct calib_param_t {
 		u16 dig_T1;/**<calibration T1 data*/

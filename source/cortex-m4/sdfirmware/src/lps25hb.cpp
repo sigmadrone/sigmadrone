@@ -1030,11 +1030,7 @@ void LPS25HB::DeInit(void)
 
 float LPS25HB::read_pressure_hpa()
 {
-	float hpa = Get_PressureHpa();
-	while (!is_fifo_empty()) {
-		hpa = Get_PressureHpa();
-	}
-	return hpa;
+	return Get_PressureHpa();
 }
 
 float LPS25HB::read_temperature_celsius()

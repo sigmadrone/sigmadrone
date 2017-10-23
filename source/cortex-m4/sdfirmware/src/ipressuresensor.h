@@ -34,6 +34,7 @@ struct IPressureSensor
 	virtual float read_temperature_celsius() = 0;
 	virtual PressureSensorType get_pressure_sensor_type() = 0;
 	virtual bool is_fifo_empty() = 0;
+	virtual bool is_fifo_supported() { return true; }
 protected:
 	virtual ~IPressureSensor() = default;
 };
