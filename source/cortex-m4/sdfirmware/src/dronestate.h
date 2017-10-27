@@ -90,7 +90,7 @@ struct DroneState {
 	    , altitude_tracker_kp_(0.025)
 		, altitude_tracker_ki_(0.005)
 		, altitude_tracker_kd_(0.001)
-		, altitude_tracker_kp2_(0.12)
+		, altitude_tracker_kp2_(0.03)
 		, altitude_correction_period_(TimeSpan::from_seconds(1000))
 	    , position_kp_(0.75)
 	    , position_ki_(0.06)
