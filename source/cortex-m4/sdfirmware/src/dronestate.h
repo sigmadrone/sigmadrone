@@ -58,9 +58,9 @@ struct DroneState {
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-	    , altitude_kp_(0.35)
+	    , altitude_kp_(0.5)
 		, altitude_ki_(0.5)
-		, altitude_kd_(0.035)
+		, altitude_kd_(0.015)
 	    , altitude_ki_leak_(0.02)
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)
@@ -90,7 +90,7 @@ struct DroneState {
 	    , altitude_tracker_kp_(0.025)
 		, altitude_tracker_ki_(0.005)
 		, altitude_tracker_kd_(0.001)
-		, altitude_tracker_kp2_(0.03)
+		, altitude_tracker_kp2_(0.12)
 		, altitude_correction_period_(TimeSpan::from_seconds(1000))
 	    , position_kp_(0.75)
 	    , position_ki_(0.06)
@@ -146,7 +146,6 @@ struct DroneState {
 			}
 			ret["alarm_time_ms"] = static_cast<int>(alarm_.when().milliseconds());
 		}
-		ret["gear_alive"] = gear_alive_;
 		return ret;
 	}
 	rexjson::value to_json_ex()
@@ -186,6 +185,8 @@ struct DroneState {
 		ret["flight_posture"] = flight_posture_;
 		ret["mag_bias"] = matrix_to_json_value(mag_bias_);
 		ret["mag_scale_factor"] = matrix_to_json_value(mag_scale_factor_);
+		ret["target_vert_speed"] = target_vertical_speed_.meters_per_second();
+		ret["target_altitude"] = target_altitude_.meters();
 		return ret;
 	}
 
@@ -317,6 +318,8 @@ struct DroneState {
 	uint32_t satellite_count_;
 	Altitude gps_altitude_;
 	Speed vertical_speed_;
+	Speed target_vertical_speed_;
+	Altitude target_altitude_;
 	Distance position_error_;
 	/*more to add here*/
 

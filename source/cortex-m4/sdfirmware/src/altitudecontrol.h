@@ -28,7 +28,7 @@
 #include "derivativefilter.h"
 
 
-static const Throttle min_throttle_altitude_hold = Throttle(0.47);
+static const Throttle min_throttle_altitude_hold = Throttle(0.49);
 static const Throttle max_throttle_altitude_hold = Throttle(0.53);
 static const Throttle landing_throttle = Throttle(0.2);
 static const Speed max_vertical_speed = (ONE_METER * 4.0f) / ONE_SECOND;
@@ -46,13 +46,12 @@ private:
 	void on_state_ascend(DroneState& drone_state);
 	void on_state_altitude_hold(DroneState& drone_state);
 	void on_state_descend(DroneState& drone_state);
-	Speed get_desired_vertical_speed(const DroneState& drone_state);
+	Speed get_target_vertical_speed(const DroneState& drone_state);
 	Speed error_as_vertical_speed(const DroneState& drone_state);
 	Altitude error_as_altitude(const DroneState& drone_state);
 	void set_throttle_from_ascend_descend(const DroneState& drone_state);
 	void set_throttle_from_altitude_hold(const DroneState& drone_state);
 	void go_to_state_altitude_hold(const DroneState& drone_state);
-	float hovering_throttle(const DroneState& drone_state);
 
 	bool is_altitude_hold_throttle(const Throttle& t);
 	bool is_ascend_throttle(const Throttle& t);
@@ -73,7 +72,7 @@ private:
 	Throttle throttle_;
 	Throttle last_base_throttle_;
 	Altitude takeoff_altitude_;
-	Altitude desired_altitude_;
+	Altitude target_altitude_;
 	TimeSpan dt_;
 	TimeStamp last_update_time_;
 	TimeStamp throttle_hold_;
