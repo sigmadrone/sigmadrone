@@ -18,14 +18,14 @@
  *  Martin Stoilov <martin@sigmadrone.org>
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
+#include "sensor3dcalibrator.h"
 #include <memory>
 #include "trimstr.h"
 #include "uartrpcserver.h"
 #include "librexjsonrpc/jsonserialization.h"
-#include "magcalibrator.h"
 
 
-UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, MagCalibrator& mag_calibrator)
+UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Sensor3dCalibrator& mag_calibrator)
 	: rpc_server<UartRpcServer, UART*>()
 	, dronestate_(dronestate)
 	, configdata_(configdata)
@@ -204,8 +204,10 @@ rexjson::value UartRpcServer::rpc_accelerometer_adjustment(UART* , rexjson::arra
 				;
 	}
 	verify_parameters(params, types, ARRAYSIZE(types));
-	if ((params[0].type() == rexjson::array_type))
+	if ((params[0].type() == rexjson::array_type)) {
 		dronestate_.accelerometer_adjustment_ = matrix_from_json_value<float, 3, 1>(params[0]);
+		dronestate_.calibrate_accel_bias_ = true;
+	}
 	return matrix_to_json_value(dronestate_.accelerometer_adjustment_);
 }
 

@@ -97,6 +97,7 @@ struct DroneState {
 	    , position_kd_ (0.15)
 	    , mag_bias_(-0.012f, -0.0065f, 0.002f)
 	    , mag_scale_factor_(0.946f, 1.047f, 1.013f)
+	    , calibrate_accel_bias_(true)
 	    , iteration_(0)
 	    , flight_ceiling_(DEFAULT_FLIGHT_CEILING)
 	    , altitude_lpf_(0.8)
@@ -371,6 +372,7 @@ struct DroneState {
 	float position_kd_;
 	Vector3f mag_bias_;
 	Vector3f mag_scale_factor_;
+	bool calibrate_accel_bias_;
 
 	/*
 	 * Time it took to read sensors
@@ -402,7 +404,7 @@ struct DroneState {
 	Altitude flight_ceiling_;
 	Altitude take_off_altitude_;
 
-	float altitude_lpf_; // temp
+	float altitude_lpf_;
 	bool gear_alive_;
 };
 

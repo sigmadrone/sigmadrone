@@ -21,11 +21,18 @@
 
 #include "altitudetracker.h"
 
+static float ACCEL_KP = 1.4f;
+static const float KI_LEAK = 0.05;
+static float accel_dead_band = 0.05;
+static const TimeSpan min_update_dt = TimeSpan::from_milliseconds(100);
+static float angular_speed_threshold = Speed::from_meters_per_second(360).meters_per_second();
+static uint32_t NUM_SAMPLES_NEEDED_FOR_ACCEL_BIAS = 100;
+
 AltitudeTracker::AltitudeTracker(const Altitude& ceiling, float safe_threshold) :
 	flight_ceiling_(ceiling), starting_altitude_(INVALID_ALTITUDE), estimated_altitude_(INVALID_ALTITUDE),
 	velocity_lpf_(0.0), alarm_count_(0), safe_threshold_(safe_threshold),
-	flight_ceiling_hit_(false), last_baro_reading_(0), vertical_acel_bias_samples_(0),
-	vertical_acel_bias_(0.0f)
+	flight_ceiling_hit_(false), last_baro_reading_(0), vertical_accel_bias_samples_(0),
+	vertical_accel_bias_(0.0f), accel_kp_(ACCEL_KP)
 {
 	assert(safe_threshold >= 0.0f && safe_threshold_ <= 1.0f);
 }
@@ -66,38 +73,51 @@ inline float apply_deadband(float val, float deadband)
 
 bool AltitudeTracker::calc_vert_accel_bias(const DroneState& drone_state)
 {
-	static uint32_t NUM_SAMPLES_NEEDED = 50;
-	if (vertical_acel_bias_samples_ < NUM_SAMPLES_NEEDED && drone_state.iteration_ > 30) {
-		vertical_acel_bias_ += calc_vertical_accel(drone_state);
-		if (++vertical_acel_bias_samples_ == NUM_SAMPLES_NEEDED) {
-			vertical_acel_bias_ /= NUM_SAMPLES_NEEDED;
+	if (vertical_accel_bias_samples_ < NUM_SAMPLES_NEEDED_FOR_ACCEL_BIAS && drone_state.iteration_ > 30 &&
+		drone_state.accel_alt_.length_squared() < 1.2f && drone_state.accel_alt_[2] < -0.9f) {
+		vertical_accel_bias_ += calc_vertical_accel(drone_state);
+		if (++vertical_accel_bias_samples_ == NUM_SAMPLES_NEEDED_FOR_ACCEL_BIAS) {
+			vertical_accel_bias_ /= NUM_SAMPLES_NEEDED_FOR_ACCEL_BIAS;
 		}
 	}
-	return vertical_acel_bias_samples_ == NUM_SAMPLES_NEEDED;
+	return vertical_accel_bias_samples_ == NUM_SAMPLES_NEEDED_FOR_ACCEL_BIAS;
 }
 
 void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 {
-	static float ACCEL_KP = 1.4f;
-	static float KI_LEAK = 0.05;
-	static const float accel_dead_band = 0.025;
-	static const TimeSpan min_update_dt = TimeSpan::from_milliseconds(100);
+	if (drone_state.calibrate_accel_bias_) {
+		drone_state.calibrate_accel_bias_ = false;
+		vertical_accel_bias_ = 0;
+		vertical_accel_bias_samples_ = 0;
+	}
 
 	if (!calc_vert_accel_bias(drone_state)) {
 		return;
 	}
 
-	float vert_accel = apply_deadband(calc_vertical_accel(drone_state) - vertical_acel_bias_, accel_dead_band);
+	accel_kp_ = ACCEL_KP;
+#if 1
+	if (fabs(drone_state.gyro_[0]) > angular_speed_threshold ||
+			fabs(drone_state.gyro_[1]) > angular_speed_threshold) {
+		//in case where the platform is rotating, there will be significant non-vertical linear accelerations
+		//which will interfere with our calculations. In this case we are really better off, ignoring
+		//the accelerometer
+		accel_kp_ = 0;
+	}
+#endif
+
+	float vert_accel = apply_deadband(calc_vertical_accel(drone_state) - vertical_accel_bias_, accel_dead_band);
 
 #if  0
 	drone_state.accel_ = Vector3f({0,0,vert_accel});
+	drone_state.accel_ = drone_state.accel_alt_;
 #endif
 
 	pid_.set_kp_ki_kd(drone_state.altitude_tracker_kp_,
 			drone_state.altitude_tracker_ki_, drone_state.altitude_tracker_kd_);
 
 	// update velocity estimate from accelerometer measurement
-	float alt_inc = -vert_accel * 9.8605 * accel_dt_.elapsed().seconds_float() * ACCEL_KP;
+	float alt_inc = -vert_accel * 9.8605 * accel_dt_.elapsed().seconds_float() * accel_kp_;
 	estimated_velocity_ += Speed::from_meters_per_second(alt_inc);
 	accel_dt_.time_stamp();
 

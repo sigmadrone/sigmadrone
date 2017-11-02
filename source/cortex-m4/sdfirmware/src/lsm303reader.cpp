@@ -5,13 +5,20 @@ LSM303Reader::LSM303Reader(LSM303D& acc, PinName int2_pin, const Matrix3f& axes_
 	, int2_pin_(int2_pin, DigitalIn::PullNone, DigitalIn::InterruptRising)
 	, axes_align_(axes_align)
 {
+#if 0
+	// TEMP: this will have to be measured
+	acc_calibrator_.start_stop_calibration(true);
+	acc_calibrator_.add_reading({-0.96, -1.002, -0.96});
+	acc_calibrator_.add_reading({1.027, 1.007, 1.05});
+	acc_calibrator_.start_stop_calibration(false);
+#endif
 }
 
 Vector3f LSM303Reader::read_sample_acc()
 {
 	LSM303D::AxesAcc_t axes = {0,0,0};
 	acc_.GetAcc(&axes);
-	return axes_align_ * Vector3d(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z);
+	return acc_calibrator_.calibrate_reading(axes_align_ * Vector3d(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
 }
 
 Vector3f LSM303Reader::read_sample_mag()

@@ -326,13 +326,13 @@ void main_task(void *pvParameters)
 
 		fifosize = acc_reader.size();
 		for (size_t i = 0; i < fifosize; i++) {
-			Vector3f acc_sample = acc_reader.read_sample_acc();
+			Vector3f acc_sample = acc_reader.read_sample_acc() - drone_state->accelerometer_adjustment_;
 			acc_lpf_att.do_filter(acc_sample);
 			acc_lpf_alt.do_filter(acc_sample);
 		}
 		drone_state->accel_raw_ = acc_lpf_att.output();
 		drone_state->accel_alt_ = acc_lpf_alt.output();
-		drone_state->accel_ = (drone_state->accel_raw_ - drone_state->accelerometer_adjustment_).normalize();
+		drone_state->accel_ = drone_state->accel_raw_.normalize();
 
 #define ALLOW_ACCELEROMETER_OFF
 #ifdef ALLOW_ACCELEROMETER_OFF

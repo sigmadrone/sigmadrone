@@ -66,8 +66,9 @@ private:
 	float safe_threshold_;
 	bool flight_ceiling_hit_;
 	float last_baro_reading_;
-	uint32_t vertical_acel_bias_samples_;
-	float vertical_acel_bias_;
+	uint32_t vertical_accel_bias_samples_;
+	float vertical_accel_bias_;
+	float accel_kp_;
 };
 
 

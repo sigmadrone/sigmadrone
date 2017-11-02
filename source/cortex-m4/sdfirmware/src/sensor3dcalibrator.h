@@ -20,15 +20,16 @@
  */
 
 
-#ifndef MAGCALIBRATOR_H_
-#define MAGCALIBRATOR_H_
+#ifndef SENSOR3DCALIBRATOR_H_
+#define SENSOR3DCALIBRATOR_H_
 
 #include "d3math.h"
 
-class MagCalibrator
+
+class Sensor3dCalibrator
 {
 public:
-	MagCalibrator();
+	Sensor3dCalibrator();
 	void start_stop_calibration(bool start);
 	void add_reading(const Vector3f& mag_values);
 	const Vector3f& bias() const;
@@ -38,8 +39,14 @@ public:
 	void set_bias(const Vector3f&);
 	void set_scale_factor(const Vector3f&);
 
+	static void Sphere3dFit(
+			const Vector3f& min_values,
+			const Vector3f& max_values,
+			Vector3f& bias,
+			Vector3f& scale_factor);
+
 private:
-	Vector3f mag_bias_;
+	Vector3f bias_;
 	Vector3f scale_factor_;
 	Vector3f min_values_;
 	Vector3f max_values_;
@@ -49,4 +56,4 @@ private:
 
 
 
-#endif /* MAGCALIBRATOR_H_ */
+#endif /* SENSOR3DCALIBRATOR_H_ */

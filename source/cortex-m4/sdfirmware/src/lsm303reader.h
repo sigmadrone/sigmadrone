@@ -22,6 +22,7 @@
 #ifndef LSM303READER_H_
 #define LSM303READER_H_
 
+#include "sensor3dcalibrator.h"
 #include "d3math.h"
 #include "units.h"
 #include "FreeRTOS.h"
@@ -30,7 +31,6 @@
 #include "lsm303d.h"
 #include "digitalin.h"
 #include "sensorsprefilters.h"
-#include "magcalibrator.h"
 
 class LSM303Reader
 {
@@ -43,7 +43,8 @@ public:
 	void init(uint8_t watermark);
 	void enable_int2(bool enable);
 
-	MagCalibrator mag_calibrator_;
+	Sensor3dCalibrator mag_calibrator_;
+	Sensor3dCalibrator acc_calibrator_;
 private:
 	void isr();
 
