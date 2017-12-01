@@ -30,7 +30,7 @@ static uint32_t NUM_SAMPLES_NEEDED_FOR_ACCEL_BIAS = 100;
 
 AltitudeTracker::AltitudeTracker(const Altitude& ceiling, float safe_threshold) :
 	flight_ceiling_(ceiling), starting_altitude_(INVALID_ALTITUDE), estimated_altitude_(INVALID_ALTITUDE),
-	velocity_lpf_(0.0), alarm_count_(0), safe_threshold_(safe_threshold),
+	velocity_lpf_(0.0f), alarm_count_(0), safe_threshold_(safe_threshold),
 	flight_ceiling_hit_(false), last_baro_reading_(0), vertical_accel_bias_samples_(0),
 	vertical_accel_bias_(0.0f), accel_kp_(ACCEL_KP)
 {
@@ -108,18 +108,19 @@ void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 
 	float vert_accel = apply_deadband(calc_vertical_accel(drone_state) - vertical_accel_bias_, accel_dead_band);
 
-#if  0
-	drone_state.accel_ = Vector3f({0,0,vert_accel});
-	drone_state.accel_ = drone_state.accel_alt_;
-#endif
-
 	pid_.set_kp_ki_kd(drone_state.altitude_tracker_kp_,
 			drone_state.altitude_tracker_ki_, drone_state.altitude_tracker_kd_);
 
 	// update velocity estimate from accelerometer measurement
 	float alt_inc = -vert_accel * 9.8605 * accel_dt_.elapsed().seconds_float() * accel_kp_;
-	estimated_velocity_ += Speed::from_meters_per_second(alt_inc);
+	drone_state.vertical_speed_from_accel_ = Speed::from_meters_per_second(alt_inc);
+	estimated_velocity_ += drone_state.vertical_speed_from_accel_;
 	accel_dt_.time_stamp();
+
+#if  0
+	drone_state.mag_ = Vector3f({0,0,alt_inc});
+	drone_state.accel_ = drone_state.accel_alt_;
+#endif
 
 	// update altitude with the velocity estimate
 	estimated_altitude_ += estimated_velocity_ * drone_state.dt_;
@@ -129,18 +130,17 @@ void AltitudeTracker::estimate_altitude(DroneState& drone_state)
 		// Correct the altitude and velocity estimate from the baro measurement/observation
 		Altitude alt_err = drone_state.altitude_ - estimated_altitude_;
 		estimated_altitude_ += alt_err * drone_state.altitude_tracker_kp2_;
-
-		if (fabs(vert_accel) < accel_dead_band || dt > min_update_dt) {
-			Speed vert_velocity = velocity_lpf_.do_filter(Speed::from_meters_per_second(
+		drone_state.vertical_speed_from_baro_ = velocity_lpf_.do_filter(Speed::from_meters_per_second(
 				altitude_deriv_.do_filter(drone_state.altitude_.meters())));
-			Speed velocity_error = vert_velocity - estimated_velocity_;
-			estimated_velocity_ += pid_.get_pid(velocity_error, dt.seconds_float(), KI_LEAK);
-			estimate_ts_.time_stamp();
-		}
+		Speed velocity_error = pid_.get_pid(drone_state.vertical_speed_from_baro_ - estimated_velocity_, dt.seconds_float(), KI_LEAK);
+#if 0
+		drone_state.mag_[0] = drone_state.vertical_speed_from_baro_.meters_per_second();
+		last_altitude_reading_ = drone_state.altitude_;
+#endif
+		estimated_velocity_ += velocity_error;
+		estimate_ts_.time_stamp();
 
-		if (drone_state.pressure_hpa_ != last_baro_reading_) {
-			drone_state.altitude_from_baro_ = drone_state.altitude_;
-		}
+		drone_state.altitude_from_baro_ = drone_state.altitude_;
 		last_baro_reading_ = drone_state.pressure_hpa_;
 	}
 

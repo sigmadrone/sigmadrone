@@ -361,7 +361,18 @@ void main_task(void *pvParameters)
 		flight_ctl.update_state(*drone_state);
 		flight_ctl.send_throttle_to_motors();
 
-		if (print_to_console && console_update_time.elapsed() > TimeSpan::from_milliseconds(300)) {
+#define REALTIME_ALTITUDE_DATA 0
+#if REALTIME_ALTITUDE_DATA
+		printf("%4.3f,%4.3f,%4.3f,%4.3f,%4.3f,%1.6f\n",
+				drone_state->altitude_.meters(),
+				drone_state->altitude_from_baro_.meters(),
+				drone_state->vertical_speed_.meters_per_second(),
+				drone_state->vertical_speed_from_baro_.meters_per_second(),
+				drone_state->vertical_speed_from_accel_.meters_per_second(),
+				drone_state->dt_.seconds_float());
+#endif
+
+		if (print_to_console && console_update_time.elapsed() > TimeSpan::from_milliseconds(100)) {
 
 			Vector3f drift_err = att.get_drift_error();
 			console_update_time.time_stamp();

@@ -322,6 +322,11 @@ struct DroneState {
 	Speed target_vertical_speed_;
 	Altitude target_altitude_;
 	Distance position_error_;
+	/*
+	 * Parameters that are not reported via JSON RPC
+	 */
+	Speed vertical_speed_from_baro_;
+	Speed vertical_speed_from_accel_;
 	/*more to add here*/
 
 	/*
