@@ -49,7 +49,7 @@
 #include "flightcontrol.h"
 #include "uartrpcserver.h"
 #include "librexjson/rexjson++.h"
-#include "libattitude/attitudetracker.h"
+#include "../libattitude/attitudetracker.h"
 #include "pressuresensorarray.h"
 #include "sensorsprefilters.h"
 #include "flashmemory.h"
