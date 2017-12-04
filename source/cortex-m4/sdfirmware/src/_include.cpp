@@ -19,5 +19,4 @@
  *  Svetoslav Vassilev <svassilev@sigmadrone.org>
  */
 #include "librexjson/rexjson++.cpp"
-#include "libattitude/attitudetracker.cpp"
 #include "libgps/TinyGPS.cpp"

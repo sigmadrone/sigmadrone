@@ -6,7 +6,7 @@ CC  		?= $(CROSS_COMPILE)gcc
 LD  		?= $(CROSS_COMPILE)ld
 LINK 		:= $(CXX)
 INCLUDES	+= $(addprefix -I,$(CURDIR) ../.. ../../include ../../libhttp ../../librexjson ../../librexjsonrpc)
-INCLUDES	+= $(addprefix -I,../../libcmdargs ../../liblogger ../../libdevice ../../libattitude)
+INCLUDES	+= $(addprefix -I,../../libcmdargs ../../liblogger ../../libdevice)
 INCLUDES	+= $(addprefix -I,../../libgoogletest/include)
 ifneq ($(BUILD),release)
 DEBUGFLAGS	= -g -O0
@@ -16,7 +16,7 @@ endif
 xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(CFLAGS) $(DEBUGFLAGS)
 xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(CXXFLAGS) $(DEBUGFLAGS)
 xLDFLAGS 	= $(LDFLAGS)
-LIBS		= -lattitude -llogger -lrexjsonrpc -lrexjson -lhttp -lcmdargs -lgtest_main
+LIBS		= -llogger -lrexjsonrpc -lrexjson -lhttp -lcmdargs -lgtest_main
 LIBS		+= -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
 LIBS		+= $(addprefix -L,../../libattitude/$(OUTDIR) ../../libcmdargs/$(OUTDIR) ../../libgoogletest/$(OUTDIR))
 LIBS		+= $(addprefix -L,../../liblogger/$(OUTDIR) ../../libhttp/$(OUTDIR) ../../librexjson/$(OUTDIR) ../../librexjsonrpc/$(OUTDIR))

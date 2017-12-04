@@ -5,7 +5,7 @@ CXX 		?= $(CROSS_COMPILE)g++
 CC  		?= $(CROSS_COMPILE)gcc
 LD  		?= $(CROSS_COMPILE)ld
 LINK 		:= $(CXX)
-INCLUDES	+= $(addprefix -I,$(CURDIR) ../.. ../../include ../../libhttp ../../librexjson ../../libcmdargs ../../liblogger ../../libdevice ../../libattitude)
+INCLUDES	+= $(addprefix -I,$(CURDIR) ../.. ../../include ../../libhttp ../../librexjson ../../libcmdargs ../../liblogger ../../libdevice)
 ifneq ($(BUILD),release)
 DEBUGFLAGS	= -g -O0
 else
@@ -14,9 +14,9 @@ endif
 xCFLAGS		= -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(CFLAGS) $(DEBUGFLAGS)
 xCXXFLAGS	= -Wall -Wextra -Wformat -Wno-unused-parameter $(INCLUDES) $(CXXFLAGS) $(DEBUGFLAGS)
 xLDFLAGS 	= $(LDFLAGS)
-LIBS		= -lrexjson -lrexjsonrpc -lattitude -llogger -lhttp -lrexjson -lcmdargs 
+LIBS		= -lrexjson -lrexjsonrpc -llogger -lhttp -lrexjson -lcmdargs 
 LIBS		+= -lm -lrt -pthread -ldl -lboost_system -lboost_filesystem -lboost_program_options -lboost_thread
-LIBS		+= -L../../libattitude/$(OUTDIR) -L../../libcmdargs/$(OUTDIR) 
+LIBS		+= -L../../libcmdargs/$(OUTDIR) 
 LIBS		+= -L../../liblogger/$(OUTDIR) -L../../libhttp/$(OUTDIR) -L../../librexjson/$(OUTDIR)
 LIBS		+= -L../../librexjson/$(OUTDIR) -L../../librexjsonrpc/$(OUTDIR)
 TARGET 		= $(OUTDIR)/uartrpc

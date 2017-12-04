@@ -1,4 +1,4 @@
-SUBDIRS += libattitude
+#SUBDIRS += libattitude
 SUBDIRS += libhttp
 SUBDIRS += libcmdargs
 SUBDIRS += liblogger
