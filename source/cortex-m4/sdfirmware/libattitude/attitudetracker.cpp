@@ -85,32 +85,35 @@ void attitudetracker::track_gyroscope(const Vector3f& omega, float dtime)
 void attitudetracker::track_accelerometer(const Vector3f& g, float dtime)
 {
 	/*
-	 * Estimate after rotating the initial vector with the
-	 * world attitude quaternion.
+	 * Estimate after rotating the initial earth acceleration
+	 * vector with the world attitude quaternion.
 	 */
 	Vector3f g_estimated = get_world_attitude().rotate(earth_g_);
 
 	/*
-	 * Calculate the rotation between the estimated vector
-	 * and the one received by the sensor.
+	 * Calculate the rotation between the estimated earth acceleration
+	 * vector and the one detected by the accelerometer sensor.
 	 */
 	QuaternionF q = QuaternionF::fromVectors(g_estimated, g);
 
 	/*
 	 * Generate angular velocity to adjust our attitude in the
-	 * direction of the sensor reading.
+	 * direction of the sensor reading. We assume that our
+	 * attitude quaternion has accumulated error, so we will
+	 * try to correct it by calculating a delta quaternion that
+	 * when adjust our attitude with it will better align
+	 * the estimated earth acceleration with one detected by
+	 * the sensor.
 	 */
 	Vector3f w = QuaternionF::angularVelocity(QuaternionF::identity, q, q.angle() / DEG2RAD(accelerometer_correction_speed_));
 	filtered_w_ = filtered_w_ * alpha_ + w * (1.0f - alpha_);
 	w = filtered_w_;
-//	if (w.length() == 0.0)
-//		return;
 	drift_err_ = drift_pid_.get_pid(w, dtime, drift_leak_rate_);
 	QuaternionF deltaq = QuaternionF::fromAngularVelocity(-w, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
-#define ACC_REALTIME_DATA 0
+#define ACC_REALTIME_DATA 1
 #if ACC_REALTIME_DATA
-		std::cout << g.transpose() << get_world_attitude().rotate(earth_g_).transpose() << w.transpose() << std::endl;
+	std::cout << g.transpose() << get_world_attitude().rotate(earth_g_).transpose() << w.transpose() << std::endl;
 #endif
 
 }

@@ -27,7 +27,7 @@
 class attitudetracker
 {
 public:
-	explicit attitudetracker(float accelerometer_correction_speed = 1.5, Vector3f earth_g = Vector3f(0, 0, -1), float alpha = 0.75f);
+	explicit attitudetracker(float accelerometer_correction_speed = 1.5, Vector3f earth_g = Vector3f(0, 0, -1), float alpha = 0.5f);
 	~attitudetracker();
 	Vector3f get_earth_g() const;
 	void set_earth_g(Vector3f earth_g);
