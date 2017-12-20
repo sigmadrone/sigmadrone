@@ -22,9 +22,8 @@
 
 #include <iostream>
 
-attitudetracker::attitudetracker(float accelerometer_correction_speed, Vector3f earth_g, float alpha)
+attitudetracker::attitudetracker(float accelerometer_correction_speed, Vector3f earth_g)
 	: accelerometer_correction_speed_(accelerometer_correction_speed)
-	, alpha_(alpha)
 	, earth_g_(earth_g)
 	, attitude_(QuaternionF::identity)
 	, drift_pid_(0, 0.01, 0)
@@ -105,11 +104,9 @@ void attitudetracker::track_accelerometer(const Vector3f& g, float dtime)
 	 * the estimated earth acceleration with one detected by
 	 * the sensor.
 	 */
-	Vector3f w = QuaternionF::angularVelocity(QuaternionF::identity, q, q.angle() / DEG2RAD(accelerometer_correction_speed_));
-	filtered_w_ = filtered_w_ * alpha_ + w * (1.0f - alpha_);
-	w = filtered_w_;
-	drift_err_ = drift_pid_.get_pid(w, dtime, drift_leak_rate_);
-	QuaternionF deltaq = QuaternionF::fromAngularVelocity(-w, dtime);
+	alignment_w_ = QuaternionF::angularVelocity(QuaternionF::identity, q, q.angle() / DEG2RAD(accelerometer_correction_speed_));
+	drift_err_ = drift_pid_.get_pid(alignment_w_, dtime, drift_leak_rate_);
+	QuaternionF deltaq = QuaternionF::fromAngularVelocity(-alignment_w_, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
 }
 
@@ -176,5 +173,5 @@ void attitudetracker::reset_attitude()
 
 Vector3d attitudetracker::get_alignment_speed() const
 {
-	return filtered_w_;
+	return alignment_w_;
 }
