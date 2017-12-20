@@ -27,7 +27,7 @@
 class attitudetracker
 {
 public:
-	explicit attitudetracker(float accelerometer_correction_speed = 1.5, Vector3f earth_g = Vector3f(0, 0, -1), float alpha = 0.5f);
+	explicit attitudetracker(float accelerometer_correction_speed = 1.5, Vector3f earth_g = Vector3f(0, 0, -1), float alpha = 0.25f);
 	~attitudetracker();
 	Vector3f get_earth_g() const;
 	void set_earth_g(Vector3f earth_g);
@@ -51,6 +51,13 @@ public:
 	 */
 	QuaternionF get_world_attitude() const;
 	void reset_attitude();
+
+	/*
+	 * Return the filtered calculated correction speed
+	 * aligning the estimated attitude to the one
+	 * detected by the accelerometer sensor
+	 */
+	Vector3d get_alignment_speed() const;
 
 public:
 	/*

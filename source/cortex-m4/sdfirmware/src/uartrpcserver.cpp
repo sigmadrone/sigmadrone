@@ -41,6 +41,7 @@ UartRpcServer::UartRpcServer(DroneState& dronestate, FlashMemory& configdata, Se
 	add("ki", &UartRpcServer::rpc_ki);
 	add("kd", &UartRpcServer::rpc_kd);
 	add("kp", &UartRpcServer::rpc_kp);
+	add("leakrate", &UartRpcServer::rpc_leakrate);
 	add("yaw_ki", &UartRpcServer::rpc_yaw_ki);
 	add("yaw_kd", &UartRpcServer::rpc_yaw_kd);
 	add("yaw_kp", &UartRpcServer::rpc_yaw_kp);
@@ -279,6 +280,29 @@ rexjson::value UartRpcServer::rpc_ki(UART* , rexjson::array& params, rpc_exec_mo
 	if ((params[0].type() != rexjson::null_type))
 		dronestate_.ki_ = params[0].get_real();
 	return dronestate_.ki_;
+}
+
+rexjson::value UartRpcServer::rpc_leakrate(UART* , rexjson::array& params, rpc_exec_mode mode)
+{
+	static unsigned int types[] = {rpc_real_type|rpc_int_type|rpc_null_type};
+	if (mode != execute) {
+		if (mode == spec)
+			return create_json_spec(types, ARRAYSIZE(types));
+		if (mode == helpspec)
+			return create_json_helpspec(types, ARRAYSIZE(types));
+		return
+	            "leakrate\n"
+	            "\nGet/Set Leak Rate."
+				"\nIf the new coefficient is not specified, the current Leak Rate will be returned."
+				"\n"
+				"Arguments:\n"
+				"1. LeakRate          (real, optional) The LeakRate of the PID controller.\n"
+				;
+	}
+	verify_parameters(params, types, ARRAYSIZE(types));
+	if ((params[0].type() != rexjson::null_type))
+		dronestate_.leakrate_ = params[0].get_real();
+	return dronestate_.leakrate_;
 }
 
 

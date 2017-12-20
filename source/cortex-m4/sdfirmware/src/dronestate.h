@@ -22,11 +22,11 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
-#undef USE_SIXPROPELLERS
-#undef USE_ALIGNMENT_MIPIFRONT
+#define USE_SIXPROPELLERS
+#define USE_ALIGNMENT_MIPIFRONT
 #define USE_LPS25HB
 
-#define LITE_FRAME
+#undef LITE_FRAME
 
 #include "units.h"
 #include "battery.h"
@@ -55,6 +55,7 @@ struct DroneState {
 		, kp_(0.14)
 		, ki_(0.3)
 		, kd_(0.035)
+		, leakrate_(0.02)
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
@@ -78,7 +79,7 @@ struct DroneState {
 		, base_throttle_(0.0)
         , yaw_throttle_factor_(0.75)
 	    , pid_filter_freq_(80)
-	    , flight_mode_(FLIGHT_MODE_ALTITUDE_HOLD)
+	    , flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
 	    , motors_armed_(false)
 		, enforce_flight_ceiling_(false)
 		, track_magnetometer_(false)
@@ -157,6 +158,7 @@ struct DroneState {
 		ret["kp"] = kp_;
 		ret["ki"] = ki_;
 		ret["kd"] = kd_;
+		ret["leakrate"] = leakrate_;
 		ret["yaw_kp"] = yaw_kp_;
 		ret["yaw_ki"] = yaw_ki_;
 		ret["yaw_kd"] = yaw_kd_;
@@ -198,6 +200,7 @@ struct DroneState {
 		ret["kp"] = kp_;
 		ret["ki"] = ki_;
 		ret["kd"] = kd_;
+		ret["leakrate"] = leakrate_;
 		ret["yaw_kp"] = yaw_kp_;
 		ret["yaw_ki"] = yaw_ki_;
 		ret["yaw_kd"] = yaw_kd_;
@@ -232,6 +235,7 @@ struct DroneState {
 		try { kp_ = bootconfig["kp"].get_real(); } catch (std::exception& e) {}
 		try { ki_ = bootconfig["ki"].get_real(); } catch (std::exception& e) {}
 		try { kd_ = bootconfig["kd"].get_real(); } catch (std::exception& e) {}
+		try { leakrate_ = bootconfig["leakrate"].get_real(); } catch (std::exception& e) {}
 		try { yaw_kp_ = bootconfig["yaw_kp"].get_real(); } catch (std::exception& e) {}
 		try { yaw_bias_ = bootconfig["yaw_bias"].get_real(); } catch (std::exception& e) {}
 		try { pitch_bias_ = bootconfig["pitch_bias"].get_real(); } catch (std::exception& e) {}
@@ -288,8 +292,9 @@ struct DroneState {
 #else
 			kp_ = 0.35;
 			kd_ = 0.08;
-			ki_ = 0.06;
-			accelerometer_adjustment_ = Vector3f(0.0f, -0.016f, 0.0f);
+			ki_ = 0.35;
+			leakrate_ = 0.02;
+			accelerometer_adjustment_ = Vector3f(0.025f, 0.050f, 0.0f);
 #endif
 		}
 	}
@@ -335,6 +340,7 @@ struct DroneState {
 	float kp_;
 	float ki_;
 	float kd_;
+	float leakrate_;
 	float yaw_kp_;
 	float yaw_ki_;
 	float yaw_kd_;

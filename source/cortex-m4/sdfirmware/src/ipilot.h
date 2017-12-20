@@ -42,6 +42,13 @@ public:
 	virtual float get_max_thrust() const = 0;
 
 	virtual PilotType get_pilot_type() const = 0;
+
+	virtual const Vector3f& get_torque_xy_p() const = 0;
+	virtual const Vector3f& get_torque_xy_d() const = 0;
+	virtual const Vector3f& get_torque_xy_i() const = 0;
+	virtual const Vector3f& get_torque_z_p() const = 0;
+	virtual const Vector3f& get_torque_z_d() const = 0;
+
 };
 
 #endif // _IPILOT_H_

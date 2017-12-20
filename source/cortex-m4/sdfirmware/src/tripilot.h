@@ -49,6 +49,11 @@ public:
 	virtual float get_min_thrust() const { return min_thrust_; }
 	virtual float get_max_thrust() const { return max_thrust_; }
 	virtual PilotType get_pilot_type() const { return PILOT_TYPE_PID_NEW; }
+	virtual const Vector3f& get_torque_xy_p() const { return torq_xy_p_; }
+	virtual const Vector3f& get_torque_xy_d() const { return torq_xy_d_; }
+	virtual const Vector3f& get_torque_xy_i() const { return torq_xy_i_; }
+	virtual const Vector3f& get_torque_z_p() const { return torq_z_p_; }
+	virtual const Vector3f& get_torque_z_d() const { return torq_z_d_; }
 
 private:
 	std::vector<float> clip_motors(const std::vector<float>& motors);
@@ -71,6 +76,12 @@ private:
 	LowPassFilter<float, float> pitch_avg_;
 	LowPassFilter<float, float> roll_avg_;
 
+public:
+	Vector3f torq_xy_p_;
+	Vector3f torq_xy_d_;
+	Vector3f torq_xy_i_;
+	Vector3f torq_z_p_;
+	Vector3f torq_z_d_;
 };
 
 

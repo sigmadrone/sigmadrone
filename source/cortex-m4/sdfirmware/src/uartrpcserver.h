@@ -56,6 +56,7 @@ protected:
 	rexjson::value rpc_kp(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_ki(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
+	rexjson::value rpc_leakrate(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_yaw_kp(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_yaw_kd(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);
 	rexjson::value rpc_yaw_ki(UART* uart, rexjson::array& params, rpc_exec_mode mode = execute);

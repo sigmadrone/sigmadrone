@@ -361,6 +361,18 @@ void main_task(void *pvParameters)
 		flight_ctl.update_state(*drone_state);
 		flight_ctl.send_throttle_to_motors();
 
+#define ACC_REALTIME_DATA 1
+#if ACC_REALTIME_DATA
+		std::cout
+		<< drone_state->accel_.transpose()
+		<< att.get_world_attitude().rotate(att.get_earth_g()).transpose()
+		<< att.get_alignment_speed().transpose()
+		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_p()).transpose()
+		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_d()).transpose()
+		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_i()).transpose()
+		<< std::endl;
+#endif
+
 #define REALTIME_ALTITUDE_DATA 0
 #if REALTIME_ALTITUDE_DATA
 		printf("%4.3f,%4.3f,%4.3f,%4.3f,%4.3f,%1.6f\n",

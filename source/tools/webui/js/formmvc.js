@@ -160,6 +160,7 @@ PidXYFormView.prototype.onRedrawData = function(droneState) {
   $(this.formId)[0].elements['kp-xy'].value = droneState.kp;
   $(this.formId)[0].elements['ki-xy'].value = droneState.ki;
   $(this.formId)[0].elements['kd-xy'].value = droneState.kd;
+  $(this.formId)[0].elements['leakrate-xy'].value = droneState.leakrate;
   return true;
 }
 

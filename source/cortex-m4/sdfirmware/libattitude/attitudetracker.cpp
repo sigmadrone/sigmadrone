@@ -111,11 +111,6 @@ void attitudetracker::track_accelerometer(const Vector3f& g, float dtime)
 	drift_err_ = drift_pid_.get_pid(w, dtime, drift_leak_rate_);
 	QuaternionF deltaq = QuaternionF::fromAngularVelocity(-w, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
-#define ACC_REALTIME_DATA 1
-#if ACC_REALTIME_DATA
-	std::cout << g.transpose() << get_world_attitude().rotate(earth_g_).transpose() << w.transpose() << std::endl;
-#endif
-
 }
 
 void attitudetracker::track_magnetometer(const Vector3f& m, float dtime)
@@ -177,4 +172,9 @@ QuaternionF attitudetracker::get_world_attitude() const
 void attitudetracker::reset_attitude()
 {
 	attitude_ = QuaternionF::identity;
+}
+
+Vector3d attitudetracker::get_alignment_speed() const
+{
+	return filtered_w_;
 }
