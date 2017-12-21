@@ -217,10 +217,10 @@ void main_task(void *pvParameters)
 	TimeStamp sample_dt;
 	FlightControl flight_ctl;
 	static bool print_to_console = false;
-	LowPassFilter<Vector3f, float> gyro_lpf({0.5});
-	LowPassFilter<Vector3f, float> acc_lpf_alt({0.9});
-	LowPassFilter<Vector3f, float> acc_lpf_att({0.5});
-	LowPassFilter<Vector3f, float> mag_lpf({0.90});
+	LowPassFilter<Vector3d, double> gyro_lpf({0.25});
+	LowPassFilter<Vector3d, double> acc_lpf_alt({0.9});
+	LowPassFilter<Vector3d, double> acc_lpf_att({0.9999});
+	LowPassFilter<Vector3d, double> mag_lpf({0.90});
 	attitudetracker att;
 
 	/*
@@ -288,6 +288,20 @@ void main_task(void *pvParameters)
 
 	sample_dt.time_stamp();
 
+
+	/*
+	 * Warm up the acc filter
+	 */
+	double alpha = acc_lpf_att.alpha();
+	acc_lpf_att.set_alpha(0.995);
+	for (size_t i = 0; i < 2000; i++) {
+		while (!acc_reader.size())
+			;
+		Vector3f acc_sample = acc_reader.read_sample_acc() - drone_state->accelerometer_adjustment_;
+		acc_lpf_att.do_filter(acc_sample);
+	}
+	acc_lpf_att.set_alpha(alpha);
+
 	// Infinite loop
 	PerfCounter idle_time;
 	while (1) {
@@ -321,8 +335,13 @@ void main_task(void *pvParameters)
 			   drone_state->gyro_raw_ = gyro_lpf.do_filter(gyro_reader.read_sample());
 		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
 			   drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_reader.bias()) * drone_state->gyro_factor_;
-			   att.track_gyroscope(DEG2RAD(drone_state->gyro_) * 1.0f, drone_state->dt_.seconds_float());
+			   att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_double());
 		}
+
+
+		QuaternionD deltaq = QuaternionD::fromAngularVelocity(-DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_double());
+		Vector3d filtered_acc = acc_lpf_att.output();
+		acc_lpf_att.reset(deltaq.rotate(filtered_acc));
 
 		fifosize = acc_reader.size();
 		for (size_t i = 0; i < fifosize; i++) {
@@ -337,10 +356,10 @@ void main_task(void *pvParameters)
 #define ALLOW_ACCELEROMETER_OFF
 #ifdef ALLOW_ACCELEROMETER_OFF
 		if (drone_state->track_accelerometer_) {
-			att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
+			att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_double());
 		}
 #else
-		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_float());
+		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_double());
 #endif
 
 #define REALTIME_DATA 0
@@ -363,9 +382,13 @@ void main_task(void *pvParameters)
 
 #define ACC_REALTIME_DATA 1
 #if ACC_REALTIME_DATA
+		QuaternionD twist, swing;
+		QuaternionD::decomposeTwistSwing(att.get_world_attitude(), Vector3f(0,0,1), swing, twist);
+
 		std::cout
 		<< drone_state->accel_.transpose()
-		<< att.get_world_attitude().rotate(att.get_earth_g()).transpose()
+//		<< att.get_world_attitude().rotate(att.get_earth_g()).transpose()
+		<< swing.rotate(att.get_earth_g()).transpose()
 		<< att.get_alignment_speed().transpose()
 		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_p()).transpose()
 		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_d()).transpose()

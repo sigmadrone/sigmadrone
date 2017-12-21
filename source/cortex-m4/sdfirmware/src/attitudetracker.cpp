@@ -25,7 +25,7 @@
 attitudetracker::attitudetracker(double accelerometer_correction_speed, Vector3d earth_g)
 	: accelerometer_correction_speed_(accelerometer_correction_speed)
 	, earth_g_(earth_g)
-	, filtered_earth_g_(0.9)
+	, filtered_earth_g_(0.98)
 	, attitude_(QuaternionD::identity)
 	, coarse_attitude_(QuaternionD::identity)
 	, drift_pid_(0, 0.01, 0)
@@ -91,8 +91,6 @@ void attitudetracker::track_gyroscope(const Vector3d& omega, double dtime)
 
 void attitudetracker::track_accelerometer(const Vector3d& g, double dtime)
 {
-	filtered_earth_g_.do_filter(attitude_.rotate(g));
-
 	/*
 	 * Estimate after rotating the initial earth acceleration
 	 * vector with the world attitude quaternion.
@@ -118,6 +116,8 @@ void attitudetracker::track_accelerometer(const Vector3d& g, double dtime)
 	drift_err_ = drift_pid_.get_pid(alignment_w_, dtime, drift_leak_rate_);
 	QuaternionD deltaq = QuaternionD::fromAngularVelocity(-alignment_w_, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
+
+	filtered_earth_g_.do_filter(attitude_.rotate(g));
 }
 
 void attitudetracker::track_magnetometer(const Vector3d& m, double dtime)

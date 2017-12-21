@@ -23,7 +23,7 @@ import matplotlib.animation as animation
 import time
 import select
 
-samplecount = 5
+samplecount = 10
 
 data1 = [[0,0,0] for i in range(samplecount)]
 data2 = [[0,0,0]]
@@ -109,6 +109,7 @@ def animate(i):
         torq_d_text.set_text('Torque_D = %.4f' % ((float(torq_d[0][0])**2 + (float(torq_d[0][1])**2)))**0.5)
         torq_i_text.set_text('Torque_I = %.4f' % ((float(torq_i[0][0])**2 + (float(torq_i[0][1])**2)))**0.5)
         ax1.plot(acc1[:,1], acc1[:,0], "ro")
+        #ax1.plot(acc1[:,1], acc1[:,0], "r")    
         ax1.plot(acc2[:,1], acc2[:,0], "yo")
         ax1.plot(earth_g[:,1], earth_g[:,0], "go")        
         ax1.arrow(acc2[0][1], acc2[0][0], torq_p[0][1] * scale_factor, torq_p[0][0] * scale_factor, fc='r', ec='r', width=arrow_width, head_width=arrow_head_width, head_length=arrow_head_length);

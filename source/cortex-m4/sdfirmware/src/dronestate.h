@@ -22,8 +22,8 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
-#undef USE_SIXPROPELLERS
-#undef USE_ALIGNMENT_MIPIFRONT
+#define USE_SIXPROPELLERS
+#define USE_ALIGNMENT_MIPIFRONT
 #define USE_LPS25HB
 
 #undef LITE_FRAME
@@ -294,7 +294,8 @@ struct DroneState {
 			kd_ = 0.08;
 			ki_ = 0.35;
 			leakrate_ = 0.05;
-			accelerometer_adjustment_ = Vector3f(0.035f, 0.045f, 0.0f);
+//			accelerometer_adjustment_ = Vector3f(0.035f, 0.045f, 0.0f);
+			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
 #endif
 		}
 	}
@@ -302,13 +303,13 @@ struct DroneState {
 	/*
 	 * Sensors - input attributes
 	 */
-	Vector3f gyro_raw_;
-	Vector3f accel_raw_;
-	Vector3f accel_alt_;
-	Vector3f mag_raw_;
-	Vector3f gyro_;
-	Vector3f accel_;
-	Vector3f mag_;
+	Vector3d gyro_raw_;
+	Vector3d accel_raw_;
+	Vector3d accel_alt_;
+	Vector3d mag_raw_;
+	Vector3d gyro_;
+	Vector3d accel_;
+	Vector3d mag_;
 	Vector3d gyro_drift_error_;
 	Altitude altitude_;
 	Altitude altitude_from_baro_;

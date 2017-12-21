@@ -126,6 +126,7 @@ struct TimeSpan : public ScaledUnit<uint64_t> {
 	inline TimeSpan() : ScaledUnit(0) {}
 	inline ~TimeSpan() {}
 	float seconds_float() const { return (float)microseconds() / (1000000.0); }
+	double seconds_double() const { return (double)microseconds() / (1000000.0); }
 	inline uint64_t seconds() const { return nanounit(); }
 	inline uint64_t milliseconds() const { return microunit(); }
 	inline uint64_t microseconds() const { return milliunit(); }
