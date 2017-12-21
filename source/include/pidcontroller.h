@@ -212,5 +212,6 @@ private:
 
 
 typedef PidController<Vector3f> PidController3f;
+typedef PidController<Vector3d> PidController3d;
 
 #endif /* PIDCONTROLLER_H_ */

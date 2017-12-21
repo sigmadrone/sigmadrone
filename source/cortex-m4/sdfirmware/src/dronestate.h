@@ -22,8 +22,8 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
-#define USE_SIXPROPELLERS
-#define USE_ALIGNMENT_MIPIFRONT
+#undef USE_SIXPROPELLERS
+#undef USE_ALIGNMENT_MIPIFRONT
 #define USE_LPS25HB
 
 #undef LITE_FRAME
@@ -293,8 +293,8 @@ struct DroneState {
 			kp_ = 0.35;
 			kd_ = 0.08;
 			ki_ = 0.35;
-			leakrate_ = 0.02;
-			accelerometer_adjustment_ = Vector3f(0.025f, 0.050f, 0.0f);
+			leakrate_ = 0.05;
+			accelerometer_adjustment_ = Vector3f(0.035f, 0.045f, 0.0f);
 #endif
 		}
 	}
@@ -309,7 +309,7 @@ struct DroneState {
 	Vector3f gyro_;
 	Vector3f accel_;
 	Vector3f mag_;
-	Vector3f gyro_drift_error_;
+	Vector3d gyro_drift_error_;
 	Altitude altitude_;
 	Altitude altitude_from_baro_;
 	float pressure_hpa_;
@@ -398,12 +398,12 @@ struct DroneState {
 	/*
 	 * Calculated state attributes
 	 */
-	QuaternionF attitude_;
-	QuaternionF target_;
-	QuaternionF target_twist_;
-	QuaternionF target_swing_;
+	QuaternionD attitude_;
+	QuaternionD target_;
+	QuaternionD target_twist_;
+	QuaternionD target_swing_;
 	std::vector<float> motors_;
-	Vector3f pid_torque_;
+	Vector3d pid_torque_;
 	std::string flight_posture_;
 
 	/*

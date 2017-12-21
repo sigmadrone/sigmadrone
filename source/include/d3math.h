@@ -350,14 +350,14 @@ public:
 
 	static T dot(const Quaternion<T>& u, const Quaternion<T>& v);
 	static T theta(const Quaternion<T>& u, const Quaternion<T>& v);
-	static Quaternion<T> fromAngularVelocity(const MatrixMN<T,3,1>& omega /* Rad/Sec */, float deltaT);
-	static Quaternion<T> fromAxisRot(MatrixMN<T,3,1> axis, float rad);
+	static Quaternion<T> fromAngularVelocity(const MatrixMN<T,3,1>& omega /* Rad/Sec */, T deltaT);
+	static Quaternion<T> fromAxisRot(MatrixMN<T,3,1> axis, T rad);
 	static Quaternion<T> fromEulerAngles(T x, T y, T z);
 	static Quaternion<T> fromVectors(const MatrixMN<T, 3, 1>& u, const MatrixMN<T, 3, 1>& v);
-	static Quaternion<T> fromVectorsPartial(const MatrixMN<T,3,1>& u, const MatrixMN<T,3,1>& v, float part);
-	static Quaternion<T> nlerp(const Quaternion<T>& i, const Quaternion<T>& f, float alpha);
-	static Quaternion<T> slerp(const Quaternion<T>& v0, const Quaternion<T>& v1, float alpha);
-	static MatrixMN<T,3,1> angularVelocity(Quaternion<T> i, Quaternion<T> f, float dT);
+	static Quaternion<T> fromVectorsPartial(const MatrixMN<T,3,1>& u, const MatrixMN<T,3,1>& v, T part);
+	static Quaternion<T> nlerp(const Quaternion<T>& i, const Quaternion<T>& f, T alpha);
+	static Quaternion<T> slerp(const Quaternion<T>& v0, const Quaternion<T>& v1, T alpha);
+	static MatrixMN<T,3,1> angularVelocity(Quaternion<T> i, Quaternion<T> f, T dT);
 	static void decomposeTwistSwing(
 			const Quaternion<T>& rotation,
 			const MatrixMN<T, 3, 1>& direction,
@@ -717,7 +717,7 @@ std::string Quaternion<T>::to_string(size_t prec) const
 }
 
 template <typename T>
-MatrixMN<T,3,1> Quaternion<T>::angularVelocity(Quaternion<T> i, Quaternion<T> f, float dT)
+MatrixMN<T,3,1> Quaternion<T>::angularVelocity(Quaternion<T> i, Quaternion<T> f, T dT)
 {
 	T dotprod = dot(i, f);
 	if (dotprod < 0.0)
@@ -746,7 +746,7 @@ Quaternion<T> Quaternion<T>::reciprocal()
 }
 
 template <typename T>
-Quaternion<T> Quaternion<T>::slerp(const Quaternion<T>& v0, const Quaternion<T>& v1, float alpha)
+Quaternion<T> Quaternion<T>::slerp(const Quaternion<T>& v0, const Quaternion<T>& v1, T alpha)
 {
     float dot = Quaternion<T>::dot(v0, v1);
     const float DOT_THRESHOLD = 0.9995f;
@@ -756,14 +756,14 @@ Quaternion<T> Quaternion<T>::slerp(const Quaternion<T>& v0, const Quaternion<T>&
 
     /* clamp dot between -1.0 and 1.0 */
     dot = std::min(std::max(dot, -1.0f), 1.0f);
-    float theta_0 = acosf(dot);
+    float theta_0 = acos(dot);
     float theta = theta_0 * alpha;
     Quaternion<T> v2 = (v1 - v0 * dot).normalize();
-    return v0 * static_cast<float>(cos(theta)) + v2 * static_cast<float>(sin(theta));
+    return v0 * static_cast<T>(cos(theta)) + v2 * static_cast<T>(sin(theta));
 }
 
 template <typename T>
-Quaternion<T> Quaternion<T>::fromAngularVelocity(const MatrixMN<T,3,1>& omega /* Rad/Sec */, float deltaT)
+Quaternion<T> Quaternion<T>::fromAngularVelocity(const MatrixMN<T,3,1>& omega /* Rad/Sec */, T deltaT)
 {
 	Quaternion<T> deltaQ;
 	MatrixMN<T,3,1> theta = omega * (0.5 * deltaT);
@@ -776,7 +776,7 @@ Quaternion<T> Quaternion<T>::fromAngularVelocity(const MatrixMN<T,3,1>& omega /*
 		deltaQ.w = 1.0 - thetaMagSq / 2.0 + thetaMag4 / 24.0 - thetaMag6 / 720.0;
 		s = 1.0 - thetaMagSq / 6.0 + thetaMag4 / 120.0 - thetaMag6 / 5040.0;
 	} else {
-		float thetaMag = std::sqrt(thetaMagSq);
+		T thetaMag = std::sqrt(thetaMagSq);
 		deltaQ.w = std::cos(thetaMag);
 		s = sin(thetaMag) / thetaMag;
 	}
@@ -789,7 +789,7 @@ Quaternion<T> Quaternion<T>::fromAngularVelocity(const MatrixMN<T,3,1>& omega /*
 }
 
 template <typename T>
-Quaternion<T> Quaternion<T>::fromAxisRot(MatrixMN<T,3,1> axis, float rad)
+Quaternion<T> Quaternion<T>::fromAxisRot(MatrixMN<T,3,1> axis, T rad)
 {
 	T sa2 = std::sin(rad / 2);
 	T ca2 = std::cos(rad / 2);
@@ -841,7 +841,7 @@ Quaternion<T> Quaternion<T>::fromVectors(const MatrixMN<T, 3, 1>& u, const Matri
 
 
 template <typename T>
-Quaternion<T> Quaternion<T>::fromVectorsPartial(const MatrixMN<T,3,1>& u, const MatrixMN<T,3,1>& v, float part)
+Quaternion<T> Quaternion<T>::fromVectorsPartial(const MatrixMN<T,3,1>& u, const MatrixMN<T,3,1>& v, T part)
 {
 	T d = MatrixMN<T, 3, 1>::dot(u, v);
 
@@ -909,7 +909,7 @@ T Quaternion<T>::theta(const Quaternion<T>& u, const Quaternion<T>& v)
 }
 
 template <typename T>
-Quaternion<T> Quaternion<T>::nlerp(const Quaternion<T>& i, const Quaternion<T>& f, float alpha)
+Quaternion<T> Quaternion<T>::nlerp(const Quaternion<T>& i, const Quaternion<T>& f, T alpha)
 {
 	Quaternion<T> result;
 

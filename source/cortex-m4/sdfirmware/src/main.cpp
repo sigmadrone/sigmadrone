@@ -49,7 +49,7 @@
 #include "flightcontrol.h"
 #include "uartrpcserver.h"
 #include "librexjson/rexjson++.h"
-#include "../libattitude/attitudetracker.h"
+#include "attitudetracker.h"
 #include "pressuresensorarray.h"
 #include "sensorsprefilters.h"
 #include "flashmemory.h"
@@ -219,7 +219,7 @@ void main_task(void *pvParameters)
 	static bool print_to_console = false;
 	LowPassFilter<Vector3f, float> gyro_lpf({0.5});
 	LowPassFilter<Vector3f, float> acc_lpf_alt({0.9});
-	LowPassFilter<Vector3f, float> acc_lpf_att({0.990});
+	LowPassFilter<Vector3f, float> acc_lpf_att({0.5});
 	LowPassFilter<Vector3f, float> mag_lpf({0.90});
 	attitudetracker att;
 
@@ -370,6 +370,7 @@ void main_task(void *pvParameters)
 		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_p()).transpose()
 		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_d()).transpose()
 		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_i()).transpose()
+		<< att.get_filtered_earth_g().transpose()
 		<< std::endl;
 #endif
 
