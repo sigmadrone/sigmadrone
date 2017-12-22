@@ -217,7 +217,7 @@ void main_task(void *pvParameters)
 	TimeStamp sample_dt;
 	FlightControl flight_ctl;
 	static bool print_to_console = false;
-	LowPassFilter<Vector3d, double> gyro_lpf({0.75});
+	LowPassFilter<Vector3d, double> gyro_lpf({0.25});
 	LowPassFilter<Vector3d, double> acc_lpf_alt({0.9});
 	LowPassFilter<Vector3d, double> acc_lpf_att({0.9995});
 	LowPassFilter<Vector3d, double> mag_lpf({0.90});
@@ -323,10 +323,12 @@ void main_task(void *pvParameters)
 		drone_state->dt_ = sample_dt.elapsed();
 		sample_dt.time_stamp();
 
-		if (drone_state->base_throttle_ > 0.1)
-			att.accelerometer_correction_speed(drone_state->accelerometer_correction_speed_);
-		else
-			att.accelerometer_correction_speed(3.0f);
+		att.accelerometer_correction_speed(drone_state->accelerometer_correction_speed_);
+
+//		if (drone_state->base_throttle_ > 0.1)
+//			att.accelerometer_correction_speed(drone_state->accelerometer_correction_speed_);
+//		else
+//			att.accelerometer_correction_speed(3.0f);
 		att.gyro_drift_pid(drone_state->gyro_drift_kp_, drone_state->gyro_drift_ki_, drone_state->gyro_drift_kd_);
 		att.gyro_drift_leak_rate(drone_state->gyro_drift_leak_rate_);
 

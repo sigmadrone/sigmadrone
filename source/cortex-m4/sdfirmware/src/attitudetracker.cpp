@@ -112,7 +112,8 @@ void attitudetracker::track_accelerometer(const Vector3d& g, double dtime)
 	 * the estimated earth acceleration with one detected by
 	 * the sensor.
 	 */
-	alignment_w_ = QuaternionD::angularVelocity(QuaternionD::identity, q, q.angle() / DEG2RAD(accelerometer_correction_speed_));
+//	alignment_w_ = QuaternionD::angularVelocity(QuaternionD::identity, q, q.angle() / DEG2RAD(accelerometer_correction_speed_));
+	alignment_w_ = QuaternionD::angularVelocity(QuaternionD::identity, q, accelerometer_correction_speed_);
 	drift_err_ = drift_pid_.get_pid(alignment_w_, dtime, drift_leak_rate_);
 	QuaternionD deltaq = QuaternionD::fromAngularVelocity(-alignment_w_, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
