@@ -34,7 +34,7 @@ public:
 		0.1006, 0.0883, 0.0719, 0.0537, 0.0362, 0.0216, 0.0120, 0.0086}) {}
 };
 
-typedef IirLowPassFilter5Hz<Vector3d, double> AccelLowPassPreFilter3d;
+typedef IirLowPassFilter5Hz<Vector3f, double> AccelLowPassPreFilter3d;
 
 /*
   * IIR LPF

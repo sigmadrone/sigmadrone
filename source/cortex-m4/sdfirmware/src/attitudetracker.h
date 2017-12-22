@@ -28,30 +28,30 @@
 class attitudetracker
 {
 public:
-	explicit attitudetracker(double accelerometer_correction_speed = 1.5, Vector3d earth_g = Vector3d(0, 0, -1));
+	explicit attitudetracker(double accelerometer_correction_speed = 1.5, Vector3f earth_g = Vector3f(0, 0, -1));
 	~attitudetracker();
-	Vector3d get_earth_g() const;
-	void set_earth_g(Vector3d earth_g);
-	Vector3d get_filtered_earth_g() const;
-	Vector3d get_earth_m() const;
-	void set_earth_m(Vector3d earth_m);
-	void track_gyroscope(const Vector3d& omega, double dtime);
-	void track_accelerometer(const Vector3d& g, double dtime);
-	void track_magnetometer(const Vector3d& m, double dtime);
+	Vector3f get_earth_g() const;
+	void set_earth_g(Vector3f earth_g);
+	Vector3f get_filtered_earth_g() const;
+	Vector3f get_earth_m() const;
+	void set_earth_m(Vector3f earth_m);
+	void track_gyroscope(const Vector3f& omega, double dtime);
+	void track_accelerometer(const Vector3f& g, double dtime);
+	void track_magnetometer(const Vector3f& m, double dtime);
 	void accelerometer_correction_speed(double accelerometer_correction_speed);
 	void gyro_drift_pid(double kp, double ki, double kd);
 	void gyro_drift_leak_rate(double leak_rate);
 
-	Vector3d get_drift_error() const;
+	Vector3f get_drift_error() const;
 	/*
 	 * Return our attitude in the world coordinate system
 	 */
-	QuaternionD get_attitude() const;
+	QuaternionF get_attitude() const;
 
 	/*
 	 * Return the world attitude in our coordinate system
 	 */
-	QuaternionD get_world_attitude() const;
+	QuaternionF get_world_attitude() const;
 	void reset_attitude();
 
 	/*
@@ -59,41 +59,41 @@ public:
 	 * aligning the estimated attitude to the one
 	 * detected by the accelerometer sensor
 	 */
-	Vector3d get_alignment_speed() const;
+	Vector3f get_alignment_speed() const;
 
 public:
 	/*
 	 * The earth M vector reading while in initial position.
 	 */
-	Vector3d earth_m_;
+	Vector3f earth_m_;
 	double accelerometer_correction_speed_;
 
 protected:
 	/*
 	 * The earth G vector reading while in leveled position.
 	 */
-	Vector3d earth_g_;
+	Vector3f earth_g_;
 
 	/*
 	 *
 	 */
-	LowPassFilter<Vector3d, double> filtered_earth_g_;
+	LowPassFilter<Vector3f, float> filtered_earth_g_;
 
 	/*
 	 * Current attitude of the world. We assume that
 	 * the world is rotating in our coordinate system.
 	 */
-	QuaternionD attitude_;
+	QuaternionF attitude_;
 
-	QuaternionD coarse_attitude_;
+	QuaternionF coarse_attitude_;
 
 	/*
 	 * Filtered correction speed
 	 */
-	Vector3d alignment_w_;
+	Vector3f alignment_w_;
 
-	PidController<Vector3d> drift_pid_;
-	Vector3d drift_err_;
+	PidController<Vector3f> drift_pid_;
+	Vector3f drift_err_;
 	double drift_leak_rate_;
 };
 

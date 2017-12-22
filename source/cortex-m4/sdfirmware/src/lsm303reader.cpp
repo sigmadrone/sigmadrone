@@ -18,7 +18,7 @@ Vector3f LSM303Reader::read_sample_acc()
 {
 	LSM303D::AxesAcc_t axes = {0,0,0};
 	acc_.GetAcc(&axes);
-	return acc_calibrator_.calibrate_reading(axes_align_ * Vector3d(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
+	return acc_calibrator_.calibrate_reading(axes_align_ * Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z));
 }
 
 Vector3f LSM303Reader::read_sample_mag()

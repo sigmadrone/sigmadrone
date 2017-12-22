@@ -303,14 +303,14 @@ struct DroneState {
 	/*
 	 * Sensors - input attributes
 	 */
-	Vector3d gyro_raw_;
-	Vector3d accel_raw_;
-	Vector3d accel_alt_;
-	Vector3d mag_raw_;
-	Vector3d gyro_;
-	Vector3d accel_;
-	Vector3d mag_;
-	Vector3d gyro_drift_error_;
+	Vector3f gyro_raw_;
+	Vector3f accel_raw_;
+	Vector3f accel_alt_;
+	Vector3f mag_raw_;
+	Vector3f gyro_;
+	Vector3f accel_;
+	Vector3f mag_;
+	Vector3f gyro_drift_error_;
 	Altitude altitude_;
 	Altitude altitude_from_baro_;
 	float pressure_hpa_;
@@ -399,12 +399,12 @@ struct DroneState {
 	/*
 	 * Calculated state attributes
 	 */
-	QuaternionD attitude_;
-	QuaternionD target_;
-	QuaternionD target_twist_;
-	QuaternionD target_swing_;
+	QuaternionF attitude_;
+	QuaternionF target_;
+	QuaternionF target_twist_;
+	QuaternionF target_swing_;
 	std::vector<float> motors_;
-	Vector3d pid_torque_;
+	Vector3f pid_torque_;
 	std::string flight_posture_;
 
 	/*

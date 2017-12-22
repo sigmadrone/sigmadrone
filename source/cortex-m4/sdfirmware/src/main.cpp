@@ -211,16 +211,16 @@ void main_task(void *pvParameters)
 	LPS25HB lps25hb(spi2, 1);
 	BMP280 bmp2(spi2, 2);
 	LSM303D accel(spi5, 1);
-	uint8_t gyro_wtm = 5;
+	uint8_t gyro_wtm = 4;
 	uint8_t acc_wtm = 8;
 	TimeStamp console_update_time;
 	TimeStamp sample_dt;
 	FlightControl flight_ctl;
 	static bool print_to_console = false;
-	LowPassFilter<Vector3d, double> gyro_lpf({0.25});
-	LowPassFilter<Vector3d, double> acc_lpf_alt({0.9});
-	LowPassFilter<Vector3d, double> acc_lpf_att({0.9995});
-	LowPassFilter<Vector3d, double> mag_lpf({0.90});
+	LowPassFilter<Vector3f, float> gyro_lpf({0.2});
+	LowPassFilter<Vector3f, float> acc_lpf_alt({0.9});
+	LowPassFilter<Vector3f, float> acc_lpf_att({0.9995});
+	LowPassFilter<Vector3f, float> mag_lpf({0.90});
 	attitudetracker att;
 
 	/*
@@ -341,8 +341,8 @@ void main_task(void *pvParameters)
 		}
 
 
-		QuaternionD deltaq = QuaternionD::fromAngularVelocity(-DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_double());
-		Vector3d filtered_acc = acc_lpf_att.output();
+		QuaternionF deltaq = QuaternionF::fromAngularVelocity(-DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_double());
+		Vector3f filtered_acc = acc_lpf_att.output();
 		acc_lpf_att.reset(deltaq.rotate(filtered_acc));
 
 		fifosize = acc_reader.size();
@@ -384,19 +384,19 @@ void main_task(void *pvParameters)
 
 #define ACC_REALTIME_DATA 1
 #if ACC_REALTIME_DATA
-		QuaternionD twist, swing;
-		QuaternionD::decomposeTwistSwing(att.get_world_attitude(), Vector3f(0,0,1), swing, twist);
+		QuaternionF twist, swing;
+		QuaternionF::decomposeTwistSwing(att.get_world_attitude(), Vector3f(0,0,1), swing, twist);
 
 		std::cout
 		<< drone_state->accel_.transpose()
 //		<< att.get_world_attitude().rotate(att.get_earth_g()).transpose()
 		<< swing.rotate(att.get_earth_g()).transpose()
 		<< att.get_alignment_speed().transpose()
-		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_p()).transpose()
-		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_d()).transpose()
-		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_i()).transpose()
+		<< QuaternionF::fromAxisRot(Vector3f(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_p()).transpose()
+		<< QuaternionF::fromAxisRot(Vector3f(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_d()).transpose()
+		<< QuaternionF::fromAxisRot(Vector3f(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_i()).transpose()
 		<< att.get_filtered_earth_g().transpose()
-		<< drone_state->target_swing_.rotate(Vector3d(0,0,1)).transpose()
+		<< drone_state->target_swing_.rotate(Vector3f(0,0,1)).transpose()
 		<< std::endl;
 #endif
 

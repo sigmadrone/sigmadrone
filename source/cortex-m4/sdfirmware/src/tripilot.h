@@ -44,20 +44,20 @@ public:
 	virtual void set_max_thrust(float maxRev);
 	virtual void set_target_thrust(float thrust);
 
-	virtual const Vector3d& torque_correction() const { return torque_correction_; }
+	virtual const Vector3f& torque_correction() const { return torque_correction_; }
 	virtual const std::vector<float>& motors() const;
 	virtual float get_min_thrust() const { return min_thrust_; }
 	virtual float get_max_thrust() const { return max_thrust_; }
 	virtual PilotType get_pilot_type() const { return PILOT_TYPE_PID_NEW; }
-	virtual Vector3d get_torque_xy_p() const { return torq_xy_p_; }
-	virtual Vector3d get_torque_xy_d() const { return torq_xy_d_; }
-	virtual Vector3d get_torque_xy_i() const { return torq_xy_i_; }
-	virtual Vector3d get_torque_z_p() const { return torq_z_p_; }
-	virtual Vector3d get_torque_z_d() const { return torq_z_d_; }
+	virtual Vector3f get_torque_xy_p() const { return torq_xy_p_; }
+	virtual Vector3f get_torque_xy_d() const { return torq_xy_d_; }
+	virtual Vector3f get_torque_xy_i() const { return torq_xy_i_; }
+	virtual Vector3f get_torque_z_p() const { return torq_z_p_; }
+	virtual Vector3f get_torque_z_d() const { return torq_z_d_; }
 
 private:
 	std::vector<float> clip_motors(const std::vector<float>& motors);
-	Vector3d get_torque(const DroneState& state);
+	Vector3f get_torque(const DroneState& state);
 
 private:
 	AirflowForce<float> pf_;
@@ -67,21 +67,21 @@ private:
 	float target_thrust_;
 	float max_integral_torque_;
 
-	Vector3d target_yawv_;
-	PidController3d pid_;
-	PidController3d pidz_;
-	Vector3d torque_correction_;
-	Vector3d swing_;
+	Vector3f target_yawv_;
+	PidController3f pid_;
+	PidController3f pidz_;
+	Vector3f torque_correction_;
+	Vector3f swing_;
 	std::vector<Propeller> propellers_;
 	LowPassFilter<float, float> pitch_avg_;
 	LowPassFilter<float, float> roll_avg_;
 
 public:
-	Vector3d torq_xy_p_;
-	Vector3d torq_xy_d_;
-	Vector3d torq_xy_i_;
-	Vector3d torq_z_p_;
-	Vector3d torq_z_d_;
+	Vector3f torq_xy_p_;
+	Vector3f torq_xy_d_;
+	Vector3f torq_xy_i_;
+	Vector3f torq_z_p_;
+	Vector3f torq_z_d_;
 };
 
 

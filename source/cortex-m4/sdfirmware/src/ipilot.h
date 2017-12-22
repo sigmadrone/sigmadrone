@@ -36,18 +36,18 @@ public:
 	virtual void set_max_thrust(float maxRev) = 0;
 	virtual void set_target_thrust(float thrust) = 0;
 
-	virtual const Vector3d& torque_correction() const = 0;
+	virtual const Vector3f& torque_correction() const = 0;
 	virtual const std::vector<float>& motors() const  = 0;
 	virtual float get_min_thrust() const = 0;
 	virtual float get_max_thrust() const = 0;
 
 	virtual PilotType get_pilot_type() const = 0;
 
-	virtual Vector3d get_torque_xy_p() const = 0;
-	virtual Vector3d get_torque_xy_d() const = 0;
-	virtual Vector3d get_torque_xy_i() const = 0;
-	virtual Vector3d get_torque_z_p() const = 0;
-	virtual Vector3d get_torque_z_d() const = 0;
+	virtual Vector3f get_torque_xy_p() const = 0;
+	virtual Vector3f get_torque_xy_d() const = 0;
+	virtual Vector3f get_torque_xy_i() const = 0;
+	virtual Vector3f get_torque_z_p() const = 0;
+	virtual Vector3f get_torque_z_d() const = 0;
 
 };
 

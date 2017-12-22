@@ -60,20 +60,20 @@ void TriPilot::set_pid_coefficents(const DroneState& state)
 	pidz_.set_derivative_filter(state.pid_filter_freq_);
 }
 
-Vector3d TriPilot::get_torque(const DroneState& state)
+Vector3f TriPilot::get_torque(const DroneState& state)
 {
-	Vector3d torq_xy, torq_z, torq;
-	QuaternionD twist, swing;
-	QuaternionD::decomposeTwistSwing(~state.attitude_, Vector3f(0,0,1), swing, twist);
+	Vector3f torq_xy, torq_z, torq;
+	QuaternionF twist, swing;
+	QuaternionF::decomposeTwistSwing(~state.attitude_, Vector3f(0,0,1), swing, twist);
 
 	// targetSwing = attitudeSwing * errorSwing; ==> ~attitudeSwing * targetSwing = ~attitudeSwing * attitudeSwing * errorSwing;
-	QuaternionD errorSwing = (~swing) * (~state.target_swing_);
-	QuaternionD errorTwist = (~twist) * (~state.target_twist_);
-	Vector3d error_xy = errorSwing.axis().normalize() * errorSwing.angle() * -1.0;
-	Vector3d error_z = errorTwist.axis().normalize() * errorTwist.angle() * -1.0;
+	QuaternionF errorSwing = (~swing) * (~state.target_swing_);
+	QuaternionF errorTwist = (~twist) * (~state.target_twist_);
+	Vector3f error_xy = errorSwing.axis().normalize() * errorSwing.angle() * -1.0;
+	Vector3f error_z = errorTwist.axis().normalize() * errorTwist.angle() * -1.0;
 
-	double ki = pid_.get_ki();
-	Vector3d integral_error = pid_.get_integral_error();
+	float ki = pid_.get_ki();
+	Vector3f integral_error = pid_.get_integral_error();
 	if (integral_error.length() * ki > max_integral_torque_ * target_thrust_) {
 		integral_error = integral_error.normalize() * (max_integral_torque_ * target_thrust_ / ki);
 		pid_.set_integral_error(integral_error);

@@ -1185,7 +1185,7 @@ Vector3f LSM330A::GetAccSample()
 {
 	LSM330A::AxesAcc_t axes = {0,0,0};
 	GetAcc(&axes);
-	return axes_align_ * Vector3d(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z);
+	return axes_align_ * Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z);
 }
 
 

@@ -158,7 +158,7 @@ Vector3f PositionControl::get_error_vector(
 {
 	int32_t long_err = (longitude.get() - target_location_.longitude().get()).millionth_degrees();
 	int32_t lat_err = (latitude.get() - target_location_.latitude().get()).millionth_degrees();
-	Vector3d err_d = Vector3d(long_err, lat_err, 0).normalize();
+	Vector3f err_d = Vector3f(long_err, lat_err, 0).normalize();
 
 	Vector3f err((float)err_d[1], (float)err_d[0], 0);
 	// Rotate the error vector with drone's current twist, so we can calculate the proper
