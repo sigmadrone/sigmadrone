@@ -217,9 +217,9 @@ void main_task(void *pvParameters)
 	TimeStamp sample_dt;
 	FlightControl flight_ctl;
 	static bool print_to_console = false;
-	LowPassFilter<Vector3d, double> gyro_lpf({0.25});
+	LowPassFilter<Vector3d, double> gyro_lpf({0.75});
 	LowPassFilter<Vector3d, double> acc_lpf_alt({0.9});
-	LowPassFilter<Vector3d, double> acc_lpf_att({0.9999});
+	LowPassFilter<Vector3d, double> acc_lpf_att({0.9995});
 	LowPassFilter<Vector3d, double> mag_lpf({0.90});
 	attitudetracker att;
 
@@ -394,6 +394,7 @@ void main_task(void *pvParameters)
 		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_d()).transpose()
 		<< QuaternionD::fromAxisRot(Vector3d(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_i()).transpose()
 		<< att.get_filtered_earth_g().transpose()
+		<< drone_state->target_swing_.rotate(Vector3d(0,0,1)).transpose()
 		<< std::endl;
 #endif
 

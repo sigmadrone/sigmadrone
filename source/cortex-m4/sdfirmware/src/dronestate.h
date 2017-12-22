@@ -295,7 +295,7 @@ struct DroneState {
 			ki_ = 0.35;
 			leakrate_ = 0.05;
 //			accelerometer_adjustment_ = Vector3f(0.035f, 0.045f, 0.0f);
-			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
+			accelerometer_adjustment_ = Vector3f(0.02f, 0.05f, 0.0f);
 #endif
 		}
 	}

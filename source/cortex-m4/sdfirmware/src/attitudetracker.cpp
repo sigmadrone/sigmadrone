@@ -25,7 +25,7 @@
 attitudetracker::attitudetracker(double accelerometer_correction_speed, Vector3d earth_g)
 	: accelerometer_correction_speed_(accelerometer_correction_speed)
 	, earth_g_(earth_g)
-	, filtered_earth_g_(0.98)
+	, filtered_earth_g_(0.85)
 	, attitude_(QuaternionD::identity)
 	, coarse_attitude_(QuaternionD::identity)
 	, drift_pid_(0, 0.01, 0)

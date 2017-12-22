@@ -52,6 +52,8 @@ void RcValueConverter::toggle_motors_armed()
 	motors_armed_ = user_led_.read();
 }
 
+#define CENTER_RADIUS 0.015
+
 void RcValueConverter::update()
 {
 	float yaw = get_value_as_float(mapper_.channel_no(RC_CHANNEL_YAW), 0.5f);
@@ -62,15 +64,15 @@ void RcValueConverter::update()
 	gear_raw_ = get_value_as_float(mapper_.channel_no(RC_CHANNEL_ARM_MOTOR), 0.0f);
 
 	throttle_ = Throttle(throttle);
-	if ((fabs(yaw - 0.5f) < 0.0225)) {
+	if ((fabs(yaw - 0.5f) < CENTER_RADIUS)) {
 		yaw = 0.5;
 	}
 
-	if ((fabs(pitch - 0.5f) < 0.0225)) {
+	if ((fabs(pitch - 0.5f) < CENTER_RADIUS)) {
 		pitch = 0.5;
 	}
 
-	if ((fabs(roll - 0.5f) < 0.0225)) {
+	if ((fabs(roll - 0.5f) < CENTER_RADIUS)) {
 		roll = 0.5;
 	}
 
