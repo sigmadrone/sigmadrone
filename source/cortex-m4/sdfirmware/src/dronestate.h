@@ -22,7 +22,7 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
-#define USE_SIXPROPELLERS
+#undef USE_SIXPROPELLERS
 #define USE_ALIGNMENT_MIPIFRONT
 #define USE_LPS25HB
 
@@ -294,9 +294,16 @@ struct DroneState {
 			kd_ = 0.08;
 			ki_ = 0.35;
 			leakrate_ = 0.05;
-//			accelerometer_adjustment_ = Vector3f(0.035f, 0.045f, 0.0f);
+
+#ifdef USE_SIXPROPELLERS
 			accelerometer_adjustment_ = Vector3f(0.02f, 0.05f, 0.0f);
+#else
+			accelerometer_adjustment_ = Vector3f(0.002f, 0.045f, 0.0f);
 #endif
+
+#endif
+			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
+
 		}
 	}
 

@@ -37,6 +37,11 @@
             1, 0, 0,
             0, 0, 1);
 
+	static const Matrix3f acc2_align(
+            0, 1, 0,
+           -1, 0, 0,
+            0, 0, 1);
+
 #elif defined USE_ALIGNMENT_MIPIFRONT_2F
 	static const Matrix3f gyro_align(
             0,-1, 0,

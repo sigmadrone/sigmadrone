@@ -59,6 +59,7 @@
 #include "iirfilt.h"
 #include "l3gd20reader.h"
 #include "lsm303reader.h"
+#include "lsm330a.h"
 #include "usbstoragedevice.h"
 #include "poweroff.h"
 #include "axesalignment.h"
@@ -195,6 +196,7 @@ void main_task(void *pvParameters)
 			}, {
 				{GYRO_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
 				{ACCEL_CS_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
+				{LSM330_ACCEL_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
 			});
 
 	SPIMaster spi2(SPI2, SPI_BAUDRATEPRESCALER_16, 0x2000, {
@@ -208,9 +210,10 @@ void main_task(void *pvParameters)
 				});
 
 	L3GD20 gyro(spi5, 0);
+	LSM303D accel(spi5, 1);
+	LSM330A accel2(spi5, 2);
 	LPS25HB lps25hb(spi2, 1);
 	BMP280 bmp2(spi2, 2);
-	LSM303D accel(spi5, 1);
 	uint8_t gyro_wtm = 4;
 	uint8_t acc_wtm = 8;
 	TimeStamp console_update_time;
@@ -220,6 +223,7 @@ void main_task(void *pvParameters)
 	LowPassFilter<Vector3f, float> gyro_lpf({0.2});
 	LowPassFilter<Vector3f, float> acc_lpf_alt({0.9});
 	LowPassFilter<Vector3f, float> acc_lpf_att({0.9995});
+	LowPassFilter<Vector3f, float> acc2_lpf_att({0.9995});
 	LowPassFilter<Vector3f, float> mag_lpf({0.90});
 	attitudetracker att;
 
@@ -253,6 +257,7 @@ void main_task(void *pvParameters)
 	printf("configKERNEL_INTERRUPT_PRIORITY: %d\n", configKERNEL_INTERRUPT_PRIORITY);
 	printf("configMAX_SYSCALL_INTERRUPT_PRIORITY: %d\n", configMAX_SYSCALL_INTERRUPT_PRIORITY);
 	printf("LPS25HB Device id: %d\n", lps25hb.Get_DeviceID());
+	printf("LSM330_ACC Device id: %d\n", accel2.GetDeviceID());
 	vTaskDelay(500 / portTICK_RATE_MS);
 
 	gyro_reader.init(gyro_wtm);
@@ -270,6 +275,14 @@ void main_task(void *pvParameters)
 	lps25hb.Set_FifoModeUse(LPS25HB_ENABLE);
 	lps25hb.Set_Odr(LPS25HB_ODR_25HZ);
 	lps25hb.Set_Bdu(LPS25HB_BDU_NO_UPDATE);
+
+
+	accel2.SetODR(LSM330A::ODR_1600Hz);
+	accel2.SetFullScale(LSM330A::FULLSCALE_4);
+	accel2.SetAntiAliasingBandwidth(LSM330A::ABW_200);
+	accel2.SetAxis(LSM330A::AXIS_XYZ);
+	accel2.FIFOModeSet(LSM330A::FIFO_STREAM_MODE);
+	accel2.FIFOModeEnable(LSM330A::MEMS_ENABLE);
 
 
 	printf("Calibrating...");
@@ -294,13 +307,19 @@ void main_task(void *pvParameters)
 	 */
 	double alpha = acc_lpf_att.alpha();
 	acc_lpf_att.set_alpha(0.995);
+	double alpha2 = acc2_lpf_att.alpha();
+	acc2_lpf_att.set_alpha(0.995);
 	for (size_t i = 0; i < 2000; i++) {
 		while (!acc_reader.size())
 			;
 		Vector3f acc_sample = acc_reader.read_sample_acc() - drone_state->accelerometer_adjustment_;
 		acc_lpf_att.do_filter(acc_sample);
+
+		while (accel2.GetFifoSourceFSS())
+			acc_lpf_att.do_filter(accel2.GetAccSample() - drone_state->accelerometer_adjustment_);
 	}
 	acc_lpf_att.set_alpha(alpha);
+	acc2_lpf_att.set_alpha(alpha2);
 
 	// Infinite loop
 	PerfCounter idle_time;
@@ -344,6 +363,7 @@ void main_task(void *pvParameters)
 		QuaternionF deltaq = QuaternionF::fromAngularVelocity(-DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_double());
 		Vector3f filtered_acc = acc_lpf_att.output();
 		acc_lpf_att.reset(deltaq.rotate(filtered_acc));
+		acc2_lpf_att.reset(deltaq.rotate(acc2_lpf_att.output()));
 
 		fifosize = acc_reader.size();
 		for (size_t i = 0; i < fifosize; i++) {
@@ -354,6 +374,11 @@ void main_task(void *pvParameters)
 		drone_state->accel_raw_ = acc_lpf_att.output();
 		drone_state->accel_alt_ = acc_lpf_alt.output();
 		drone_state->accel_ = drone_state->accel_raw_.normalize();
+
+		fifosize = accel2.GetFifoSourceFSS();
+		for (size_t i = 0; i < fifosize; i++) {
+			acc2_lpf_att.do_filter(acc2_align * accel2.GetAccSample() - drone_state->accelerometer_adjustment_);
+		}
 
 #define ALLOW_ACCELEROMETER_OFF
 #ifdef ALLOW_ACCELEROMETER_OFF
@@ -386,18 +411,19 @@ void main_task(void *pvParameters)
 #if ACC_REALTIME_DATA
 		QuaternionF twist, swing;
 		QuaternionF::decomposeTwistSwing(att.get_world_attitude(), Vector3f(0,0,1), swing, twist);
-
-		std::cout
-		<< drone_state->accel_.transpose()
-//		<< att.get_world_attitude().rotate(att.get_earth_g()).transpose()
-		<< swing.rotate(att.get_earth_g()).transpose()
-		<< att.get_alignment_speed().transpose()
-		<< QuaternionF::fromAxisRot(Vector3f(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_p()).transpose()
-		<< QuaternionF::fromAxisRot(Vector3f(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_d()).transpose()
-		<< QuaternionF::fromAxisRot(Vector3f(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_i()).transpose()
-		<< att.get_filtered_earth_g().transpose()
-		<< drone_state->target_swing_.rotate(Vector3f(0,0,1)).transpose()
-		<< std::endl;
+			if (drone_state->iteration_ % 3 == 0) {
+				std::cout
+				<< drone_state->accel_.transpose()
+				<< swing.rotate(att.get_earth_g()).transpose()
+				<< att.get_alignment_speed().transpose()
+				<< QuaternionF::fromAxisRot(Vector3f(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_p()).transpose()
+				<< QuaternionF::fromAxisRot(Vector3f(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_d()).transpose()
+				<< QuaternionF::fromAxisRot(Vector3f(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_i()).transpose()
+				<< att.get_filtered_earth_g().transpose()
+				<< drone_state->target_swing_.rotate(Vector3f(0,0,1)).transpose()
+				<< acc2_lpf_att.output().normalize().transpose()
+				<< std::endl;
+		}
 #endif
 
 #define REALTIME_ALTITUDE_DATA 0
