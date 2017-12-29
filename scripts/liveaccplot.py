@@ -89,8 +89,9 @@ def reader():
         lock.release()
 
 def animate(i):
-    ylimits = [-0.05, 0.05]
-    xlimits = [-0.05, 0.05]
+    screen_limit = 0.25
+    ylimits = [-screen_limit, screen_limit]
+    xlimits = [-screen_limit, screen_limit]
     ax1.clear()
     ax1.grid()
     ax1.set_xlabel(r"Y", fontsize=16, color="darkgreen")    

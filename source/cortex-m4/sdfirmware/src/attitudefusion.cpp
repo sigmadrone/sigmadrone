@@ -27,7 +27,7 @@ attitudefusion::attitudefusion(double accelerometer_correction_speed, attitudefu
 	, use_accelerometer_(true)
 	, use_magnetometer_(true)
 	, accelerometer_correction_speed_(accelerometer_correction_speed)
-	, gyr_lpf_{0.25}
+	, gyr_lpf_{0.2}
 	, acc_lpf_{0.995}
 	, mag_lpf_{0.90}
 	, earth_g_(earth_g)

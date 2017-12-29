@@ -412,9 +412,12 @@ void main_task(void *pvParameters)
 		att.set_track_magnetometer(drone_state->track_magnetometer_);
 		att.input(gyr_samples, acc_samples, mag_samples, drone_state->dt_.seconds_double());
 
-		drone_state->gyro_ = att.get_filtered_acc();
+		attitudefusion::vector_type filterd_gyr = RAD2DEG(att.get_filtered_gyr());
+		attitudefusion::vector_type drift_err = RAD2DEG(att.get_drift_error());
+
+		drone_state->gyro_ = Vector3f(filterd_gyr[0], filterd_gyr[1], filterd_gyr[2]);
 		drone_state->attitude_ = att.get_attitude();
-		drone_state->gyro_drift_error_ = RAD2DEG(att.get_drift_error());
+		drone_state->gyro_drift_error_ = Vector3f(drift_err[0], drift_err[1], drift_err[2]);
 
 		flight_ctl.update_state(*drone_state);
 		flight_ctl.send_throttle_to_motors();
@@ -428,7 +431,7 @@ void main_task(void *pvParameters)
 			}
 		}
 
-#define ACC_REALTIME_DATA 1
+#define ACC_REALTIME_DATA 0
 #if ACC_REALTIME_DATA
 		QuaternionF twist, swing;
 		QuaternionF::decomposeTwistSwing(att.get_world_attitude(), Vector3f(0,0,1), swing, twist);
