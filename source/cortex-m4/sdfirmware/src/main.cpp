@@ -49,7 +49,7 @@
 #include "flightcontrol.h"
 #include "uartrpcserver.h"
 #include "librexjson/rexjson++.h"
-#include "attitudetracker.h"
+#include "attitudefusion.h"
 #include "pressuresensorarray.h"
 #include "sensorsprefilters.h"
 #include "flashmemory.h"
@@ -63,6 +63,8 @@
 #include "usbstoragedevice.h"
 #include "poweroff.h"
 #include "axesalignment.h"
+#include "accelbias.h"
+
 
 //#undef USE_LPS25HB
 
@@ -77,7 +79,9 @@ DigitalOut led2(USER_LED2_PIN);
 DigitalOut led3(USER_LED3_PIN);
 DigitalOut led4(USER_LED4_PIN);
 DigitalOut led5(USER_LED5_PIN);
-DigitalOut sesnsor_ctrl(SENSOR_CTRL_PIN, DigitalOut::OutputDefault, DigitalOut::PullDefault, 0);
+DigitalOut sesnsor1_ctrl(SENSOR1_CTRL_PIN, DigitalOut::OutputDefault, DigitalOut::PullDown, 0);
+DigitalOut sesnsor2_ctrl(SENSOR2_CTRL_PIN, DigitalOut::OutputDefault, DigitalOut::PullDown, 0);
+DigitalOut sesnsor3_ctrl(SENSOR3_CTRL_PIN, DigitalOut::OutputDefault, DigitalOut::PullDown, 0);
 
 DigitalIn user_sw1(USER_SWITCH_1_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
 DigitalIn user_sw2(USER_SWITCH_2_PIN, DigitalIn::PullNone, DigitalIn::InterruptDefault);
@@ -183,30 +187,32 @@ void uart_task(void *pvParameters)
 	}
 }
 
+
 void main_task(void *pvParameters)
 {
 	(void) pvParameters;
 
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
-				{MEMS_SPI_SCK_PIN,  GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},
-				{MEMS_SPI_MISO_PIN, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},
-				{MEMS_SPI_MOSI_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL,   GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},
+	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_32, 0x2000, {
+				{MEMS_SPI_SCK_PIN,  GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_HIGH, GPIO_AF5_SPI5},
+				{MEMS_SPI_MISO_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL, GPIO_SPEED_HIGH, GPIO_AF5_SPI5},
+				{MEMS_SPI_MOSI_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL,   GPIO_SPEED_HIGH, GPIO_AF5_SPI5},
 			}, {
-				{GYRO_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
-				{ACCEL_CS_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
-				{LSM330_ACCEL_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
+				{GYRO_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, GPIO_SPEED_HIGH, 0},
+				{ACCEL_CS_PIN, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, GPIO_SPEED_HIGH, 0},
+				{LSM330_ACCEL_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, GPIO_SPEED_HIGH, 0},
+				{LSM330_GYRO_CS_PIN, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, GPIO_SPEED_HIGH, 0}
 			});
 
-	SPIMaster spi2(SPI2, SPI_BAUDRATEPRESCALER_16, 0x2000, {
-					{EXT_MEMS_SPI_SCK_PIN,  GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI2},
-					{EXT_MEMS_SPI_MISO_PIN, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI2},
-					{EXT_MEMS_SPI_MOSI_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL,   GPIO_SPEED_MEDIUM, GPIO_AF5_SPI2},
+	SPIMaster spi2(SPI2, SPI_BAUDRATEPRESCALER_32, 0x2000, {
+					{EXT_MEMS_SPI_SCK_PIN,  GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_HIGH, GPIO_AF5_SPI2},
+					{EXT_MEMS_SPI_MISO_PIN, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_HIGH, GPIO_AF5_SPI2},
+					{EXT_MEMS_SPI_MOSI_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL,   GPIO_SPEED_HIGH, GPIO_AF5_SPI2},
 				}, {
-					{EXT_GYRO_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
-					{LPS25HB_PRESSURE_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
-					{BMP280_PRESSURE_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
+					{EXT_GYRO_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_HIGH, 0},
+					{LPS25HB_PRESSURE_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_HIGH, 0},
+					{BMP280_PRESSURE_CS_PIN,  GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_HIGH, 0},
 				});
 
 	L3GD20 gyro(spi5, 0);
@@ -221,11 +227,19 @@ void main_task(void *pvParameters)
 	FlightControl flight_ctl;
 	static bool print_to_console = false;
 	LowPassFilter<Vector3f, float> gyro_lpf({0.2});
+	LowPassFilter<Vector3f, float> gyro_accfilt_lpf({0.95});
 	LowPassFilter<Vector3f, float> acc_lpf_alt({0.9});
-	LowPassFilter<Vector3f, float> acc_lpf_att({0.9995});
-	LowPassFilter<Vector3f, float> acc2_lpf_att({0.9995});
+	LowPassFilter<Vector3f, float> acc_lpf_att({0.995});
+	LowPassFilter<Vector3f, float> acc2_lpf_att({0.995});
 	LowPassFilter<Vector3f, float> mag_lpf({0.90});
-	attitudetracker att;
+	attitudefusion att;
+	std::vector<attitudefusion::vector_type> gyr_samples;
+	std::vector<attitudefusion::vector_type> acc_samples;
+	std::vector<attitudefusion::vector_type> mag_samples;
+	AccelBias acc_bias;
+
+
+	user_sw3.callback(&led3, &DigitalOut::toggle);
 
 	/*
 	 * Apply the boot configuration from flash memory.
@@ -277,6 +291,7 @@ void main_task(void *pvParameters)
 	lps25hb.Set_Bdu(LPS25HB_BDU_NO_UPDATE);
 
 
+	accel2.Reboot();
 	accel2.SetODR(LSM330A::ODR_1600Hz);
 	accel2.SetFullScale(LSM330A::FULLSCALE_4);
 	accel2.SetAntiAliasingBandwidth(LSM330A::ABW_200);
@@ -316,7 +331,7 @@ void main_task(void *pvParameters)
 		acc_lpf_att.do_filter(acc_sample);
 
 		while (accel2.GetFifoSourceFSS())
-			acc_lpf_att.do_filter(accel2.GetAccSample() - drone_state->accelerometer_adjustment_);
+			acc_lpf_att.do_filter(accel2.GetAccSample() - drone_state->accelerometer_adjustment2_);
 	}
 	acc_lpf_att.set_alpha(alpha);
 	acc2_lpf_att.set_alpha(alpha2);
@@ -325,6 +340,9 @@ void main_task(void *pvParameters)
 	PerfCounter idle_time;
 	while (1) {
 		drone_state->iteration_++;
+		gyr_samples.clear();
+		acc_samples.clear();
+		mag_samples.clear();
 		if (drone_state->iteration_ % 120 == 0) {
 			led1.toggle();
 		}
@@ -343,33 +361,31 @@ void main_task(void *pvParameters)
 		sample_dt.time_stamp();
 
 		att.accelerometer_correction_speed(drone_state->accelerometer_correction_speed_);
-
-//		if (drone_state->base_throttle_ > 0.1)
-//			att.accelerometer_correction_speed(drone_state->accelerometer_correction_speed_);
-//		else
-//			att.accelerometer_correction_speed(3.0f);
 		att.gyro_drift_pid(drone_state->gyro_drift_kp_, drone_state->gyro_drift_ki_, drone_state->gyro_drift_kd_);
 		att.gyro_drift_leak_rate(drone_state->gyro_drift_leak_rate_);
 
 		size_t fifosize = gyro_reader.size();
-		for (size_t i = 0; i < fifosize; i++)
-			   drone_state->gyro_raw_ = gyro_lpf.do_filter(gyro_reader.read_sample());
+		for (size_t i = 0; i < fifosize; i++) {
+			Vector3f sample = gyro_reader.read_sample();
+			gyr_samples.push_back((sample - gyro_reader.bias()) * drone_state->gyro_factor_);
+			drone_state->gyro_raw_ = gyro_lpf.do_filter(sample);
+			gyro_accfilt_lpf.do_filter((sample - gyro_reader.bias()) * drone_state->gyro_factor_ - att.get_drift_error());
+		}
 		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
-			   drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_reader.bias()) * drone_state->gyro_factor_;
-			   att.track_gyroscope(DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_double());
+		   drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_reader.bias()) * drone_state->gyro_factor_;
 		}
 
-
-		QuaternionF deltaq = QuaternionF::fromAngularVelocity(-DEG2RAD(drone_state->gyro_), drone_state->dt_.seconds_double());
+		QuaternionF deltaq = QuaternionF::fromAngularVelocity(-(DEG2RAD(drone_state->gyro_)), drone_state->dt_.seconds_double());
 		Vector3f filtered_acc = acc_lpf_att.output();
 		acc_lpf_att.reset(deltaq.rotate(filtered_acc));
-		acc2_lpf_att.reset(deltaq.rotate(acc2_lpf_att.output()));
+//		acc2_lpf_att.reset(deltaq.rotate(acc2_lpf_att.output()));
 
 		fifosize = acc_reader.size();
 		for (size_t i = 0; i < fifosize; i++) {
-			Vector3f acc_sample = acc_reader.read_sample_acc() - drone_state->accelerometer_adjustment_;
-			acc_lpf_att.do_filter(acc_sample);
-			acc_lpf_alt.do_filter(acc_sample);
+			Vector3f sample = acc_reader.read_sample_acc() - drone_state->accelerometer_adjustment_;
+			acc_lpf_att.do_filter(sample);
+			acc_lpf_alt.do_filter(sample);
+			acc_samples.push_back(sample);
 		}
 		drone_state->accel_raw_ = acc_lpf_att.output();
 		drone_state->accel_alt_ = acc_lpf_alt.output();
@@ -377,17 +393,9 @@ void main_task(void *pvParameters)
 
 		fifosize = accel2.GetFifoSourceFSS();
 		for (size_t i = 0; i < fifosize; i++) {
-			acc2_lpf_att.do_filter(acc2_align * accel2.GetAccSample() - drone_state->accelerometer_adjustment_);
+			acc2_lpf_att.do_filter(acc2_align * accel2.GetAccSample() - drone_state->accelerometer_adjustment2_);
 		}
 
-#define ALLOW_ACCELEROMETER_OFF
-#ifdef ALLOW_ACCELEROMETER_OFF
-		if (drone_state->track_accelerometer_) {
-			att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_double());
-		}
-#else
-		att.track_accelerometer(drone_state->accel_, drone_state->dt_.seconds_double());
-#endif
 
 #define REALTIME_DATA 0
 #if REALTIME_DATA
@@ -397,21 +405,34 @@ void main_task(void *pvParameters)
 
 		drone_state->mag_raw_ = mag_lpf.do_filter(acc_reader.read_sample_mag());
 		drone_state->mag_ = drone_state->mag_raw_.normalize();
-		if (drone_state->track_magnetometer_) {
-			att.track_magnetometer(drone_state->mag_, drone_state->dt_.seconds_float());
-		}
+		mag_samples.push_back(drone_state->mag_);
 
+		att.set_track_gyroscope(true);
+		att.set_track_accelerometer(drone_state->track_accelerometer_);
+		att.set_track_magnetometer(drone_state->track_magnetometer_);
+		att.input(gyr_samples, acc_samples, mag_samples, drone_state->dt_.seconds_double());
+
+		drone_state->gyro_ = att.get_filtered_acc();
 		drone_state->attitude_ = att.get_attitude();
 		drone_state->gyro_drift_error_ = RAD2DEG(att.get_drift_error());
 
 		flight_ctl.update_state(*drone_state);
 		flight_ctl.send_throttle_to_motors();
 
+		if (user_sw3.poll_edge(DigitalIn::InterruptRising)) {
+			if (led3.read()) {
+				acc_bias.reset(att.get_world_attitude(), acc_lpf_att.output());
+			} else {
+				acc_bias.detect(att.get_world_attitude(), acc_lpf_att.output());
+				drone_state->accelerometer_adjustment_ += acc_bias.detect(att.get_world_attitude(), acc_lpf_att.output());
+			}
+		}
+
 #define ACC_REALTIME_DATA 1
 #if ACC_REALTIME_DATA
 		QuaternionF twist, swing;
 		QuaternionF::decomposeTwistSwing(att.get_world_attitude(), Vector3f(0,0,1), swing, twist);
-			if (drone_state->iteration_ % 3 == 0) {
+			if (drone_state->iteration_ % 4 == 0) {
 				std::cout
 				<< drone_state->accel_.transpose()
 				<< swing.rotate(att.get_earth_g()).transpose()
@@ -421,7 +442,7 @@ void main_task(void *pvParameters)
 				<< QuaternionF::fromAxisRot(Vector3f(0,0,-1), DEG2RAD(90)).rotate(flight_ctl.pilot().get_torque_xy_i()).transpose()
 				<< att.get_filtered_earth_g().transpose()
 				<< drone_state->target_swing_.rotate(Vector3f(0,0,1)).transpose()
-				<< acc2_lpf_att.output().normalize().transpose()
+				<< acc2_lpf_att.output().transpose()
 				<< std::endl;
 		}
 #endif

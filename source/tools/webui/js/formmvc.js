@@ -252,9 +252,9 @@ SensorsCfgFormView.prototype.onRedrawData = function(droneState) {
   if (!FormView.prototype.onRedrawData.call(this,droneState)) {
     return false;
   }
-  $(this.formId)[0].elements['acc-bias-x'].value = droneState.accel_adjustment[0];
-  $(this.formId)[0].elements['acc-bias-y'].value = droneState.accel_adjustment[1];
-  $(this.formId)[0].elements['acc-bias-z'].value = droneState.accel_adjustment[2];
+  $(this.formId)[0].elements['acc-bias-x'].value = droneState.accel_adjustment[0].toFixed(4);
+  $(this.formId)[0].elements['acc-bias-y'].value = droneState.accel_adjustment[1].toFixed(4);
+  $(this.formId)[0].elements['acc-bias-z'].value = droneState.accel_adjustment[2].toFixed(4);
   $(this.formId)[0].elements['acc-corr-period'].value = droneState.accelerometer_correction_period;
   $(this.formId)[0].elements['gyro-factor'].value = droneState.gyro_factor;
   return true;

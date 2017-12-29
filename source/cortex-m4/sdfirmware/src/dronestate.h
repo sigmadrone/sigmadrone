@@ -302,7 +302,11 @@ struct DroneState {
 #endif
 
 #endif
+			accelerometer_adjustment_ = Vector3f(-0.0108f, 0.0150f, 0.0f);
+			accelerometer_adjustment2_ = Vector3f(-0.0212f, -0.0050f, 0.0f);
+
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
+			accelerometer_adjustment2_ = Vector3f(0.0f, 0.0f, 0.0f);
 
 		}
 	}
@@ -361,6 +365,7 @@ struct DroneState {
 	float gyro_drift_kd_;
 	float gyro_drift_leak_rate_;
 	Vector3f accelerometer_adjustment_;
+	Vector3f accelerometer_adjustment2_;
 	float accelerometer_correction_speed_;
 	PilotType pilot_type_;
 	float gyro_factor_;

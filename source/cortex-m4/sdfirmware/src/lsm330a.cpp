@@ -1194,3 +1194,14 @@ void LSM330A::SetAlignment(const Matrix3f& axes_align)
 	axes_align_ = axes_align;
 }
 
+void LSM330A::Reboot()
+{
+	int i;
+
+	WriteReg8(LSM330A_CTRL_REG6_ADDR, (1 << 7));
+	/*
+	 * Add some delay after reboot
+	 */
+	for (i = 0; i < 100000; i++)
+		;
+}

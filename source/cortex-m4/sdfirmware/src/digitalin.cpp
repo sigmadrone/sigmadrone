@@ -39,6 +39,7 @@ void DigitalIn::vector_handler(uint8_t line)
 DigitalIn::DigitalIn(PinName pin, PullMode pmode, InterruptMode imode)
 	: pin_(STM_PIN(pin))
 	, GPIOx_((GPIO_TypeDef *) (GPIOA_BASE + 0x0400 * STM_PORT(pin)))
+	, state_(-1)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -134,4 +135,45 @@ void DigitalIn::clock_enable(unsigned int port)
 int DigitalIn::read()
 {
 	return (int)HAL_GPIO_ReadPin(GPIOx_, 1 << pin_);
+}
+
+bool DigitalIn::poll_edge(InterruptMode edge)
+{
+	bool ret = false;
+	int state = read();
+
+	if (state_ < 0) {
+		state_ = state;
+		return false;
+	}
+	switch (edge) {
+	case InterruptNone:
+
+		break;
+
+	case InterruptFalling:
+		if (state_ == 1 && state == 0) {
+			callback_.call();
+			ret = true;
+		}
+		break;
+
+	case InterruptRising:
+		if (state_ == 0 && state == 1) {
+			callback_.call();
+			ret = true;
+		}
+		break;
+
+	case InterruptRisingFalling:
+		if ((state_ == 1 && state == 0) || (state_ == 0 && state == 1)) {
+			callback_.call();
+			ret = true;
+		}
+		break;
+	default:
+		break;
+	}
+	state_ = state;
+	return ret;
 }

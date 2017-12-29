@@ -71,7 +71,7 @@ public:
 		return read();
 	}
 
-	/** Attach a member function to call when a rising edge occurs on the input
+	/** Attach a member function to call when a rising or falling edge occurs on the input
 	 *
 	 *  @param tptr pointer to the object to call the member function on
 	 *  @param mptr pointer to the member function to be called
@@ -88,6 +88,8 @@ public:
 		callback_.attach(fptr);
 	}
 
+	bool poll_edge(InterruptMode edge);
+
 	static void vector_handler(uint8_t line);
 
 protected:
@@ -96,6 +98,7 @@ protected:
 protected:
 	uint8_t pin_;
 	GPIO_TypeDef *GPIOx_;
+	int state_;
 	FunctionPointer callback_;
 };
 

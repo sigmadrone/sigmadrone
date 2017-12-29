@@ -475,15 +475,15 @@
               <div class="form-group" id="acc-bias-gr">
                 <div class="col-xs-4 col-md-2">
                   <label for="acc-bias-x">X</label>
-                  <input id="acc-bias-x" name="acc-bias-x" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.001" required="true" oninput="onSensorsConfigUserInput()">
+                  <input id="acc-bias-x" name="acc-bias-x" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.0001" required="true" oninput="onSensorsConfigUserInput()">
                 </div>
                 <div class="col-xs-4 col-md-2">
                   <label for="acc-bias-y">Y</label>
-                  <input id="acc-bias-y" name="acc-bias-y" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.001" required="true" oninput="onSensorsConfigUserInput()">
+                  <input id="acc-bias-y" name="acc-bias-y" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.0001" required="true" oninput="onSensorsConfigUserInput()">
                 </div>
                 <div class="col-xs-4 col-md-2">
                   <label for="acc-bias-z">Z</label>
-                  <input id="acc-bias-z" name="acc-bias-z" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.001" required="true" oninput="onSensorsConfigUserInput()">
+                  <input id="acc-bias-z" name="acc-bias-z" class="form-control input-sm" type="number" min="-0.5" max="0.5" step="0.0001" required="true" oninput="onSensorsConfigUserInput()">
                 </div>
               </div>
 
@@ -973,12 +973,12 @@
   function onToggleChartVerticalSpeed(element) { altitudeChart.enableDisableGroup('Vertical Speed, m/s', element.checked); }
   function onToggleChartTargetVerticalSpeed(element) { altitudeChart.enableDisableGroup('Target Vertical Speed, m/s', element.checked); }
 
-  function quaternion2str(q) {
-    return 'w:' + q.w.toFixed(3) + ' x:' + q.x.toFixed(3) + '  y:' + q.y.toFixed(3) + '  z:' + q.z.toFixed(3);
+  function quaternion2str(q,p=3) {
+    return 'w:' + q.w.toFixed(p) + ' x:' + q.x.toFixed(p) + '  y:' + q.y.toFixed(p) + '  z:' + q.z.toFixed(p);
   }
 
-  function vector2str(v) {
-    return 'x:' + v[0].toFixed(3) + ' y:' + v[1].toFixed(3) + ' z:' + v[2].toFixed(3);
+  function vector2str(v,p=3) {
+    return 'x:' + v[0].toFixed(p) + ' y:' + v[1].toFixed(p) + ' z:' + v[2].toFixed(p);
   }
 
   function onDisplayAlarm(droneState) {
@@ -1317,7 +1317,7 @@
       var deg = qt2EulerDeg(response.result.attitude);
       $("#euler-angles-id").text("Roll: " + deg[0].toFixed(3) + " Pitch: " + deg[1].toFixed(3) + " Yaw: " + deg[2].toFixed(3) + " deg");
 
-      $("#accel").text(vector2str(response.result.accel));
+      $("#accel").text(vector2str(response.result.accel,4));
       $("#gyro").text(vector2str(response.result.gyro));
       $("#gyro-raw-id").text(vector2str(response.result.gyro_raw));
       $("#gyro-drift-id").text(vector2str(response.result.gyro_drift));

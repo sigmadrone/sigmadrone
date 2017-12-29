@@ -135,7 +135,9 @@ static const PinName  USER_LED3_PIN = PI_13;
 static const PinName  USER_LED4_PIN = PI_14;
 static const PinName  USER_LED5_PIN = PI_15;
 
-static const PinName  SENSOR_CTRL_PIN = PB_1;
+static const PinName  SENSOR1_CTRL_PIN = PB_1;
+static const PinName  SENSOR2_CTRL_PIN = PG_10;
+static const PinName  SENSOR3_CTRL_PIN = PF_10;
 
 static const PinName USART2_CTS_PIN = PD_3;
 static const PinName USART2_RTS_PIN = PD_4;

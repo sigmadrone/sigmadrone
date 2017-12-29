@@ -134,6 +134,7 @@ public:
 	void SetFullScale(Fullscale_t fs);
 	float GetFullScale();
 	void SetBDU(State_t bdu);
+	void Reboot();
 
 	//Filtering Functions
 	void SetAntiAliasingBandwidth(AntialiasFilterBandwidth_t abw);
