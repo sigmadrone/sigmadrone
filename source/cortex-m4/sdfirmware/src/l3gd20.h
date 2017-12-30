@@ -304,6 +304,7 @@ public:
 	void SetAxis(L3GD20_Axis_t axis);
 	void SetFullScale(Fullscale_t fs);
 	float GetFullScale();
+	float GetGain();
 	void SetBDU(State_t bdu);
 	void SetBLE(Endianess_t ble);
 	void SetSPIInterface(SPIMode_t spi);

@@ -197,6 +197,25 @@ float L3GD20::GetFullScale()
 	return 2000.0;
 }
 
+float L3GD20::GetGain()
+{
+	u8_t value;
+
+	ReadReg8(L3GD20_CTRL_REG4, &value);
+	value &= 0x30;
+	value = (value >> L3GD20_FS);
+	if (value == 0) {
+		/* Full Scale 250 */
+		return 0.00875;
+	} else if (value == 1) {
+		/* Full Scale 500 */
+		return 0.0175;
+	}
+	/* Full Scale 2000 */
+	return 0.070;
+}
+
+
 /*******************************************************************************
 * Function Name  : L3GD20_SetBDU
 * Description    : Enable/Disable Block Data Update Functionality
@@ -561,18 +580,18 @@ void L3GD20::GetAngRateRaw(AxesRaw_t* buff)
 void L3GD20::GetAngRateDPS(AxesDPS_t* buff)
 {
 	AxesRaw_t raw = {0, 0, 0};
-	float fullscale = GetFullScale();
+	float gain = GetGain();
 	GetAngRateRaw(&raw);
-	buff->AXIS_X = raw.AXIS_X * fullscale / 32768.0;
-	buff->AXIS_Y = raw.AXIS_Y * fullscale / 32768.0;
-	buff->AXIS_Z = raw.AXIS_Z * fullscale / 32768.0;
+	buff->AXIS_X = raw.AXIS_X * gain;
+	buff->AXIS_Y = raw.AXIS_Y * gain;
+	buff->AXIS_Z = raw.AXIS_Z * gain;
 }
 
 void L3GD20::GetFifoAngRateDPS(AxesDPS_t* buff)
 {
 	AxesRaw_t raw = {0, 0, 0};
 	uint8_t count = GetFifoSourceReg() & 0x1F;
-	float scale = GetFullScale() / 32768.0 / ((float)count);
+	float scale = GetGain() / ((float)count);
 
 	buff->AXIS_X = buff->AXIS_Y = buff->AXIS_Z = 0.0;
 	for (uint8_t i = 0; i < count; i++) {
