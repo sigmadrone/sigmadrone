@@ -23,10 +23,11 @@
 #define DRONESTATE_H_
 
 #undef USE_SIXPROPELLERS
-#define USE_ALIGNMENT_MIPIFRONT
+#undef USE_ALIGNMENT_MIPIFRONT
 #define USE_LPS25HB
+#define USE_ACCELEROMETER_2
 
-#undef LITE_FRAME
+#define LITE_FRAME
 
 #include "units.h"
 #include "battery.h"
@@ -69,7 +70,7 @@ struct DroneState {
 	    , gyro_drift_leak_rate_(0.00001)
 	    , accelerometer_correction_speed_(5.0)
 	    , pilot_type_(PILOT_TYPE_PID_NEW)
-		, gyro_factor_(1.18)
+		, gyro_factor_(1.0)
 		, yaw_(0.0)
 		, pitch_(0.0)
 		, roll_(0.0)
@@ -283,7 +284,7 @@ struct DroneState {
 			yaw_kp_ = 0.20;
 			yaw_ki_= 0.0;
 			yaw_kd_ = 0.07;
-			accelerometer_correction_speed_ = 0.5;
+			accelerometer_correction_speed_ = 0.25;
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
 #ifdef LITE_FRAME
 			kp_ = 0.25;
@@ -303,10 +304,8 @@ struct DroneState {
 
 #endif
 			accelerometer_adjustment_ = Vector3f(-0.0108f, 0.0150f, 0.0f);
-			accelerometer_adjustment2_ = Vector3f(-0.0212f, -0.0050f, 0.0f);
 
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
-			accelerometer_adjustment2_ = Vector3f(0.0f, 0.0f, 0.0f);
 
 		}
 	}
@@ -365,7 +364,6 @@ struct DroneState {
 	float gyro_drift_kd_;
 	float gyro_drift_leak_rate_;
 	Vector3f accelerometer_adjustment_;
-	Vector3f accelerometer_adjustment2_;
 	float accelerometer_correction_speed_;
 	PilotType pilot_type_;
 	float gyro_factor_;

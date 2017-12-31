@@ -220,16 +220,14 @@ void main_task(void *pvParameters)
 	LSM330A accel2(spi5, 2);
 	LPS25HB lps25hb(spi2, 1);
 	BMP280 bmp2(spi2, 2);
-	uint8_t gyro_wtm = 4;
+	uint8_t gyro_wtm = 5;
 	uint8_t acc_wtm = 8;
 	TimeStamp console_update_time;
 	TimeStamp sample_dt;
 	FlightControl flight_ctl;
 	static bool print_to_console = false;
 	LowPassFilter<Vector3f, float> gyro_lpf({0.2});
-	LowPassFilter<Vector3f, float> gyro_accfilt_lpf({0.95});
 	LowPassFilter<Vector3f, float> acc_lpf_alt({0.9});
-	LowPassFilter<Vector3f, float> acc_lpf_att({0.995});
 	LowPassFilter<Vector3f, float> acc2_lpf_att({0.995});
 	LowPassFilter<Vector3f, float> mag_lpf({0.90});
 	attitudefusion att;
@@ -316,26 +314,6 @@ void main_task(void *pvParameters)
 
 	sample_dt.time_stamp();
 
-
-	/*
-	 * Warm up the acc filter
-	 */
-	double alpha = acc_lpf_att.alpha();
-	acc_lpf_att.set_alpha(0.995);
-	double alpha2 = acc2_lpf_att.alpha();
-	acc2_lpf_att.set_alpha(0.995);
-	for (size_t i = 0; i < 2000; i++) {
-		while (!acc_reader.size())
-			;
-		Vector3f acc_sample = acc_reader.read_sample_acc() - drone_state->accelerometer_adjustment_;
-		acc_lpf_att.do_filter(acc_sample);
-
-		while (accel2.GetFifoSourceFSS())
-			acc_lpf_att.do_filter(accel2.GetAccSample() - drone_state->accelerometer_adjustment2_);
-	}
-	acc_lpf_att.set_alpha(alpha);
-	acc2_lpf_att.set_alpha(alpha2);
-
 	// Infinite loop
 	PerfCounter idle_time;
 	while (1) {
@@ -369,31 +347,38 @@ void main_task(void *pvParameters)
 			Vector3f sample = gyro_reader.read_sample();
 			gyr_samples.push_back((sample - gyro_reader.bias()) * drone_state->gyro_factor_);
 			drone_state->gyro_raw_ = gyro_lpf.do_filter(sample);
-			gyro_accfilt_lpf.do_filter((sample - gyro_reader.bias()) * drone_state->gyro_factor_ - att.get_drift_error());
 		}
 		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
 		   drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_reader.bias()) * drone_state->gyro_factor_;
 		}
 
-		QuaternionF deltaq = QuaternionF::fromAngularVelocity(-(DEG2RAD(drone_state->gyro_)), drone_state->dt_.seconds_double());
-		Vector3f filtered_acc = acc_lpf_att.output();
-		acc_lpf_att.reset(deltaq.rotate(filtered_acc));
-//		acc2_lpf_att.reset(deltaq.rotate(acc2_lpf_att.output()));
-
+#ifdef USE_ACCELEROMETER_2
+		fifosize = accel2.GetFifoSourceFSS();
+#else
 		fifosize = acc_reader.size();
+#endif
 		for (size_t i = 0; i < fifosize; i++) {
+#ifdef USE_ACCELEROMETER_2
+			Vector3f sample = acc2_align * accel2.GetAccSample() - drone_state->accelerometer_adjustment_;
+#else
 			Vector3f sample = acc_reader.read_sample_acc() - drone_state->accelerometer_adjustment_;
-			acc_lpf_att.do_filter(sample);
+#endif
 			acc_lpf_alt.do_filter(sample);
 			acc_samples.push_back(sample);
 		}
-		drone_state->accel_raw_ = acc_lpf_att.output();
-		drone_state->accel_alt_ = acc_lpf_alt.output();
-		drone_state->accel_ = drone_state->accel_raw_.normalize();
 
+#ifdef USE_ACCELEROMETER_2
+		fifosize = acc_reader.size();
+#else
 		fifosize = accel2.GetFifoSourceFSS();
+#endif
 		for (size_t i = 0; i < fifosize; i++) {
-			acc2_lpf_att.do_filter(acc2_align * accel2.GetAccSample() - drone_state->accelerometer_adjustment2_);
+#ifdef USE_ACCELEROMETER_2
+			Vector3f sample = acc_reader.read_sample_acc() - drone_state->accelerometer_adjustment_;
+#else
+			Vector3f sample = acc2_align * accel2.GetAccSample() - drone_state->accelerometer_adjustment_;
+#endif
+			acc2_lpf_att.do_filter(sample);
 		}
 
 
@@ -418,20 +403,22 @@ void main_task(void *pvParameters)
 		drone_state->gyro_ = Vector3f(filterd_gyr[0], filterd_gyr[1], filterd_gyr[2]);
 		drone_state->attitude_ = att.get_attitude();
 		drone_state->gyro_drift_error_ = Vector3f(drift_err[0], drift_err[1], drift_err[2]);
+		drone_state->accel_alt_ = acc_lpf_alt.output();
+		drone_state->accel_ = att.get_filtered_acc().normalize();
 
 		flight_ctl.update_state(*drone_state);
 		flight_ctl.send_throttle_to_motors();
 
 		if (user_sw3.poll_edge(DigitalIn::InterruptRising)) {
 			if (led3.read()) {
-				acc_bias.reset(att.get_world_attitude(), acc_lpf_att.output());
+				acc_bias.reset(att.get_world_attitude(), att.get_filtered_acc());
 			} else {
-				acc_bias.detect(att.get_world_attitude(), acc_lpf_att.output());
-				drone_state->accelerometer_adjustment_ += acc_bias.detect(att.get_world_attitude(), acc_lpf_att.output());
+				acc_bias.detect(att.get_world_attitude(), att.get_filtered_acc());
+				drone_state->accelerometer_adjustment_ += acc_bias.detect(att.get_world_attitude(), att.get_filtered_acc());
 			}
 		}
 
-#define ACC_REALTIME_DATA 0
+#define ACC_REALTIME_DATA 1
 #if ACC_REALTIME_DATA
 		QuaternionF twist, swing;
 		QuaternionF::decomposeTwistSwing(att.get_world_attitude(), Vector3f(0,0,1), swing, twist);
@@ -537,7 +524,6 @@ int main(int argc, char* argv[])
 			tskIDLE_PRIORITY + 1UL, /* Task priority*/
 			&gps_task_handle /* Task handle */
 	);
-
 
 #if ENABLE_UART_TASK
 	xTaskCreate(

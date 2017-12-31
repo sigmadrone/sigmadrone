@@ -89,7 +89,7 @@ def reader():
         lock.release()
 
 def animate(i):
-    screen_limit = 0.25
+    screen_limit = 0.15
     ylimits = [-screen_limit, screen_limit]
     xlimits = [-screen_limit, screen_limit]
     ax1.clear()
@@ -121,8 +121,8 @@ def animate(i):
         torq_i_text.set_text('Torque_I = %.4f' % ((float(torq_i[0][0])**2 + (float(torq_i[0][1])**2)))**0.5)
         secondacc_text.set_text('SecondAcc (X = %.4f, Y = %.4f)' % (second_acc[0][0], second_acc[0][1]))
         ax1.plot(acc1[:,1], acc1[:,0], "ro", markersize=10)
-        ax1.plot(second_acc[:,1], second_acc[:,0], "mo", alpha=0.5, markersize=10)
         ax1.plot(acc2[:,1], acc2[:,0], "yo", markersize=10)
+        ax1.plot(second_acc[:,1], second_acc[:,0], "mo", alpha=0.5, markersize=10)
         ax1.plot(earth_g[:,1], earth_g[:,0], "go", markersize=20, alpha=0.5)
         ax1.plot(target[:,1], target[:,0], "bo", markersize=3, alpha=0.75)        
         ax1.arrow(acc2[0][1], acc2[0][0], torq_p[0][1] * scale_factor, torq_p[0][0] * scale_factor, fc='r', ec='r', width=arrow_width, head_width=arrow_head_width, head_length=arrow_head_length);

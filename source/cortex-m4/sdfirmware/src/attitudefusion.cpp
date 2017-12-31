@@ -27,9 +27,10 @@ attitudefusion::attitudefusion(double accelerometer_correction_speed, attitudefu
 	, use_accelerometer_(true)
 	, use_magnetometer_(true)
 	, accelerometer_correction_speed_(accelerometer_correction_speed)
-	, gyr_lpf_{0.2}
-	, acc_lpf_{0.995}
+	, gyr_lpf_{0.25}
+	, acc_lpf_{0.9995}
 	, mag_lpf_{0.90}
+	, gyr_lpf2_{0.5}
 	, earth_g_(earth_g)
 	, filtered_earth_g_(0.85)
 	, attitude_(quaternion_type::identity)
@@ -43,7 +44,8 @@ attitudefusion::attitudefusion(double accelerometer_correction_speed, attitudefu
 void attitudefusion::input(const std::vector<vector_type>& gyr, const std::vector<vector_type>& acc, const std::vector<vector_type>& mag, double dtime)
 {
 	for (auto x : gyr) {
-		gyr_lpf_.do_filter(DEG2RAD(x) - drift_err_);
+		gyr_lpf_.do_filter(DEG2RAD(x));
+		gyr_lpf2_.do_filter(DEG2RAD(x));
 	}
 
 	for (auto x : acc) {
@@ -54,14 +56,18 @@ void attitudefusion::input(const std::vector<vector_type>& gyr, const std::vecto
 		mag_lpf_.do_filter(x);
 	}
 
+	quaternion_type deltaq = quaternion_type::fromAngularVelocity(gyr_lpf2_.output() - drift_err_, dtime).normalize();
+	Vector3f filtered_acc = acc_lpf_.output();
+	acc_lpf_.reset(deltaq.conjugate().rotate(filtered_acc));
+
 	if (use_gyroscope_) {
 		track_gyroscope(gyr_lpf_.output(), dtime);
 	}
 	if (use_accelerometer_) {
-		track_accelerometer(acc_lpf_.output(), dtime);
+		track_accelerometer(acc_lpf_.output().normalize(), dtime);
 	}
 	if (use_magnetometer_) {
-		track_magnetometer(mag_lpf_.output(), dtime);
+		track_magnetometer(mag_lpf_.output().normalize(), dtime);
 	}
 }
 
@@ -116,7 +122,7 @@ void attitudefusion::gyro_drift_leak_rate(double leak_rate)
 
 void attitudefusion::track_gyroscope(const attitudefusion::vector_type& omega, double dtime)
 {
-	quaternion_type deltaq = quaternion_type::fromAngularVelocity(omega, dtime);
+	quaternion_type deltaq = quaternion_type::fromAngularVelocity(omega - drift_err_, dtime).normalize();
 	attitude_ = (attitude_ * deltaq).normalize();
 }
 

@@ -70,7 +70,7 @@ public:
 	 */
 	vector_type get_alignment_speed() const;
 
-protected:
+public:
 	void track_gyroscope(const vector_type& omega, double dtime);
 	void track_accelerometer(const vector_type& g, double dtime);
 	void track_magnetometer(const vector_type& m, double dtime);
@@ -90,6 +90,7 @@ protected:
 	LowPassFilter<vector_type, float> gyr_lpf_;
 	LowPassFilter<vector_type, float> acc_lpf_;
 	LowPassFilter<vector_type, float> mag_lpf_;
+	LowPassFilter<vector_type, float> gyr_lpf2_;
 
 
 	/*
