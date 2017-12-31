@@ -418,7 +418,7 @@ void main_task(void *pvParameters)
 			}
 		}
 
-#define ACC_REALTIME_DATA 1
+#define ACC_REALTIME_DATA 0
 #if ACC_REALTIME_DATA
 		QuaternionF twist, swing;
 		QuaternionF::decomposeTwistSwing(att.get_world_attitude(), Vector3f(0,0,1), swing, twist);
