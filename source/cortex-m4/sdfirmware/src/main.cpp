@@ -60,6 +60,7 @@
 #include "l3gd20reader.h"
 #include "lsm303reader.h"
 #include "lsm330a.h"
+#include "lsm330g.h"
 #include "usbstoragedevice.h"
 #include "poweroff.h"
 #include "axesalignment.h"
@@ -218,6 +219,7 @@ void main_task(void *pvParameters)
 	L3GD20 gyro(spi5, 0);
 	LSM303D accel(spi5, 1);
 	LSM330A accel2(spi5, 2);
+	LSM330G gyro2(spi5, 3);
 	LPS25HB lps25hb(spi2, 1);
 	BMP280 bmp2(spi2, 2);
 	uint8_t gyro_wtm = 5;
@@ -232,10 +234,12 @@ void main_task(void *pvParameters)
 	LowPassFilter<Vector3f, float> mag_lpf({0.90});
 	attitudefusion att;
 	std::vector<attitudefusion::vector_type> gyr_samples;
+	std::vector<attitudefusion::vector_type> gyr2_samples;
 	std::vector<attitudefusion::vector_type> acc_samples;
 	std::vector<attitudefusion::vector_type> mag_samples;
 	AccelBias acc_bias;
-
+	LowPassFilter<Vector3f, float> gyro2_bias_lpf(0.99, 0.01);
+	size_t gyro_fifo_size = 0;
 
 	user_sw3.callback(&led3, &DigitalOut::toggle);
 
@@ -298,10 +302,43 @@ void main_task(void *pvParameters)
 	accel2.FIFOModeEnable(LSM330A::MEMS_ENABLE);
 
 
+	gyro2.Reboot();
+	gyro2.SetMode(LSM330G::NORMAL);
+	gyro2.SetFullScale(LSM330G::FULLSCALE_500);
+	gyro2.SetBDU(LSM330G::MEMS_ENABLE);
+	gyro2.SetWaterMark(25);
+	gyro2.FIFOModeEnable(LSM330G::FIFO_STREAM_MODE);
+	gyro2.SetInt2Pin(0);
+	gyro2.SetAxis(LSM330G_X_ENABLE | LSM330G_Y_ENABLE | LSM330G_Z_ENABLE);
+	gyro2.HPFEnable(LSM330G::MEMS_ENABLE);
+	gyro2.SetHPFMode(LSM330G::HPM_NORMAL_MODE_RES);
+	gyro2.SetHPFCutOFF(LSM330G::HPFCF_0);
+	gyro2.SetODR(LSM330G::ODR_760Hz_BW_50);
+	gyro2.SetAlignment(acc2_align);
+
+	accel2.SetODR(LSM330A::ODR_1600Hz);
+	accel2.SetFullScale(LSM330A::FULLSCALE_4);
+	accel2.SetAntiAliasingBandwidth(LSM330A::ABW_200);
+	accel2.SetAxis(LSM330A::AXIS_XYZ);
+	accel2.FIFOModeSet(LSM330A::FIFO_STREAM_MODE);
+	accel2.FIFOModeEnable(LSM330A::MEMS_ENABLE);
+
 	printf("Calibrating...");
 
 	gyro_reader.enable_int2(true);
 	gyro_reader.calculate_static_bias_filtered(2400);
+
+
+	for (int i = 0; i < 32; i++) {
+		gyro2.GetSample(); // Drain the fifo
+	}
+
+	for (int i = 0; i < 2400; i++) {
+		if (gyro2.GetFifoSourceFSS() == 0)
+			HAL_Delay(5);
+		else
+			gyro2_bias_lpf.do_filter(gyro2.GetSample());
+	}
 
 	pressure_sensors.calibrate();
 
@@ -319,6 +356,7 @@ void main_task(void *pvParameters)
 	while (1) {
 		drone_state->iteration_++;
 		gyr_samples.clear();
+		gyr2_samples.clear();
 		acc_samples.clear();
 		mag_samples.clear();
 		if (drone_state->iteration_ % 120 == 0) {
@@ -343,13 +381,11 @@ void main_task(void *pvParameters)
 		att.gyro_drift_leak_rate(drone_state->gyro_drift_leak_rate_);
 
 		size_t fifosize = gyro_reader.size();
+		gyro_fifo_size = fifosize;
 		for (size_t i = 0; i < fifosize; i++) {
 			Vector3f sample = gyro_reader.read_sample();
 			gyr_samples.push_back((sample - gyro_reader.bias()) * drone_state->gyro_factor_);
 			drone_state->gyro_raw_ = gyro_lpf.do_filter(sample);
-		}
-		if (drone_state->gyro_raw_.length_squared() > 0 && drone_state->dt_.microseconds() > 0) {
-		   drone_state->gyro_ = (drone_state->gyro_raw_ - gyro_reader.bias()) * drone_state->gyro_factor_;
 		}
 
 #ifdef USE_ACCELEROMETER_2
@@ -418,7 +454,7 @@ void main_task(void *pvParameters)
 			}
 		}
 
-#define ACC_REALTIME_DATA 0
+#define ACC_REALTIME_DATA 1
 #if ACC_REALTIME_DATA
 		QuaternionF twist, swing;
 		QuaternionF::decomposeTwistSwing(att.get_world_attitude(), Vector3f(0,0,1), swing, twist);
@@ -453,6 +489,7 @@ void main_task(void *pvParameters)
 			Vector3f drift_err = att.get_drift_error();
 			console_update_time.time_stamp();
 			printf("Gyro      : %5.3f %5.3f %5.3f\n", drone_state->gyro_.at(0), drone_state->gyro_.at(1), drone_state->gyro_.at(2));
+			printf("Gyro FIFO : %u\n", gyro_fifo_size);
 			printf("Drift Err : %5.3f %5.3f %5.3f\n", RAD2DEG(drift_err.at(0)), RAD2DEG(drift_err.at(1)), RAD2DEG(drift_err.at(2)));
 			printf("Gyro Raw  : %5.3f %5.3f %5.3f\n", drone_state->gyro_raw_.at(0), drone_state->gyro_raw_.at(1), drone_state->gyro_raw_.at(2));
 			printf("Accel     : %5.3f %5.3f %5.3f\n", drone_state->accel_.at(0), drone_state->accel_.at(1), drone_state->accel_.at(2));

@@ -95,6 +95,7 @@ static const PinName PWM_IN_PIN_4 = PA_0;
 static const PinName PWM_IN_PIN_5 = PA_2;
 
 static const PinName GYRO_INT2_PIN = PA_3;
+static const PinName GYRO2_INT2_PIN = PI_14;
 static const PinName GYRO_CS_PIN = PC_1;
 
 static const PinName ACC_INT2_PIN = PC_12;

@@ -644,7 +644,10 @@ u8_t L3GD20::GetFifoSourceReg()
 	return ret;
 }
 
-
+u8_t L3GD20::GetFifoSourceFSS()
+{
+	return GetFifoSourceReg() & 0x1F;
+}
 /*******************************************************************************
 * Function Name  : L3GD20_SetOutputDataAndFifoFilters
 * Description    : ENABLE/DISABLE HIGH PASS and LOW PASS filters applied to output and fifo registers
@@ -746,3 +749,16 @@ void L3GD20::SetSPIInterface(SPIMode_t spi)
 	value |= spi << L3GD20_SIM;
 	WriteReg8(L3GD20_CTRL_REG4, value);
 }
+
+void L3GD20::SetAlignment(const Matrix3f& axes_align)
+{
+	axes_align_ = axes_align;
+}
+
+Vector3f L3GD20::GetSample()
+{
+	L3GD20::AxesDPS_t axes = {0,0,0};
+	GetAngRateDPS(&axes);
+	return axes_align_ * Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z);
+}
+

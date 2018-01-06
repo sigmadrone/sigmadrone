@@ -27,10 +27,10 @@ attitudefusion::attitudefusion(double accelerometer_correction_speed, attitudefu
 	, use_accelerometer_(true)
 	, use_magnetometer_(true)
 	, accelerometer_correction_speed_(accelerometer_correction_speed)
-	, gyr_lpf_{0.25}
+	, gyr_lpf_{0.5}
 	, acc_lpf_{0.9995}
 	, mag_lpf_{0.90}
-	, gyr_lpf2_{0.5}
+	, gyr_lpf2_{0.8}
 	, earth_g_(earth_g)
 	, filtered_earth_g_(0.85)
 	, attitude_(quaternion_type::identity)
@@ -151,7 +151,8 @@ void attitudefusion::track_accelerometer(const attitudefusion::vector_type& g, d
 	 */
 //	alignment_w_ = quaternion_type::angularVelocity(quaternion_type::identity, q, q.angle() / DEG2RAD(accelerometer_correction_speed_));
 	alignment_w_ = quaternion_type::angularVelocity(quaternion_type::identity, q, accelerometer_correction_speed_);
-	drift_err_ = drift_pid_.get_pid(alignment_w_, dtime, drift_leak_rate_);
+	vector_type drift_err = drift_pid_.get_pid(alignment_w_, dtime, drift_leak_rate_);
+	drift_err_ = vector_type(drift_err[0], drift_err[1], 0);
 	quaternion_type deltaq = quaternion_type::fromAngularVelocity(-alignment_w_, dtime);
 	attitude_ = (attitude_ * deltaq).normalize();
 

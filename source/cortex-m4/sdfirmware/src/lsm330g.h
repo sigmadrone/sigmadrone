@@ -25,6 +25,7 @@
 
 #include <stdint.h>
 #include "spimaster.h"
+#include "d3math.h"
 
 //these could change accordingly with the architecture
 #ifndef __ARCHDEP__TYPES
@@ -83,6 +84,20 @@ typedef u8_t LSM330G_Axis_t;
 #define LSM330G_I2_WTM                                   BIT(2)
 #define LSM330G_I2_ORUN                                  BIT(1)
 #define LSM330G_I2_EMPTY                                 BIT(0)
+#define LSM330G_I1_ON_PIN_INT1_ENABLE                    0x80
+#define LSM330G_I1_ON_PIN_INT1_DISABLE                   0x00
+#define LSM330G_I1_BOOT_ON_INT1_ENABLE                   0x40
+#define LSM330G_I1_BOOT_ON_INT1_DISABLE                  0x00
+#define LSM330G_INT1_ACTIVE_HIGH                         0x00
+#define LSM330G_INT1_ACTIVE_LOW                          0x20
+#define LSM330G_I2_DRDY_ON_INT2_ENABLE                   0x08
+#define LSM330G_I2_DRDY_ON_INT2_DISABLE                  0x00
+#define LSM330G_WTM_ON_INT2_ENABLE                       0x04
+#define LSM330G_WTM_ON_INT2_DISABLE                      0x00
+#define LSM330G_OVERRUN_ON_INT2_ENABLE                   0x02
+#define LSM330G_OVERRUN_ON_INT2_DISABLE                  0x00
+#define LSM330G_EMPTY_ON_INT2_ENABLE                     0x01
+#define LSM330G_EMPTY_ON_INT2_DISABLE                    0x00
 
 
 /***************CTRL4***************/
@@ -310,6 +325,7 @@ public:
 	void SetAxis(LSM330G_Axis_t axis);
 	void SetFullScale(Fullscale_t fs);
 	float GetFullScale();
+	float GetGain();
 	void SetBDU(State_t bdu);
 	void SetBLE(Endianess_t ble);
 	void SetSPIInterface(SPIMode_t spi);
@@ -342,8 +358,14 @@ public:
 	void GetAngRateDPS(AxesDPS_t* buff);
 	void GetFifoAngRateDPS(AxesDPS_t* buff);
 	u8_t GetFifoSourceReg();
+	u8_t GetFifoSourceFSS();
 	u8_t GetInt1Src();
 	u8_t GetDeviceID();
+	void SetAlignment(const Matrix3f& axes_align);
+	Vector3f GetSample();
+
+protected:
+	Matrix3f axes_align_;
 
 };
 

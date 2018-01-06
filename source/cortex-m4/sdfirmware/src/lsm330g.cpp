@@ -34,6 +34,7 @@ LSM330G::LSM330G(SPIMaster& spi, u8_t cs, const std::vector<GPIOPin>& pins)
 	: spi_(spi)
 	, cs_(cs)
 	, pins_(pins)
+	, axes_align_{1,0,0, 0,1,0, 0,0,1}
 {
 	for (auto& pin : pins_)
 		pin.init();
@@ -188,6 +189,24 @@ float LSM330G::GetFullScale()
 	else if (value == 1)
 		return 500.0;
 	return 2000.0;
+}
+
+float LSM330G::GetGain()
+{
+	u8_t value;
+
+	ReadReg8(LSM330G_CTRL_REG4, &value);
+	value &= 0x30;
+	value = (value >> LSM330G_FS);
+	if (value == 0) {
+		/* Full Scale 250 */
+		return 0.00875;
+	} else if (value == 1) {
+		/* Full Scale 500 */
+		return 0.0175;
+	}
+	/* Full Scale 2000 */
+	return 0.070;
 }
 
 /*******************************************************************************
@@ -554,18 +573,18 @@ void LSM330G::GetAngRateRaw(AxesRaw_t* buff)
 void LSM330G::GetAngRateDPS(AxesDPS_t* buff)
 {
 	AxesRaw_t raw = {0, 0, 0};
-	float fullscale = GetFullScale();
+	float gain = GetGain();
 	GetAngRateRaw(&raw);
-	buff->AXIS_X = raw.AXIS_X * fullscale / 32768.0;
-	buff->AXIS_Y = raw.AXIS_Y * fullscale / 32768.0;
-	buff->AXIS_Z = raw.AXIS_Z * fullscale / 32768.0;
+	buff->AXIS_X = raw.AXIS_X * gain;
+	buff->AXIS_Y = raw.AXIS_Y * gain;
+	buff->AXIS_Z = raw.AXIS_Z * gain;
 }
 
 void LSM330G::GetFifoAngRateDPS(AxesDPS_t* buff)
 {
 	AxesRaw_t raw = {0, 0, 0};
 	uint8_t count = GetFifoSourceReg() & 0x1F;
-	float scale = GetFullScale() / 32768.0 / ((float)count);
+	float scale = GetGain() / ((float)count);
 
 	buff->AXIS_X = buff->AXIS_Y = buff->AXIS_Z = 0.0;
 	for (uint8_t i = 0; i < count; i++) {
@@ -618,6 +637,10 @@ u8_t LSM330G::GetFifoSourceReg()
 	return ret;
 }
 
+u8_t LSM330G::GetFifoSourceFSS()
+{
+	return GetFifoSourceReg() & 0x1F;
+}
 
 /*******************************************************************************
 * Function Name  : LSM330G_SetOutputDataAndFifoFilters
@@ -721,3 +744,14 @@ void LSM330G::SetSPIInterface(SPIMode_t spi)
 	WriteReg8(LSM330G_CTRL_REG4, value);
 }
 
+void LSM330G::SetAlignment(const Matrix3f& axes_align)
+{
+	axes_align_ = axes_align;
+}
+
+Vector3f LSM330G::GetSample()
+{
+	LSM330G::AxesDPS_t axes = {0,0,0};
+	GetAngRateDPS(&axes);
+	return axes_align_ * Vector3f(axes.AXIS_X, axes.AXIS_Y, axes.AXIS_Z);
+}

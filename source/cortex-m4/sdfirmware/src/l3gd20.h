@@ -22,6 +22,7 @@
 #define __L3GD20_H
 
 #include "spimaster.h"
+#include "d3math.h"
 
 //these could change accordingly with the architecture
 #ifndef __ARCHDEP__TYPES
@@ -337,6 +338,7 @@ public:
 	void GetAngRateDPS(AxesDPS_t* buff);
 	void GetFifoAngRateDPS(AxesDPS_t* buff);
 	u8_t GetFifoSourceReg();
+	u8_t GetFifoSourceFSS();
 	u8_t GetInt1Src();
 	u8_t GetDeviceID();
 
@@ -347,6 +349,12 @@ public:
 	void WriteReg8(u8_t reg, u8_t data);
 	void ReadData(u8_t reg, u8_t* data, u16_t nbytes);
 	void WriteData(u8_t reg, u8_t *data, u16_t nbytes);
+
+	void SetAlignment(const Matrix3f& axes_align);
+	Vector3f GetSample();
+
+protected:
+	Matrix3f axes_align_;
 };
 
 #endif /* __L3GD20_DEVICE_H */

@@ -40,6 +40,8 @@ const Vector3f& L3GD20Reader::calculate_static_bias_filtered(size_t num_samples)
 	for (int i = 0; i < 32; i++) {
 		gyro_.GetFifoAngRateDPS(&gyro_axes); // Drain the fifo
 	}
+
+#if 0
 	while (count < 100 && wait_for_data(TimeSpan::from_milliseconds(100))) {
 		while (size()) {
 			lpf.do_filter(read_sample());
@@ -55,6 +57,16 @@ const Vector3f& L3GD20Reader::calculate_static_bias_filtered(size_t num_samples)
 	}
 	static_bias_ /= static_cast<float>(count);
 	return static_bias_;
+#else
+	while (count < num_samples && wait_for_data(TimeSpan::from_milliseconds(100))) {
+		while (size()) {
+			static_bias_ += lpf.do_filter(read_sample());
+			count++;
+		}
+	}
+	static_bias_ = lpf.output();
+	return static_bias_;
+#endif
 }
 
 const Vector3f& L3GD20Reader::bias() const
@@ -64,7 +76,7 @@ const Vector3f& L3GD20Reader::bias() const
 
 size_t L3GD20Reader::size()
 {
-	return gyro_.GetFifoSourceReg() & 0x1F;
+	return gyro_.GetFifoSourceFSS();
 }
 
 Vector3f L3GD20Reader::read_sample()
