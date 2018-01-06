@@ -29,7 +29,7 @@ data1 = [[0,0,0] for i in range(samplecount)]
 data2 = [[0,0,0]]
 data3 = [[0,0,0] for i in range(750)]
 data4 = [[0,0,0]]
-data5 = [[0,0,0]]
+data5 = [[0,0,0] for i in range(750)]
 data6 = [[0,0,0]]
 data7 = [[0,0,0]]
 data8 = [[0,0,0]]
@@ -76,7 +76,7 @@ def reader():
         del data3[0]
         del data4[:]
         data4.append([float(i) * 1.0 for i in a[3].tolist()])
-        del data5[:]
+        del data5[0]
         data5.append([float(i) * 1.0 for i in a[4].tolist()])
         del data6[:]
         data6.append([float(i) * 1.0 for i in a[5].tolist()])        
@@ -101,7 +101,7 @@ def animate(i):
     ax2.clear()
     ax2.grid()
     ax2.set_ylabel(r"Y (Rad/Sec)", fontsize=8, color="darkgreen")
-    ax2.set_ylim(ylimits)
+    ax2.set_ylim([-0.02,0.02])
     torq_p_text = ax1.text(xlimits[0] + 0.01, ylimits[1]-0.01, '', style='italic', color='r')
     torq_d_text = ax1.text(xlimits[0] + 0.01, ylimits[1]-0.02, '', style='italic', color='b')
     torq_i_text = ax1.text(xlimits[0] + 0.01, ylimits[1]-0.03, '', style='italic', color='g')
@@ -117,7 +117,7 @@ def animate(i):
         earth_g = np.array(data7)
         target =  np.array(data8)
         torq_p_text.set_text('Torque_P = %.4f' % ((float(torq_p[0][0])**2 + (float(torq_p[0][1])**2)))**0.5)
-        torq_d_text.set_text('Torque_D = %.4f' % ((float(torq_d[0][0])**2 + (float(torq_d[0][1])**2)))**0.5)
+        torq_d_text.set_text('Torque_D = %.4f' % ((float(torq_d[-1][0])**2 + (float(torq_d[-1][1])**2)))**0.5)
         torq_i_text.set_text('Torque_I = %.4f' % ((float(torq_i[0][0])**2 + (float(torq_i[0][1])**2)))**0.5)
         secondacc_text.set_text('SecondAcc (X = %.4f, Y = %.4f)' % (second_acc[0][0], second_acc[0][1]))
         ax1.plot(acc1[:,1], acc1[:,0], "ro", markersize=10)
@@ -128,7 +128,7 @@ def animate(i):
         ax1.arrow(acc2[0][1], acc2[0][0], torq_p[0][1] * scale_factor, torq_p[0][0] * scale_factor, fc='r', ec='r', width=arrow_width, head_width=arrow_head_width, head_length=arrow_head_length);
         ax1.arrow(acc2[0][1], acc2[0][0], torq_d[0][1] * scale_factor, torq_d[0][0] * scale_factor, fc='b', ec='b', width=arrow_width, head_width=arrow_head_width, head_length=arrow_head_length);
         ax1.arrow(acc2[0][1], acc2[0][0], torq_i[0][1] * scale_factor, torq_i[0][0] * scale_factor, fc='g', ec='g', width=arrow_width, head_width=arrow_head_width, head_length=arrow_head_length);
-        ax2.plot(w[:,0], "green")
+        ax2.plot(torq_d[:,0], "green")
         lock.release()
 
 # reader()
