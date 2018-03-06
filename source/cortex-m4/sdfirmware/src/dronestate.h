@@ -22,19 +22,20 @@
 #ifndef DRONESTATE_H_
 #define DRONESTATE_H_
 
-#define USE_SIXPROPELLERS
-#define USE_ALIGNMENT_MIPIFRONT
 #define USE_LPS25HB
 #define USE_ACCELEROMETER_2
 
-#undef LITE_FRAME
-
+#include "droneframedefs.h"
 #include "units.h"
 #include "battery.h"
 #include "d3math.h"
 #include "alarm.h"
 #include "flightdefs.h"
 #include "librexjsonrpc/jsonserialization.h"
+
+#ifndef DRONE_FRAMEDEFS_H
+#error "droneframedefs.h must be included here!"
+#endif
 
 static const Altitude DEFAULT_FLIGHT_CEILING(Altitude::from_meters(50));
 
@@ -80,7 +81,7 @@ struct DroneState {
 		, base_throttle_(0.0)
         , yaw_throttle_factor_(0.75)
 	    , pid_filter_freq_(80)
-	    , flight_mode_(FLIGHT_MODE_AUTO_LEVEL)
+	    , flight_mode_(FLIGHT_MODE_ALTITUDE_HOLD)
 	    , motors_armed_(false)
 		, enforce_flight_ceiling_(false)
 		, track_magnetometer_(false)
@@ -285,23 +286,23 @@ struct DroneState {
 			yaw_ki_= 0.0;
 			yaw_kd_ = 0.07;
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);
-#ifdef LITE_FRAME
+#if defined(LITE_FRAME)
 			kp_ = 0.25;
 			kd_= 0.055;
 			ki_ = 0.09;
-#else
+#elif defined(FULL_FRAME)
 			kp_ = 0.35;
 			kd_ = 0.08;
 			ki_ = 0.35;
 			leakrate_ = 0.05;
+#endif
 
-#ifdef USE_SIXPROPELLERS
+#if defined(HEXCOPTER_FRAME)
 			accelerometer_adjustment_ = Vector3f(0.02f, 0.05f, 0.0f);
-#else
+#elif defined(QUADCOPTER_FRAME)
 			accelerometer_adjustment_ = Vector3f(0.002f, 0.045f, 0.0f);
 #endif
 
-#endif
 			accelerometer_adjustment_ = Vector3f(-0.0108f, 0.0150f, 0.0f);
 
 			accelerometer_adjustment_ = Vector3f(0.0f, 0.0f, 0.0f);

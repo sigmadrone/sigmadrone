@@ -33,14 +33,14 @@ TriPilot::TriPilot()
 	max_integral_torque_ = 0.25;
 
 	Vector3f thrust_dir(0, 0, -1);
-#ifdef USE_SIXPROPELLERS
+#if defined(HEXCOPTER_FRAME)
 	propellers_.push_back(Propeller(Vector3f(-0.866, -0.5,   0), thrust_dir, Propeller::CCW));
 	propellers_.push_back(Propeller(Vector3f(-0.866,  0.5,   0), thrust_dir, Propeller::CW));
 	propellers_.push_back(Propeller(Vector3f( 0.0,    1.0,   0), thrust_dir, Propeller::CCW));
 	propellers_.push_back(Propeller(Vector3f( 0.866,  0.5,   0), thrust_dir, Propeller::CW));
 	propellers_.push_back(Propeller(Vector3f( 0.866, -0.5,   0), thrust_dir, Propeller::CCW));
 	propellers_.push_back(Propeller(Vector3f( 0.0,   -1.0,   0), thrust_dir, Propeller::CW));
-#else
+#elif defined(QUADCOPTER_FRAME)
 	propellers_.push_back(Propeller(Vector3f(-0.707, -0.707, 0), thrust_dir, Propeller::CCW));
 	propellers_.push_back(Propeller(Vector3f(-0.707,  0.707, 0), thrust_dir, Propeller::CW));
 	propellers_.push_back(Propeller(Vector3f( 0.707,  0.707, 0), thrust_dir, Propeller::CCW));
