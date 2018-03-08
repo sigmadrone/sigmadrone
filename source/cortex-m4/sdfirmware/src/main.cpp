@@ -403,21 +403,6 @@ void main_task(void *pvParameters)
 			acc_samples.push_back(sample);
 		}
 
-#ifdef USE_ACCELEROMETER_2
-		fifosize = acc_reader.size();
-#else
-		fifosize = accel2.GetFifoSourceFSS();
-#endif
-		for (size_t i = 0; i < fifosize; i++) {
-#ifdef USE_ACCELEROMETER_2
-			Vector3f sample = acc_reader.read_sample_acc() - drone_state->accelerometer_adjustment_;
-#else
-			Vector3f sample = acc2_align * accel2.GetAccSample() - drone_state->accelerometer_adjustment_;
-#endif
-			acc2_lpf_att.do_filter(sample);
-		}
-
-
 #define REALTIME_DATA 0
 #if REALTIME_DATA
 		std::cout << drone_state->gyro_.transpose() << drone_state->accel_.transpose() << drone_state->pid_torque_.transpose();
