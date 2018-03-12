@@ -24,7 +24,7 @@
 
 #undef USE_SIXPROPELLERS
 #undef USE_ALIGNMENT_MIPIFRONT
-#define USE_LPS25HB
+//#define USE_LPS25HB
 
 #define LITE_FRAME
 
@@ -58,9 +58,9 @@ struct DroneState {
 		, yaw_kp_(0.72)
 		, yaw_ki_(0.0)
 		, yaw_kd_(0.30)
-	    , altitude_kp_(0.35)
+	    , altitude_kp_(0.55)
 		, altitude_ki_(0.5)
-		, altitude_kd_(0.035)
+		, altitude_kd_(0.015)
 	    , altitude_ki_leak_(0.02)
 	    , gyro_drift_kp_(0.0)
 	    , gyro_drift_ki_(0.01)

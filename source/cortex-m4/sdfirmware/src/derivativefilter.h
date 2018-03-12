@@ -53,7 +53,7 @@ class DerivativeFilter
 {
 public:
 	using State = std::array<DataType,N>;
-	using DeltaT = std::array<TimeStamp,N>;
+	using DeltaT = std::array<float,N>;
 	static const size_t M = (N-1)/2;
 	using Coeff = std::array<float, M>;
 
@@ -68,11 +68,9 @@ public:
 
 	void reset()
 	{
-		for (auto& s : state_) {
-			s = static_cast<DataType>(0);
-		}
-		for (auto& t : ts_) {
-			t.time_stamp();
+		state_.fill(static_cast<DataType>(0));
+		for (auto&& t : ts_) {
+			t = TimeStamp::since_boot().seconds_float();
 		}
 		out_ = static_cast<DataType>(0);
 		index_ = 0;
@@ -81,7 +79,7 @@ public:
 	const DataType& do_filter(const DataType& in)
 	{
 		state_[index_] = in;
-		ts_[index_].time_stamp();
+		ts_[index_] = TimeStamp::since_boot().seconds_float();
 		if (index_ == N -1) {
 			ready_ = true;
 		}
@@ -97,6 +95,9 @@ public:
 			}
 		}
 		index_ = (index_+1) % N;
+		if (std::isnan(out_) || std::isinf(out_)) {
+			out_ = 0;
+		}
 		return out_;
 	}
 	const DataType& output()     const { return out_; }
@@ -105,29 +106,28 @@ private:
 
 	void populate_coeff()
 	{
-		// ugly, but the formulas cited in the paper do not pan out
 		switch (N) {
 		case 5:
-			coeff_[0] = 2.0f/8.0f;
-			coeff_[1] = 1.0f/8.0f;
+			coeff_[0] = 2.0f/8.0f*2.0f;
+			coeff_[1] = 1.0f/8.0f*4.0f;
 			break;
 		case 7:
-			coeff_[0] = 5.0f/32.0f;
-			coeff_[1] = 4.0f/32.0f;
-			coeff_[2] = 1.0f/32.0f;
+			coeff_[0] = 5.0f/32.0f*2.0f;
+			coeff_[1] = 4.0f/32.0f*4.0f;
+			coeff_[2] = 1.0f/32.0f*6.0f;
 			break;
 		case 9:
-			coeff_[0] = 14.0f/128.0f;
-			coeff_[1] = 14.0f/128.0f;
-			coeff_[2] = 6.0f/128.0f;
-			coeff_[3] = 1.0f/128.0f;
+			coeff_[0] = 14.0f/128.0f*2.0f;
+			coeff_[1] = 14.0f/128.0f*4.0f;
+			coeff_[2] =  6.0f/128.0f*6.0f;
+			coeff_[3] =  1.0f/128.0f*8.0f;
 			break;
 		case 11:
-			coeff_[0] = 42.0f/512.0f;
-			coeff_[1] = 48.0f/512.0f;
-			coeff_[2] = 27.0f/512.0f;
-			coeff_[3] = 8.0f /512.0f;
-			coeff_[4] = 1.0f /512.0f;
+			coeff_[0] = 42.0f/512.0f*2.0f;
+			coeff_[1] = 48.0f/512.0f*4.0f;
+			coeff_[2] = 27.0f/512.0f*6.0f;
+			coeff_[3] = 8.0f /512.0f*8.0f;
+			coeff_[4] = 1.0f /512.0f*10.0f;
 			break;
 		default:
 			assert(false);
@@ -150,10 +150,8 @@ private:
 	}
 	DataType dt_k(size_t k)
 	{
-		assert(ts_[rel_index(-k)].elapsed() >= ts_[rel_index(k)].elapsed());
-		float t1 = ts_[rel_index(-k)].elapsed().seconds_float();
-		float t2 = ts_[rel_index(k)].elapsed().seconds_float();
-		return t1 - t2;
+		assert(ts_[rel_index(-k)] <= ts_[rel_index(k)]);
+		return ts_[rel_index(k)] - ts_[rel_index(-k)];
 	}
 
 private:
