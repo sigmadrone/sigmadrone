@@ -188,7 +188,7 @@ void main_task(void *pvParameters)
 
 	vTaskDelay(500 / portTICK_RATE_MS);
 
-	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_16, 0x2000, {
+	SPIMaster spi5(SPI5, SPI_BAUDRATEPRESCALER_32, 0x2000, {
 				{MEMS_SPI_SCK_PIN,  GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},
 				{MEMS_SPI_MISO_PIN, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},
 				{MEMS_SPI_MOSI_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL,   GPIO_SPEED_MEDIUM, GPIO_AF5_SPI5},
@@ -197,7 +197,7 @@ void main_task(void *pvParameters)
 				{ACCEL_CS_PIN, GPIO_MODE_OUTPUT_PP, GPIO_PULLUP, GPIO_SPEED_MEDIUM, 0},
 			});
 
-	SPIMaster spi2(SPI2, SPI_BAUDRATEPRESCALER_16, 0x2000, {
+	SPIMaster spi2(SPI2, SPI_BAUDRATEPRESCALER_32, 0x2000, {
 					{EXT_MEMS_SPI_SCK_PIN,  GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI2},
 					{EXT_MEMS_SPI_MISO_PIN, GPIO_MODE_AF_PP, GPIO_PULLDOWN, GPIO_SPEED_MEDIUM, GPIO_AF5_SPI2},
 					{EXT_MEMS_SPI_MOSI_PIN, GPIO_MODE_AF_PP, GPIO_NOPULL,   GPIO_SPEED_MEDIUM, GPIO_AF5_SPI2},
@@ -286,12 +286,14 @@ void main_task(void *pvParameters)
 	memset(&fifo_config, 0, sizeof(fifo_config));
 	lps25hb.Get_FifoConfig(&fifo_config);
 
+#ifdef USE_LPS25HB
 	float base_pressure = lps25hb.Get_PressureHpa();
 	for (int i = 0; i < 100; i++) {
 		while (lps25hb.Get_FifoStatus().FIFO_EMPTY)
 			vTaskDelay(50 / portTICK_RATE_MS);
 		base_pressure = pressure_lpf.do_filter(lps25hb.Get_PressureHpa());
 	}
+#endif
 
 	bmp_reader.calibrate();
 
