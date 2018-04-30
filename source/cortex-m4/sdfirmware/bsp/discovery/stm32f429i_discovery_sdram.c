@@ -123,7 +123,7 @@ void BSP_SDRAM_Init(void)
   Timing.RCDDelay             = 2;
   
   /* FMC SDRAM control configuration */
-  SdramHandle.Init.SDBank             = FMC_SDRAM_BANK2;
+  SdramHandle.Init.SDBank             = FMC_SDRAM_BANK1;
   /* Row addressing: [7:0] */
   SdramHandle.Init.ColumnBitsNumber   = FMC_SDRAM_COLUMN_BITS_NUM_8;
   /* Column addressing: [11:0] */
@@ -155,7 +155,7 @@ void BSP_SDRAM_Initialization_sequence(uint32_t RefreshCount)
   
   /* Step 1:  Configure a clock configuration enable command */
   Command.CommandMode             = FMC_SDRAM_CMD_CLK_ENABLE;
-  Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK2;
+  Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK1;
   Command.AutoRefreshNumber       = 1;
   Command.ModeRegisterDefinition  = 0;
 
@@ -168,7 +168,7 @@ void BSP_SDRAM_Initialization_sequence(uint32_t RefreshCount)
 
   /* Step 3: Configure a PALL (precharge all) command */ 
   Command.CommandMode             = FMC_SDRAM_CMD_PALL;
-  Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK2;
+  Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK1;
   Command.AutoRefreshNumber       = 1;
   Command.ModeRegisterDefinition  = 0;
 
@@ -177,7 +177,7 @@ void BSP_SDRAM_Initialization_sequence(uint32_t RefreshCount)
   
   /* Step 4: Configure an Auto Refresh command */ 
   Command.CommandMode             = FMC_SDRAM_CMD_AUTOREFRESH_MODE;
-  Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK2;
+  Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK1;
   Command.AutoRefreshNumber       = 4;
   Command.ModeRegisterDefinition  = 0;
 
@@ -192,7 +192,7 @@ void BSP_SDRAM_Initialization_sequence(uint32_t RefreshCount)
                      SDRAM_MODEREG_WRITEBURST_MODE_SINGLE;
   
   Command.CommandMode             = FMC_SDRAM_CMD_LOAD_MODE;
-  Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK2;
+  Command.CommandTarget           = FMC_SDRAM_CMD_TARGET_BANK1;
   Command.AutoRefreshNumber       = 1;
   Command.ModeRegisterDefinition  = tmpmrd;
 
@@ -300,6 +300,9 @@ static void MspInit(void)
   __GPIOE_CLK_ENABLE();
   __GPIOF_CLK_ENABLE();
   __GPIOG_CLK_ENABLE();
+  __GPIOH_CLK_ENABLE();
+
+
                             
 /*-- GPIOs Configuration -----------------------------------------------------*/
 /*
@@ -331,10 +334,15 @@ static void MspInit(void)
   GPIO_InitStructure.Pull  = GPIO_NOPULL;
   GPIO_InitStructure.Alternate = GPIO_AF12_FMC;
 
+#ifdef DISCOVERY
   /* GPIOB configuration */
   GPIO_InitStructure.Pin = GPIO_PIN_5 | GPIO_PIN_6;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);  
-
+#else
+  /* GPIOH configuration */
+  GPIO_InitStructure.Pin = GPIO_PIN_2 | GPIO_PIN_3;
+  HAL_GPIO_Init(GPIOH, &GPIO_InitStructure);
+#endif
   /* GPIOC configuration */
   GPIO_InitStructure.Pin = GPIO_PIN_0;      
   HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);  
@@ -364,6 +372,7 @@ static void MspInit(void)
                            GPIO_PIN_5 | GPIO_PIN_8 | GPIO_PIN_15;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStructure);
 
+#if 0
   /* Configure common DMA parameters */
   dmaHandle.Init.Channel             = SDRAM_DMAx_CHANNEL;
   dmaHandle.Init.Direction           = DMA_MEMORY_TO_MEMORY;
@@ -392,6 +401,7 @@ static void MspInit(void)
   /* NVIC configuration for DMA transfer complete interrupt */
   HAL_NVIC_SetPriority(SDRAM_DMAx_IRQn, 1, 0);
   HAL_NVIC_EnableIRQ(SDRAM_DMAx_IRQn);
+#endif
 }
 
 /**
