@@ -59,7 +59,6 @@
 #include "iirfilt.h"
 #include "l3gd20reader.h"
 #include "lsm303reader.h"
-#include "usbstoragedevice.h"
 #include "poweroff.h"
 #include "axesalignment.h"
 
