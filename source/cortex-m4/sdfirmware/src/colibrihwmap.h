@@ -182,4 +182,10 @@ static const PinName LSM330_GYRO_CS_PIN = PK_0;
 static const PinName LSM330_ACCEL_CS_PIN = PK_2;
 static const PinName LSM330_GYRO_INT2_PIN = PI_14;
 
+static const PinName SD_CS_PIN = PG_11;
+static const PinName SD_MISO_PIN = PG_12;
+static const PinName SD_CLK_PIN = PG_13;
+static const PinName SD_MOSI_PIN = PG_14;
+static const PinName SD_CD_PIN = PG_7;
+
 #endif /* COLIBRI_HW_MAP */
